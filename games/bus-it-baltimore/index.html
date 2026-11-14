@@ -1,0 +1,1040 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#14101f">
+<title>BUS IT! BALTIMORE — Toad City bus route</title>
+<style>
+  html, body { margin:0; height:100%; overflow:hidden; background:#0b0f17; touch-action:none; overscroll-behavior:none; position:fixed; width:100%;
+    -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; font-family:'Arial Black', Arial, sans-serif; }
+  #gl { position:fixed; inset:0; width:100vw; height:100vh; height:100dvh; display:block; outline:none; }
+  .ui { position:fixed; z-index:1100; pointer-events:none; }
+  /* top bar */
+  #topbar { top:calc(env(safe-area-inset-top,0px) + 8px); left:8px; right:8px; display:flex; gap:6px; align-items:stretch; }
+  .chip { background:rgba(20,16,31,.88); color:#fff; border:2px solid #ffd23c; border-radius:10px; padding:5px 9px; font-size:15px; line-height:1.15;
+    box-shadow:2px 2px 0 rgba(0,0,0,.45); white-space:nowrap; }
+  .chip small { display:block; font-size:8.5px; letter-spacing:.12em; color:#ffd23c; font-family:Arial,sans-serif; font-weight:700; }
+  #timeChip.low { border-color:#ff3d6e; color:#ffb3c6; animation:pulse .5s infinite alternate; }
+  @keyframes pulse { from{transform:scale(1)} to{transform:scale(1.07)} }
+  #comboChip { display:none; border-color:#7dffc0; color:#7dffc0; }
+  /* objective panel */
+  #obj { top:calc(env(safe-area-inset-top,0px) + 64px); left:50%; transform:translateX(-50%); width:min(94vw,430px);
+    background:rgba(20,16,31,.9); border:2.5px solid #fff; border-radius:12px; color:#fff; padding:7px 10px 8px; text-align:center; box-shadow:3px 3px 0 rgba(0,0,0,.5); }
+  #objMode { font-size:10px; letter-spacing:.18em; color:#ffd23c; font-family:Arial,sans-serif; font-weight:800; }
+  #objMain { display:flex; align-items:center; justify-content:center; gap:8px; font-size:19px; margin-top:1px; }
+  #objArrow { display:inline-block; font-size:24px; color:#ffd23c; transition:transform .12s linear; }
+  #objSub { font-size:11.5px; font-family:Arial,sans-serif; font-weight:700; color:#cfe3ef; margin-top:1px; }
+  #patWrap { height:7px; background:#332d4a; border-radius:4px; margin-top:6px; overflow:hidden; }
+  #patBar { height:100%; width:100%; background:linear-gradient(90deg,#7dffc0,#ffd23c,#ff3d6e); border-radius:4px; }
+  /* fare popup */
+  #popup { top:38%; left:50%; transform:translate(-50%,-50%) scale(.6); font-size:34px; color:#7dffc0; opacity:0;
+    text-shadow:3px 3px 0 #14101f, -1px -1px 0 #14101f; transition:all .18s ease-out; text-align:center; }
+  #popup.show { opacity:1; transform:translate(-50%,-50%) scale(1); }
+  #popup small { display:block; font-size:15px; color:#ffd23c; }
+  /* minimap */
+  #mmap { top:calc(env(safe-area-inset-top,0px) + 172px); right:8px; border:2px solid #14101f; border-radius:8px; box-shadow:2px 2px 0 rgba(0,0,0,.4); background:#223; }
+  /* overlays */
+  .veil { position:fixed; inset:0; z-index:1300; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+    background:linear-gradient(180deg, rgba(20,16,31,.82), rgba(20,16,31,.94)); color:#fff; padding:20px; }
+  .veil h1 { font-size:clamp(30px,9vw,52px); margin:0; color:#ffd23c; text-shadow:4px 4px 0 #d8262a; letter-spacing:.01em; }
+  .veil h2 { font-size:clamp(15px,4.4vw,20px); margin:6px 0 2px; color:#fff; }
+  .veil p { font-family:Arial,sans-serif; font-weight:700; font-size:14px; line-height:1.5; color:#cfe3ef; max-width:430px; margin:8px 0; }
+  .bigbtn { pointer-events:auto; cursor:pointer; margin-top:14px; background:#ffd23c; color:#14101f; border:3px solid #14101f; border-radius:14px;
+    font-family:'Arial Black',Arial,sans-serif; font-size:21px; padding:13px 30px; box-shadow:4px 4px 0 #d8262a; }
+  .bigbtn:active { transform:translate(2px,2px); box-shadow:2px 2px 0 #d8262a; }
+  .stats { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; justify-content:center; }
+  .stats .chip { font-size:19px; }
+  #endVeil { display:none; }
+  .buslogo { font-size:13px; letter-spacing:.28em; color:#7de8ff; font-family:Arial,sans-serif; font-weight:800; }
+  /* touch controls */
+  #touchUI { position:fixed; inset:0; z-index:1200; pointer-events:none; display:none; }
+  #stickBase { position:absolute; width:118px; height:118px; border-radius:50%; border:2.5px solid rgba(255,255,255,.55); background:rgba(20,16,31,.28); display:none; }
+  #stickKnob { position:absolute; width:54px; height:54px; border-radius:50%; background:rgba(255,210,60,.92); border:2.5px solid #14101f; display:none; box-shadow:2px 2px 0 rgba(0,0,0,.4); }
+  .pedal { position:absolute; border-radius:50%; border:3px solid #14101f; color:#14101f; font-family:'Arial Black',Arial,sans-serif;
+    display:flex; align-items:center; justify-content:center; text-align:center; box-shadow:3px 3px 0 rgba(0,0,0,.45); pointer-events:none; }
+  #btnGo { right:22px; bottom:calc(env(safe-area-inset-bottom,0px) + 30px); width:96px; height:96px; background:#7dffc0; font-size:19px; }
+  #btnBrake { right:132px; bottom:calc(env(safe-area-inset-bottom,0px) + 22px); width:76px; height:76px; background:#ff5f5f; font-size:13.5px; }
+  .pedal.on { filter:brightness(1.25); transform:scale(.94); }
+  #hintKeys { bottom:calc(env(safe-area-inset-bottom,0px) + 10px); left:50%; transform:translateX(-50%); color:rgba(255,255,255,.75);
+    font-family:Arial,sans-serif; font-weight:700; font-size:11.5px; background:rgba(20,16,31,.55); padding:4px 10px; border-radius:8px; }
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<div class="ui" id="topbar">
+  <div class="chip"><small>TIME</small><span id="hudTime">3:00</span></div>
+  <div class="chip"><small>FARES</small><span id="hudFares">$0.00</span></div>
+  <div class="chip"><small>RIDERS</small><span id="hudPax">0</span></div>
+  <div class="chip" id="comboChip"><small>COMBO</small><span id="hudCombo">×1</span></div>
+</div>
+
+<div class="ui" id="obj">
+  <div id="objMode">NEXT PICKUP</div>
+  <div id="objMain"><span id="objArrow">⬆</span><span id="objName">—</span><span id="objDist"></span></div>
+  <div id="objSub">Drive to the glowing stop</div>
+  <div id="patWrap"><div id="patBar"></div></div>
+</div>
+
+<div class="ui" id="popup"></div>
+<canvas class="ui" id="mmap" width="168" height="106"></canvas>
+
+<div id="touchUI">
+  <div id="stickBase"></div><div id="stickKnob"></div>
+  <div class="pedal" id="btnGo">GO</div>
+  <div class="pedal" id="btnBrake">BRAKE</div>
+</div>
+<div class="ui" id="hintKeys">W A S D / arrows to drive</div>
+
+<div class="veil" id="startVeil">
+  <div class="buslogo">MTA · CHARM CITY ROUTE 1</div>
+  <h1>BUS IT!<br>BALTIMORE</h1>
+  <h2>Toad City needs its bus driver. That's you, hon.</h2>
+  <p>Pick up waiting riders at the glowing bus stops and drop them at their stops before their patience runs out. Chain drop-offs to build your combo. You've got 3 minutes — make those fares!</p>
+  <button class="bigbtn" id="btnStart">🚌 START ROUTE</button>
+  <p style="font-size:12px">Desktop: WASD / arrows &nbsp;·&nbsp; Phone: stick steers, GO &amp; BRAKE pedals</p>
+</div>
+
+<div class="veil" id="endVeil">
+  <div class="buslogo">ROUTE COMPLETE</div>
+  <h1 id="endTitle">SHIFT DONE!</h1>
+  <div class="stats">
+    <div class="chip"><small>FARES EARNED</small><span id="endFares">$0</span></div>
+    <div class="chip"><small>RIDERS SERVED</small><span id="endPax">0</span></div>
+    <div class="chip"><small>BEST COMBO</small><span id="endCombo">×1</span></div>
+  </div>
+  <p id="endLine">Baltimore thanks you.</p>
+  <button class="bigbtn" id="btnAgain">↻ DRIVE AGAIN</button>
+</div>
+
+<script type="module">
+import * as THREE from '../toad-city/three.module.min.js';
+
+/* ================================================================
+   BUS IT! BALTIMORE — a bus route through Toad City.
+   The city below is Toad City Baltimore's own layout data, copied
+   verbatim from games/toad-city/game.js (src/03_city.js): same
+   world bounds, harbour basin, piers, block grid (24 m blocks,
+   10 m streets), landmark reservations and landmark positions.
+   X east, Z south (north = -Z). Units are metres.
+   ================================================================ */
+const $ = (id) => document.getElementById(id);
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const damp = (a, b, r, dt) => a + (b - a) * (1 - Math.exp(-r * dt));
+const wrapA = (a) => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
+let SEED = 1234567; const srnd = () => ((SEED = (SEED * 16807) % 2147483647) / 2147483647);
+const Q = new URLSearchParams(location.search);
+
+// ---------- Toad City layout data (verbatim) ----------
+const CURB = 0.16, GF = 4.4, FH = 3.4, PAR = 1.3, WY = -0.85;
+const WB = { x0: -136, x1: 213, z0: -106, z1: 104 };
+const BASIN = { x0: -60, x1: 400, z0: -30, z1: 30 };
+const PROM = 6;
+const PIERS = [
+  { id: 'hp1', x0: -60, x1: -44, z0: -30, z1: -20, t: 'pave', w: 'se' },
+  { id: 'hp2', x0: -60, x1: -50, z0: -20, z1: 4, t: 'pave', w: 'es' },
+  { id: 'p1', x0: -40, x1: -35, z0: -30, z1: -8, t: 'plank', w: 'wes' },
+  { id: 'wtc', x0: -20, x1: -4, z0: -30, z1: -14, t: 'pave', w: 'wes' },
+  { id: 'p3', x0: 6, x1: 32, z0: -30, z1: -4, t: 'pave', w: 'wes' },
+  { id: 'p4', x0: 44, x1: 68, z0: -30, z1: -4, t: 'pave', w: 'wes' },
+  { id: 'rec', x0: 110, x1: 142, z0: -30, z1: -18, t: 'plank', w: 'wes' },
+];
+const inR = (r, x, z) => x >= r.x0 && x <= r.x1 && z >= r.z0 && z <= r.z1;
+function onPier(x, z) { for (const p of PIERS) if (inR(p, x, z)) return p; return null; }
+function isWater(x, z) { return inR(BASIN, x, z) && !onPier(x, z); }
+const RES = [
+  { x0: -136, x1: -76, z0: -36, z1: 36 },
+  { x0: -136, x1: -76, z0: 46, z1: 106 },
+  { x0: -32, x1: -8, z0: -104, z1: -80 },
+  { x0: 70, x1: 94, z0: -70, z1: -46 },
+  { x0: 138, x1: 162, z0: -70, z1: -46 },
+  { x0: -66, x1: -42, z0: 46, z1: 70 },
+  { x0: -32, x1: 26, z0: 46, z1: 72 },
+  { x0: 70, x1: 94, z0: 46, z1: 70 },
+  { x0: 104, x1: 128, z0: 46, z1: 70 },
+  { x0: 138, x1: 213, z0: 46, z1: 106 },
+];
+const BLOCKS = [];
+{ const cols = []; for (let k = 0; k < 10; k++) cols.push(-134 + k * 34);
+  for (const zr of [[-70, -46], [-104, -80], [46, 70], [80, 104]]) for (const x of cols) BLOCKS.push({ x0: x, x1: x + 24, z0: zr[0], z1: zr[1] });
+  for (const zr of [[-36, -6], [4, 36]]) for (const x of [-134, -100]) BLOCKS.push({ x0: x, x1: x + 24, z0: zr[0], z1: zr[1] });
+}
+const ovl = (a, b) => a.x0 < b.x1 && a.x1 > b.x0 && a.z0 < b.z1 && a.z1 > b.z0;
+const GEN = BLOCKS.filter((b) => !RES.some((r) => ovl(r, b)));
+const PLOTS = GEN.concat(RES);
+function isProm(x, z) { return !inR(BASIN, x, z) && x >= BASIN.x0 - PROM && z >= BASIN.z0 - PROM && z <= BASIN.z1 + PROM; }
+const PG = new Map(); const pgk = (x, z) => Math.floor(x / 4) + ',' + Math.floor(z / 4);
+for (const b of PLOTS) for (let x = Math.floor(b.x0 / 4); x * 4 < b.x1; x++) for (let z = Math.floor(b.z0 / 4); z * 4 < b.z1; z++) { const k = x + ',' + z; (PG.get(k) || PG.set(k, []).get(k)).push(b); }
+function onPlot(x, z) { const a = PG.get(pgk(x, z)); if (a) for (const b of a) if (inR(b, x, z)) return b; return null; }
+function isRoad(x, z) { return !inR(BASIN, x, z) && !isProm(x, z) && !onPlot(x, z); }
+const HILL = { x: -3, z: 59, rx: 28, rz: 13, h: 9 };
+function hillH(x, z) { const d = Math.hypot((x - HILL.x) / HILL.rx, (z - HILL.z) / HILL.rz); if (d >= 1) return 0; const t = clamp((1 - d) / 0.8, 0, 1); return HILL.h * t * t * (3 - 2 * t); }
+// landmark anchor points (name, x, z) — from Toad City's LANDMARKS table
+const LANDMARKS = [
+  ['harborplace', 'HARBORPLACE', -52, -24], ['constellation', 'USS CONSTELLATION', -31, -18],
+  ['wtc', 'WORLD TRADE CENTER', -12, -22], ['aquarium', 'NATIONAL AQUARIUM', 19, -17],
+  ['powerplant', 'POWER PLANT', 56, -17], ['fourseasons', 'FOUR SEASONS', 82, -58],
+  ['pendry', 'PENDRY', 126, -25], ['fells', 'FELLS POINT', 160, -56],
+  ['monument', 'WASHINGTON MONUMENT', -20, -92], ['orioles', 'ORIOLE PARK', -100, 0],
+  ['ravens', 'M&T BANK STADIUM', -106, 76], ['science', 'SCIENCE CENTER', -54, 58],
+  ['fedhill', 'FEDERAL HILL', -3, 59], ['domino', 'DOMINO SUGARS', 82, 57],
+  ['underarmour', 'UNDER ARMOUR', 116, 52], ['fort', 'FORT MCHENRY', 176, 78],
+];
+
+// ---------- renderer / scene (Toad City: three r160, cel light, harbour fog) ----------
+const canvas = $('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#a9c6dd');
+scene.fog = new THREE.Fog(new THREE.Color('#b9c6cf'), 55, 330);
+const camera = new THREE.PerspectiveCamera(62, 1, 0.12, 600);
+const sun = new THREE.DirectionalLight('#fff2d8', 2.6);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -70; sun.shadow.camera.right = 70; sun.shadow.camera.top = 70; sun.shadow.camera.bottom = -70;
+sun.shadow.camera.far = 260; sun.shadow.bias = -0.0006;
+scene.add(sun); scene.add(sun.target);
+scene.add(new THREE.HemisphereLight('#cfe6ff', '#5a6a52', 1.32));
+scene.add(new THREE.AmbientLight('#ffffff', 0.38)); // lifts shade-side facades the way Toad City's cel banding does
+function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize);
+
+// ---------- canvas textures (Toad City paints its signs/facades on canvas too) ----------
+function ctex(w, h, draw) { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; }
+const INK = '#14101f';
+const PAL = [ // Toad City's facade palette (walls lifted a touch so shade sides stay readable)
+  { wall: '#9a5a48', trim: '#c9b48a', glass: '#33506b' }, { wall: '#847e74', trim: '#a39a88', glass: '#2e4356' },
+  { wall: '#ab7c52', trim: '#4f3a2c', glass: '#31465c' }, { wall: '#8a6a7a', trim: '#c9b48a', glass: '#33506b' },
+  { wall: '#6f828c', trim: '#a39a88', glass: '#31465c' }, { wall: '#b3865d', trim: '#e0cfa8', glass: '#31465c' },
+];
+function facadeTex(p, seed) { return ctex(128, 256, (c, w, h) => {
+  c.fillStyle = p.wall; c.fillRect(0, 0, w, h);
+  c.fillStyle = 'rgba(0,0,0,.08)'; for (let i = 0; i < 40; i++) c.fillRect((srnd() * w) | 0, (srnd() * h) | 0, 3, 3);
+  c.fillStyle = p.trim; c.fillRect(0, 0, w, 8); c.fillRect(0, h - 10, w, 10);
+  for (let y = 18; y < h - 22; y += 22) for (let x = 10; x < w - 14; x += 24) {
+    c.fillStyle = srnd() < 0.3 ? '#ffd690' : p.glass; c.fillRect(x, y, 14, 15);
+    c.fillStyle = 'rgba(255,255,255,.25)'; c.fillRect(x, y, 14, 4);
+  }
+}); }
+const facTex = PAL.map((p, i) => facadeTex(p, i));
+const roofTex = ctex(64, 64, (c, w, h) => { c.fillStyle = '#4a4642'; c.fillRect(0, 0, w, h); c.fillStyle = 'rgba(255,255,255,.06)'; for (let i = 0; i < 30; i++) c.fillRect((srnd() * w) | 0, (srnd() * h) | 0, 4, 4); });
+const roadTex = ctex(128, 128, (c, w, h) => { c.fillStyle = '#3c3f45'; c.fillRect(0, 0, w, h); c.fillStyle = 'rgba(255,255,255,.05)'; for (let i = 0; i < 90; i++) c.fillRect((srnd() * w) | 0, (srnd() * h) | 0, 2, 2); c.fillStyle = 'rgba(0,0,0,.12)'; for (let i = 0; i < 50; i++) c.fillRect((srnd() * w) | 0, (srnd() * h) | 0, 3, 2); });
+roadTex.wrapS = roadTex.wrapT = THREE.RepeatWrapping;
+const walkTex = ctex(128, 128, (c, w, h) => { c.fillStyle = '#9a958c'; c.fillRect(0, 0, w, h); c.strokeStyle = 'rgba(20,16,31,.35)'; c.lineWidth = 2; for (let i = 0; i <= 4; i++) { c.beginPath(); c.moveTo(i * 32, 0); c.lineTo(i * 32, h); c.stroke(); c.beginPath(); c.moveTo(0, i * 32); c.lineTo(w, i * 32); c.stroke(); } });
+walkTex.wrapS = walkTex.wrapT = THREE.RepeatWrapping;
+const brickTex = ctex(128, 128, (c, w, h) => { c.fillStyle = '#8a4a3a'; c.fillRect(0, 0, w, h); c.strokeStyle = 'rgba(20,16,31,.3)'; c.lineWidth = 1.5; for (let y = 0; y < h; y += 10) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); for (let x = (y / 10) % 2 ? 0 : 16; x < w; x += 32) { c.beginPath(); c.moveTo(x, y); c.lineTo(x, y + 10); c.stroke(); } } });
+brickTex.wrapS = brickTex.wrapT = THREE.RepeatWrapping;
+const plankTex = ctex(128, 128, (c, w, h) => { c.fillStyle = '#8a6a48'; c.fillRect(0, 0, w, h); c.strokeStyle = 'rgba(20,16,31,.4)'; c.lineWidth = 2; for (let x = 0; x <= w; x += 16) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, h); c.stroke(); } c.fillStyle = 'rgba(255,255,255,.05)'; for (let i = 0; i < 26; i++) c.fillRect((srnd() * w) | 0, (srnd() * h) | 0, 10, 2); });
+plankTex.wrapS = plankTex.wrapT = THREE.RepeatWrapping;
+function signTex(lines, bg, fg, font) { return ctex(512, 128, (c, w, h) => {
+  c.fillStyle = bg; c.fillRect(0, 0, w, h); c.strokeStyle = INK; c.lineWidth = 10; c.strokeRect(5, 5, w - 10, h - 10);
+  c.fillStyle = fg; c.textAlign = 'center'; c.textBaseline = 'middle';
+  const n = lines.length; lines.forEach((s, i) => { c.font = (font || '900 ') + (n > 1 ? 44 : 56) + 'px Arial'; c.fillText(s, w / 2, h * (i + 1) / (n + 1) + 2); });
+}); }
+
+// materials — flat Lambert (Toad City's toon base) + ink edge lines on hero meshes
+const M = {
+  road: new THREE.MeshLambertMaterial({ map: roadTex }),
+  walk: new THREE.MeshLambertMaterial({ map: walkTex }),
+  brick: new THREE.MeshLambertMaterial({ map: brickTex }),
+  plank: new THREE.MeshLambertMaterial({ map: plankTex }),
+  roof: new THREE.MeshLambertMaterial({ map: roofTex }),
+  water: new THREE.MeshLambertMaterial({ color: '#2e6f8e' }),
+  grass: new THREE.MeshLambertMaterial({ color: '#5d8a4a' }),
+  sand: new THREE.MeshLambertMaterial({ color: '#c9b48a' }),
+  white: new THREE.MeshLambertMaterial({ color: '#f4f0e6' }),
+  ink: new THREE.LineBasicMaterial({ color: INK }),
+};
+function box(w, h, d, mat, x = 0, y = 0, z = 0, ink = false) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(x, y, z);
+  if (ink) { const e = new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry), M.ink); m.add(e); }
+  return m;
+}
+function shadowed(root) { root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); return root; }
+
+// ---------- colliders ----------
+const COLL = []; // {x0,x1,z0,z1}
+function collideRect(x0, z0, x1, z1) { COLL.push({ x0, z0, x1, z1 }); }
+// the harbour itself is blocked (promenade + basin + piers live inside this rect)
+collideRect(BASIN.x0 - PROM, BASIN.z0 - PROM, WB.x1 + 40, BASIN.z1 + PROM);
+// world bounds as walls
+collideRect(WB.x0 - 30, WB.z0 - 30, WB.x0, WB.z1 + 30); collideRect(WB.x1, WB.z0 - 30, WB.x1 + 30, WB.z1 + 30);
+collideRect(WB.x0 - 30, WB.z0 - 30, WB.x1 + 30, WB.z0); collideRect(WB.x0 - 30, WB.z1, WB.x1 + 30, WB.z1 + 30);
+// park reservations the bus must not climb: Federal Hill + the Monument grounds (landmark colliders cover the rest)
+collideRect(-32, 46, 26, 72); collideRect(-32, -104, -8, -80);
+
+// ---------- ground: roads everywhere, plots raised, promenade brick, piers, water ----------
+const cityG = new THREE.Group(); scene.add(cityG);
+{
+  const gw = WB.x1 - WB.x0 + 90, gd = WB.z1 - WB.z0 + 90;
+  const gnd = new THREE.Mesh(new THREE.PlaneGeometry(gw, gd), M.road);
+  gnd.material.map.repeat.set(gw / 9, gd / 9);
+  gnd.rotation.x = -Math.PI / 2; gnd.position.set((WB.x0 + WB.x1) / 2, 0, (WB.z0 + WB.z1) / 2);
+  gnd.receiveShadow = true; cityG.add(gnd);
+  // street centre dashes: Pratt St (z=-41) + Key Hwy (z=41) + Light St (x=-71), exactly as Toad City paints them
+  const dashMat = new THREE.MeshBasicMaterial({ color: '#d8b040' });
+  const dashG = new THREE.PlaneGeometry(3, 0.3);
+  const dashes = [];
+  for (let x = -130; x < 212; x += 6) { dashes.push([x + 1.5, -41]); dashes.push([x + 1.5, 41]); }
+  for (let z = -100; z < 102; z += 6) dashes.push([-71, z + 1.5, 1]);
+  const dIM = new THREE.InstancedMesh(dashG, dashMat, dashes.length);
+  const m4 = new THREE.Matrix4(), q0 = new THREE.Quaternion(), qV = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI / 2, 0));
+  dashes.forEach((d, i) => { m4.compose(new THREE.Vector3(d[0], 0.012, d[1]), d[2] ? qV : q0, new THREE.Vector3(1, 1, 1)); dIM.setMatrixAt(i, m4); });
+  dIM.rotation.x = 0; // planes already flat via geometry below
+  dIM.geometry.rotateX(-Math.PI / 2); cityG.add(dIM);
+  // plots (sidewalk slabs)
+  const plotIM = new THREE.InstancedMesh(new THREE.BoxGeometry(1, CURB, 1), M.walk, PLOTS.length);
+  PLOTS.forEach((b, i) => { m4.compose(new THREE.Vector3((b.x0 + b.x1) / 2, CURB / 2, (b.z0 + b.z1) / 2), q0, new THREE.Vector3(b.x1 - b.x0, 1, b.z1 - b.z0)); plotIM.setMatrixAt(i, m4); });
+  plotIM.receiveShadow = true; cityG.add(plotIM);
+  // promenade: brick ring round the basin (west wall + north + south)
+  const prom = [[BASIN.x0 - PROM, BASIN.z0 - PROM, 213, BASIN.z0], [BASIN.x0 - PROM, BASIN.z1, 213, BASIN.z1 + PROM], [BASIN.x0 - PROM, BASIN.z0, BASIN.x0, BASIN.z1]];
+  for (const [x0, z0, x1, z1] of prom) { const p = box(x1 - x0, CURB, z1 - z0, M.brick, (x0 + x1) / 2, CURB / 2, (z0 + z1) / 2); p.receiveShadow = true; cityG.add(p); }
+  // piers
+  for (const p of PIERS) { const f = box(p.x1 - p.x0, CURB, p.z1 - p.z0, p.t === 'plank' ? M.plank : M.walk, (p.x0 + p.x1) / 2, CURB / 2, (p.z0 + p.z1) / 2); f.receiveShadow = true; cityG.add(f); }
+  // water
+  const wat = new THREE.Mesh(new THREE.PlaneGeometry(BASIN.x1 - BASIN.x0 + 20, BASIN.z1 - BASIN.z0 + 2), M.water);
+  wat.rotation.x = -Math.PI / 2; wat.position.set((BASIN.x0 + BASIN.x1) / 2, WY, 0); cityG.add(wat);
+  // sparkle ribbons drifting on the water (Toad City does the same)
+  const spark = new THREE.Mesh(new THREE.PlaneGeometry(BASIN.x1 - BASIN.x0, BASIN.z1 - BASIN.z0),
+    new THREE.MeshBasicMaterial({ map: ctex(256, 64, (c, w, h) => { c.clearRect(0, 0, w, h); c.fillStyle = 'rgba(190,235,255,.5)'; for (let i = 0; i < 90; i++) c.fillRect((srnd() * w) | 0, (srnd() * h) | 0, 8 + srnd() * 16, 1.6); }), transparent: true, depthWrite: false }));
+  spark.material.map.wrapS = THREE.RepeatWrapping; spark.material.map.repeat.set(6, 1);
+  spark.rotation.x = -Math.PI / 2; spark.position.set((BASIN.x0 + BASIN.x1) / 2, WY + 0.03, 0); cityG.add(spark);
+  cityG.userData.spark = spark;
+}
+// ---------- generic buildings on the generic blocks (instanced, Toad City palette) ----------
+{
+  const geo = new THREE.BoxGeometry(1, 1, 1); geo.translate(0, 0.5, 0);
+  const mats = facTex.map((t) => new THREE.MeshLambertMaterial({ map: t }));
+  const per = [[], [], [], [], [], []];
+  const cr = [];
+  for (const b of GEN) {
+    const w = b.x1 - b.x0, d = b.z1 - b.z0;
+    if (w < 20 || d < 20) continue;
+    const inset = 2.2, bw = w - inset * 2, bd = d - inset * 2;
+    const h = 9 + srnd() * 24, cx = (b.x0 + b.x1) / 2 + (srnd() - 0.5) * 2, cz = (b.z0 + b.z1) / 2 + (srnd() - 0.5) * 2;
+    const pi = (srnd() * PAL.length) | 0;
+    per[pi].push([cx, cz, bw, h, bd]);
+    cr.push([cx - bw / 2, cz - bd / 2, cx + bw / 2, cz + bd / 2]);
+    if (srnd() < 0.5) { const h2 = 6 + srnd() * 10, w2 = bw * 0.5; per[pi].push([cx - bw / 4, cz, w2, h2, bd * 0.8]); cr.push([cx - bw / 4 - w2 / 2, cz - bd * 0.4, cx - bw / 4 + w2 / 2, cz + bd * 0.4]); }
+  }
+  const m4 = new THREE.Matrix4(), q0 = new THREE.Quaternion();
+  per.forEach((list, pi) => { if (!list.length) return;
+    const im = new THREE.InstancedMesh(geo, mats[pi], list.length);
+    list.forEach((v, i) => { m4.compose(new THREE.Vector3(v[0], CURB, v[1]), q0, new THREE.Vector3(v[2], v[3], v[4])); im.setMatrixAt(i, m4); });
+    im.castShadow = true; im.receiveShadow = true; cityG.add(im);
+  });
+  for (const r of cr) collideRect(r[0], r[1], r[2], r[3]);
+}
+
+// ---------- landmarks: simple massings + original canvas signs (Toad City phase-1 style) ----------
+const LM = {}; for (const [id, name, x, z] of LANDMARKS) LM[id] = { name, x, z };
+function sign(lines, w, h, bg, fg) { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: signTex(lines, bg, fg), side: THREE.DoubleSide })); return m; }
+function putSign(parent, lines, w, h, x, y, z, ry = 0, bg = '#f4f0e6', fg = INK) { const s = sign(lines, w, h, bg, fg); s.position.set(x, y, z); s.rotation.y = ry; parent.add(s); return s; }
+const glassMat = new THREE.MeshLambertMaterial({ color: '#5d7a8c' });
+const darkMat = new THREE.MeshLambertMaterial({ color: '#2a2622' });
+function lmGroup(id) { const g = new THREE.Group(); const L = LM[id]; g.position.set(L.x, CURB, L.z); cityG.add(g); return g; }
+{ // HARBORPLACE — twin glass pavilions on their piers
+  const g = new THREE.Group(); cityG.add(g);
+  for (const [cx, cz] of [[-52, -25], [-55, -8]]) { const p = box(13, 6, 9, glassMat, cx, CURB + 3, cz, true); const r = new THREE.Mesh(new THREE.ConeGeometry(8.4, 3.4, 4), new THREE.MeshLambertMaterial({ color: '#3f7a5e' })); r.position.set(cx, CURB + 7.6, cz); r.rotation.y = Math.PI / 4; g.add(p, shadowed(r)); collideRect(cx - 6.5, cz - 4.5, cx + 6.5, cz + 4.5); }
+  putSign(g, ['HARBORPLACE'], 15, 3.4, -52, CURB + 8.6, -19.4, 0, '#ffd23c');
+}
+{ // USS CONSTELLATION — hull, masts, sails furled (on pier p1)
+  const g = lmGroup('constellation'); g.position.z = -16;
+  const hull = box(4.6, 3.2, 17, new THREE.MeshLambertMaterial({ color: '#3a2a1a' }), 0, 1.2, 0, true); g.add(hull);
+  const deck = box(4, 0.4, 15.6, new THREE.MeshLambertMaterial({ color: '#8a6a48' }), 0, 2.9, 0); g.add(deck);
+  for (const mz of [-5.5, 0, 5.5]) { const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.2, 13, 6), darkMat); mast.position.set(0, 9, mz); g.add(mast);
+    for (let i = 1; i <= 3; i++) { const yard = box(5.6 - i * 0.9, 0.14, 0.14, darkMat, 0, 4.4 + i * 2.6, mz); g.add(yard); } }
+  shadowed(g); collideRect(-33.5, -25, -28.5, -7);
+}
+{ // WORLD TRADE CENTER — pentagon tower on its pier
+  const g = lmGroup('wtc'); g.position.z = -20;
+  const towerTex = ctex(256, 512, (c, w, h) => { c.fillStyle = '#6f93a8'; c.fillRect(0, 0, w, h);
+    c.fillStyle = 'rgba(20,16,31,.55)'; for (let x = 0; x < w; x += 32) c.fillRect(x, 0, 3, h);
+    c.fillStyle = 'rgba(255,255,255,.28)'; for (let y = 10; y < h; y += 26) c.fillRect(0, y, w, 2);
+    c.fillStyle = 'rgba(230,245,255,.35)'; for (let i = 0; i < 60; i++) c.fillRect((srnd() * w) | 0, (srnd() * h) | 0, 18, 12); });
+  const tw = new THREE.Mesh(new THREE.CylinderGeometry(7.6, 8.4, 48, 5), new THREE.MeshLambertMaterial({ map: towerTex }));
+  tw.position.y = 24; tw.rotation.y = 0.32; g.add(shadowed(tw));
+  putSign(g, ['WORLD TRADE CENTER'], 17, 3.6, 0, 12, 8.6, 0, '#f4f0e6');
+  collideRect(-21, -29, -3, -11);
+}
+{ // NATIONAL AQUARIUM — glass pyramids on pier 3
+  const g = lmGroup('aquarium'); g.position.z = -16;
+  const base = box(24, 5, 12, new THREE.MeshLambertMaterial({ color: '#37505e' }), 0, 2.5, 0, true); g.add(base);
+  for (const [px, s, hh] of [[-6.5, 8.6, 11], [4.5, 10.6, 14], [10.5, 5.4, 7]]) { const py = new THREE.Mesh(new THREE.ConeGeometry(s, hh, 4), glassMat); py.position.set(px, 5 + hh / 2, 0); py.rotation.y = Math.PI / 4; g.add(shadowed(py)); }
+  putSign(g, ['NATIONAL AQUARIUM'], 19, 3.6, 0, 7.6, 6.2, 0, '#39e6ff');
+  collideRect(7, -22, 31, -10);
+}
+{ // POWER PLANT — brick hall + four black stacks (pier 4)
+  const g = lmGroup('powerplant'); g.position.z = -16;
+  const hall = box(22, 11, 11, new THREE.MeshLambertMaterial({ map: facTex[0] }), 0, 5.5, 0, true); g.add(hall);
+  for (const sx of [-8, -2.7, 2.7, 8]) { const st = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.8, 21, 10), darkMat); st.position.set(sx, 10.5, -2.5); g.add(shadowed(st)); }
+  putSign(g, ['POWER PLANT'], 15, 3.4, 0, 13.4, 5.7, 0, '#ffd23c');
+  collideRect(45, -22, 67, -10);
+}
+{ // FOUR SEASONS — glass tower (Harbor East)
+  const g = lmGroup('fourseasons');
+  const tw = box(15, 44, 15, glassMat, 0, 22, 0, true); g.add(tw);
+  const cap = box(16.5, 2, 16.5, M.white, 0, 45, 0); g.add(cap);
+  putSign(g, ['FOUR SEASONS'], 14, 3.2, 0, 10, 7.7, 0, '#f4f0e6');
+  collideRect(74.5, -65.5, 89.5, -50.5);
+}
+{ // PENDRY — recreation pier hall + clock tower
+  const g = lmGroup('pendry'); g.position.z = -21;
+  const hall = box(26, 8, 10, new THREE.MeshLambertMaterial({ map: facTex[2] }), 0, 4, 0, true); g.add(hall);
+  const tw = box(5, 17, 5, new THREE.MeshLambertMaterial({ color: '#c9b48a' }), 10, 8.5, 0, true); g.add(tw);
+  const clock = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 1.9, 0.4, 16), M.white); clock.rotation.x = Math.PI / 2; clock.position.set(10, 14.5, 2.7); g.add(clock);
+  putSign(g, ['PENDRY'], 11, 3, -4, 10.4, 5.2, 0, '#f4f0e6');
+  collideRect(113, -26, 139, -16);
+}
+{ // FELLS POINT — market hall + rowhouse strip
+  const g = lmGroup('fells');
+  const hall = box(20, 6.5, 11, new THREE.MeshLambertMaterial({ map: facTex[0] }), 0, 3.25, 0, true); g.add(hall);
+  const roof = new THREE.Mesh(new THREE.CylinderGeometry(5.8, 5.8, 20, 12, 1, false, 0, Math.PI), new THREE.MeshLambertMaterial({ color: '#5a4a3a' }));
+  roof.rotation.z = Math.PI / 2; roof.rotation.y = Math.PI / 2; roof.position.y = 6.5; g.add(shadowed(roof));
+  putSign(g, ['FELLS POINT'], 14, 3.2, 0, 8.6, 5.7, 0, '#ffd23c');
+  collideRect(150, -61.5, 170, -50.5);
+}
+{ // WASHINGTON MONUMENT — column on Mount Vernon plinth
+  const g = lmGroup('monument');
+  const plinth = box(13, 2.2, 13, M.walk, 0, 1.1, 0, true); g.add(plinth);
+  const col = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.7, 34, 12), M.white); col.position.y = 19.2; g.add(shadowed(col));
+  const stat = box(1.6, 3.4, 1.6, new THREE.MeshLambertMaterial({ color: '#c9b48a' }), 0, 37.8, 0); g.add(stat);
+  putSign(g, ['WASHINGTON MONUMENT'], 16, 3, 0, 5.4, 6.7, 0, '#f4f0e6');
+  collideRect(-26.5, -98.5, -13.5, -85.5);
+}
+{ // ORIOLE PARK — the long warehouse + green stands
+  const g = lmGroup('orioles');
+  const wh = box(52, 15, 13, new THREE.MeshLambertMaterial({ map: facTex[0] }), 4, 7.5, -12, true); g.add(wh);
+  const stands = box(46, 9, 20, new THREE.MeshLambertMaterial({ color: '#3f7a5e' }), 0, 4.5, 12, true); g.add(stands);
+  const field = box(40, 0.3, 15, M.grass, 0, 0.2, 12); g.add(field);
+  putSign(g, ['ORIOLE PARK'], 17, 3.8, 4, 17.4, -5.3, 0, '#ff7a1a');
+  collideRect(-124, -18.5, -80, 22);
+}
+{ // M&T BANK STADIUM — purple bowl
+  const g = lmGroup('ravens');
+  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(27, 24, 15, 20), new THREE.MeshLambertMaterial({ color: '#3a2a5e' }));
+  bowl.scale.z = 0.78; bowl.position.y = 7.5; g.add(shadowed(bowl));
+  const inner = new THREE.Mesh(new THREE.CylinderGeometry(21, 21, 1.2, 20), M.grass); inner.scale.z = 0.78; inner.position.y = 14.6; g.add(inner);
+  putSign(g, ['M&T BANK STADIUM'], 19, 3.8, 0, 12, 21.5, 0, '#c9a0ff');
+  collideRect(-130, 55, -82, 97);
+}
+{ // SCIENCE CENTER — tiers + dome
+  const g = lmGroup('science');
+  const t1 = box(18, 5, 14, M.white, 0, 2.5, 0, true); const t2 = box(14, 4.4, 11, M.white, 0, 7.2, 0, true); g.add(t1, t2);
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(5.4, 14, 10, 0, TAU, 0, Math.PI / 2), glassMat); dome.position.y = 9.4; g.add(shadowed(dome));
+  putSign(g, ['SCIENCE CENTER'], 15, 3.2, 0, 4.4, 7.2, 0, '#39e6ff');
+  collideRect(-63, 51, -45, 65);
+}
+{ // FEDERAL HILL — walkable mound (Toad City's own HILL profile) + flag
+  const g = new THREE.Group(); g.position.set(HILL.x, 0, HILL.z); cityG.add(g);
+  const hg = new THREE.PlaneGeometry(HILL.rx * 2, HILL.rz * 2, 20, 10); hg.rotateX(-Math.PI / 2);
+  const pos = hg.attributes.position;
+  for (let i = 0; i < pos.count; i++) pos.setY(i, hillH(pos.getX(i) + HILL.x, pos.getZ(i) + HILL.z));
+  hg.computeVertexNormals();
+  const hill = new THREE.Mesh(hg, M.grass); hill.receiveShadow = true; g.add(hill);
+  // a low park plaza slab on the RES plot so the mound reads as a park, plus collider ring handled by plot-free driving (hill is scenery; bus stays on Key Hwy)
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 10, 6), darkMat); pole.position.y = HILL.h + 5; g.add(pole);
+  const flag = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 2), new THREE.MeshBasicMaterial({ map: ctex(64, 40, (c, w, h) => { c.fillStyle = '#d8262a'; c.fillRect(0, 0, w, h); c.fillStyle = '#fff'; for (let y = 6; y < h; y += 8) c.fillRect(0, y, w, 3.4); c.fillStyle = '#2a2a6a'; c.fillRect(0, 0, 26, 20); c.fillStyle = '#fff'; for (let i = 0; i < 12; i++) c.fillRect(3 + (i % 4) * 6, 3 + ((i / 4) | 0) * 6, 2.4, 2.4); }), side: THREE.DoubleSide }));
+  flag.position.set(1.75, HILL.h + 9, 0); g.add(flag);
+  g.userData.flag = flag;
+  cityG.userData.fedFlag = flag;
+}
+{ // DOMINO SUGARS — factory + the two-line script sign (Toad City flies it as "Harbor Sugars")
+  const g = lmGroup('domino');
+  const fac = box(19, 12, 15, new THREE.MeshLambertMaterial({ map: facTex[2] }), 0, 6, 0, true); g.add(fac);
+  for (const sx of [-6, 6]) { const st = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.5, 17, 8), new THREE.MeshLambertMaterial({ color: '#a39a88' })); st.position.set(sx, 8.5, -3); g.add(shadowed(st)); }
+  const s = new THREE.Mesh(new THREE.PlaneGeometry(21, 6.4), new THREE.MeshBasicMaterial({ map: signTex(['Harbor', 'Sugars'], '#7a1010', '#ffd23c', 'italic 900 '), side: THREE.DoubleSide, transparent: false }));
+  s.position.set(0, 15.6, 4); g.add(s);
+  collideRect(72.5, 49.5, 91.5, 64.5);
+}
+{ // UNDER ARMOUR / TIDE POINT — brick halls + clock tower
+  const g = lmGroup('underarmour');
+  const h1 = box(18, 9, 13, new THREE.MeshLambertMaterial({ map: facTex[0] }), -2, 4.5, 0, true); g.add(h1);
+  const tw = box(4.6, 15, 4.6, new THREE.MeshLambertMaterial({ color: '#8a4a3a' }), 8, 7.5, 0, true); g.add(tw);
+  const clock = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.7, 0.4, 14), M.white); clock.rotation.x = Math.PI / 2; clock.position.set(8, 12.4, 2.4); g.add(clock);
+  putSign(g, ['UNDER ARMOUR'], 13, 3, -2, 11.2, 6.7, 0, '#f4f0e6');
+  collideRect(107, 45.5, 129, 58.5);
+}
+{ // FORT MCHENRY — star-fort walls + the big flag
+  const g = lmGroup('fort');
+  const grnd = box(48, 0.3, 40, M.grass, 2, 0.15, 0); g.add(grnd);
+  const wallMat = new THREE.MeshLambertMaterial({ color: '#7a4a3a' });
+  for (let i = 0; i < 5; i++) { const a = (i / 5) * TAU + 0.3; const wseg = box(21, 3.4, 1.8, wallMat, Math.sin(a) * 17, 1.7, Math.cos(a) * 14.5, true); wseg.rotation.y = a + Math.PI / 2; g.add(wseg); }
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.2, 15, 6), darkMat); pole.position.y = 7.5; g.add(pole);
+  const flag = new THREE.Mesh(new THREE.PlaneGeometry(5.4, 3.1), new THREE.MeshBasicMaterial({ map: ctex(76, 46, (c, w, h) => { c.fillStyle = '#d8262a'; c.fillRect(0, 0, w, h); c.fillStyle = '#fff'; for (let y = 7; y < h; y += 10) c.fillRect(0, y, w, 4); c.fillStyle = '#2a2a6a'; c.fillRect(0, 0, 32, 24); c.fillStyle = '#fff'; for (let i = 0; i < 15; i++) c.fillRect(3 + (i % 5) * 6, 3 + ((i / 5) | 0) * 7, 2.6, 2.6); }), side: THREE.DoubleSide }));
+  flag.position.set(2.8, 13.6, 0); g.add(flag);
+  cityG.userData.fortFlag = flag;
+  collideRect(157, 61, 195, 95); // the star-fort walls only — the stop at the gate (148,75) stays reachable
+}
+// promenade trees + lamps (instanced)
+{
+  const spots = [];
+  for (let x = -58; x < 210; x += 17) { spots.push([x, -33.2, 1]); spots.push([x, 33.2, 1]); }
+  for (let z = -100; z < 100; z += 22) spots.push([-68.6, z, 0]);
+  const trunkIM = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.14, 0.2, 1.6, 5), darkMat, spots.length);
+  const topIM = new THREE.InstancedMesh(new THREE.ConeGeometry(1.7, 3.6, 7), new THREE.MeshLambertMaterial({ color: '#3f7a3e' }), spots.length);
+  const lampIM = new THREE.InstancedMesh(new THREE.SphereGeometry(0.32, 8, 6), new THREE.MeshBasicMaterial({ color: '#ffe9a8' }), spots.length);
+  const m4 = new THREE.Matrix4(), q0 = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1);
+  spots.forEach((s, i) => {
+    if (s[2]) { m4.compose(new THREE.Vector3(s[0], CURB + 0.8, s[1]), q0, one); trunkIM.setMatrixAt(i, m4);
+      m4.compose(new THREE.Vector3(s[0], CURB + 3.2, s[1]), q0, one); topIM.setMatrixAt(i, m4);
+      m4.compose(new THREE.Vector3(1e5, -50, 0), q0, one); lampIM.setMatrixAt(i, m4);
+    } else { m4.compose(new THREE.Vector3(s[0], CURB + 1.7, s[1]), q0, one); trunkIM.setMatrixAt(i, m4);
+      m4.compose(new THREE.Vector3(s[0], CURB + 3.6, s[1]), q0, new THREE.Vector3(0.5, 0.5, 0.5)); lampIM.setMatrixAt(i, m4);
+      m4.compose(new THREE.Vector3(1e5, -50, 0), q0, one); topIM.setMatrixAt(i, m4); }
+  });
+  trunkIM.castShadow = true; topIM.castShadow = true;
+  cityG.add(trunkIM, topIM, lampIM);
+}
+
+// ---------- the bus: MTA-style city bus, canvas livery, sliding doors ----------
+const bus = { x: -95, z: -41, yaw: Math.PI / 2, speed: 0, steerVis: 0 }; // starts on Pratt St facing east
+const busG = new THREE.Group(); scene.add(busG);
+let doorL, doorR, wheelFL, wheelFR, wheelRL, wheelRR, destSignMat;
+{
+  const liverySide = ctex(1024, 256, (c, w, h) => {
+    c.fillStyle = '#f2f2ee'; c.fillRect(0, 0, w, h);
+    c.fillStyle = '#20242c'; c.fillRect(0, 26, w, 74); // window band
+    c.fillStyle = 'rgba(160,210,235,.85)'; for (let x = 18; x < w - 30; x += 86) c.fillRect(x, 34, 66, 58);
+    c.fillStyle = '#5b2d8e'; c.fillRect(0, 118, w, 40); // MTA purple band
+    c.fillStyle = '#ffd23c'; c.fillRect(0, 158, w, 12);
+    c.fillStyle = '#d8262a'; c.fillRect(0, 170, w, 10);
+    c.fillStyle = '#14101f'; c.font = '900 74px Arial'; c.textAlign = 'left'; c.fillText('MTA', 26, 238);
+    c.font = '900 40px Arial'; c.fillText('BALTIMORE', 220, 232);
+    c.font = '700 25px Arial'; c.fillStyle = '#5b2d8e'; c.fillText('CITYLINK · CHARM CITY', 560, 232);
+  });
+  const sideMat = new THREE.MeshLambertMaterial({ map: liverySide });
+  const frontTex = ctex(512, 256, (c, w, h) => {
+    c.fillStyle = '#f2f2ee'; c.fillRect(0, 0, w, h);
+    c.fillStyle = '#14101f'; c.fillRect(30, 8, w - 60, 46);
+    c.fillStyle = '#ffb52e'; c.font = '900 33px "Courier New",monospace'; c.textAlign = 'center'; c.fillText('1 · INNER HARBOR', w / 2, 43);
+    c.fillStyle = '#20242c'; c.fillRect(36, 66, w - 72, 92);
+    c.fillStyle = 'rgba(160,210,235,.85)'; c.fillRect(48, 74, w - 96, 76);
+    c.fillStyle = '#5b2d8e'; c.fillRect(0, 176, w, 26); c.fillStyle = '#ffd23c'; c.fillRect(0, 202, w, 8);
+    c.fillStyle = '#ffe9a8'; c.beginPath(); c.arc(52, 226, 13, 0, TAU); c.arc(w - 52, 226, 13, 0, TAU); c.fill();
+    c.fillStyle = '#14101f'; c.font = '900 30px Arial'; c.fillText('MTA', w / 2, 236);
+  });
+  const backTex = ctex(512, 256, (c, w, h) => {
+    c.fillStyle = '#f2f2ee'; c.fillRect(0, 0, w, h); c.fillStyle = '#20242c'; c.fillRect(60, 22, w - 120, 72);
+    c.fillStyle = 'rgba(160,210,235,.85)'; c.fillRect(72, 30, w - 144, 56);
+    c.fillStyle = '#14101f'; c.font = '900 52px Arial'; c.textAlign = 'center'; c.fillText('MTA', w / 2, 140);
+    c.fillStyle = '#5b2d8e'; c.fillRect(0, 152, w, 30); c.fillStyle = '#ffd23c'; c.fillRect(0, 182, w, 10); c.fillStyle = '#d8262a'; c.fillRect(0, 192, w, 8);
+    c.fillStyle = '#d8262a'; c.fillRect(16, 208, 26, 38); c.fillRect(w - 42, 208, 26, 38);
+    c.fillStyle = '#14101f'; c.font = '900 27px Arial'; c.fillText('BUS IT! · BALTIMORE', w / 2, 232);
+  });
+  const roofMat = new THREE.MeshLambertMaterial({ color: '#dcd8d0' });
+  const bodyMats = [sideMat, sideMat, roofMat, roofMat, new THREE.MeshLambertMaterial({ map: frontTex }), new THREE.MeshLambertMaterial({ map: backTex })];
+  const body = new THREE.Mesh(new THREE.BoxGeometry(2.6, 2.5, 11), bodyMats); // +Z faces front (texture on +z via material index 4? three box order: [px, nx, py, ny, pz, nz])
+  body.position.y = 1.75; busG.add(body);
+  const inkE = new THREE.LineSegments(new THREE.EdgesGeometry(body.geometry), M.ink); inkE.position.copy(body.position); busG.add(inkE);
+  const skirt = box(2.66, 0.5, 11.06, new THREE.MeshLambertMaterial({ color: '#3a3f45' }), 0, 0.42, 0); busG.add(skirt);
+  const ac = box(1.7, 0.34, 4.6, roofMat, 0, 3.14, -0.6, true); busG.add(ac);
+  // doors: front-right side (+X when facing +Z), two panels that slide apart
+  const doorMat = new THREE.MeshLambertMaterial({ color: '#9fc6d8' });
+  doorL = box(0.08, 1.9, 0.78, doorMat, 1.32, 1.5, 3.4, true); doorR = box(0.08, 1.9, 0.78, doorMat, 1.32, 1.5, 4.2, true);
+  busG.add(doorL, doorR);
+  const wheelG = new THREE.CylinderGeometry(0.52, 0.52, 0.36, 14); wheelG.rotateZ(Math.PI / 2);
+  const wheelM = new THREE.MeshLambertMaterial({ color: '#1b1a1d' });
+  const hubM = new THREE.MeshLambertMaterial({ color: '#c9c9c9' });
+  function wheel(x, z) { const g = new THREE.Group(); const t = new THREE.Mesh(wheelG, wheelM); const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.38, 10).rotateZ(Math.PI / 2), hubM); g.add(t, hub); g.position.set(x, 0.52, z); busG.add(g); return g; }
+  wheelFL = wheel(1.15, 3.7); wheelFR = wheel(-1.15, 3.7); wheelRL = wheel(1.15, -3.7); wheelRR = wheel(-1.15, -3.7);
+  const mirrorM = darkMat;
+  busG.add(box(0.08, 0.5, 0.08, mirrorM, 1.45, 2.6, 5.3), box(0.08, 0.5, 0.08, mirrorM, -1.45, 2.6, 5.3));
+  shadowed(busG);
+}
+// door world position (for passengers to walk to)
+function doorWorld() { const s = Math.sin(bus.yaw), c = Math.cos(bus.yaw); return { x: bus.x + c * 1.55 + s * 3.8, z: bus.z - s * 1.55 + c * 3.8 }; }
+
+// ---------- passengers ----------
+const SHIRTS = ['#ff3d6e', '#39e6ff', '#ffd23c', '#7dffc0', '#ff7a1a', '#c9a0ff', '#f4f0e6', '#9dff6b'];
+let shirtI = 0;
+function makePerson() {
+  const g = new THREE.Group();
+  const shirt = new THREE.MeshLambertMaterial({ color: SHIRTS[shirtI++ % SHIRTS.length] });
+  const skin = new THREE.MeshLambertMaterial({ color: ['#f2c79b', '#c98a5a', '#8a5a36', '#ffe0bd'][(Math.random() * 4) | 0] });
+  const legs = box(0.34, 0.5, 0.2, new THREE.MeshLambertMaterial({ color: '#2a3040' }), 0, 0.25, 0); g.add(legs);
+  const torso = box(0.46, 0.62, 0.26, shirt, 0, 0.81, 0); g.add(torso);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8), skin); head.position.y = 1.32; g.add(head);
+  const armGeo = new THREE.BoxGeometry(0.11, 0.52, 0.11); armGeo.translate(0, -0.22, 0);
+  const armR = new THREE.Mesh(armGeo, shirt); armR.position.set(0.3, 1.06, 0); g.add(armR);
+  const armL = new THREE.Mesh(armGeo, shirt); armL.position.set(-0.3, 1.06, 0); armL.rotation.z = 0.12; g.add(armL);
+  g.userData.armR = armR;
+  shadowed(g);
+  return g;
+}
+
+// ---------- bus stops (on Toad City's streets, named for its landmarks) ----------
+const STOPS = [
+  { id: 'harborplace', name: 'Harborplace', x: -52, z: -41 },
+  { id: 'wtc', name: 'World Trade Center', x: -12, z: -41 },
+  { id: 'aquarium', name: 'National Aquarium', x: 19, z: -41 },
+  { id: 'powerplant', name: 'Power Plant', x: 56, z: -41 },
+  { id: 'pendry', name: 'Pendry · Harbor East', x: 126, z: -41 },
+  { id: 'fells', name: 'Fells Point', x: 167, z: -74 },
+  { id: 'fourseasons', name: 'Four Seasons', x: 82, z: -75 },
+  { id: 'monument', name: 'Washington Monument', x: -20, z: -75 },
+  { id: 'orioles', name: 'Oriole Park', x: -71, z: -20 },
+  { id: 'ravens', name: 'M&T Bank Stadium', x: -71, z: 75 },
+  { id: 'science', name: 'Science Center', x: -54, z: 41 },
+  { id: 'fedhill', name: 'Federal Hill', x: -3, z: 41 },
+  { id: 'domino', name: 'Domino Sugars', x: 82, z: 41 },
+  { id: 'underarmour', name: 'Under Armour', x: 116, z: 41 },
+  { id: 'fort', name: 'Fort McHenry', x: 148, z: 75 },
+];
+const ZONE_R = 8.5;
+for (const s of STOPS) {
+  const g = new THREE.Group(); g.position.set(s.x, 0, s.z); scene.add(g);
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 3.1, 6), darkMat); pole.position.y = 1.55; g.add(pole);
+  // offset the pole toward the block side (+z for Pratt, -z for Key) so it never sits mid-lane
+  const sideOff = s.z === -41 ? 4.6 : s.z === 41 ? -4.6 : 4.6;
+  pole.position.z = sideOff * 0.55; 
+  const sgn = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.05), new THREE.MeshBasicMaterial({ map: signTex(['BUS STOP', s.name.toUpperCase().slice(0, 22)], '#5b2d8e', '#ffffff', '900 '), side: THREE.DoubleSide }));
+  sgn.position.set(0, 2.85, sideOff * 0.55); g.add(sgn);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(ZONE_R - 0.8, ZONE_R, 40), new THREE.MeshBasicMaterial({ color: '#ffd23c', transparent: true, opacity: 0.0, side: THREE.DoubleSide, depthWrite: false }));
+  ring.rotation.x = -Math.PI / 2; ring.position.y = 0.06; g.add(ring);
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.8, 22, 12, 1, true), new THREE.MeshBasicMaterial({ color: '#ffd23c', transparent: true, opacity: 0.0, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending }));
+  beam.position.y = 11; g.add(beam);
+  s.ring = ring; s.beam = beam; s.group = g;
+  s.waiting = []; // passenger figures waiting here
+  shadowed(pole);
+}
+
+// ---------- traffic: simple cars looping the Pratt/Key/Light rectangle ----------
+const CARS = [];
+{
+  const cols = ['#d8262a', '#39e6ff', '#f4f0e6', '#ffd23c', '#7dffc0', '#ff7a1a', '#c9a0ff'];
+  // two thin loops, one per bank — the harbour basin runs to the east edge, so no N-S street crosses it
+  const LOOPS = [
+    [[-120, -38.6], [190, -38.6], [190, -43.4], [-120, -43.4], [-120, -38.6]],   // Pratt St, both lanes
+    [[190, 43.4], [-120, 43.4], [-120, 38.6], [190, 38.6], [190, 43.4]],         // Key Hwy, both lanes
+  ];
+  function buildSegs(LOOP) { const segs = []; let total = 0;
+    for (let i = 0; i < LOOP.length - 1; i++) { const [ax, az] = LOOP[i], [bx, bz] = LOOP[i + 1]; const L = Math.hypot(bx - ax, bz - az); segs.push({ ax, az, bx, bz, L, at: total }); total += L; }
+    return { segs, total };
+  }
+  for (let i = 0; i < 7; i++) {
+    const g = new THREE.Group();
+    const cm = new THREE.MeshLambertMaterial({ color: cols[i % cols.length] });
+    g.add(box(1.8, 0.62, 4.1, cm, 0, 0.62, 0, true), box(1.6, 0.55, 2.1, glassMat, 0, 1.16, -0.2, true));
+    const wg = new THREE.CylinderGeometry(0.33, 0.33, 0.24, 10); wg.rotateZ(Math.PI / 2);
+    for (const [wx, wz] of [[0.85, 1.35], [-0.85, 1.35], [0.85, -1.35], [-0.85, -1.35]]) { const w = new THREE.Mesh(wg, darkMat); w.position.set(wx, 0.33, wz); g.add(w); }
+    shadowed(g); scene.add(g);
+    const lp = buildSegs(LOOPS[i % 2]);
+    CARS.push({ g, s: (i / 7) * lp.total, v: 8.5 + (i % 3), segs: lp.segs, total: lp.total });
+  }
+  for (const c of CARS) c.update = (dt) => {
+    c.s = (c.s + c.v * dt) % c.total;
+    let sg = c.segs.find((s2) => c.s >= s2.at && c.s <= s2.at + s2.L) || c.segs[0];
+    const t = (c.s - sg.at) / sg.L, x = lerp(sg.ax, sg.bx, t), z = lerp(sg.az, sg.bz, t);
+    c.g.position.set(x, 0, z); c.g.rotation.y = Math.atan2(sg.bx - sg.ax, sg.bz - sg.az);
+    c.x = x; c.z = z;
+  };
+}
+
+// ---------- audio: all WebAudio, created/resumed on first gesture (iOS fix) ----------
+let AC = null, engOsc, engOsc2, engFilter, engGain, masterGain;
+function initAudio() {
+  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = AC.createGain(); masterGain.gain.value = 0.5; masterGain.connect(AC.destination);
+    engOsc = AC.createOscillator(); engOsc.type = 'sawtooth'; engOsc.frequency.value = 52;
+    engOsc2 = AC.createOscillator(); engOsc2.type = 'square'; engOsc2.frequency.value = 26;
+    engFilter = AC.createBiquadFilter(); engFilter.type = 'lowpass'; engFilter.frequency.value = 320; engFilter.Q.value = 2;
+    engGain = AC.createGain(); engGain.gain.value = 0.0;
+    engOsc.connect(engFilter); engOsc2.connect(engFilter); engFilter.connect(engGain); engGain.connect(masterGain);
+    engOsc.start(); engOsc2.start();
+  } catch (e) { AC = null; }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && AC && AC.state === 'suspended') AC.resume(); });
+function beep(freq, t0, dur, type = 'sine', vol = 0.22, slide = 0) {
+  if (!AC) return; const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, AC.currentTime + t0);
+  if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq + slide), AC.currentTime + t0 + dur);
+  g.gain.setValueAtTime(0, AC.currentTime + t0); g.gain.linearRampToValueAtTime(vol, AC.currentTime + t0 + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + t0 + dur);
+  o.connect(g); g.connect(masterGain); o.start(AC.currentTime + t0); o.stop(AC.currentTime + t0 + dur + 0.05);
+}
+const sfx = {
+  chime() { beep(880, 0, 0.16, 'sine', 0.25); beep(659, 0.13, 0.22, 'sine', 0.25); },        // door ding-ding
+  fare() { beep(1318, 0, 0.09, 'square', 0.14); beep(1760, 0.07, 0.14, 'square', 0.14); },     // coin blip
+  cheer() { [523, 659, 784, 1046].forEach((f, i) => beep(f, i * 0.07, 0.13, 'triangle', 0.2)); },
+  sad() { beep(330, 0, 0.2, 'sawtooth', 0.1, -120); },
+  honk() { beep(370, 0, 0.16, 'square', 0.12); beep(370, 0.2, 0.16, 'square', 0.12); },
+};
+
+// ---------- input: keyboard + touch (gamepress pattern: floating stick steers, GO/BRAKE pedals) ----------
+const KEYS = {};
+addEventListener('keydown', (e) => { KEYS[e.code] = true; initAudio(); if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault(); });
+addEventListener('keyup', (e) => { KEYS[e.code] = false; });
+const touch = { steer: 0, go: false, brake: false, active: false };
+const TOUCHABLE = matchMedia('(pointer: coarse)').matches || (navigator.maxTouchPoints > 0 && !matchMedia('(hover: hover)').matches);
+if (TOUCHABLE || Q.has('touch')) {
+  $('touchUI').style.display = 'block'; $('hintKeys').style.display = 'none';
+  const tui = $('touchUI'), base = $('stickBase'), knob = $('stickKnob');
+  let stickId = null, anchorX = 0, anchorY = 0;
+  const pedal = (el, key) => {
+    el.addEventListener('pointerdown', (e) => { e.preventDefault(); initAudio(); el.setPointerCapture(e.pointerId); touch[key] = true; el.classList.add('on'); });
+    const off = (e) => { touch[key] = false; el.classList.remove('on'); };
+    el.addEventListener('pointerup', off); el.addEventListener('pointercancel', off); el.addEventListener('lostpointercapture', off);
+    el.style.pointerEvents = 'auto';
+  };
+  pedal($('btnGo'), 'go'); pedal($('btnBrake'), 'brake');
+  // stick lives on window-level listeners (#touchUI itself is pointer-events:none; pedals opt back in)
+  addEventListener('pointerdown', (e) => {
+    initAudio();
+    if (stickId !== null || e.clientX >= innerWidth / 2) return;
+    if (e.target.closest && e.target.closest('.pedal,button,.veil')) return;
+    stickId = e.pointerId; anchorX = e.clientX; anchorY = e.clientY; touch.active = true;
+    base.style.display = knob.style.display = 'block';
+    base.style.left = (anchorX - 59) + 'px'; base.style.top = (anchorY - 59) + 'px';
+    knob.style.left = (anchorX - 27) + 'px'; knob.style.top = (anchorY - 27) + 'px';
+  });
+  addEventListener('pointermove', (e) => {
+    if (e.pointerId !== stickId) return;
+    const dx = clamp(e.clientX - anchorX, -56, 56);
+    touch.steer = clamp(dx / 44, -1, 1);
+    knob.style.left = (anchorX + dx - 27) + 'px';
+  });
+  const endStick = (e) => { if (e.pointerId !== stickId) return; stickId = null; touch.steer = 0; touch.active = false; base.style.display = knob.style.display = 'none'; };
+  addEventListener('pointerup', endStick); addEventListener('pointercancel', endStick);
+  // iOS pinch/gesture swallow (TOUCH.md hygiene)
+  for (const n of ['gesturestart', 'gesturechange']) document.addEventListener(n, (e) => e.preventDefault());
+  document.addEventListener('touchmove', (e) => { if (e.cancelable) e.preventDefault(); }, { passive: false });
+}
+function readInput() {
+  let steer = 0, throttle = 0, brake = 0;
+  if (KEYS.KeyA || KEYS.ArrowLeft) steer -= 1;
+  if (KEYS.KeyD || KEYS.ArrowRight) steer += 1;
+  if (KEYS.KeyW || KEYS.ArrowUp) throttle = 1;
+  if (KEYS.KeyS || KEYS.ArrowDown) brake = 1;
+  if (touch.active || touch.steer) steer = touch.steer;
+  if (touch.go) throttle = 1;
+  if (touch.brake) brake = 1;
+  return { steer: clamp(steer, -1, 1), throttle, brake };
+}
+
+// ---------- game state ----------
+const G = {
+  started: false, over: false, time: 180, fares: 0, paxServed: 0, combo: 0, bestCombo: 0, lastDrop: -99,
+  mode: 'pickup', // pickup -> boarding -> dropoff -> alighting -> pickup...
+  target: null, group: null, aboard: [], elapsed: 0, doorOpen: 0, seq: [],
+};
+function pickStop(exclude, nearX, nearZ, minD = 0) {
+  const pool = STOPS.filter((s) => s !== exclude && Math.hypot(s.x - nearX, s.z - nearZ) >= minD);
+  return pool[(Math.random() * pool.length) | 0];
+}
+function spawnGroup(stop) {
+  const n = 1 + ((Math.random() * 3) | 0);
+  const dest = pickStop(stop, stop.x, stop.z, 70) || pickStop(stop, 0, 0);
+  const grp = { stop, dest, n, patience: 0, maxPatience: 0, figures: [] };
+  const dist = Math.hypot(dest.x - stop.x, dest.z - stop.z);
+  grp.maxPatience = grp.patience = clamp(26 + dist * 0.55, 34, 95);
+  const sideOff = stop.z === -41 ? 4.4 : stop.z === 41 ? -4.4 : 4.4;
+  for (let i = 0; i < n; i++) {
+    const f = makePerson();
+    f.position.set(stop.x + (i - (n - 1) / 2) * 0.85, 0, stop.z + sideOff + (i % 2) * 0.5);
+    f.userData.home = f.position.clone();
+    scene.add(f); grp.figures.push(f); stop.waiting.push(f);
+  }
+  return grp;
+}
+function setTarget(stop, mode) {
+  for (const s of STOPS) { s.ring.material.opacity = 0; s.beam.material.opacity = 0; }
+  G.target = stop; G.mode = mode;
+  if (stop) {
+    stop.ring.material.color.set(mode === 'pickup' ? '#ffd23c' : '#7dffc0');
+    stop.beam.material.color.set(mode === 'pickup' ? '#ffd23c' : '#7dffc0');
+  }
+  updateObjHUD();
+}
+function updateObjHUD() {
+  const t = G.target; if (!t) return;
+  $('objMode').textContent = G.mode === 'pickup' ? '🟡 NEXT PICKUP' : '🟢 DROP-OFF';
+  $('objName').textContent = t.name;
+  $('objSub').textContent = G.mode === 'pickup'
+    ? (G.group ? G.group.n + (G.group.n > 1 ? ' riders' : ' rider') + ' waiting → headed to ' + G.group.dest.name : 'Riders waiting')
+    : (G.aboard.length + (G.aboard.length === 1 ? ' rider' : ' riders') + ' aboard — drop them off!');
+  $('patWrap').style.display = G.group ? 'block' : 'none';
+}
+function popup(html, sub) {
+  const p = $('popup'); p.innerHTML = html + (sub ? '<small>' + sub + '</small>' : '');
+  p.classList.remove('show'); void p.offsetWidth; p.classList.add('show');
+  clearTimeout(popup._t); popup._t = setTimeout(() => p.classList.remove('show'), 1500);
+}
+function startGame() {
+  initAudio();
+  G.started = true; G.over = false; G.time = 180; G.fares = 0; G.paxServed = 0; G.combo = 0; G.bestCombo = 0; G.lastDrop = -99; G.elapsed = 0;
+  for (const s of STOPS) for (const f of s.waiting) scene.remove(f);
+  for (const s of STOPS) s.waiting.length = 0;
+  G.aboard = [];
+  G.group = spawnGroup(STOPS[2]); // first pickup: the Aquarium — a short first hop east on Pratt
+  setTarget(G.group.stop, 'pickup');
+  $('startVeil').style.display = 'none'; $('endVeil').style.display = 'none';
+  updateHUD();
+}
+function endGame() {
+  G.over = true; sfx.sad();
+  $('endFares').textContent = '$' + G.fares.toFixed(2);
+  $('endPax').textContent = G.paxServed;
+  $('endCombo').textContent = '×' + (1 + 0.5 * Math.max(0, G.bestCombo - 1)).toFixed(1).replace('.0', '');
+  $('endLine').textContent = G.paxServed >= 12 ? 'Route 1 legend status. Baltimore loves you, hon!' :
+    G.paxServed >= 7 ? 'A solid shift — the Inner Harbor approves.' :
+    G.paxServed >= 3 ? 'Not bad for a first route. The city is patient.' : 'Tough shift. Tip: follow the gold beam!';
+  $('endVeil').style.display = 'flex';
+}
+function updateHUD() {
+  const t = Math.max(0, G.time), mm = (t / 60) | 0, ss = Math.floor(t % 60);
+  $('hudTime').textContent = mm + ':' + String(ss).padStart(2, '0');
+  $('hudTime').parentElement.classList.toggle('low', t <= 30 && G.started && !G.over);
+  $('hudFares').textContent = '$' + G.fares.toFixed(2);
+  $('hudPax').textContent = G.paxServed;
+  $('comboChip').style.display = G.combo >= 2 ? 'block' : 'none';
+  $('hudCombo').textContent = '×' + (1 + 0.5 * (G.combo - 1)).toFixed(1).replace('.0', '');
+}
+// give the time chip an id for styling
+$('hudTime').parentElement.id = 'timeChip';
+
+// ---------- boarding / alighting sequences ----------
+function beginBoarding() {
+  G.mode = 'boarding'; sfx.chime();
+  G.seq = G.group.figures.map((f, i) => ({ f, t: -i * 0.55, phase: 'walk' }));
+  updateObjHUD();
+}
+function beginAlighting() {
+  G.mode = 'alighting'; sfx.chime();
+  const dest = G.group.dest;
+  G.seq = G.aboard.map((f, i) => ({ f, t: -i * 0.5, phase: 'exit', spot: new THREE.Vector3(dest.x + (i - 1) * 0.9, 0, dest.z + (dest.z === 41 ? -4.4 : 4.4)) }));
+  G.aboard = [];
+  updateObjHUD();
+}
+function finishBoarding() {
+  G.aboard = G.group.figures.slice();
+  for (const f of G.aboard) f.visible = false;
+  G.group.stop.waiting.length = 0;
+  sfx.cheer();
+  setTarget(G.group.dest, 'dropoff');
+}
+function finishAlighting() {
+  const n = G.group.n, dist = Math.hypot(G.group.dest.x - G.group.stop.x, G.group.dest.z - G.group.stop.z);
+  const frac = clamp(G.group.patience / G.group.maxPatience, 0, 1);
+  const chained = G.elapsed - G.lastDrop <= 30;
+  G.combo = chained ? G.combo + 1 : 1; G.bestCombo = Math.max(G.bestCombo, G.combo);
+  const mult = 1 + 0.5 * (G.combo - 1);
+  const fare = (n * 2.5 + n * 6 * frac) * mult;
+  G.fares += fare; G.paxServed += n; G.lastDrop = G.elapsed;
+  sfx.fare();
+  popup('+$' + fare.toFixed(2), (G.combo >= 2 ? 'COMBO ×' + mult.toFixed(1).replace('.0', '') + ' · ' : '') + n + (n > 1 ? ' riders' : ' rider') + ' dropped at ' + G.group.dest.name);
+  for (const e of G.seq) if (e.f) { scene.remove(e.f); }
+  G.seq = [];
+  G.group = spawnGroup(pickStop(G.group.dest, bus.x, bus.z, 40));
+  setTarget(G.group.stop, 'pickup');
+  updateHUD();
+}
+function updateSeq(dt) {
+  const dw = doorWorld();
+  let done = true;
+  for (const e of G.seq) {
+    if (e.t < 0) { e.t += dt; done = false; continue; }
+    const f = e.f; if (!f) continue;
+    if (e.phase === 'walk') {
+      const d = Math.hypot(dw.x - f.position.x, dw.z - f.position.z);
+      if (d < 0.55) { e.phase = 'in'; }
+      else { const sp = 2.4 * dt; f.position.x += (dw.x - f.position.x) / d * sp; f.position.z += (dw.z - f.position.z) / d * sp; f.rotation.y = Math.atan2(dw.x - f.position.x, dw.z - f.position.z); done = false; }
+    } else if (e.phase === 'in') { f.visible = false; e.phase = 'done'; }
+    else if (e.phase === 'exit') {
+      if (!f.visible) { f.visible = true; f.position.set(dw.x, 0, dw.z); }
+      const d = Math.hypot(e.spot.x - f.position.x, e.spot.z - f.position.z);
+      if (d < 0.3) { e.phase = 'done'; }
+      else { const sp = 2.4 * dt; f.position.x += (e.spot.x - f.position.x) / d * sp; f.position.z += (e.spot.z - f.position.z) / d * sp; f.rotation.y = Math.atan2(e.spot.x - f.position.x, e.spot.z - f.position.z); done = false; }
+    } else if (e.phase === 'done') { /* settled */ }
+    if (e.phase !== 'done') done = false;
+  }
+  if (done && G.seq.length) {
+    if (G.mode === 'boarding') finishBoarding();
+    else if (G.mode === 'alighting') finishAlighting();
+  }
+}
+
+// ---------- collision: circle vs rects ----------
+function collide() {
+  const R = 2.1;
+  for (const c of COLL) {
+    const nx = clamp(bus.x, c.x0, c.x1), nz = clamp(bus.z, c.z0, c.z1);
+    const dx = bus.x - nx, dz = bus.z - nz, d2 = dx * dx + dz * dz;
+    if (d2 > R * R) continue;
+    if (d2 > 1e-6) { const d = Math.sqrt(d2); bus.x = nx + dx / d * R; bus.z = nz + dz / d * R; }
+    else { // centre inside the rect: push out the nearest face
+      const l = bus.x - c.x0, r = c.x1 - bus.x, t = bus.z - c.z0, b = c.z1 - bus.z, m = Math.min(l, r, t, b);
+      if (m === l) bus.x = c.x0 - R; else if (m === r) bus.x = c.x1 + R; else if (m === t) bus.z = c.z0 - R; else bus.z = c.z1 + R;
+    }
+    if (Math.abs(bus.speed) > 3) sfx.honk();
+    bus.speed *= 0.35;
+  }
+  for (const c of CARS) {
+    const dx = bus.x - c.x, dz = bus.z - c.z, d = Math.hypot(dx, dz);
+    if (d < 3.4 && d > 0.01) { bus.x = c.x + dx / d * 3.4; bus.z = c.z + dz / d * 3.4; bus.speed *= 0.6; }
+  }
+}
+
+// ---------- minimap (Toad City's own layout, drawn from the same data) ----------
+const mmc = $('mmap').getContext('2d');
+function drawMap() {
+  const W = 168, H = 106, sx = W / (WB.x1 - WB.x0), sz = H / (WB.z1 - WB.z0);
+  const X = (x) => (x - WB.x0) * sx, Z = (z) => (z - WB.z0) * sz;
+  mmc.fillStyle = '#3c3f45'; mmc.fillRect(0, 0, W, H);
+  mmc.fillStyle = '#9a958c'; for (const b of PLOTS) mmc.fillRect(X(b.x0), Z(b.z0), (b.x1 - b.x0) * sx, (b.z1 - b.z0) * sz);
+  mmc.fillStyle = '#2e6f8e'; mmc.fillRect(X(BASIN.x0), Z(BASIN.z0), (WB.x1 - BASIN.x0) * sx, (BASIN.z1 - BASIN.z0) * sz);
+  mmc.fillStyle = '#5d8a4a'; mmc.fillRect(X(-32), Z(46), 58 * sx, 26 * sz); mmc.fillRect(X(138), Z(46), 75 * sx, 60 * sz);
+  mmc.fillStyle = '#ffe08a'; for (const [, , x, z] of LANDMARKS) { mmc.beginPath(); mmc.arc(X(x), Z(z), 2.2, 0, TAU); mmc.fill(); }
+  if (G.target) { mmc.strokeStyle = G.mode === 'pickup' || G.mode === 'boarding' ? '#ffd23c' : '#7dffc0'; mmc.lineWidth = 2;
+    mmc.beginPath(); mmc.arc(X(G.target.x), Z(G.target.z), 4.5 + Math.sin(performance.now() / 180) * 1.2, 0, TAU); mmc.stroke(); }
+  mmc.fillStyle = '#fff'; mmc.beginPath(); mmc.arc(X(bus.x), Z(bus.z), 3, 0, TAU); mmc.fill();
+  mmc.strokeStyle = '#14101f'; mmc.beginPath(); mmc.moveTo(X(bus.x), Z(bus.z));
+  mmc.lineTo(X(bus.x) + Math.sin(bus.yaw) * 6, Z(bus.z) + Math.cos(bus.yaw) * 6); mmc.stroke();
+}
+
+// ---------- main loop ----------
+const clock = new THREE.Clock();
+let frames = 0, mapT = 0;
+const camPos = new THREE.Vector3(bus.x - 12, 6, bus.z);
+function tick() {
+  requestAnimationFrame(tick);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  frames++;
+  const inp = readInput();
+  // --- bus physics (forgiving arcade) ---
+  if (G.started && !G.over) {
+    if (inp.throttle) bus.speed += 9.5 * dt;
+    if (inp.brake) bus.speed += (bus.speed > 0.6 ? -15 : -6.5) * dt;
+    bus.speed -= bus.speed * 0.55 * dt; // drag
+    if (!inp.throttle && !inp.brake) bus.speed -= Math.sign(bus.speed) * Math.min(Math.abs(bus.speed), 2.2 * dt);
+    bus.speed = clamp(bus.speed, -7, 21);
+    const sf = clamp(Math.abs(bus.speed) / 5, 0, 1) * (1 - clamp(Math.abs(bus.speed) / 30, 0, 0.45));
+    bus.yaw += inp.steer * 0.92 * sf * Math.sign(bus.speed) * dt; // sign(speed): steering reverses while backing up, like a real bus
+    bus.steerVis = damp(bus.steerVis, inp.steer, 10, dt);
+  }
+  bus.x += Math.sin(bus.yaw) * bus.speed * dt;
+  bus.z += Math.cos(bus.yaw) * bus.speed * dt;
+  collide();
+  busG.position.set(bus.x, 0, bus.z);
+  busG.rotation.y = bus.yaw;
+  busG.rotation.z = -bus.steerVis * clamp(Math.abs(bus.speed) / 21, 0, 1) * 0.045;
+  const wSpin = bus.speed * dt / 0.52;
+  for (const w of [wheelFL, wheelFR, wheelRL, wheelRR]) w.rotation.x += wSpin;
+  wheelFL.rotation.y = wheelFR.rotation.y = bus.steerVis * 0.42;
+  // doors
+  const doorTarget = (G.mode === 'boarding' || G.mode === 'alighting') ? 1 : 0;
+  G.doorOpen = damp(G.doorOpen, doorTarget, 7, dt);
+  doorL.position.z = 3.4 - G.doorOpen * 0.66; doorR.position.z = 4.2 + G.doorOpen * 0.66;
+  // engine sound
+  if (AC && engGain) { const sr = Math.abs(bus.speed) / 21; engOsc.frequency.value = 50 + sr * 95 + (inp.throttle ? 9 : 0); engOsc2.frequency.value = 25 + sr * 46; engGain.gain.value = G.started && !G.over ? 0.05 + sr * 0.05 : 0.02; }
+  // --- traffic ---
+  for (const c of CARS) c.update(dt);
+  // --- game flow ---
+  if (G.started && !G.over) {
+    G.elapsed += dt; G.time -= dt;
+    if (G.time <= 0) { G.time = 0; endGame(); }
+    if (G.group && (G.mode === 'pickup' || G.mode === 'dropoff')) {
+      G.group.patience -= dt;
+      if (G.group.patience <= 0) {
+        if (G.mode === 'pickup') { // they gave up waiting
+          for (const f of G.group.figures) scene.remove(f);
+          G.group.stop.waiting.length = 0; sfx.sad(); popup('They gave up! 😤', 'Riders at ' + G.group.stop.name + ' left');
+          G.group = spawnGroup(pickStop(null, bus.x, bus.z, 30)); setTarget(G.group.stop, 'pickup');
+        } else { G.group.patience = 0; } // aboard: tip is just gone
+      }
+      $('patBar').style.width = (100 * clamp(G.group.patience / G.group.maxPatience, 0, 1)) + '%';
+    }
+    // zone checks
+    const t = G.target;
+    if (t && (G.mode === 'pickup' || G.mode === 'dropoff')) {
+      const near = Math.hypot(bus.x - t.x, bus.z - t.z) < ZONE_R && Math.abs(bus.speed) < 0.9;
+      if (near) { if (G.mode === 'pickup') beginBoarding(); else beginAlighting(); }
+    }
+    if (G.mode === 'boarding' || G.mode === 'alighting') updateSeq(dt);
+    // target HUD
+    if (t) {
+      const d = Math.hypot(bus.x - t.x, bus.z - t.z);
+      $('objDist').textContent = Math.round(d) + 'm';
+      const rel = wrapA(Math.atan2(t.x - bus.x, t.z - bus.z) - bus.yaw);
+      $('objArrow').style.transform = 'rotate(' + (rel * 180 / Math.PI) + 'deg)';
+      t.ring.material.opacity = 0.55 + Math.sin(frames * 0.09) * 0.25;
+      t.beam.material.opacity = 0.06 + Math.sin(frames * 0.09) * 0.025;
+    }
+    updateHUD();
+  }
+  // waiting passengers wave
+  for (const s of STOPS) for (const f of s.waiting) { f.userData.armR.rotation.z = -2.25 + Math.sin(frames * 0.16 + f.position.x) * 0.45; }
+  for (const e of G.seq) if (e.f && e.f.userData.armR) e.f.userData.armR.rotation.z = -0.4;
+  // water sparkle drift + flags flutter
+  cityG.userData.spark.material.map.offset.x = frames * 0.0006;
+  if (cityG.userData.fortFlag) cityG.userData.fortFlag.rotation.y = Math.sin(frames * 0.05) * 0.24;
+  if (cityG.userData.fedFlag) cityG.userData.fedFlag.rotation.y = Math.sin(frames * 0.04 + 2) * 0.24;
+  // camera: damped chase
+  const fx = Math.sin(bus.yaw), fz = Math.cos(bus.yaw);
+  const cd = 11.5 + Math.abs(bus.speed) * 0.14;
+  camPos.x = damp(camPos.x, bus.x - fx * cd, 3.4, dt); camPos.z = damp(camPos.z, bus.z - fz * cd, 3.4, dt);
+  camPos.y = damp(camPos.y, 5.0 + Math.abs(bus.speed) * 0.05, 3.4, dt);
+  camera.position.copy(camPos);
+  camera.lookAt(bus.x + fx * 9, 1.6, bus.z + fz * 9);
+  camera.fov = damp(camera.fov, 62 + Math.abs(bus.speed) * 0.35, 3, dt); camera.updateProjectionMatrix();
+  // sun shadow follows the bus — from the south-east so the facades the chase cam actually sees get direct light
+  sun.position.set(bus.x + 40, 70, bus.z + 30); sun.target.position.set(bus.x, 0, bus.z);
+  mapT += dt; if (mapT > 0.2) { mapT = 0; drawMap(); }
+  renderer.render(scene, camera);
+}
+resize();
+drawMap();
+tick();
+
+// ---------- wiring ----------
+$('btnStart').addEventListener('click', startGame);
+$('btnAgain').addEventListener('click', startGame);
+addEventListener('keydown', (e) => { if ((e.code === 'Enter' || e.code === 'Space') && (!G.started || G.over)) startGame(); });
+
+// test hooks (used by the headless drive check)
+window.__bus = {
+  G, bus, STOPS, COLL,
+  frames: () => frames,
+  start: startGame,
+  state: () => ({ mode: G.mode, fares: G.fares, pax: G.paxServed, aboard: G.aboard.length, target: G.target ? G.target.id : null, dest: G.group ? G.group.dest.id : null, speed: bus.speed, x: bus.x, z: bus.z, yaw: bus.yaw, time: G.time, waiting: G.group ? G.group.figures.length : 0 }),
+  place: (x, z, yaw) => { bus.x = x; bus.z = z; bus.yaw = yaw; bus.speed = 0; camPos.set(x - Math.sin(yaw) * 12, 6, z - Math.cos(yaw) * 12); },
+  key: (code, down) => { KEYS[code] = down; },
+};
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
