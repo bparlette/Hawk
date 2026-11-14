@@ -417,8 +417,11 @@ const shadeScene = new THREE.Scene();
 }
 const shade = createShade(renderer, shared, shadeScene, { sun: SUN, size: [2048, 2048], box: [30, 26], centre: [0, 1, -3], back: 110, near: 30, far: 240 });
 
-// --- Her, walking: NOT the old Juniper walk GLB under this painter any more. Following the
-//     Oil Paint pilot (plaza-real-walker), the hero is the verified walk-fix v2 pool rig,
+// --- Her, walking: the LANTERNPORT heroine — the hooded dress Juniper (the plaza's own
+//     mesh + skeleton) playing Fable's GOOD walk clip 07_01, the gait Cherie approved in
+//     Lanternport, transplanted into the plaza GLB by glTF surgery (the file's old baked
+//     gait is gone; see ~/workspace/charcoal-dress/REPORT.md). Following the real-walker
+//     swaps (Oil Paint pilot, then the pool-rig Charcoal swap this build replaces), she is
 //     brought in AS IS and UNPAINTED — the only non-charcoal thing in the world. She keeps
 //     her own PBR materials and real light (the two scene lights below, hers alone: every
 //     charcoal surface here uses custom shaders that ignore scene lights), and the finish
@@ -428,8 +431,8 @@ const shade = createShade(renderer, shared, shadeScene, { sun: SUN, size: [2048,
 //     her bones; her hips are re-anchored over herPos every tick so her body — not the bone —
 //     stays where the controls put her, and she travels at the speed her stride was measured
 //     to cover (see REF_SPEED below), so feet and ground agree.
-// --- daylight for the one unpainted thing: colours follow the pool-stroll recipe this rig
-//     was proven under; the sun is swung to the plaza's own SUN so her shading agrees with
+// --- daylight for the one unpainted thing: colours follow the real-walker recipe the
+//     swaps were proven under; the sun is swung to the plaza's own SUN so her shading agrees with
 //     the drawn light (and with the figure shadow the shade pass draws of her each frame).
 //     No shadow maps — her ground shadow is the shade system's figure picture, as before.
 scene.add(new THREE.HemisphereLight(0xcfeeff, 0x8a7a5f, 1.0));
@@ -437,15 +440,15 @@ const herSun = new THREE.DirectionalLight(0xfff1d6, 1.9);
 herSun.position.copy(SUN).multiplyScalar(40);
 scene.add(herSun);
 
-const gltf = await new GLTFLoader().loadAsync('./assets/pool_colorfix_v2.glb');
+const gltf = await new GLTFLoader().loadAsync('./assets/juniper_walk.glb');
 const HER_MESH_OBJS = [];
 let hipsBone = null, footL = null, footR = null;
 gltf.scene.traverse((o) => {
   if (o.isMesh) {
     // AS IS — she keeps her own materials. Three load-time normalizations, all carried over
-    // from the pool games and the oil pilot: (1) Hunyuan GLBs omit metallicFactor, whose
-    // glTF default of 1.0 renders near-black without an environment map, so metalness goes
-    // to 0; (2) she writes frame-target alpha 0.5 — the marker the finish reads to leave a
+    // from the real-walker swaps: (1) metalness goes to 0 — this frame has no environment
+    // map, so metallic PBR response would render near-black; (2) she writes frame-target
+    // alpha 0.5 — the marker the finish reads to leave a
     // surface's detail and colour alone (finish.js), so the charcoal shafts/rub/wipe/grade
     // never touch her. The alpha is written by the fragment-tail injection in (3), NOT by
     // material.opacity: this three version forces alpha to 1.0 for opaque built-in
