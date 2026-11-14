@@ -3,839 +3,658 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>LINKLE — Car Dance AR</title>
+<title>Linkle AR Dance — Keep Her Beat!</title>
 <style>
-  html, body { height: 100%; }
-  body {
-    margin: 0;
-    overflow: hidden;
-    background: #17100d;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: #fff;
-    -webkit-user-select: none;
-    user-select: none;
-  }
-  #cam, #room, #gl, #fx {
-    position: fixed; inset: 0;
-    width: 100%; height: 100%;
-    display: block;
-  }
-  #cam { object-fit: cover; background: #17100d; z-index: 0; }
-  #room { z-index: 0; }
-  #gl { z-index: 1; }
-  #fx { z-index: 2; pointer-events: none; }
-  #hud {
-    position: fixed;
-    top: calc(env(safe-area-inset-top, 0px) + 10px);
-    left: 10px; right: 10px;
-    display: flex; gap: 8px; align-items: center;
-    z-index: 3;
-    pointer-events: none;
-  }
-  .chip {
-    background: rgba(20, 12, 8, 0.55);
-    border: 1px solid rgba(255,255,255,0.22);
-    border-radius: 999px;
-    padding: 4px 10px;
-    font-size: 13px; font-weight: 700;
-    letter-spacing: 0.02em;
-    backdrop-filter: blur(3px);
-  }
-  .chip small { font-weight: 600; opacity: 0.75; }
-  #camTag { margin-left: auto; font-size: 12px; font-weight: 700; opacity: 0.9; }
-  /* Slim bottom dock: hint line + one row of small controls, nothing at the top. */
-  #dock {
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
-    z-index: 6;
-    display: flex; flex-direction: column; align-items: center;
-    gap: 4px;
-    padding: 4px 8px calc(env(safe-area-inset-bottom, 0px) + 8px);
-    pointer-events: none;
-  }
-  #dock button { pointer-events: auto; }
-  #btnRow {
-    display: flex; align-items: center; justify-content: center;
-    gap: 6px; max-width: 100%;
-  }
-  #hint {
-    padding: 0 6px;
-    font-size: 12px; font-weight: 600;
-    color: rgba(255,255,255,0.92);
-    text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.65);
-    white-space: nowrap;
-    max-width: 96vw; overflow: hidden; text-overflow: ellipsis;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.6s ease;
-  }
-  #hint.show { opacity: 1; }
-  #start {
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
-    z-index: 5;
-    display: flex; flex-direction: column; align-items: stretch;
-    gap: 10px;
-    max-width: 430px;
-    margin: 0 auto;
-    padding: 12px 16px calc(env(safe-area-inset-bottom, 0px) + 16px);
-    box-sizing: border-box;
-  }
-  #startBtn {
-    font: inherit;
-    font-size: 20px; font-weight: 900;
-    color: #173d10;
-    background: linear-gradient(180deg, #cdeeb8, #8fd07a);
-    border: 2px solid rgba(34, 84, 30, 0.55);
-    border-radius: 999px;
-    padding: 15px 34px;
-    box-shadow: 0 8px 22px rgba(0,0,0,0.45);
-    cursor: pointer;
-  }
-  #startBtn:active { transform: scale(0.96); }
-  .moveStart {
-    font: inherit; font-size: 17px; font-weight: 900; color: #4a2c05;
-    background: linear-gradient(180deg, #ffe9a8, #ffc95e);
-    border: 2px solid rgba(122, 79, 10, 0.55); border-radius: 999px;
-    padding: 12px 30px; box-shadow: 0 8px 22px rgba(0,0,0,0.45); cursor: pointer;
-  }
-  .moveStart:active { transform: scale(0.96); }
-  #airBtn { color: #173d10; background: linear-gradient(180deg, #dff3ff, #9fd8f0); border-color: rgba(23, 84, 110, 0.55); }
-  #moveBar { display: flex; align-items: center; }
-  .mv-btn { font: inherit; width: 36px; height: 36px; font-size: 18px; line-height: 1; color: #fff; background: rgba(20,12,8,.55); border: 1px solid rgba(255,255,255,.3); border-radius: 50%; cursor: pointer; backdrop-filter: blur(3px); }
-  .mv-btn:active { transform: scale(.93); }
-  #motionPill {
-    font: inherit; font-size: 12.5px; font-weight: 700;
-    color: #ffe9a8;
-    background: rgba(20, 12, 8, 0.55);
-    border: 1px solid rgba(255, 215, 106, 0.6);
-    border-radius: 999px;
-    padding: 0 11px;
-    min-height: 34px;
-    cursor: pointer;
-    white-space: nowrap;
-    backdrop-filter: blur(3px);
-  }
-  #motionPill:active { transform: scale(0.96); }
-  .hidden { display: none !important; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#12081c;
+    font-family:"Avenir Next","Segoe UI",system-ui,sans-serif; color:#fff;
+    -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent;
+    touch-action:none; overscroll-behavior:none; }
+  #cam { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-index:0; background:#12081c; }
+  #cam.hidden { display:none; }
+  #gl { position:fixed; inset:0; z-index:1; }
+  #gl canvas { display:block; }
+
+  /* ---------- HUD (icons + numbers only, <=15% of screen) ---------- */
+  #hud { position:fixed; top:0; left:0; right:0; z-index:1200; padding:calc(8px + env(safe-area-inset-top)) 12px 0;
+    display:flex; justify-content:space-between; align-items:flex-start; pointer-events:none; }
+  .chip { background:rgba(16,6,28,.55); border:1px solid rgba(255,255,255,.28); border-radius:999px;
+    padding:5px 13px; font-size:19px; font-weight:800; letter-spacing:.02em; backdrop-filter:blur(3px);
+    min-width:86px; text-align:center; }
+  .chip small { display:block; font-size:9.5px; font-weight:700; opacity:.75; letter-spacing:.14em; }
+  #comboChip.hot { background:linear-gradient(180deg,#ff9d5c,#f4572e); border-color:#ffd9a8; }
+  #progWrap { position:fixed; top:calc(64px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%);
+    z-index:1200; width:180px; pointer-events:none; text-align:center; }
+  #progBarBg { height:6px; border-radius:3px; background:rgba(255,255,255,.22); overflow:hidden; }
+  #progBar { height:100%; width:0%; border-radius:3px; background:linear-gradient(90deg,#5eead4,#ec2c8c); }
+  #progTxt { font-size:11px; font-weight:800; letter-spacing:.12em; opacity:.85; margin-top:3px; text-shadow:0 1px 3px #000; }
+
+  /* ---------- tap pad + beat rings ---------- */
+  #pad { position:fixed; left:50%; bottom:calc(30px + env(safe-area-inset-bottom)); transform:translateX(-50%);
+    z-index:1200; width:104px; height:104px; pointer-events:none; }
+  #padCore { position:absolute; inset:0; border-radius:50%;
+    background:radial-gradient(circle at 50% 38%, rgba(255,120,200,.85), rgba(160,30,120,.75) 70%);
+    border:3px solid rgba(255,255,255,.85); display:flex; align-items:center; justify-content:center;
+    font-size:17px; font-weight:900; letter-spacing:.06em; text-shadow:0 1px 2px rgba(0,0,0,.5);
+    box-shadow:0 6px 24px rgba(236,44,140,.45); }
+  .ring { position:absolute; inset:0; border-radius:50%; border:4px solid rgba(94,234,212,.95);
+    box-shadow:0 0 14px rgba(94,234,212,.6), inset 0 0 14px rgba(94,234,212,.5); opacity:0; }
+  #judge { position:fixed; left:50%; bottom:calc(158px + env(safe-area-inset-bottom)); transform:translateX(-50%);
+    z-index:1200; font-size:30px; font-weight:900; letter-spacing:.04em; pointer-events:none; opacity:0;
+    text-shadow:0 2px 10px rgba(0,0,0,.65); white-space:nowrap; }
+  #judge.pop { animation:jpop .45s ease-out; }
+  @keyframes jpop { 0%{opacity:0; transform:translateX(-50%) scale(.6);} 25%{opacity:1; transform:translateX(-50%) scale(1.15);}
+    70%{opacity:1;} 100%{opacity:0; transform:translateX(-50%) scale(1);} }
+  #countPop { position:fixed; left:50%; top:34%; transform:translate(-50%,-50%); z-index:1200;
+    font-size:64px; font-weight:900; pointer-events:none; opacity:0; text-shadow:0 3px 18px rgba(0,0,0,.7); }
+  #countPop.pop { animation:jpop .5s ease-out; }
+  #spinTip { position:fixed; left:50%; bottom:calc(146px + env(safe-area-inset-bottom)); transform:translateX(-50%);
+    z-index:1190; font-size:12.5px; font-weight:700; background:rgba(16,6,28,.55); border:1px solid rgba(255,255,255,.25);
+    padding:4px 12px; border-radius:999px; pointer-events:none; opacity:0; transition:opacity .5s; white-space:nowrap; }
+  #spinTip.show { opacity:1; }
+
+  /* ---------- overlays ---------- */
+  .overlay { position:fixed; inset:0; z-index:1300; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; text-align:center; padding:24px;
+    background:radial-gradient(ellipse at 50% 30%, rgba(64,20,90,.88), rgba(10,3,20,.94)); }
+  .overlay.hidden { display:none; }
+  .overlay h1 { font-size:40px; letter-spacing:.03em; line-height:1.05;
+    background:linear-gradient(180deg,#a7f3ea,#ec2c8c); -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 3px 10px rgba(0,0,0,.6)); }
+  .overlay h2 { font-size:15px; letter-spacing:.34em; color:#5eead4; margin:6px 0 16px; font-weight:800; }
+  .overlay p { font-size:16.5px; line-height:1.5; max-width:330px; color:#f3eefc; }
+  .overlay p b { color:#ffd166; }
+  .bigbtn { margin-top:22px; pointer-events:auto; cursor:pointer; border:3px solid #fff; border-radius:999px;
+    background:linear-gradient(180deg,#ff5ea8,#d61c7a); color:#fff; font-size:23px; font-weight:900;
+    padding:14px 46px; letter-spacing:.04em; box-shadow:0 6px 0 #7c0f47, 0 12px 28px rgba(0,0,0,.5);
+    font-family:inherit; }
+  .bigbtn:active { transform:translateY(4px); box-shadow:0 2px 0 #7c0f47; }
+  .bigbtn:disabled { filter:grayscale(.7); opacity:.6; }
+  .note { margin-top:16px; font-size:12.5px; opacity:.75; max-width:300px; line-height:1.45; }
+  #resultCard .grade { font-size:84px; font-weight:900; line-height:1; color:#ffd166;
+    text-shadow:0 4px 22px rgba(255,209,102,.45); }
+  #resultCard .rstats { font-size:19px; line-height:1.65; font-weight:700; }
+  #toast { position:fixed; left:50%; bottom:calc(150px + env(safe-area-inset-bottom)); transform:translateX(-50%);
+    z-index:1400; background:rgba(120,10,30,.9); border:1px solid #ff8fa8; color:#fff; font-size:14px; font-weight:700;
+    padding:8px 16px; border-radius:10px; display:none; max-width:86vw; text-align:center; }
 </style>
-<script type="importmap">
-{ "imports": {
-    "three": "../link-blender/vendor/three.module.js",
-    "three/addons/": "../link-blender/vendor/addons/"
-} }
-</script>
 <style id="moth-game-guard">
 html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 canvas{touch-action:none}
 </style>
-<style id="link-mode-css">
-/* BEGIN link-mode-block CSS: WALK / ROTATE viewing-mode controls */
-#modeBar{display:flex;gap:6px;align-items:center}
-.hm-chip{font:inherit;font-size:12.5px;font-weight:800;color:#fff;background:rgba(20,12,8,.55);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:0 12px;min-height:34px;cursor:pointer;backdrop-filter:blur(3px)}
-.hm-chip.on{background:linear-gradient(180deg,#cdeeb8,#8fd07a);color:#173d10;border-color:rgba(34,84,30,.55)}
-#rotPanel{display:flex;flex-direction:row;gap:6px;align-items:center}
-.hm-btn{font:inherit;width:32px;height:32px;font-size:16px;line-height:1;color:#fff;background:rgba(20,12,8,.55);border:1px solid rgba(255,255,255,.3);border-radius:50%;cursor:pointer;backdrop-filter:blur(3px)}
-.hm-btn:active{transform:scale(.93)}
-.hm-wide{font:inherit;font-size:11.5px;font-weight:800;color:#fff;background:rgba(20,12,8,.55);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:0 10px;min-height:32px;cursor:pointer;width:auto;backdrop-filter:blur(3px)}
-.hm-wide.on{background:linear-gradient(180deg,#cdeeb8,#8fd07a);color:#173d10;border-color:rgba(34,84,30,.55)}
-/* END link-mode-block CSS */
-</style>
 </head>
 <body>
 <video id="cam" autoplay playsinline muted></video>
-<canvas id="room"></canvas>
-<canvas id="gl"></canvas>
-<canvas id="fx"></canvas>
+<div id="gl"></div>
 
-<div id="hud" class="hidden">
-  <div class="chip" id="heartChip">❤️ <b><span id="heartCount">0</span></b></div>
+<div id="hud">
+  <div class="chip" id="scoreChip">💎<span id="score">0</span><small>SCORE</small></div>
+  <div class="chip" id="comboChip">🔥<span id="combo">0</span><small>COMBO ×<span id="mult">1</span></small></div>
+</div>
+<div id="progWrap"><div id="progBarBg"><div id="progBar"></div></div><div id="progTxt">♪ 0 / 96</div></div>
+
+<div id="pad"><div class="ring" id="ring1"></div><div class="ring" id="ring2"></div><div id="padCore">TAP!</div></div>
+<div id="judge"></div>
+<div id="countPop"></div>
+<div id="spinTip">👆 Tap HER for a spin move!</div>
+
+<div class="overlay" id="startOverlay">
+  <h1>LINKLE<br>AR DANCE</h1>
+  <h2>KEEP HER BEAT!</h2>
+  <p>She dances in <b>your room</b>. A ring closes on the pad every beat — <b>tap when it lands</b>.<br>
+     Perfect taps build your 🔥 combo. <b>Tap her</b> for a spin move!</p>
+  <button class="bigbtn" id="startBtn" disabled>LOADING…</button>
+  <div class="note">📷 Camera on = she dances on your real floor.<br>Camera off = neon stage instead. 🔊 Sound on!</div>
 </div>
 
-<!-- Slim bottom dock: hint line, rotate-mode extras (rotate mode only),
-     and ONE row of small controls. Nothing control-related at the top. -->
-<div id="dock">
-  <div id="hint">She's dancing! Walk around her · Tap her for a spin</div>
-  <!-- BEGIN link-mode-block HTML: viewing-mode toggle + rotate controls -->
-  <div id="rotPanel" class="hidden">
-    <button id="hmLeft" class="hm-btn" type="button" aria-label="Turn her left">⟲</button>
-    <button id="hmRight" class="hm-btn" type="button" aria-label="Turn her right">⟳</button>
-    <button id="hmAuto" class="hm-wide" type="button">AUTO-SPIN</button>
-    <button id="hmReset" class="hm-wide" type="button">RESET</button>
-  </div>
-  <div id="btnRow">
-    <button id="motionPill" class="hidden" type="button">📱 Enable motion look-around</button>
-    <div id="modeBar" class="hidden">
-      <button id="hmWalk" class="hm-chip on" type="button">🚶 WALK</button>
-      <button id="hmRotate" class="hm-chip" type="button">🔄 ROTATE</button>
-    </div>
-  </div>
-  <!-- END link-mode-block HTML -->
+<div class="overlay hidden" id="resultCard">
+  <div class="grade" id="gradeEl">S</div>
+  <div class="rstats" id="rstats"></div>
+  <button class="bigbtn" id="againBtn">↻ DANCE AGAIN</button>
 </div>
 
-<div id="start">
-  <a id="exploreBtn" rel="ar" href="dance.usdz" aria-label="Explore dancing Linkle in your room in AR" style="display:none;align-items:center;justify-content:center;gap:10px;background:#fff;color:#2e7d32;border:2px solid #a5d6a7;padding:9px 24px 9px 11px;font-size:19px;font-weight:900;letter-spacing:0.02em;border-radius:999px;text-decoration:none;box-shadow:0 8px 22px rgba(0,0,0,0.35);"><img src="linkle-dance.jpg" alt="" style="width:38px;height:38px;border-radius:50%;object-fit:cover;display:block;">EXPLORE</a>
-  <button id="startBtn" type="button">💃 START DANCING</button>
-</div>
+<div id="toast"></div>
 
+<script type="importmap">
+{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/addons/"}}
+</script>
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-'use strict';
-const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
-const lerp = (a, b, t) => a + (b - a) * t;
-const rand = (a, b) => a + Math.random() * (b - a);
+/* ================================================================
+   LINKLE AR DANCE — rebuilt Nov 14 2026 around the DRESS rig
+   (juniper_rig.glb + Fable clips: dance-club / dance-cartop /
+   idle-stand — the Lanternport standard). The dead v2 loaded a
+   0-byte GLB of the rejected pool sculpt; none of that is used.
+   Original v2 idea kept: she dances in AR, walk around her,
+   tap her for a spin — now with a real beat game on top.
+   ================================================================ */
 
-/* EXPLORE launches Quick Look (Apple-only): reveal the button just for iOS. */
-if (/iP(hone|ad|od)/.test(navigator.userAgent)) {
-  fetch('dance.usdz', { method: 'HEAD' }).then(r => { if (r.ok) document.getElementById('exploreBtn').style.display = 'inline-flex'; }).catch(() => {});
-}
+const BPM = 115, BEAT = 60 / BPM, SONG_BEATS = 96;      // ~50 s round
+const PERFECT_W = 0.090, GOOD_W = 0.180;                // judge windows (s)
+const HERO_H = 1.42, HERO_DIST = 1.50;                  // metres — she fills ~85% of frame height
 
-/* ============================== audio (soft chime on tap) ============================== */
-let AC = null;
-function initAudio() {
+const $ = id => document.getElementById(id);
+const video = $('cam'), toastEl = $('toast');
+function toast(msg, ms=3400){ toastEl.textContent = msg; toastEl.style.display='block';
+  clearTimeout(toast._t); toast._t = setTimeout(()=>toastEl.style.display='none', ms); }
+
+/* ============================== audio ============================== */
+let AC = null, master = null, musicBus = null;
+function audioInit(){
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch(e){}
+  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
   try {
-    if ('audioSession' in navigator) { try { navigator.audioSession.type = 'playback'; } catch (e) {} }
-    if (!AC) {
-      const Ctor = window.AudioContext || window.webkitAudioContext;
-      if (Ctor) AC = new Ctor();
-    }
-    if (AC) {
-      if (AC.state === 'suspended') AC.resume();
-      const buf = AC.createBuffer(1, 1, 22050);
-      const src = AC.createBufferSource();
-      src.buffer = buf; src.connect(AC.destination); src.start(0);
-    }
-  } catch (e) {}
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain(); master.gain.value = 0.8; master.connect(AC.destination);
+    musicBus = AC.createGain(); musicBus.gain.value = 0.9; musicBus.connect(master);
+    const len = Math.max(1, Math.floor(AC.sampleRate * 0.03)), buf = AC.createBuffer(1, len, AC.sampleRate);
+    const src = AC.createBufferSource(); src.buffer = buf; src.connect(master); src.start(); // silent unlock blip
+  } catch(e){ AC = null; }
 }
-function resumeAudio() { try { if (AC && AC.state === 'suspended') AC.resume(); } catch (e) {} }
-document.addEventListener('pointerdown', resumeAudio, true);
-document.addEventListener('touchend', resumeAudio, true);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) resumeAudio(); });
-function tone(f0, f1, dur, type, vol, delay) {
-  if (!AC) return;
-  try {
-    const t0 = AC.currentTime + (delay || 0);
-    const o = AC.createOscillator(), g = AC.createGain();
-    o.type = type || 'sine';
-    o.frequency.setValueAtTime(f0, t0);
-    o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t0 + dur);
-    g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(vol || 0.15, t0 + 0.015);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-    o.connect(g); g.connect(AC.destination);
-    o.start(t0); o.stop(t0 + dur + 0.05);
-  } catch (e) {}
-}
-function sndGiggle() {
-  tone(1175, 1568, 0.09, 'triangle', 0.12, 0);
-  tone(1319, 1760, 0.11, 'triangle', 0.12, 0.10);
-  tone(1568, 2093, 0.14, 'sine', 0.08, 0.21);
-}
-function sndSpin() {
-  tone(1500, 300, 0.07, 'square', 0.10, 0);
-  tone(1500, 300, 0.07, 'square', 0.10, 0.09);
-  tone(320, 980, 0.34, 'triangle', 0.07, 0.02);
-}
-/* ============================== dom / state ============================== */
-const video = document.getElementById('cam');
-const roomCanvas = document.getElementById('room');
-const rctx = roomCanvas.getContext('2d');
-const glCanvas = document.getElementById('gl');
-const fxCanvas = document.getElementById('fx');
-const fctx = fxCanvas.getContext('2d');
-const hudEl = document.getElementById('hud');
-const heartCountEl = document.getElementById('heartCount');
-const hintEl = document.getElementById('hint');
-const startEl = document.getElementById('start');
+addEventListener('pointerdown', () => { if (AC && AC.state === 'suspended') AC.resume(); }, { passive:true });
+addEventListener('touchend',   () => { if (AC && AC.state === 'suspended') AC.resume(); }, { passive:true });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && AC && AC.state === 'suspended') AC.resume(); });
 
-let W = 0, H = 0, floorTop = 0;
-let started = false;
-let camOK = false;
-let hearts = [];
-let heartTotal = 0;
+/* tiny synth kit — everything synthesized, no audio files */
+function kick(t){ const o=AC.createOscillator(), g=AC.createGain();
+  o.type='sine'; o.frequency.setValueAtTime(150,t); o.frequency.exponentialRampToValueAtTime(44,t+0.11);
+  g.gain.setValueAtTime(0.9,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.24);
+  o.connect(g); g.connect(musicBus); o.start(t); o.stop(t+0.26); }
+function hat(t,open){ const len=Math.floor(AC.sampleRate*(open?0.16:0.05)), buf=AC.createBuffer(1,len,AC.sampleRate);
+  const d=buf.getChannelData(0); for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len);
+  const s=AC.createBufferSource(); s.buffer=buf; const f=AC.createBiquadFilter(); f.type='highpass'; f.frequency.value=6500;
+  const g=AC.createGain(); g.gain.value=open?0.20:0.13; s.connect(f); f.connect(g); g.connect(musicBus); s.start(t); }
+function snare(t){ const len=Math.floor(AC.sampleRate*0.14), buf=AC.createBuffer(1,len,AC.sampleRate);
+  const d=buf.getChannelData(0); for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len);
+  const s=AC.createBufferSource(); s.buffer=buf; const f=AC.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1900; f.Q.value=0.8;
+  const g=AC.createGain(); g.gain.value=0.32; s.connect(f); f.connect(g); g.connect(musicBus); s.start(t);
+  const o=AC.createOscillator(), og=AC.createGain(); o.type='triangle'; o.frequency.value=185;
+  og.gain.setValueAtTime(0.22,t); og.gain.exponentialRampToValueAtTime(0.001,t+0.09);
+  o.connect(og); og.connect(musicBus); o.start(t); o.stop(t+0.1); }
+function bassN(t,fq){ const o=AC.createOscillator(), g=AC.createGain(), f=AC.createBiquadFilter();
+  o.type='sawtooth'; o.frequency.value=fq; f.type='lowpass'; f.frequency.setValueAtTime(700,t);
+  f.frequency.exponentialRampToValueAtTime(160,t+0.22); f.Q.value=4;
+  g.gain.setValueAtTime(0.30,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.26);
+  o.connect(f); f.connect(g); g.connect(musicBus); o.start(t); o.stop(t+0.28); }
+function pluck(t,fq){ const o=AC.createOscillator(), g=AC.createGain();
+  o.type='square'; o.frequency.value=fq;
+  g.gain.setValueAtTime(0.10,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.30);
+  o.connect(g); g.connect(musicBus); o.start(t); o.stop(t+0.32); }
+function judgeBlip(kind){ if(!AC) return; const t=AC.currentTime;
+  const o=AC.createOscillator(), g=AC.createGain(); o.type='sine';
+  o.frequency.value = kind==='perfect'?1320 : kind==='good'?880 : 160;
+  g.gain.setValueAtTime(kind==='miss'?0.15:0.12,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.12);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t+0.13); }
 
-/* ================= AR motion: permission-in-gesture + 3DOF look-around ================= */
-let baseCamQ = null;
-let hemiLight = null, dirLight = null;
+/* song: 16th-note lookahead scheduler, Am–F–C–G */
+const ROOTS = [110.00, 87.31, 130.81, 98.00];
+const BASSLINE = [0,-1,0,-1, 12,-1,0,-1, 0,-1,10,-1, 12,-1,-1,-1];
+const PLUCKS  = [440,523.25,659.25,523.25, 349.23,440,523.25,440, 523.25,659.25,783.99,659.25, 392,493.88,587.33,493.88];
+let schedTimer = null;
+function scheduleStep(step, t){
+  const bar = Math.floor(step/16), s16 = step % 16;
+  const root = ROOTS[bar % 4];
+  if (s16 % 4 === 0) kick(t);
+  if (bar >= 1 && s16 % 4 === 2) hat(t,false);
+  if (bar >= 2 && s16 === 14) hat(t,true);
+  if (bar >= 2 && (s16 === 4 || s16 === 12)) snare(t);
+  const bo = BASSLINE[s16];
+  if (bo >= 0) bassN(t, root * Math.pow(2, bo/12) / 2);
+  if (bar >= 3 && s16 % 2 === 0 && (step % 32) < 24) pluck(t, PLUCKS[(step>>1) % 16]);
+}
+function startMusic(songStart){
+  let step = 0, nextT = songStart;
+  const stepDur = BEAT / 4;
+  schedTimer = setInterval(() => {
+    if (!AC) return;
+    while (nextT < AC.currentTime + 0.14) {
+      if (step < SONG_BEATS * 4) scheduleStep(step, nextT);
+      step++; nextT += stepDur;
+    }
+    if (step >= SONG_BEATS * 4 && AC.currentTime > songStart + SONG_BEATS * BEAT + 1.2) {
+      clearInterval(schedTimer); schedTimer = null; finishSong();
+    }
+  }, 27);
+}
+function stopMusic(){ if (schedTimer) { clearInterval(schedTimer); schedTimer = null; } }
+
+/* ============================== three scene ============================== */
+const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.12;
+$('gl').appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(68, innerWidth/innerHeight, 0.05, 80);
+const camRig = new THREE.Group();              // yaw → pitch → camera
+const camPitch = new THREE.Group();
+camRig.add(camPitch); camPitch.add(camera);
+camRig.position.set(0, 1.12, 0);
+scene.add(camRig);
+camera.position.set(0, 0, 0);
+
+const hemi = new THREE.HemisphereLight(0xfdf4ff, 0x33222a, 1.05); scene.add(hemi);
+const key = new THREE.DirectionalLight(0xfff1dd, 1.6); key.position.set(1.2, 2.6, 1.4); scene.add(key);
+const rim = new THREE.DirectionalLight(0x7ae7ff, 0.7); rim.position.set(-1.6, 1.8, -1.2); scene.add(rim);
+const accentA = new THREE.PointLight(0xec2c8c, 0, 6); accentA.position.set(-1.4, 0.9, -2.2); scene.add(accentA);
+const accentB = new THREE.PointLight(0x5eead4, 0, 6); accentB.position.set( 1.4, 0.9, -2.2); scene.add(accentB);
+
+/* fallback stage (only when the camera is off — a place, not a fake floor) */
+const stageGroup = new THREE.Group(); stageGroup.visible = false; scene.add(stageGroup);
+{
+  const gc = document.createElement('canvas'); gc.width = 16; gc.height = 256;
+  const g2 = gc.getContext('2d'); const gr = g2.createLinearGradient(0,0,0,256);
+  gr.addColorStop(0,'#2b1052'); gr.addColorStop(0.55,'#4a1160'); gr.addColorStop(1,'#0d0518');
+  g2.fillStyle = gr; g2.fillRect(0,0,16,256);
+  const bgTex = new THREE.CanvasTexture(gc); bgTex.colorSpace = THREE.SRGBColorSpace;
+  const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(30, 14),
+    new THREE.MeshBasicMaterial({ map:bgTex, fog:false }));
+  backdrop.position.set(0, 3.4, -7.5); stageGroup.add(backdrop);
+  const glowC = document.createElement('canvas'); glowC.width = glowC.height = 128;
+  const gg = glowC.getContext('2d'); const rg = gg.createRadialGradient(64,64,2,64,64,64);
+  rg.addColorStop(0,'rgba(236,44,140,0.55)'); rg.addColorStop(1,'rgba(236,44,140,0)');
+  gg.fillStyle = rg; gg.fillRect(0,0,128,128);
+  const glowTex = new THREE.CanvasTexture(glowC);
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(7,7),
+    new THREE.MeshBasicMaterial({ map:glowTex, transparent:true, depthWrite:false, fog:false }));
+  glow.position.set(0, 1.5, -3.4); stageGroup.add(glow);
+  const starGeo = new THREE.BufferGeometry(); const N = 260, pos = new Float32Array(N*3);
+  for (let i=0;i<N;i++){ pos[i*3]=(Math.random()-0.5)*16; pos[i*3+1]=Math.random()*5.5; pos[i*3+2]=-2-Math.random()*5; }
+  starGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color:0xbfefff, size:0.035, transparent:true, opacity:0.85, fog:false }));
+  stageGroup.add(stars);
+}
+
+/* shadow blob — the ONLY thing under her feet in AR (AR-MAX: no fake floor) */
+function makeBlob(){
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d'); const rg = g.createRadialGradient(64,64,4,64,64,62);
+  rg.addColorStop(0,'rgba(0,0,0,0.42)'); rg.addColorStop(0.7,'rgba(0,0,0,0.18)'); rg.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle = rg; g.fillRect(0,0,128,128);
+  const t = new THREE.CanvasTexture(c);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 0.95),
+    new THREE.MeshBasicMaterial({ map:t, transparent:true, depthWrite:false }));
+  m.rotation.x = -Math.PI/2; m.position.y = 0.005; m.renderOrder = 1;
+  return m;
+}
+
+/* ============================== hero (dress rig) ============================== */
+const heroSpin = new THREE.Group();            // spin tween lives here
+const heroInner = new THREE.Group();           // root-lock offset lives here
+heroSpin.add(heroInner); heroSpin.position.set(0, 0, -HERO_DIST); scene.add(heroSpin);
+const blob = makeBlob(); heroSpin.add(blob);
+
+let mixer = null, bone2 = null, gltfScene = null, heroReady = false;
+let actIdle = null, actClub = null, actCartop = null, currentAct = null;
+const CLUB_DUR = 1.57, CLUB_TS = CLUB_DUR / (3 * BEAT);      // loop = exactly 3 beats
+const CARTOP_DUR = 1.30, CARTOP_TS = CARTOP_DUR / (2 * BEAT); // spin move = exactly 2 beats
+let lockAnchor = null, heroScale = 1;
+
+function setAction(act, fade=0.25){
+  if (!act || act === currentAct) return;
+  act.reset().setLoop(THREE.LoopRepeat, Infinity).fadeIn(fade).play();
+  if (currentAct) currentAct.fadeOut(fade);
+  currentAct = act;
+}
+/* TRUE bounds of the skinned hero. Box3.setFromObject() reads BIND-POSE
+   geometry and lies for this rig (Noesis export) — Lanternport's constant
+   is the cross-check: ~87 GLB units = 1 m, soles ~84.9 units below origin. */
+function skinnedBox(){
+  const u = new THREE.Box3(); let any = false;
+  gltfScene.updateMatrixWorld(true);
+  gltfScene.traverse(o => { if (o.isSkinnedMesh) {
+    o.computeBoundingBox();
+    const b = o.boundingBox.clone().applyMatrix4(o.matrixWorld);
+    if (!b.isEmpty()) { u.union(b); any = true; }
+  }});
+  return any ? u : null;
+}
+const loader = new GLTFLoader();
+Promise.all([
+  loader.loadAsync('./assets/juniper_rig.glb'),
+  loader.loadAsync('./assets/dance-club.glb'),
+  loader.loadAsync('./assets/dance-cartop.glb'),
+  loader.loadAsync('./assets/idle-stand.glb'),
+]).then(([rig, club, cartop, idle]) => {
+  gltfScene = rig.scene;
+  gltfScene.traverse(o => { if (o.isSkinnedMesh) o.frustumCulled = false; });
+  heroInner.add(gltfScene);
+  bone2 = gltfScene.getObjectByName('bone_2');
+  mixer = new THREE.AnimationMixer(gltfScene);
+  actIdle   = mixer.clipAction(idle.animations[0]);
+  actClub   = mixer.clipAction(club.animations[0]);  actClub.timeScale = CLUB_TS;
+  actCartop = mixer.clipAction(cartop.animations[0]); actCartop.timeScale = CARTOP_TS;
+  actIdle.play(); currentAct = actIdle;
+  mixer.update(0.05);                                   // settle into a real pose before measuring
+  const box = skinnedBox();
+  const h = box ? Math.max(1, box.max.y - box.min.y) : 139;
+  heroScale = HERO_H / h;
+  heroInner.scale.setScalar(heroScale);
+  if (box) heroInner.position.y = -box.min.y * heroScale;   // soles exactly on y=0
+  heroReady = true;
+  const b = $('startBtn'); b.disabled = false; b.textContent = '▶ START';
+}).catch(err => {
+  console.error('hero load failed', err);
+  $('startBtn').textContent = '⚠ LOAD FAILED';
+  toast('Could not load the dancer — check connection and reload.');
+});
+
+/* root-motion lock: keep bone_2 (the only bone with translation tracks)
+   pinned in X/Z inside the GLB's own frame, so she dances in place. */
+const _wv = new THREE.Vector3();
+function rootLock(){
+  if (!bone2 || !gltfScene) return;
+  bone2.getWorldPosition(_wv);
+  const rel = heroSpin.worldToLocal(_wv.clone());   // heroSpin frame excludes the lock offset itself → no feedback loop
+  const offX = rel.x - heroInner.position.x, offZ = rel.z - heroInner.position.z;
+  if (!lockAnchor) { lockAnchor = { x: offX, z: offZ }; return; }
+  heroInner.position.x -= (offX - lockAnchor.x);
+  heroInner.position.z -= (offZ - lockAnchor.z);
+}
+
+/* ============================== look-around (gyro + drag) ============================== */
 const MOTION = {
   needPerm: (typeof DeviceOrientationEvent !== 'undefined' &&
              typeof DeviceOrientationEvent.requestPermission === 'function'),
-  perm: 'unknown', ok: false, ever: false, lastAt: -1e9, recal: true, refQ: null, devQ: null
+  granted: false, ever: false, quat: null, calibInv: null,
 };
-function askMotionPermission() {
-  if (!MOTION.needPerm) { MOTION.perm = 'n/a'; return; }
+let dragYaw = 0, dragPitch = 0;
+function askMotionPermission(){           // MUST be called synchronously in the tap
+  if (!MOTION.needPerm || MOTION.granted) return;
   try {
     const p = DeviceOrientationEvent.requestPermission();
-    if (p && typeof p.then === 'function') {
-      p.then(r => {
-        MOTION.perm = (r === 'granted') ? 'granted' : 'denied';
-        if (MOTION.perm === 'granted') MOTION.recal = true;
-      }).catch(() => { MOTION.perm = 'error'; });
-    }
-  } catch (e) { MOTION.perm = 'error'; }
+    if (p && p.then) p.then(r => { if (r === 'granted') enableGyro(); }).catch(()=>{});
+  } catch(e){}
 }
-const motionPillEl = document.getElementById('motionPill');
-function showMotionPill() { if (motionPillEl) motionPillEl.classList.remove('hidden'); }
-function hideMotionPill() { if (motionPillEl) motionPillEl.classList.add('hidden'); }
-if (motionPillEl) motionPillEl.addEventListener('click', () => { askMotionPermission(); });
-function motionWatchdog() {
-  setTimeout(() => { if (MOTION.needPerm && !MOTION.ever) showMotionPill(); }, 1500);
-}
-window.addEventListener('orientationchange', () => { MOTION.recal = true; });
-
-const _zee = new THREE.Vector3(0, 0, 1);
-const _eul = new THREE.Euler();
-const _q0 = new THREE.Quaternion();
-const _q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
-function deviceQuat(out, alphaDeg, betaDeg, gammaDeg) {
-  const orient = (typeof window.orientation === 'number' ? window.orientation : 0) * Math.PI / 180;
-  _eul.set(THREE.MathUtils.degToRad(betaDeg), THREE.MathUtils.degToRad(alphaDeg),
-           THREE.MathUtils.degToRad(-gammaDeg), 'YXZ');
-  out.setFromEuler(_eul);
-  out.multiply(_q1);
-  out.multiply(_q0.setFromAxisAngle(_zee, -orient));
-  return out;
-}
-const _invRefQ = new THREE.Quaternion();
-const _targetQ = new THREE.Quaternion();
-const _relQ = new THREE.Quaternion();
-const MOTION_DEADBAND_RAD = 0.035;   // ~2 deg: hand tremor / sensor noise inside this cone = hold still
-function applyMotionCamera() {
-  if (!camera || !baseCamQ || !MOTION.refQ) return false;
-  if (performance.now() - MOTION.lastAt > 3000) { MOTION.ok = false; return false; }
-  if (!MOTION.ok) return false;
-  _invRefQ.copy(MOTION.refQ).invert();
-  _relQ.copy(MOTION.devQ).multiply(_invRefQ);
-  // angle of the relative rotation from the calibration pose, via |w| (version-proof)
-  const ang = 2 * Math.acos(Math.min(1, Math.abs(_relQ.w)));
-  if (ang < MOTION_DEADBAND_RAD) _targetQ.copy(baseCamQ);
-  else _targetQ.copy(_relQ).multiply(baseCamQ);
-  camera.quaternion.slerp(_targetQ, 0.16);
-  return true;
-}
-
-/* ================= light matching ================= */
-const lightBase = { hemi: 1.15, dir: 1.5 };
-const _lsCanvas = document.createElement('canvas');
-_lsCanvas.width = 16; _lsCanvas.height = 16;
-const _lsCtx = _lsCanvas.getContext('2d', { willReadFrequently: true });
-const _lightTgt = { m: 1, c: new THREE.Color(1, 1, 1) };
-let _lsNextAt = 0;
-function updateLightMatch(t, dt) {
-  if (!hemiLight || !dirLight) return;
-  if (camOK && video && video.readyState >= 2 && t >= _lsNextAt) {
-    _lsNextAt = t + 500;
-    try {
-      _lsCtx.drawImage(video, 0, 0, 16, 16);
-      const d = _lsCtx.getImageData(0, 0, 16, 16).data;
-      let r = 0, g = 0, b = 0;
-      const n = d.length / 4;
-      for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
-      r /= n * 255; g /= n * 255; b /= n * 255;
-      const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-      _lightTgt.m = clamp(0.45 + lum * 1.1, 0.45, 1.35);
-      _lightTgt.c.setRGB(lerp(1, Math.min(1, r * 1.7), 0.5),
-                         lerp(1, Math.min(1, g * 1.7), 0.5),
-                         lerp(1, Math.min(1, b * 1.7), 0.5));
-    } catch (e) {}
-  }
-  if (!camOK) return;
-  const k = 1 - Math.exp(-dt * 2.5);
-  hemiLight.intensity += (lightBase.hemi * _lightTgt.m - hemiLight.intensity) * k;
-  dirLight.intensity += (lightBase.dir * _lightTgt.m - dirLight.intensity) * k;
-  hemiLight.color.lerp(_lightTgt.c, k);
-}
-
-/* ============================== parallax ============================== */
-let parX = 0, parY = 0, parTX = 0, parTY = 0;
-let parRefG = null, parRefB = null;   // gamma/beta at calibration: parallax is RELATIVE to how she holds the phone at start
-let lastOrientAt = -1e9;
-let mouseAt = -1e9, mouseTX = 0, mouseTY = 0;
-/* one parallax axis: deadzone (deg) around the calibration pose, then rescale, hard-bounded */
-function parAxis(delta, deadDeg, rangeDeg) {
-  const a = Math.abs(delta);
-  if (a < deadDeg) return 0;
-  return clamp(Math.sign(delta) * (a - deadDeg) / rangeDeg, -0.6, 0.6);
-}
-window.addEventListener('deviceorientation', (e) => {
-  if (e.gamma == null && e.beta == null && e.alpha == null) return;
-  lastOrientAt = performance.now();
-  MOTION.ever = true; MOTION.ok = true; MOTION.lastAt = lastOrientAt;
-  if (!MOTION.devQ) MOTION.devQ = new THREE.Quaternion();
-  deviceQuat(MOTION.devQ, e.alpha || 0, e.beta || 0, e.gamma || 0);
-  if (MOTION.recal || !MOTION.refQ) {
-    MOTION.refQ = MOTION.devQ.clone(); MOTION.recal = false;
-    parRefG = e.gamma || 0; parRefB = e.beta || 0;
-  }
-  parTX = parAxis((e.gamma || 0) - (parRefG || 0), 3, 22);
-  parTY = parAxis((e.beta || 0) - (parRefB || 0), 3, 20);
-  hideMotionPill();
-}, true);
-window.addEventListener('pointermove', (e) => {
-  if (e.pointerType !== 'mouse') return;
-  mouseAt = performance.now();
-  mouseTX = clamp((e.clientX / Math.max(1, W) - 0.5) * 2, -1, 1);
-  mouseTY = clamp((e.clientY / Math.max(1, H) - 0.5) * 2, -1, 1);
-}, true);
-function updateParallax(t) {
-  let tx, ty;
-  if (performance.now() - mouseAt < 2500) { tx = mouseTX; ty = mouseTY; }
-  else if (performance.now() - lastOrientAt < 3000) { tx = parTX; ty = parTY; }
-  else { tx = 0; ty = 0; }   // no live input: hold perfectly still (no idle sway/wander)
-  parX += (tx - parX) * 0.055;
-  parY += (ty - parY) * 0.055;
-}
-
-/* ============================== cozy room (fallback bg) ============================== */
-function rr2(c, x, y, w, h, r) {
-  c.beginPath();
-  if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h);
-}
-function ellipse2(c, x, y, rx, ry, rot) {
-  c.beginPath(); c.ellipse(x, y, rx, ry, rot || 0, 0, Math.PI * 2);
-}
-function drawRoom() {
-  const ctx = rctx;
-  const wall = ctx.createLinearGradient(0, 0, 0, floorTop + 30);
-  wall.addColorStop(0, '#f2f8e6'); wall.addColorStop(1, '#dceccb');
-  ctx.fillStyle = wall; ctx.fillRect(0, 0, W, floorTop + 2);
-  const wx = W * 0.14 + parX * -8, wy = H * 0.06, ww = W * 0.30, wh = floorTop * 0.60;
-  ctx.fillStyle = '#bfe3f2'; rr2(ctx, wx, wy, ww, wh, 8); ctx.fill();
-  ctx.fillStyle = '#fff3b0'; ctx.beginPath(); ctx.arc(wx + ww * 0.72, wy + wh * 0.3, ww * 0.13, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#e8f7fd'; ellipse2(ctx, wx + ww * 0.3, wy + wh * 0.62, ww * 0.2, wh * 0.1); ctx.fill();
-  ctx.strokeStyle = '#fff8ee'; ctx.lineWidth = 7; rr2(ctx, wx, wy, ww, wh, 8); ctx.stroke();
-  ctx.lineWidth = 4; ctx.beginPath();
-  ctx.moveTo(wx + ww / 2, wy); ctx.lineTo(wx + ww / 2, wy + wh);
-  ctx.moveTo(wx, wy + wh / 2); ctx.lineTo(wx + ww, wy + wh / 2); ctx.stroke();
-  const fx = W * 0.68 + parX * -8, fy = H * 0.07, fw = W * 0.20, fh = floorTop * 0.44;
-  ctx.fillStyle = '#a9743f'; rr2(ctx, fx, fy, fw, fh, 5); ctx.fill();
-  ctx.fillStyle = '#fff6ec'; rr2(ctx, fx + 6, fy + 6, fw - 12, fh - 12, 3); ctx.fill();
-  ctx.fillStyle = '#ff8fb8';
-  for (let i = 0; i < 5; i++) {
-    const a = (i / 5) * Math.PI * 2;
-    ellipse2(ctx, fx + fw / 2 + Math.cos(a) * fw * 0.13, fy + fh / 2 + Math.sin(a) * fh * 0.13, fw * 0.10, fh * 0.10);
-    ctx.fill();
-  }
-  ctx.fillStyle = '#ffb84d'; ctx.beginPath(); ctx.arc(fx + fw / 2, fy + fh / 2, fw * 0.09, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#fff3e0'; ctx.fillRect(0, floorTop - 7, W, 9);
-  ctx.fillStyle = 'rgba(120,70,30,0.35)'; ctx.fillRect(0, floorTop + 2, W, 2);
-  const fl = ctx.createLinearGradient(0, floorTop, 0, H);
-  fl.addColorStop(0, '#bb8048'); fl.addColorStop(1, '#8a5527');
-  ctx.fillStyle = fl; ctx.fillRect(0, floorTop, W, H - floorTop);
-  ctx.strokeStyle = 'rgba(60,30,5,0.20)'; ctx.lineWidth = 2;
-  for (let y = floorTop + 26; y < H; y += 30) {
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-  }
-  ctx.strokeStyle = 'rgba(60,30,5,0.10)';
-  for (let y = floorTop + 26, row = 0; y < H; y += 30, row++) {
-    for (let x = ((row % 2) * 90) + 40; x < W; x += 190) {
-      ctx.beginPath(); ctx.moveTo(x, y - 28); ctx.lineTo(x, y); ctx.stroke();
-    }
-  }
-  const rugX = W * 0.5 + parX * -12, rugY = H * 0.86;
-  ctx.fillStyle = '#7fb069'; ellipse2(ctx, rugX, rugY, W * 0.42, H * 0.10); ctx.fill();
-  ctx.fillStyle = '#95c685'; ellipse2(ctx, rugX, rugY, W * 0.35, H * 0.080); ctx.fill();
-  ctx.fillStyle = '#b9dcab'; ellipse2(ctx, rugX, rugY, W * 0.25, H * 0.055); ctx.fill();
-  const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.45, W / 2, H / 2, Math.max(W, H) * 0.78);
-  vg.addColorStop(0, 'rgba(30,15,5,0)'); vg.addColorStop(1, 'rgba(30,15,5,0.20)');
-  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
-}
-
-/* ============================== three.js scene ==============================
-   LINK — HAND-BUILT (Blender): standing still at (0, 0, MODEL_Z), framed so the whole
-   figure fits the fallback view; in camera mode he stands in the room. */
-let renderer = null, scene = null, camera = null;
-const MODEL_Z = -1.5;
-const CAM_BASE = new THREE.Vector3(0, 0.98, 1.12);
-const CAM_LOOK = new THREE.Vector3(0, 0.70, MODEL_Z);
-
-function makeBlobTexture() {
-  const c = document.createElement('canvas'); c.width = c.height = 128;
-  const g = c.getContext('2d');
-  const grad = g.createRadialGradient(64, 64, 4, 64, 64, 62);
-  grad.addColorStop(0, 'rgba(0,0,0,0.55)');
-  grad.addColorStop(0.6, 'rgba(0,0,0,0.28)');
-  grad.addColorStop(1, 'rgba(0,0,0,0)');
-  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
-  return new THREE.CanvasTexture(c);
-}
-let blobGeo = null, blobMat = null;
-
-function initGL() {
-  renderer = new THREE.WebGLRenderer({ canvas: glCanvas, alpha: true, antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.setSize(W, H);
-  renderer.setClearColor(0x000000, 0);
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(58, W / Math.max(1, H), 0.1, 120);
-  camera.position.copy(CAM_BASE);
-  camera.lookAt(CAM_LOOK);
-  baseCamQ = camera.quaternion.clone();
-  hemiLight = new THREE.HemisphereLight(0xffffff, 0x554433, 1.15);
-  scene.add(hemiLight);
-  dirLight = new THREE.DirectionalLight(0xfff1da, 1.5);
-  dirLight.position.set(2.5, 6.5, 3.0);
-  scene.add(dirLight);
-  blobGeo = new THREE.PlaneGeometry(1, 1);
-  blobMat = new THREE.MeshBasicMaterial({
-    map: makeBlobTexture(), transparent: true, depthWrite: false, opacity: 0.85
+const _e = new THREE.Euler(), _q0 = new THREE.Quaternion(), _q1 = new THREE.Quaternion(-Math.sqrt(0.5),0,0,Math.sqrt(0.5));
+const _zee = new THREE.Vector3(0,0,1);
+function enableGyro(){
+  if (MOTION.granted) return; MOTION.granted = true; MOTION.ever = true;
+  addEventListener('deviceorientation', e => {
+    if (e.alpha === null) return;
+    _e.set(THREE.MathUtils.degToRad(e.beta||0), THREE.MathUtils.degToRad(e.alpha||0),
+           THREE.MathUtils.degToRad(-(e.gamma||0)), 'YXZ');
+    const q = new THREE.Quaternion().setFromEuler(_e);
+    q.multiply(_q1);
+    _q0.setFromAxisAngle(_zee, -THREE.MathUtils.degToRad((screen.orientation && screen.orientation.angle) || 0));
+    q.multiply(_q0);
+    if (!MOTION.calibInv) MOTION.calibInv = q.clone().invert();  // start pose = looking at her
+    MOTION.quat = MOTION.calibInv.clone().multiply(q);
   });
 }
+/* desktop/headless: no gyro hardware — mouse drag looks (drag also fine-tunes on phones) */
 
-/* ===================== LINK — HAND-BUILT ===================== */
-const LINK_HEIGHT = 1.7;              // metres — scaled from the loaded bbox
-let linkFig = null;                    // { group, inner, shadow, height }
-let modelLoaded = false;
-let modelError = false;
-let modelHeight = 0;
-
-let mixer = null;
-let baseInnerY = 0;
-let nativeH = 0;
-const SPIN = { active: false, t: 0, dur: 0.8 };
-
-function loadLink() {
-  const loader = new GLTFLoader();
-  loader.load('models/linkle-dance.glb', (gltf) => {
-    const group = new THREE.Group();
-    const inner = gltf.scene;
-    inner.traverse(o => { if (o.isMesh && o.material && 'metalness' in o.material) { o.material.metalness = 0; o.material.needsUpdate = true; } });   // Hunyuan GLBs default metalness 1 = black without an env map
-    inner.updateMatrixWorld(true);
-    const bb = new THREE.Box3();
-    const _tb = new THREE.Box3();
-    inner.traverse(o => { if (o.isMesh) { if (!o.geometry.boundingBox) o.geometry.computeBoundingBox(); _tb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld); bb.union(_tb); } });
-    const size = new THREE.Vector3(); bb.getSize(size);
-    modelHeight = size.y; nativeH = size.y;
-    const s = LINK_HEIGHT / size.y;
-    inner.scale.setScalar(s);
-    inner.position.y = -bb.min.y * s;
-    baseInnerY = inner.position.y;
-    group.add(inner);
-    group.position.set(0, 0, MODEL_Z);
-    scene.add(group);
-    const shadow = new THREE.Mesh(blobGeo, blobMat.clone());
-    shadow.rotation.x = -Math.PI / 2;
-    shadow.position.set(0, 0.012, MODEL_Z);
-    shadow.scale.set(1.0, 0.8, 1);
-    scene.add(shadow);
-    linkFig = { group, inner, shadow };
-    if (gltf.animations && gltf.animations.length) {
-      mixer = new THREE.AnimationMixer(inner);
-      mixer.clipAction(gltf.animations[0]).play();
-    }
-    modelLoaded = true;
-  }, undefined, () => { modelError = true; });
-}
-
-/* breathing sway: barely-there, feet stay planted (scale about the floor) */
-function easeIO(x) { return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2; }
-function doSpin() {
-  if (!linkFig || SPIN.active) return;
-  SPIN.active = true; SPIN.t = 0;
-  heartTotal++; heartCountEl.textContent = heartTotal;
-  sndSpin();
-  _pv.set(0, 0.85, MODEL_Z).project(camera);
-  const sx = (_pv.x * 0.5 + 0.5) * W, sy = (_pv.y * -0.5 + 0.5) * H;
-  spawnHeartsAt(sx, sy - 30, 5, 1.3);
-}
-function updateLink(t, dt) {
-  if (!linkFig) return;
-  if (mixer && dt) mixer.update(dt);
-  const b = Math.sin(t * 0.0016);              // ~4 s breath
-  linkFig.group.scale.set(1 + 0.0022 * b, 1 + 0.0055 * b, 1 + 0.0022 * b);
-  linkFig.group.rotation.z = 0.0035 * Math.sin(t * 0.0009);
-  if (SPIN.active) {
-    SPIN.t += dt;
-    const p = clamp(SPIN.t / SPIN.dur, 0, 1);
-    linkFig.inner.rotation.y = easeIO(p) * Math.PI * 4;
-    linkFig.inner.position.y = baseInnerY + Math.sin(p * Math.PI) * 0.28;
-    if (p >= 1) { SPIN.active = false; linkFig.inner.rotation.y = 0; linkFig.inner.position.y = baseInnerY; }
-  }
-}
-
-/* ============================== hearts (fx overlay) ============================== */
-function spawnHeartsAt(sx, sy, n, s) {
-  for (let i = 0; i < n; i++) {
-    hearts.push({
-      x: sx + rand(-16, 16) * (s || 1), y: sy,
-      vx: rand(-9, 9), vy: rand(-50, -32),
-      life: 0, max: rand(0.7, 1.15), size: rand(7, 11) * (s || 1)
-    });
-  }
-}
-function updateHearts(dt) {
-  for (let i = hearts.length - 1; i >= 0; i--) {
-    const h = hearts[i];
-    h.life += dt; h.x += h.vx * dt; h.y += h.vy * dt; h.vy -= 6 * dt;
-    if (h.life >= h.max) hearts.splice(i, 1);
-  }
-}
-function drawHeart(h) {
-  const a = clamp(1 - h.life / h.max, 0, 1);
-  const s = h.size * (0.7 + 0.3 * (h.life / h.max));
-  fctx.save();
-  fctx.translate(h.x + Math.sin(h.life * 6 + h.size) * 2.5, h.y);
-  fctx.scale(s / 10, s / 10);
-  fctx.fillStyle = 'rgba(255,92,132,' + (a * 0.95) + ')';
-  fctx.beginPath();
-  fctx.moveTo(0, 8);
-  fctx.bezierCurveTo(-11, -2, -6, -11, 0, -5);
-  fctx.bezierCurveTo(6, -11, 11, -2, 0, 8);
-  fctx.fill();
-  fctx.restore();
-}
-
-/* ============================== taps ============================== */
-const raycaster = new THREE.Raycaster();
-const _ndc = new THREE.Vector2();
-const _pv = new THREE.Vector3();
-
-function petLink(hitY) {
-  doSpin();
-  hintEl.classList.remove('show');
-}
-glCanvas.addEventListener('pointerdown', (e) => {
-  if (!started || !linkFig) return;
-  if (window.__linkModeState && window.__linkModeState.mode === 'rotate') return; // ROTATE: link-mode-block taps on pointerup
-  initAudio(); resumeAudio();
-  _ndc.set((e.clientX / Math.max(1, W)) * 2 - 1, -((e.clientY / Math.max(1, H)) * 2 - 1));
-  raycaster.setFromCamera(_ndc, camera);
-  const hits = raycaster.intersectObject(linkFig.inner, true);
-  if (hits.length) petLink(hits[0].point.y);
-});
-
-/* ================= BEGIN link-mode-block: WALK / ROTATE viewing modes =================
-   Self-contained viewing-mode logic: mode toggle, drag-to-turn with inertia,
-   two-finger pinch zoom (via camera distance), nudge / auto-spin / reset.
-   PORT NOTE: to move this to another page, copy this block plus the
-   link-mode-css <style> and the link-mode-block HTML (ids: modeBar, rotPanel,
-   hmWalk, hmRotate, hmLeft, hmRight, hmAuto, hmReset), and keep the one-line
-   rotate guard at the top of the page's own canvas pointerdown handler.
-   It expects these page globals: linkFig, camera, CAM_BASE, MODEL_Z, started,
-   hintEl, raycaster, _ndc, petLink, initAudio, resumeAudio, clamp, W, H. */
-const HM = {
-  mode: 'walk', yaw: 0, vel: 0, scale: 1, auto: false,
-  dragging: false, moved: 0, downAt: 0, lastX: 0,
-  pointers: new Map(), pinchD: 0
-};
-window.__linkModeState = HM;
-const HM_BASE_Z = CAM_BASE.z;                 // default camera z (RESET target)
-const HM_DIST = CAM_BASE.z - MODEL_Z;         // framing distance at scale 1
-const hmBar = document.getElementById('modeBar');
-const hmPanel = document.getElementById('rotPanel');
-const hmWalkBtn = document.getElementById('hmWalk');
-const hmRotateBtn = document.getElementById('hmRotate');
-const hmAutoBtn = document.getElementById('hmAuto');
-const HM_HINTS = {
-  walk: 'She\'s dancing! Walk around her · Tap her for a spin',
-  rotate: 'Drag sideways to turn her · Tap her for a spin'
-};
-function hmSetMode(m) {
-  HM.mode = m; HM.vel = 0; HM.dragging = false; HM.pointers.clear(); HM.pinchD = 0;
-  hmWalkBtn.classList.toggle('on', m === 'walk');
-  hmRotateBtn.classList.toggle('on', m === 'rotate');
-  hmPanel.classList.toggle('hidden', m !== 'rotate');
-  hintEl.textContent = HM_HINTS[m];
-  if (started) {
-    hintEl.classList.add('show');
-    clearTimeout(hmSetMode._t);
-    hmSetMode._t = setTimeout(() => hintEl.classList.remove('show'), 2600);
-  }
-}
-hmWalkBtn.addEventListener('click', () => hmSetMode('walk'));
-hmRotateBtn.addEventListener('click', () => hmSetMode('rotate'));
-document.getElementById('hmLeft').addEventListener('click', () => { HM.yaw -= Math.PI / 12; HM.vel = 0; });
-document.getElementById('hmRight').addEventListener('click', () => { HM.yaw += Math.PI / 12; HM.vel = 0; });
-hmAutoBtn.addEventListener('click', () => { HM.auto = !HM.auto; hmAutoBtn.classList.toggle('on', HM.auto); });
-document.getElementById('hmReset').addEventListener('click', () => {
-  HM.yaw = 0; HM.vel = 0; HM.scale = 1; HM.auto = false;
-  hmAutoBtn.classList.remove('on');
-  CAM_BASE.z = HM_BASE_Z;
-});
-function hmPetTap(cx, cy) {
-  _ndc.set((cx / Math.max(1, W)) * 2 - 1, -((cy / Math.max(1, H)) * 2 - 1));
-  raycaster.setFromCamera(_ndc, camera);
-  const hits = raycaster.intersectObject(linkFig.inner, true);
-  if (hits.length) petLink(hits[0].point.y);
-}
-glCanvas.addEventListener('pointerdown', (e) => {
-  if (!started || !linkFig || HM.mode !== 'rotate') return;
-  initAudio(); resumeAudio();
-  HM.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  try { glCanvas.setPointerCapture(e.pointerId); } catch (err) {}
-  if (HM.pointers.size === 1) {
-    HM.dragging = true; HM.moved = 0; HM.downAt = performance.now();
-    HM.lastX = e.clientX; HM.vel = 0;
-  } else if (HM.pointers.size === 2) {
-    const p = [...HM.pointers.values()];
-    HM.pinchD = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
-    HM.dragging = false;
-  }
-});
-glCanvas.addEventListener('pointermove', (e) => {
-  if (HM.mode !== 'rotate' || !HM.pointers.has(e.pointerId)) return;
-  HM.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  if (HM.pointers.size === 2) {
-    const p = [...HM.pointers.values()];
-    const d = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
-    if (HM.pinchD > 0 && d > 0) {
-      HM.scale = clamp(HM.scale * (d / HM.pinchD), 0.5, 1.5);
-      CAM_BASE.z = MODEL_Z + HM_DIST / HM.scale;
-    }
-    HM.pinchD = d;
-    return;
-  }
-  if (!HM.dragging) return;
-  const dx = e.clientX - HM.lastX;
-  HM.lastX = e.clientX;
-  HM.moved += Math.abs(dx);
-  HM.yaw += dx * 0.009;
-  HM.vel = HM.vel * 0.6 + dx * 0.009 * 0.4;
-});
-function hmPointerEnd(e) {
-  if (!HM.pointers.has(e.pointerId)) return;
-  const wasTap = HM.pointers.size === 1 && HM.dragging && HM.moved < 10 &&
-                 (performance.now() - HM.downAt) < 350;
-  HM.pointers.delete(e.pointerId);
-  if (HM.pointers.size < 2) HM.pinchD = 0;
-  if (HM.pointers.size === 0) {
-    HM.dragging = false;
-    if (wasTap && HM.mode === 'rotate' && linkFig) hmPetTap(e.clientX, e.clientY);
-  }
-}
-glCanvas.addEventListener('pointerup', hmPointerEnd);
-glCanvas.addEventListener('pointercancel', hmPointerEnd);
-(function hmTick() {
-  requestAnimationFrame(hmTick);
-  hmBar.classList.toggle('hidden', !started);
-  if (!linkFig) return;
-  if (HM.mode === 'rotate' && !HM.dragging && HM.pointers.size === 0) {
-    HM.yaw += HM.vel;                 // inertia glide
-    HM.vel *= 0.95;
-    if (HM.auto) HM.yaw += 0.0036;    // auto-spin ~12 deg/s at 60 fps
-  }
-  linkFig.group.rotation.y = HM.yaw;
-})();
-window.__linkMode = {
-  get mode() { return HM.mode; },
-  get yaw() { return HM.yaw; },
-  get scale() { return HM.scale; },
-  setMode: hmSetMode
-};
-/* ================= END link-mode-block ================= */
-
-/* ============================== resize ============================== */
-function resize() {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  W = window.innerWidth; H = window.innerHeight;
-  for (const c of [roomCanvas, fxCanvas]) {
-    c.width = Math.round(W * dpr);
-    c.height = Math.round(H * dpr);
-  }
-  rctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  floorTop = Math.round(H * 0.34);
-  if (renderer && camera) {
-    renderer.setSize(W, H);
-    camera.aspect = W / Math.max(1, H);
-    camera.updateProjectionMatrix();
-  }
-}
-window.addEventListener('resize', resize);
-
-/* ============================== main loop ============================== */
-let lastT = 0;
-function frame(t) {
-  requestAnimationFrame(frame);
-  const dt = Math.min(0.05, lastT ? (t - lastT) / 1000 : 0.016);
-  lastT = t;
-  updateParallax(t);
-  if (!camOK) { rctx.clearRect(0, 0, W, H); drawRoom(); }
-  if (camera) {
-    camera.position.set(CAM_BASE.x + parX * 0.9, CAM_BASE.y - parY * 0.45, CAM_BASE.z);
-    if (!applyMotionCamera()) {
-      let lx = CAM_LOOK.x - parX * 0.5, ly = CAM_LOOK.y - parY * 0.3, lz = CAM_LOOK.z;
-      camera.lookAt(lx, ly, lz);
-    }
-  }
-  updateLightMatch(t, dt);
-  if (started) { updateLink(t, dt); updateHearts(dt); }
-  if (renderer) renderer.render(scene, camera);
-  fctx.clearRect(0, 0, W, H);
-  for (const h of hearts) drawHeart(h);
-}
-
-/* ============================== start flow ============================== */
-let startInFlight = false;
-document.getElementById('startBtn').addEventListener('click', async () => {
-  if (startInFlight) return;
-  startInFlight = true;
-  askMotionPermission();   // FIRST, synchronously — iOS only honors it inside the tap
-  initAudio();
+/* ============================== camera ============================== */
+let camOK = false;
+async function startCamera(){
   try {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('no getUserMedia');
-    const stream = await Promise.race([
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }),
-      new Promise((_, rej) => setTimeout(() => rej(new Error('camera timeout')), 4500))
-    ]);
+    const stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false });
     video.srcObject = stream;
-    await video.play().catch(() => {});
+    await video.play().catch(()=>{});
     camOK = true;
-  } catch (e) { camOK = false; }
-  video.classList.toggle('hidden', !camOK);
-  roomCanvas.classList.toggle('hidden', camOK);
-  startEl.classList.add('hidden');
-  hudEl.classList.remove('hidden');
-  started = true;
-  MOTION.recal = true;
-  motionWatchdog();
-  hintEl.classList.add('show');
-  setTimeout(() => hintEl.classList.remove('show'), 7000);
+    video.classList.remove('hidden');
+    stageGroup.visible = false;
+    scene.background = null;
+  } catch(e) {
+    camOK = false;
+    video.classList.add('hidden');
+    stageGroup.visible = true;            // neon stage fallback
+  }
+}
+
+/* ============================== game ============================== */
+const G = { phase:'load', score:0, combo:0, maxCombo:0, counts:{perfect:0,good:0,miss:0},
+            songStart:0, lastBeat:-1, spinUntil:0, spinT0:-1, spinFrom:0, finished:false };
+const mult = () => Math.min(8, 1 + Math.floor(G.combo / 8));
+const scoreEl=$('score'), comboEl=$('combo'), multEl=$('mult'), comboChip=$('comboChip'),
+      judgeEl=$('judge'), countEl=$('countPop'), progBar=$('progBar'), progTxt=$('progTxt');
+
+function refreshHUD(){
+  scoreEl.textContent = G.score;
+  comboEl.textContent = G.combo;
+  multEl.textContent = mult();
+  comboChip.classList.toggle('hot', G.combo >= 8);
+}
+function showJudge(txt, color){
+  judgeEl.textContent = txt; judgeEl.style.color = color;
+  judgeEl.classList.remove('pop'); void judgeEl.offsetWidth; judgeEl.classList.add('pop');
+}
+function showCount(txt){
+  countEl.textContent = txt;
+  countEl.classList.remove('pop'); void countEl.offsetWidth; countEl.classList.add('pop');
+}
+function addScore(base){
+  G.score += base * mult();
+  refreshHUD();
+}
+function beatTime(k){ return G.songStart + k * BEAT; }
+
+function judgeTap(tNow){
+  if (G.phase !== 'play' || !AC) return null;
+  const rel = tNow - G.songStart;
+  if (rel < -GOOD_W) return null;                        // count-in tap — not a miss
+  const k = Math.round(rel / BEAT);
+  if (k < 0 || k >= SONG_BEATS) return null;
+  const d = rel - k * BEAT, ad = Math.abs(d);
+  let kind;
+  if (ad <= PERFECT_W) kind = 'perfect';
+  else if (ad <= GOOD_W) kind = 'good';
+  else kind = 'miss';
+  if (kind === 'perfect'){ G.counts.perfect++; G.combo++; addScore(100); showJudge('PERFECT! 💎', '#5eead4'); }
+  else if (kind === 'good'){ G.counts.good++; G.combo++; addScore(50); showJudge('GOOD ✓', '#ffd166'); }
+  else { G.counts.miss++; G.combo = 0; refreshHUD(); showJudge('MISS', '#ff7d9c'); }
+  G.maxCombo = Math.max(G.maxCombo, G.combo);
+  refreshHUD(); judgeBlip(kind);
+  return kind;
+}
+
+/* spin move — tap HER (original v2's signature interaction) */
+function doSpin(tNow){
+  if (G.phase !== 'play' || !heroReady) return false;
+  if (tNow < G.spinUntil) return false;
+  G.spinUntil = tNow + 1.6;
+  G.spinT0 = performance.now() / 1000; G.spinFrom = heroSpin.rotation.y;
+  const nearBeat = Math.abs((tNow - G.songStart) - Math.round((tNow - G.songStart) / BEAT) * BEAT);
+  const onBeat = nearBeat <= 0.25;
+  G.score += onBeat ? 150 : 50;
+  showJudge(onBeat ? 'SPIN! +150 🌀' : 'SPIN! +50 🌀', '#ff9df0');
+  refreshHUD();
+  if (actCartop && currentAct !== actCartop) {
+    actCartop.reset().setLoop(THREE.LoopOnce, 1); actCartop.clampWhenFinished = true;
+    actCartop.fadeIn(0.1).play();
+    if (currentAct) currentAct.fadeOut(0.1);
+    currentAct = actCartop;
+    setTimeout(() => {                       // back to the groove, re-locked to the beat grid
+      if (!actClub || G.phase !== 'play') return;
+      const el = AC ? (AC.currentTime - G.songStart) : 0;
+      actClub.reset(); actClub.time = (el % (3*BEAT)) * CLUB_TS;   // re-enter the loop on the beat grid
+      actClub.setLoop(THREE.LoopRepeat, Infinity).fadeIn(0.15).play();
+      if (currentAct) currentAct.fadeOut(0.15);
+      currentAct = actClub;
+    }, 2 * BEAT * 1000);
+  }
+  return true;
+}
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+function tapHitsHero(x, y){
+  if (!gltfScene) return false;
+  ndc.set((x / innerWidth) * 2 - 1, -(y / innerHeight) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  return ray.intersectObject(gltfScene, true).length > 0;
+}
+
+/* ============================== input: tap vs drag-look ============================== */
+let pDown = null;
+const glEl = renderer.domElement;
+glEl.addEventListener('pointerdown', e => {
+  pDown = { t: performance.now()/1000, at: AC ? AC.currentTime : 0, x: e.clientX, y: e.clientY, moved: 0, lx: e.clientX, ly: e.clientY };
+});
+glEl.addEventListener('pointermove', e => {
+  if (!pDown) return;
+  const dx = e.clientX - pDown.lx, dy = e.clientY - pDown.ly;
+  pDown.lx = e.clientX; pDown.ly = e.clientY;
+  pDown.moved += Math.abs(dx) + Math.abs(dy);
+  if (pDown.moved > 14) { dragYaw -= dx * 0.0052; dragPitch -= dy * 0.0052;
+    dragPitch = THREE.MathUtils.clamp(dragPitch, -0.9, 0.9); }
+});
+glEl.addEventListener('pointerup', e => {
+  if (!pDown) return;
+  const wasTap = pDown.moved <= 14 && (performance.now()/1000 - pDown.t) < 0.45;
+  const { at, x, y } = pDown; pDown = null;
+  if (!wasTap || G.phase !== 'play') return;
+  if (tapHitsHero(x, y)) { if (doSpin(at)) return; }
+  judgeTap(at);
+});
+glEl.addEventListener('pointercancel', () => { pDown = null; });
+addEventListener('keydown', e => {
+  if (e.code === 'Space' && G.phase === 'play' && AC) { e.preventDefault(); judgeTap(AC.currentTime); }
 });
 
-/* ============================== boot + test hook ============================== */
-resize();
-initGL();
-resize();
-loadLink();
-requestAnimationFrame(frame);
+/* ============================== flow ============================== */
+function beginRound(){
+  G.score = 0; G.combo = 0; G.maxCombo = 0; G.counts = { perfect:0, good:0, miss:0 };
+  G.lastBeat = -1; G.finished = false; G.spinT0 = -1;
+  heroSpin.rotation.y = 0;
+  refreshHUD();
+  $('resultCard').classList.add('hidden');
+  G.phase = 'count';
+  const t0 = AC.currentTime + 0.15;
+  G.songStart = t0 + 4 * BEAT;                            // 4-beat count-in
+  [3,2,1].forEach((n,i) => setTimeout(() => showCount(n), (i+1) * BEAT * 1000));
+  setTimeout(() => { showCount('GO! 💃'); if (actClub) setAction(actClub, 0.2); }, 4 * BEAT * 1000);
+  setTimeout(() => { G.phase = 'play'; $('spinTip').classList.add('show');
+    setTimeout(() => $('spinTip').classList.remove('show'), 4200); }, 4 * BEAT * 1000);
+  startMusic(G.songStart);
+}
+function finishSong(){
+  if (G.finished) return; G.finished = true; G.phase = 'done';
+  stopMusic();
+  if (actIdle) setAction(actIdle, 0.6);
+  const judged = G.counts.perfect + G.counts.good + G.counts.miss;
+  const acc = (G.counts.perfect + 0.5 * G.counts.good) / SONG_BEATS;
+  const grade = acc >= 0.9 ? 'S' : acc >= 0.75 ? 'A' : acc >= 0.55 ? 'B' : acc >= 0.35 ? 'C' : 'D';
+  $('gradeEl').textContent = grade;
+  $('rstats').innerHTML =
+    `💎 ${G.score} points<br>🔥 best combo ×${G.maxCombo}<br>` +
+    `✨ ${G.counts.perfect} perfect · ✓ ${G.counts.good} good · ✗ ${G.counts.miss} miss`;
+  $('resultCard').classList.remove('hidden');
+}
+$('startBtn').addEventListener('click', () => {
+  askMotionPermission();                       // FIRST, synchronously — iOS rule
+  audioInit();
+  if (!MOTION.needPerm && typeof DeviceOrientationEvent !== 'undefined') enableGyro();
+  startCamera();
+  $('startOverlay').classList.add('hidden');
+  if (heroReady && AC) beginRound();
+  else { const iv = setInterval(() => { if (heroReady && AC) { clearInterval(iv); beginRound(); } }, 200); }
+});
+$('againBtn').addEventListener('click', () => { audioInit(); if (AC) beginRound(); });
 
-window.__linkleDance = {
-  get started() { return started; },
-  get camOK() { return camOK; },
-  get loaded() { return modelLoaded; },
-  get modelError() { return modelError; },
-  get spinning() { return SPIN.active; },
-  get clipTime() { return mixer ? +mixer.time.toFixed(3) : -1; },
-  get heartTotal() { return heartTotal; },
-  height: () => modelHeight,
-  screenPos: () => {
-    if (!linkFig || !camera) return null;
-    const gp = linkFig.group.position;
-    _pv.set(gp.x, gp.y + LINK_HEIGHT * 0.55, gp.z).project(camera);
-    return [(_pv.x * 0.5 + 0.5) * W, (_pv.y * -0.5 + 0.5) * H];
+/* ============================== beat visuals + main loop ============================== */
+const rings = [$('ring1'), $('ring2')]; let ringIdx = 0, lastRingBeat = -1;
+function spawnRing(){
+  const r = rings[ringIdx++ % rings.length];
+  r.animate([
+    { transform:'scale(2.1)', opacity:0.95 },
+    { transform:'scale(1.0)', opacity:1.0 },
+  ], { duration: BEAT * 1000, easing:'linear' });
+}
+const padCore = $('padCore');
+const clock = new THREE.Clock();
+let frozen = false;   // verification aid: hold one presented frame so headless screenshots can land
+function animate(){
+  requestAnimationFrame(animate);
+  if (frozen) return;
+  const dt = Math.min(clock.getDelta(), 0.05);
+  if (mixer) { mixer.update(dt); rootLock(); }
+
+  /* spin tween: one full turn over ~0.45 s, ease-out */
+  if (G.spinT0 > 0) {
+    const p = (performance.now()/1000 - G.spinT0) / 0.45;
+    if (p >= 1) { heroSpin.rotation.y = G.spinFrom + Math.PI*2; G.spinT0 = -1; }
+    else heroSpin.rotation.y = G.spinFrom + Math.PI*2 * (1 - Math.pow(1-p, 3));
+  }
+
+  /* camera: gyro quaternion if we have one, else drag look.
+     Base pitch −0.26 rad centres her (mid-height 0.76 m) in the frame —
+     at HERO_DIST the fov-68 half-height is ~0.89 m, so centred she fills ~85%. */
+  if (MOTION.quat) {
+    camRig.quaternion.copy(MOTION.quat);
+    camPitch.rotation.set(dragPitch - 0.26, dragYaw, 0);
+  } else {
+    camRig.rotation.set(0, dragYaw, 0);
+    camPitch.rotation.set(dragPitch - 0.26, 0, 0);
+  }
+
+  /* beat-driven dressing */
+  if (AC && (G.phase === 'play' || G.phase === 'count')) {
+    const el = AC.currentTime - G.songStart;
+    const beatF = el / BEAT, beatI = Math.floor(beatF), phase = beatF - beatI;
+    if (G.phase === 'play') {
+      if (beatI > G.lastBeat) {
+        G.lastBeat = beatI;
+        const done = Math.min(SONG_BEATS, Math.max(0, beatI));
+        progBar.style.width = (done / SONG_BEATS * 100) + '%';
+        progTxt.textContent = `♪ ${done} / ${SONG_BEATS}`;
+      }
+      if (beatI - 1 > lastRingBeat && beatI - 1 < SONG_BEATS) { lastRingBeat = beatI - 1; spawnRing(); }
+    }
+    const pulse = Math.max(0, 1 - phase * 2.4);
+    padCore.style.transform = `scale(${1 + pulse * 0.10})`;
+    blob.material.opacity = 1;
+    blob.scale.setScalar(1 + pulse * 0.10);
+    const beatEven = ((beatI % 2) + 2) % 2 === 0;
+    accentA.intensity = stageGroup.visible ? pulse * (beatEven ? 26 : 6) : pulse * 5;
+    accentB.intensity = stageGroup.visible ? pulse * (beatEven ? 6 : 26) : pulse * 5;
+  }
+  renderer.render(scene, camera);
+}
+animate();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+/* verification hooks (house pattern) */
+window.__dance = {
+  G, get camOK(){ return camOK; }, get heroReady(){ return heroReady; },
+  get phase(){ return G.phase; },
+  start(){ $('startBtn').click(); },
+  tapNow(){ return AC ? judgeTap(AC.currentTime) : null; },
+  tapAtBeat(k, offMs=0){ return judgeTap(beatTime(k) + offMs/1000); },
+  spinNow(){ return AC ? doSpin(AC.currentTime) : false; },
+  nextBeatIn(){ if (!AC) return -1; const el = AC.currentTime - G.songStart;
+    return (Math.ceil(el / BEAT) * BEAT - el); },
+  freeze(v){ frozen = !!v; if (frozen) renderer.render(scene, camera); },
+  capture(){ renderer.render(scene, camera); return renderer.domElement.toDataURL('image/png'); },
+  diag(){
+    if (!gltfScene) return { ready:false };
+    const box = skinnedBox() || new THREE.Box3();
+    const corners = [];
+    for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z])
+      corners.push(new THREE.Vector3(x,y,z).project(camera));
+    const ys = corners.map(c => c.y), xs = corners.map(c => c.x);
+    const camP = new THREE.Vector3(); camera.getWorldPosition(camP);
+    const perMesh = [];
+    gltfScene.traverse(o => { if (o.isMesh) { const b = new THREE.Box3().setFromObject(o);
+      perMesh.push({ n:o.name, skinned:!!o.isSkinnedMesh, min:b.min.toArray().map(v=>+v.toFixed(2)), max:b.max.toArray().map(v=>+v.toFixed(2)) }); } });
+    const joints = { head:null, hips:null };
+    for (const nm of ['bone_23','bone_7']) {}
+    bone2.getWorldPosition(_wv); joints.hips = _wv.toArray().map(v=>+v.toFixed(2));
+    return { ready:true, heroScale, worldH: box.max.y - box.min.y, worldMinY: box.min.y, worldMaxY: box.max.y,
+      boxMin: box.min.toArray().map(v=>+v.toFixed(2)), boxMax: box.max.toArray().map(v=>+v.toFixed(2)), perMesh, joints,
+      innerPos: heroInner.position.toArray(), spinPos: heroSpin.position.toArray(),
+      ndcY: [Math.min(...ys), Math.max(...ys)], ndcX: [Math.min(...xs), Math.max(...xs)],
+      fillPct: Math.round((Math.max(...ys) - Math.min(...ys)) / 2 * 100), camY: camP.y };
   },
-  debug: () => {
-    const bb = new THREE.Box3().setFromObject(linkFig.inner);
-    const hips = linkFig.inner.getObjectByName('bone_2');
-    const hp = new THREE.Vector3();
-    if (hips) hips.getWorldPosition(hp);
-    const hand = linkFig.inner.getObjectByName('bone_19');
-    const wp = new THREE.Vector3();
-    if (hand) hand.getWorldPosition(wp);
-    return {
-      bbMin: bb.min.toArray().map(v => +v.toFixed(3)), bbMax: bb.max.toArray().map(v => +v.toFixed(3)),
-      groupPos: linkFig.group.position.toArray(),
-      innerScale: linkFig.inner.scale.toArray().map(v => +v.toFixed(3)),
-      camPos: camera.position.toArray(), hips: hp.toArray().map(v => +v.toFixed(3)), handL: wp.toArray().map(v => +v.toFixed(3)),
-      camOK2: camOK
-    };
-  },
-  start: () => document.getElementById('startBtn').click(),
-  spin: () => doSpin()
 };
 </script>
 <script id="moth-game-guard-js">

@@ -139,6 +139,7 @@ function mergedInput() {
 /* ============================== WORLD ============================== */
 const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
 let W = 0, H = 0, CX = 0, CY = 0, R0 = 0, HY = 0, bgCanvas = null;
+let AX0 = 0, AY0 = 0, K = 1;   // oval arena: base semi-axes + vertical/horizontal ratio
 const BALL_R = 23;
 
 function mulberry(seed) { return function () { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -188,26 +189,35 @@ function resize() {
   cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
   cv.style.width = W + 'px'; cv.style.height = H + 'px';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  CX = W / 2; CY = H * 0.54; HY = H * 0.335;
-  R0 = Math.min(W * 0.465, H * 0.30);
+  CX = W / 2; CY = H * 0.52; HY = H * 0.335;
+  // OVAL arena (v3 reshape, Cherie Nov 14): vertical ellipse filling most of
+  // the portrait screen instead of a circle floating in dead space.
+  // R0/R remain the horizontal semi-axis; vertical semi-axis = R * K.
+  AX0 = Math.min(W / 2 - 12, H * 0.32);
+  AY0 = Math.min(H * 0.41, W * 1.05);
+  K = AY0 / AX0;
+  R0 = AX0;
   if (phase !== 'play') R = R0;
   buildBackground();
   buildDiscSprite();
   buildBallSprites();
 }
 function buildDiscSprite() {
-  const S = Math.ceil(R0 * 2) + 4;
-  discCanvas = document.createElement('canvas'); discCanvas.width = S; discCanvas.height = S;
-  const g = discCanvas.getContext('2d'), c = S / 2;
-  const dg = g.createRadialGradient(c, c, R0 * 0.1, c, c, R0);
+  // Ellipse sprite: draw the circular disc art under a vertical scale of K
+  // so the gradient, speckles and highlight all stretch into the oval.
+  const SW = Math.ceil(AX0 * 2) + 4, SH = Math.ceil(AY0 * 2) + 4;
+  discCanvas = document.createElement('canvas'); discCanvas.width = SW; discCanvas.height = SH;
+  const g = discCanvas.getContext('2d'), cx = SW / 2, cy = SH / 2;
+  g.save();
+  g.translate(cx, cy); g.scale(1, K); g.translate(-cx, -cy);
+  const dg = g.createRadialGradient(cx, cy, AX0 * 0.1, cx, cy, AX0);
   dg.addColorStop(0, '#a7b0c2'); dg.addColorStop(0.72, '#79839a'); dg.addColorStop(1, '#4c5468');
   g.fillStyle = dg;
-  g.beginPath(); g.arc(c, c, R0, 0, 7); g.fill();
-  g.save();
-  g.beginPath(); g.arc(c, c, R0, 0, 7); g.clip();
-  for (const sp of speckles) { g.fillStyle = `rgba(20,24,40,${sp.a})`; g.beginPath(); g.arc(c + sp.x * R0, c + sp.y * R0, sp.r, 0, 7); g.fill(); }
+  g.beginPath(); g.arc(cx, cy, AX0, 0, 7); g.fill();
+  g.beginPath(); g.arc(cx, cy, AX0, 0, 7); g.clip();
+  for (const sp of speckles) { g.fillStyle = `rgba(20,24,40,${sp.a})`; g.beginPath(); g.arc(cx + sp.x * AX0, cy + sp.y * AX0, sp.r, 0, 7); g.fill(); }
   g.fillStyle = 'rgba(255,255,255,.06)';
-  g.beginPath(); g.arc(c, c, R0 * 0.55, 0, 7); g.fill();
+  g.beginPath(); g.arc(cx, cy, AX0 * 0.55, 0, 7); g.fill();
   g.restore();
 }
 function buildBallSprites() {
@@ -252,6 +262,26 @@ const hAlive = document.getElementById('hAlive'), hTime = document.getElementByI
 const startOv = document.getElementById('startOv'), endOv = document.getElementById('endOv');
 const endTitle = document.getElementById('endTitle'), endSub = document.getElementById('endSub');
 const distC = (p) => Math.hypot(p.x - CX, p.y - CY);
+/* ---- oval geometry (v3): R = current horizontal semi-axis, R*K = vertical.
+   qE(p) = normalized ellipse radius: 1 exactly on the rim, <1 inside.
+   sdE(p) = signed distance past the rim in TRUE px, first-order form
+   (q-1)/|grad q| — uniform all the way around. (A center-ray measure
+   overstates the distance by up to ~13% near the diagonals, which made the
+   parked attempt's lip band and kill line angle-dependent.)
+   inN(p) = inward unit normal of the ellipse at p (gradient direction). */
+const RB = () => R * K;
+const qE = (p) => Math.hypot((p.x - CX) / (R || 1), (p.y - CY) / (RB() || 1));
+const sdE = (p) => {
+  const dx = p.x - CX, dy = p.y - CY, q = qE(p);
+  if (q < 1e-9) return -Math.min(R, RB());
+  const gx = dx / ((R * R) * q), gy = dy / ((RB() * RB()) * q);
+  return (q - 1) / (Math.hypot(gx, gy) || 1);
+};
+const inN = (p) => {
+  const gx = (p.x - CX) / ((R * R) || 1), gy = (p.y - CY) / ((RB() * RB()) || 1);
+  const m = Math.hypot(gx, gy);
+  return m < 1e-6 ? { x: 0, y: -1 } : { x: -gx / m, y: -gy / m };
+};
 
 function makeBall(i, x, y, isPlayer) {
   const f = FACTIONS[i];
@@ -273,7 +303,7 @@ function startRound(mode) {
   const n = 6;
   for (let i = 0; i < n; i++) {
     const a = (i / n) * Math.PI * 2 - Math.PI / 2;
-    const b = makeBall(i, CX + Math.cos(a) * R0 * 0.38, CY + Math.sin(a) * R0 * 0.38, mode === 'play' && i === 0);
+    const b = makeBall(i, CX + Math.cos(a) * AX0 * 0.38, CY + Math.sin(a) * AY0 * 0.38, mode === 'play' && i === 0);
     if (mode === 'attract') b.isPlayer = false;
     balls.push(b); Composite.add(engine.world, b.body);
   }
@@ -352,10 +382,10 @@ function driveBall(b, dx, dy, maxSpd, accel) {
   Body.setVelocity(b.body, { x: v.x + dvx, y: v.y + dvy });
 }
 function botThink(b, now) {
-  const p = b.body.position, v = b.body.velocity, ai = b.ai, dC = distC(p);
-  const rimLimit = R * (0.55 + ai.caution * 0.2);
+  const p = b.body.position, v = b.body.velocity, ai = b.ai, q = qE(p);
+  const rimLimit = 0.55 + ai.caution * 0.2;   // in ellipse-q units (1 = rim)
   let ax, ay, spd = ai.maxSpd, accel = ai.accel;
-  if (dC > rimLimit) {
+  if (q > rimLimit) {
     // recover: drive hard at the center
     ax = CX - p.x; ay = CY - p.y; accel = ai.accel * 1.6;
   } else {
@@ -363,21 +393,22 @@ function botThink(b, now) {
       b.retarget = now + 0.7 + Math.random() * 0.9;
       const others = balls.filter((o) => o !== b && o.alive);
       if (!others.length) return;
-      if (ai.aggro >= 0.95) b.target = others.reduce((m, o) => (distC(o.body.position) > distC(m.body.position) ? o : m), others[0]); // rim-most
-      else if (ai.aggro <= 0.55) b.target = others.reduce((m, o) => (distC(o.body.position) < distC(m.body.position) ? o : m), others[0]); // innermost
+      if (ai.aggro >= 0.95) b.target = others.reduce((m, o) => (qE(o.body.position) > qE(m.body.position) ? o : m), others[0]); // rim-most (ellipse q)
+      else if (ai.aggro <= 0.55) b.target = others.reduce((m, o) => (qE(o.body.position) < qE(m.body.position) ? o : m), others[0]); // innermost
       else b.target = others.reduce((m, o) => (Math.hypot(o.body.position.x - p.x, o.body.position.y - p.y) < Math.hypot(m.body.position.x - p.x, m.body.position.y - p.y) ? o : m), others[0]); // nearest
     }
     const t = b.target, tp = t.body.position, tv = t.body.velocity;
-    // aim at the point just behind the target, away from center — pushes them OUT
-    const ox = tp.x - CX, oy = tp.y - CY, om = Math.hypot(ox, oy) || 1;
-    const aimX = tp.x + tv.x * 6 - (ox / om) * BALL_R * 0.7, aimY = tp.y + tv.y * 6 - (oy / om) * BALL_R * 0.7;
+    // aim at the point just behind the target, along the ellipse's outward
+    // normal there — pushes them OUT through their nearest rim
+    const inw = inN(tp), onx = -inw.x, ony = -inw.y;
+    const aimX = tp.x + tv.x * 6 - onx * BALL_R * 0.7, aimY = tp.y + tv.y * 6 - ony * BALL_R * 0.7;
     ax = aimX - p.x; ay = aimY - p.y;
     const dT = Math.hypot(tp.x - p.x, tp.y - p.y);
-    const align = dT > 1 ? ((tp.x - p.x) / dT) * (ox / om) + ((tp.y - p.y) / dT) * (oy / om) : 0;
+    const align = dT > 1 ? ((tp.x - p.x) / dT) * onx + ((tp.y - p.y) / dT) * ony : 0;
     if (dT < 95 && align > 0.45) { spd = ai.maxSpd * 1.15; accel = ai.accel * 1.3; tryDash(b, ax, ay, now); } // CHARGE (+ dash when off cooldown)
   }
   // unstick: barely moving away from the middle -> dash inward with a random slant
-  if (Math.hypot(v.x, v.y) < 0.35 && dC > R * 0.25) {
+  if (Math.hypot(v.x, v.y) < 0.35 && q > 0.25) {
     b.stillT = (b.stillT || 0) + 1;
     if (b.stillT > 80) {
       b.stillT = 0;
@@ -430,7 +461,7 @@ function tick(dt) {
           suddenT = 0;
           const aliveNow = balls.filter((b) => b.alive);
           if (aliveNow.length > 1) {
-            const out = aliveNow.reduce((m, o) => (distC(o.body.position) > distC(m.body.position) ? o : m), aliveNow[0]);
+            const out = aliveNow.reduce((m, o) => (qE(o.body.position) > qE(m.body.position) ? o : m), aliveNow[0]);
             eliminate(out, now);
           }
         }
@@ -443,15 +474,18 @@ function tick(dt) {
   for (const b of balls) {
     if (!b.alive) continue;
     const p = b.body.position;
-    // shallow bowl + an ABSOLUTE-width lip in the outer ~22px: slow rollers get
-    // saved, real rams still eject — and the lip stays fair when the arena shrinks
-    const dC = distC(p), fr = dC / R;
-    if (fr > 0.3) {
-      let pull = 0.02 * fr * fr;
-      const lip = dC - (R - 22);
+    // shallow bowl + an ABSOLUTE-width lip in the outer ~22px of the rim:
+    // slow rollers get saved, real rams still eject — and the lip stays fair
+    // when the arena shrinks. Oval version: strength follows ellipse q, the
+    // pull follows the ellipse's inward normal (nearest rim), and the lip is
+    // measured in true px from the rim via sdE, same all the way around.
+    const q = qE(p);
+    if (q > 0.3) {
+      let pull = 0.02 * q * q;
+      const lip = sdE(p) + 22;
       if (lip > 0) pull += 0.006 * lip;
-      const v = b.body.velocity;
-      Body.setVelocity(b.body, { x: v.x + ((CX - p.x) / (dC || 1)) * pull, y: v.y + ((CY - p.y) / (dC || 1)) * pull });
+      const n = inN(p), v = b.body.velocity;
+      Body.setVelocity(b.body, { x: v.x + n.x * pull, y: v.y + n.y * pull });
     }
     if (b.isPlayer && phase === 'play' && !spectate) {
       const inp = mergedInput(), im = Math.hypot(inp.x, inp.y);
@@ -467,7 +501,7 @@ function tick(dt) {
       particles.push({ x: p2.x + (Math.random() - 0.5) * 14, y: p2.y + (Math.random() - 0.5) * 14, vx: -b.body.velocity.x * 0.12, vy: -b.body.velocity.y * 0.12, life: 0.7, decay: 0.12, col: '#a5f3ff', r: 2.4, type: 'spark' });
     }
     // rim scrape
-    if (dC > R * 0.88 && Math.hypot(b.body.velocity.x, b.body.velocity.y) > 1.6 && now - lastScrape > 0.11) {
+    if (q > 0.88 && Math.hypot(b.body.velocity.x, b.body.velocity.y) > 1.6 && now - lastScrape > 0.11) {
       lastScrape = now; sfx.scrape();
     }
   }
@@ -477,7 +511,7 @@ function tick(dt) {
   let fell = false;
   for (const b of balls) {
     if (!b.alive) continue;
-    if (distC(b.body.position) > R + BALL_R * 0.9) { eliminate(b, now); fell = true; }
+    if (sdE(b.body.position) > BALL_R * 0.9) { eliminate(b, now); fell = true; }
   }
   if (fell) syncHud();
   const alive = balls.filter((b) => b.alive);
@@ -519,7 +553,7 @@ function endRound() {
   if (winner && winner.isPlayer) {
     endTitle.textContent = '🏆 YOU WIN!';
     sfx.win();
-    for (let k = 0; k < 70; k++) particles.push({ x: CX + (Math.random() - 0.5) * R0 * 1.6, y: CY - R0 * 0.7 + Math.random() * 40, vx: (Math.random() - 0.5) * 1.6, vy: 0.4 + Math.random(), life: 1.4, decay: 0.008, col: ['#ffd94d', '#ff5e8a', '#22d3ee', '#7CFC98'][k % 4], r: 3.4, type: 'confetti', rot: Math.random() * 7, vr: (Math.random() - 0.5) * 0.3 });
+    for (let k = 0; k < 70; k++) particles.push({ x: CX + (Math.random() - 0.5) * AX0 * 1.6, y: CY - AY0 * 0.7 + Math.random() * 40, vx: (Math.random() - 0.5) * 1.6, vy: 0.4 + Math.random(), life: 1.4, decay: 0.008, col: ['#ffd94d', '#ff5e8a', '#22d3ee', '#7CFC98'][k % 4], r: 3.4, type: 'confetti', rot: Math.random() * 7, vr: (Math.random() - 0.5) * 0.3 });
   } else {
     endTitle.textContent = '🏆 ' + (winner ? winner.f.name : '???') + ' WINS';
     sfx.lose();
@@ -607,28 +641,28 @@ function render(now) {
   }
   // floating shadow
   ctx.fillStyle = 'rgba(5,0,20,.4)';
-  ctx.beginPath(); ctx.ellipse(CX, CY + R * 0.96 + 26, R * 0.94, R * 0.20, 0, 0, 7); ctx.fill();
-  // stone disc (prerendered sprite, scaled to the current radius)
-  if (discCanvas) ctx.drawImage(discCanvas, CX - R - 2, CY - R - 2, (R + 2) * 2, (R + 2) * 2);
+  ctx.beginPath(); ctx.ellipse(CX, CY + RB() * 0.96 + 26, R * 0.94, R * 0.20, 0, 0, 7); ctx.fill();
+  // stone disc (prerendered ellipse sprite, scaled to the current semi-axes)
+  if (discCanvas) ctx.drawImage(discCanvas, CX - R - 2, CY - RB() - 2, (R + 2) * 2, (RB() + 2) * 2);
   // neon rim (layered strokes, no shadowBlur — software rasterizers choke on it)
   const shrinking = (phase === 'play' && timeLeft <= 45) || (phase === 'attract' && roundT > 55);
   const rimCol = shrinking ? '255,46,136' : '34,211,238';
   ctx.strokeStyle = `rgba(${rimCol},.16)`; ctx.lineWidth = 13;
-  ctx.beginPath(); ctx.arc(CX, CY, R, 0, 7); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(CX, CY, R, RB(), 0, 0, 7); ctx.stroke();
   ctx.strokeStyle = `rgba(${rimCol},.30)`; ctx.lineWidth = 7;
-  ctx.beginPath(); ctx.arc(CX, CY, R, 0, 7); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(CX, CY, R, RB(), 0, 0, 7); ctx.stroke();
   ctx.strokeStyle = `rgba(${rimCol},${shrinking ? 0.75 + 0.25 * Math.sin(t * 10) : 0.9})`;
   ctx.lineWidth = shrinking ? 5 : 3.5;
-  ctx.beginPath(); ctx.arc(CX, CY, R, 0, 7); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(CX, CY, R, RB(), 0, 0, 7); ctx.stroke();
   ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.arc(CX, CY, R - 7, 0, 7); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(CX, CY, Math.max(1, R - 7), Math.max(1, RB() - 7), 0, 0, 7); ctx.stroke();
   // falling balls (behind live ones)
   for (const f of falling) drawBall(f.x, f.y, BALL_R, f.f, 0, false, false, t, 1 - f.t * 0.45, 1 - f.t * 0.25);
   // live balls
   for (const b of balls) {
     if (!b.alive) continue;
-    const p = b.body.position, dC = distC(p);
-    drawBall(p.x, p.y, BALL_R, b.f, b.body.angle, b.isPlayer, dC > R * 0.86, t);
+    const p = b.body.position;
+    drawBall(p.x, p.y, BALL_R, b.f, b.body.angle, b.isPlayer, qE(p) > 0.86, t);
   }
   // particles
   for (const pt of particles) {
@@ -685,7 +719,7 @@ window.__dbg = {
   get spectate() { return spectate; },
   get R() { return R; },
   get lastHitAgo() { return performance.now() / 1000 - lastHitT; },
-  balls() { return balls.map((b) => ({ name: b.f.name, x: Math.round(b.body.position.x), y: Math.round(b.body.position.y), alive: b.alive, ko: b.ko, isPlayer: b.isPlayer, vx: +b.body.velocity.x.toFixed(2), vy: +b.body.velocity.y.toFixed(2), dC: Math.round(distC(b.body.position)) })); },
+  balls() { return balls.map((b) => ({ name: b.f.name, x: Math.round(b.body.position.x), y: Math.round(b.body.position.y), alive: b.alive, ko: b.ko, isPlayer: b.isPlayer, vx: +b.body.velocity.x.toFixed(2), vy: +b.body.velocity.y.toFixed(2), dC: Math.round(distC(b.body.position)), q: +qE(b.body.position).toFixed(3) })); },
   playerVel() { const b = balls[0]; return b ? { vx: +b.body.velocity.x.toFixed(2), vy: +b.body.velocity.y.toFixed(2) } : null; },
   stick() { return { x: +stickVec.x.toFixed(2), y: +stickVec.y.toFixed(2) }; },
   playerState() { const b = balls[0]; return b ? { alive: b.alive, x: Math.round(b.body.position.x), y: Math.round(b.body.position.y) } : null; },
@@ -701,6 +735,10 @@ window.__dbg = {
   setLastHit(vIdx, aIdx, agoSec) { const v = balls[vIdx], a = balls[aIdx]; if (v && a) v.lastHit = { by: a, t: performance.now() / 1000 - agoSec }; },
   setHoldBots(v) { holdBots = !!v; },
   center() { return { x: CX, y: CY }; },
+  // --- v3 oval hooks ---
+  arena() { const a = R, b = R * K; return { a: Math.round(a), b: Math.round(b), a0: Math.round(AX0), b0: Math.round(AY0), areaPct: +(Math.PI * a * b / (W * H) * 100).toFixed(1), heightPct: +(2 * b / H * 100).toFixed(1), widthPct: +(2 * a / W * 100).toFixed(1) }; },
+  qOf(i) { const b = balls[i]; return b ? +qE(b.body.position).toFixed(3) : null; },
+  sdOf(i) { const b = balls[i]; return b ? +sdE(b.body.position).toFixed(1) : null; },
 };
 </script>
 <script id="moth-game-guard-js">

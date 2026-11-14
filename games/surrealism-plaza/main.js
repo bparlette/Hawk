@@ -7,6 +7,15 @@
 // (gamepress gptouch standard) or WASD/arrows, with a smooth follow camera.
 //   ?paint=rich    full part-1 dab density (default: smooth = the proof's reduced video density)
 //   ?paint=smooth  reduced density + smaller drawing buffer — the real-time default
+// SURREALISM REDO (Nov 13, after Cherie's style audit — "a recolor is not a style"): the first
+// build only warped the finish pass and graded the light; the plaza itself stayed honest. Now
+// the GEOMETRY dreams: the fountain is vertex-melted (rim drooping like wax toward her spawn,
+// drum slumped, stem bent), its orb — grown too big for its neck — floats half a metre above it
+// and pools a shadow on the basin water, house A leans and stretches on a shear while house B
+// stands straight, and the tree crowns drift tall off their trunks. And the paint itself is
+// smooth now: the Realism lane's micro-mark film (soft brush sheet, ~0.4x kit strokes, grain-
+// level jitter, fine ground cells) replaced the dab blotches — a continuous, blended surface.
+// Colliders, paths and the sim are untouched throughout: she walks the same plaza.
 // Performance note: the painter repaints every dab every frame; on a real phone GPU that is
 // the intended load, on this VM's SwiftShader it crawls — judge speed on a phone, not here.
 import * as THREE from 'three';
@@ -56,7 +65,7 @@ SHADOW_SUN.applyAxisAngle(new THREE.Vector3(0, 1, 0), -0.5);
 const shared = createShared();
 shared.tBrush.value = createBrushSheet();
 shared.uSunDir.value.copy(SUN);
-shared.uImpasto.value = 0.1; // cartoon paint lies flat: almost no relief for the light to rake across
+shared.uImpasto.value = 0.03; // SURREALISM REDO: effectively no impasto — a dream surface is smooth; marks catch no raking fake light
 shared.uHaze.value.setRGB(0.30, 0.36, 0.62); // the air itself is evening blue now…
 shared.uHazeSun.value.setRGB(1.0, 0.82, 0.55); // …but it warms where it looks toward the afterglow
 shared.uHazeGlow.value.setRGB(0.1, 0.08, 0.03);
@@ -147,13 +156,13 @@ void makeDab(inout Dab d) {
   c = mix(c, c * vec3(0.7, 0.6, 0.58), clamp(band, 0.0, 1.0) * 0.85);
   c = mix(c, paint3(vec3(1.0, 0.95, 0.84), vec3(0.86, 0.78, 0.64), S, lit, q.y), smoothstep(4.8, 3.2, rad)); // paler apron at the fountain
   c = mix(c, c * vec3(0.88, 0.86, 0.8), smoothstep(19.0, 40.0, rad)); // duller past the plaza's edge
-  c = jitter(c, r.wzy, 0.45);
+  c = jitter(c, r.wzy, 0.03); // SURREALISM REDO: grain-level only (was 0.45: every stone a different chip, so the ground read as blotches)
   vec2 radial = rad > 0.01 ? xz / rad : vec2(1.0, 0.0);
   d.dir = vec3(radial.x, 0.0, radial.y); // strokes run outward from the fountain, like spokes of the paving
   d.pos = P;
   d.size = uCell0 * vec2(1.05 + 0.5 * r.z, 1.7 + 0.9 * r.w) * lod;
   d.c1 = hazed(c, P);
-  d.c2 = d.c1; // one flat colour per ground patch: no second tone streaked through it
+  d.c2 = hazed(jitter(c * 1.015, q.wzy, 0.02), P); // the second mix inside a ground dab barely differs now: a gentle shift, never a second patch
   d.seed = dot(cell, vec2(1.0, 57.0)) + sub * 0.37;
   d.turnabout = 1.0;
   d.lie = 1.0;
@@ -161,7 +170,10 @@ void makeDab(inout Dab d) {
   d.height = (0.02 + 0.05 * q.z) * pow(lod, 0.35);
   d.glaze = 1.0;
 }`;
-const plaza = groundRings(shared, { body: plazaBody, per: DENSE ? 3 : 2, n: 192, cell0: 0.24, levels: 6, minPx: [8, 14], maxPx: [4000, 4000], cells: [0, 8] });
+// SURREALISM REDO: cells down to 0.08 m (day plaza: 0.24) and a smaller minimum on-screen dab
+// size, so the paving is a fine, dense film of touches that cross-blend into continuous stone
+// instead of a mosaic of patches. (Ring instance count is fixed — only the cell size changes.)
+const plaza = groundRings(shared, { body: plazaBody, per: DENSE ? 3 : 2, n: 192, cell0: 0.08, levels: 7, minPx: [2, 3], maxPx: [4000, 4000], cells: [0, 8] });
 scene.add(plaza.group);
 
 // --- how the kit's paint is lit on a day like this ---
@@ -205,18 +217,46 @@ const slab = (cx, cy, cz, rotX, rotZ, w, thick, len, pal, grain) => {
   kit.add(new THREE.BoxGeometry(w, thick, len), m, pal, { grain: new THREE.Vector3(...grain), stroke: [0.09, 0.3] });
 };
 
-// --- house A: cream, terracotta roof, ridge along x ---
-kit.box(-7.5, 2.2, -13, 8, 4.4, 6, 'cream', { stroke: [0.09, 0.26] });
-kit.tri([-3.5, 4.4, -16], [-3.5, 6.3, -13], [-3.5, 4.4, -10], 'cream', { stroke: [0.09, 0.24] });
-kit.tri([-11.5, 4.4, -10], [-11.5, 6.3, -13], [-11.5, 4.4, -16], 'cream', { stroke: [0.09, 0.24] });
-slab(-7.5, 5.32, -11.55, 0.564, 0, 8.9, 0.16, 3.9, 'tile', [0, -0.5, 0.85]);
-slab(-7.5, 5.32, -14.45, -0.564, 0, 8.9, 0.16, 3.9, 'tile', [0, -0.5, -0.85]);
-kit.box(-9.6, 5.4, -14.6, 0.95, 2.8, 0.95, 'stone', { stroke: [0.08, 0.2] });
-kit.box(-7.5, 1.05, -9.92, 1.15, 2.1, 0.16, 'timber', { grain: 'y' });
-kit.box(-9.9, 2.7, -9.92, 1.3, 1.5, 0.14, 'glass');
-kit.box(-5.1, 2.7, -9.92, 1.3, 1.5, 0.14, 'glass');
-kit.box(-7.5, 3.45, -9.92, 0.9, 1.0, 0.14, 'glass');
-kit.box(-7.5, 0.09, -9.35, 1.7, 0.18, 0.95, 'stone');
+// --- SURREALISM REDO: house A leans. A world-space shear + slight stretch, pivoting at y = 1:
+//     x' = x + 0.13·(y−1) (the ridge, 5 m up, stands ~0.72 m east of where the walls rise) and
+//     y' = 1 + 1.07·(y−1) (the house is stretched a touch tall). Applied to the placement matrix
+//     (FINAL TOUCH, Nov 14: shear/stretch raised ~1/3 on Cherie's "a little stronger" ruling.)
+//     of every house-A piece — geometry only; the collision box in the sim is NOT leaned, so she
+//     still walks the plaza she always walked. House B stands straight, for contrast.
+const LEAN = new THREE.Matrix4().set(
+  1, 0.13, 0, -0.13,
+  0, 1.07, 0, -0.07,
+  0, 0, 1, 0,
+  0, 0, 0, 1);
+const boxL = (x, y, z, sx, sy, sz, pal, opts = {}) => {
+  const grain = opts.grain ? new THREE.Vector3(opts.grain === 'x' ? 1 : 0, opts.grain === 'y' ? 1 : 0, opts.grain === 'z' ? 1 : 0) : null;
+  if (grain && opts.rotY) grain.applyAxisAngle(new THREE.Vector3(0, 1, 0), opts.rotY);
+  kit.add(new THREE.BoxGeometry(sx, sy, sz), LEAN.clone().multiply(kit.place(x, y, z, opts.rotY ?? 0)), pal, { ...opts, grain });
+};
+const triL = (pa, pb, pc, pal, opts = {}) => {
+  const w = (p) => { const v = new THREE.Vector3(...p).applyMatrix4(LEAN); return [v.x, v.y, v.z]; };
+  kit.tri(w(pa), w(pb), w(pc), pal, opts);
+};
+const slabL = (cx, cy, cz, rotX, rotZ, w, thick, len, pal, grain) => {
+  const m = new THREE.Matrix4().compose(
+    new THREE.Vector3(cx, cy, cz),
+    new THREE.Quaternion().setFromEuler(new THREE.Euler(rotX, 0, rotZ)),
+    new THREE.Vector3(1, 1, 1));
+  kit.add(new THREE.BoxGeometry(w, thick, len), LEAN.clone().multiply(m), pal, { grain: new THREE.Vector3(...grain), stroke: [0.09, 0.3] });
+};
+
+// --- house A: cream, terracotta roof, ridge along x — and leaning (see LEAN above) ---
+boxL(-7.5, 2.2, -13, 8, 4.4, 6, 'cream', { stroke: [0.09, 0.26] });
+triL([-3.5, 4.4, -16], [-3.5, 6.3, -13], [-3.5, 4.4, -10], 'cream', { stroke: [0.09, 0.24] });
+triL([-11.5, 4.4, -10], [-11.5, 6.3, -13], [-11.5, 4.4, -16], 'cream', { stroke: [0.09, 0.24] });
+slabL(-7.5, 5.32, -11.55, 0.564, 0, 8.9, 0.16, 3.9, 'tile', [0, -0.5, 0.85]);
+slabL(-7.5, 5.32, -14.45, -0.564, 0, 8.9, 0.16, 3.9, 'tile', [0, -0.5, -0.85]);
+boxL(-9.6, 5.4, -14.6, 0.95, 2.8, 0.95, 'stone', { stroke: [0.08, 0.2] });
+boxL(-7.5, 1.05, -9.92, 1.15, 2.1, 0.16, 'timber', { grain: 'y' });
+boxL(-9.9, 2.7, -9.92, 1.3, 1.5, 0.14, 'glass');
+boxL(-5.1, 2.7, -9.92, 1.3, 1.5, 0.14, 'glass');
+boxL(-7.5, 3.45, -9.92, 0.9, 1.0, 0.14, 'glass');
+boxL(-7.5, 0.09, -9.35, 1.7, 0.18, 0.95, 'stone');
 
 // --- house B: rose, verdigris roof ---
 kit.box(6, 1.9, -13.5, 7, 3.8, 5.5, 'rose', { stroke: [0.09, 0.24] });
@@ -241,13 +281,60 @@ for (const s of [1, -1]) {
   for (let i = 0; i < 5; i++) kit.add(new THREE.SphereGeometry(0.09, 8, 6), kit.place(11.9 * s, 1.17, cz - 0.8 + i * 0.4), 'fruit', { smooth: true, stroke: [0.04, 0.07] });
 }
 
-// --- the fountain ---
-kit.round(0, 0.34, 0, 2.6, 0.68, 'stone', { sides: 22, stroke: [0.09, 0.24] });
-kit.round(0, 0.72, 0, 2.72, 0.12, 'stonePale', { sides: 22, stroke: [0.08, 0.2] });
-kit.round(0, 0.8, 0, 0.44, 1.6, 'stone', { sides: 14, stroke: [0.07, 0.18] });
-kit.round(0, 1.62, 0, 1.08, 0.2, 'stonePale', { sides: 18, stroke: [0.07, 0.16] });
-kit.round(0, 1.8, 0, 0.07, 0.26, 'stone', { sides: 8 });
-kit.add(new THREE.SphereGeometry(0.17, 10, 8), kit.place(0, 1.98, 0), 'stonePale', { smooth: true, stroke: [0.05, 0.09] });
+// --- the fountain, melted. SURREALISM REDO: the geometry itself is wrong now, not just the
+//     light on it. Every piece is vertex-warped in its local space before the kit paints it, all
+//     pulled toward SAG — the south-east, her spawn side, the side the opening frame looks at.
+//     The sim never hears about any of this: the fountain collider stays the honest circle it
+//     always was, so she walks the plaza she always walked while looking at a melted one.
+const SAG = new THREE.Vector2(0.63, 0.78).normalize();
+function warpGeo(geo, fn) {
+  const P = geo.attributes.position, v = new THREE.Vector3();
+  for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i); fn(v); P.setXYZ(i, v.x, v.y, v.z); }
+  geo.computeVertexNormals();
+  return geo;
+}
+// how much a vertex faces the sag: 1 dead toward it, 0 on the far side, squared for a soft falloff
+const align = (v) => { const l = Math.hypot(v.x, v.z); return l < 1e-4 ? 0 : Math.pow(Math.max(0, (v.x * SAG.x + v.z * SAG.y) / l), 2); };
+// a kit round thing, warped first: fn(vertex, t up its height 0..1, sag alignment)
+function meltRound(y, r, h, pal, opts, fn) {
+  const geo = new THREE.CylinderGeometry(opts.top ?? r, r, h, opts.sides ?? 9);
+  warpGeo(geo, (v) => fn(v, (v.y / h) + 0.5, align(v)));
+  kit.add(geo, kit.place(0, y, 0), pal, { smooth: true, grain: new THREE.Vector3(0, 1, 0), ...opts });
+}
+// the basin drum: its top sinks on the sagging side, its wall bellies out at mid-height, and the
+// whole drum leans a little toward the sag
+meltRound(0.34, 2.6, 0.68, 'stone', { sides: 22, stroke: [0.09, 0.24] }, (v, t, a) => {
+  const rad = Math.hypot(v.x, v.z);
+  if (rad > 1e-4) { const b = 1 + 0.17 * a * Math.sin(Math.PI * t); v.x *= b; v.z *= b; }
+  v.y -= 0.23 * a * t;
+  v.x += SAG.x * 0.11 * t; v.z += SAG.y * 0.11 * t;
+});
+// the rim: the lip droops like wax on the sagging side — 0.40 m at the top edge — and slumps outward
+meltRound(0.72, 2.72, 0.12, 'stonePale', { sides: 22, stroke: [0.08, 0.2] }, (v, t, a) => {
+  const rad = Math.hypot(v.x, v.z);
+  if (rad > 1e-4) { const b = 1 + 0.12 * a * t; v.x *= b; v.z *= b; }
+  v.y -= 0.40 * a * t * t;
+  v.y -= 0.07 * ((v.x * SAG.x + v.z * SAG.y) / 2.72); // and the whole ring tilts toward the sag
+});
+// the stem: bends as it climbs, a third of a metre off true by the top
+meltRound(0.8, 0.44, 1.6, 'stone', { sides: 14, stroke: [0.07, 0.18] }, (v, t) => {
+  v.x += SAG.x * 0.35 * t * t; v.z += SAG.y * 0.35 * t * t;
+});
+// the upper basin: rides where the bent stem put it, tilted toward the sag, its own lip sagging
+meltRound(1.62, 1.08, 0.2, 'stonePale', { sides: 18, stroke: [0.07, 0.16] }, (v, t, a) => {
+  const lx = v.x, lz = v.z;
+  v.x += SAG.x * 0.35; v.z += SAG.y * 0.35;
+  v.y -= 0.13 * ((lx * SAG.x + lz * SAG.y) / 1.08);
+  v.y -= 0.09 * a * t;
+});
+// the neck: continues the stem's bend a little further
+meltRound(1.8, 0.07, 0.26, 'stone', { sides: 8 }, (v, t) => {
+  const o = 0.35 + 0.09 * t; v.x += SAG.x * o; v.z += SAG.y * o;
+});
+// the orb: too big for its neck now, and it does not touch it — it hovers half a metre above the
+// neck's top, over where the bent stem points, in plain defiance of the fountain's plumbing
+const ORB = { x: SAG.x * 0.47, y: 2.77, z: SAG.y * 0.47, r: 0.23 };
+kit.add(new THREE.SphereGeometry(ORB.r, 12, 10), kit.place(ORB.x, ORB.y, ORB.z), 'stonePale', { smooth: true, stroke: [0.05, 0.09] });
 // trees' trunks ride in the same kit
 for (const [tx, tz] of [[-12, -7.5], [12, -9.5], [-13, 7]]) kit.round(tx, 1.15, tz, 0.17, 2.3, 'bark', { sides: 8, stroke: [0.06, 0.22] });
 const built = kit.build();
@@ -267,10 +354,47 @@ const waterKit = createKit(shared, {
 });
 {
   const flat = (y) => new THREE.Matrix4().compose(new THREE.Vector3(0, y, 0), new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)), new THREE.Vector3(1, 1, 1));
-  waterKit.add(new THREE.CircleGeometry(2.38, 26), flat(0.55), 'water', { stroke: [0.06, 0.15], density: 1.2 });
-  waterKit.add(new THREE.CircleGeometry(0.92, 20), flat(1.66), 'water', { stroke: [0.05, 0.12], density: 1.2 });
+  waterKit.add(new THREE.CircleGeometry(2.38, 26), flat(0.55), 'water', { stroke: [0.045, 0.11], density: 1.2 });
+  // SURREALISM REDO: the upper pool rides its melted basin — shifted where the bent stem put the
+  // basin, and tipped toward the sag to sit in it (the lower pool, held by the drum, stays level)
+  const qFlat = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
+  const qTip = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(-SAG.y, 0, SAG.x), -0.09);
+  const upper = new THREE.Matrix4().compose(new THREE.Vector3(SAG.x * 0.26, 1.66, SAG.y * 0.26), qTip.multiply(qFlat), new THREE.Vector3(1, 1, 1));
+  waterKit.add(new THREE.CircleGeometry(0.92, 20), upper, 'water', { stroke: [0.04, 0.09], density: 1.2 });
 }
 scene.add(waterKit.build().group);
+
+// --- the floating orb's shadow, pooled on the upper basin's water: a soft plum ellipse lying on
+//     the tilted pool, part-way from its centre toward the rim, stretched along the light's fall.
+//     (The orb also stands in the shade scene below, so the shadow sun stretches a second, long
+//     shadow from it clear across the plaza stones — the dream keeps both receipts.)
+{
+  const g = new THREE.CircleGeometry(0.4, 24);
+  const stretch = new THREE.Matrix4().makeRotationZ(Math.atan2(0.66, 0.75))
+    .multiply(new THREE.Matrix4().makeScale(1.35, 1, 1))
+    .multiply(new THREE.Matrix4().makeRotationZ(-Math.atan2(0.66, 0.75)));
+  g.applyMatrix4(stretch);
+  const m = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false,
+    vertexShader: /* glsl */ `
+      varying vec2 vP;
+      void main() { vP = uv * 2.0 - 1.0; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader: /* glsl */ `
+      varying vec2 vP;
+      void main() {
+        float a = smoothstep(1.0, 0.15, dot(vP, vP)) * 0.42;
+        gl_FragColor = vec4(vec3(0.10, 0.08, 0.24), a);
+      }`,
+  });
+  const disc = new THREE.Mesh(g, m);
+  const qFlat = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
+  const qTip = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(-SAG.y, 0, SAG.x), -0.09);
+  disc.quaternion.copy(qTip.multiply(qFlat));
+  disc.position.set(SAG.x * 0.26 + 0.36, 1.675, SAG.y * 0.26 - 0.30);
+  disc.renderOrder = 6;
+  disc.frustumCulled = false;
+  scene.add(disc);
+}
 
 // --- trees: dark crowns for underpainting, then dabs over them (the pines' way, in leaf) ---
 const crownData = { pos: [], dir: [], nrm: [] };
@@ -289,6 +413,12 @@ const crownUnder = [];
       if (u.lengthSq() > 1 || u.lengthSq() < 0.05) { i--; continue; }
       u.normalize();
       const p = new THREE.Vector3(...c).addScaledVector(u, r * (0.8 + 0.32 * rand()));
+      // SURREALISM REDO: the crowns drift — stretched a third taller and leaning off their
+      // trunks, the tops pulled furthest east, the way dream trees lean. The trunk (and its
+      // collider) stays exactly where it always stood.
+      p.y = c[1] + (p.y - c[1]) * 1.4;
+      const dr = Math.pow(0.5 + 0.5 * u.y, 2);
+      p.x += dr * 0.73; p.z -= dr * 0.24;
       crownData.pos.push(p.x, p.y, p.z);
       crownData.nrm.push(u.x, u.y, u.z);
       const d = u.clone().multiplyScalar(0.6); d.y -= 0.55; d.normalize();
@@ -309,7 +439,8 @@ const crownUnder = [];
   });
   for (const { c, r } of crownUnder) {
     const s = new THREE.Mesh(new THREE.SphereGeometry(r * 0.96, 12, 9), underMat);
-    s.position.set(...c);
+    s.scale.set(1, 1.4, 1); // REDO: the underpainting drifts with its dabs
+    s.position.set(c[0] + 0.19, c[1] + r * 0.19, c[2] - 0.07);
     s.frustumCulled = false;
     scene.add(s);
   }
@@ -326,12 +457,12 @@ const crowns = dabMesh(dabGeometry(crownCount, {
       if (dot(Nn, normalize(cameraPosition - aPos)) < -0.1) { d.alive = 0.0; return; }
       float x = dayOn(aPos, Nn);
       vec3 c = paint3(vec3(0.58, 0.87, 0.35), vec3(0.36, 0.69, 0.26), vec3(0.15, 0.39, 0.24), x, r.y);
-      c = jitter(c, r.wzy, 0.5);
+      c = jitter(c, r.wzy, 0.09); // REDO: foliage varies cluster to cluster, not dab to dab — no more dotted clusters
       d.pos = aPos;
       d.dir = aDir;
-      d.size = vec2(0.19, 0.36) * (0.8 + 0.5 * r.x);
+      d.size = vec2(0.10, 0.20) * (0.85 + 0.3 * r.x);
       d.c1 = hazed(c, aPos);
-      d.c2 = hazed(c * 1.3, aPos);
+      d.c2 = hazed(c * 1.18, aPos);
       d.seed = r.x * 977.0;
       d.lift = 0.35;
       d.turnabout = 1.0;
@@ -350,14 +481,14 @@ const jets = dabMesh(dabGeometry(90), dabMaterial(shared, {
         float a = r.x * 6.28318;
         float life = fract(r.y + uTime * 0.85);
         vec2 out2 = vec2(cos(a), sin(a));
-        d.pos = vec3(out2.x * life * 0.95, 2.06 + life * 0.72 - life * life * 1.1, out2.y * life * 0.95);
+        d.pos = vec3(out2.x * life * 0.95 + 0.19, 2.06 + life * 0.72 - life * life * 1.1, out2.y * life * 0.95 + 0.24); // REDO: the crown rides the bent stem's top
         d.dir = normalize(vec3(out2.x * 0.6, 0.8 - life * 1.2, out2.y * 0.6));
         d.size = vec2(0.035, 0.075) * (1.0 - life * 0.45);
         d.c1 = vec3(0.78, 0.9, 1.0) * 0.5 * (1.0 - life * 0.35);
       } else {
         float a = r.z * 6.28318;
         float life = fract(r.w + uTime * 0.7);
-        d.pos = vec3(cos(a) * 1.06, 1.58 - life * life * 1.02, sin(a) * 1.06);
+        d.pos = vec3(cos(a) * 1.06 + 0.16, 1.58 - life * life * 1.02, sin(a) * 1.06 + 0.20); // REDO: centred on the shifted upper basin
         d.dir = vec3(0.0, 1.0, 0.0);
         d.size = vec2(0.028, 0.09);
         d.c1 = vec3(0.78, 0.9, 1.0) * 0.45;
@@ -366,7 +497,7 @@ const jets = dabMesh(dabGeometry(90), dabMaterial(shared, {
       d.seed = id * 3.1;
       d.lift = 0.0;
     }`,
-  uniforms: { uImpasto: { value: 0.3 } },
+  uniforms: { uImpasto: { value: 0.05 } },
   minPx: [2, 3], maxPx: [60, 120], cells: [0, 6], depthWrite: false,
 }), 21);
 jets.material.transparent = true;
@@ -391,7 +522,7 @@ const sparkles = dabMesh(dabGeometry(42), dabMaterial(shared, {
       d.height = 0.012;
       d.lift = 0.0;
     }`,
-  uniforms: { uImpasto: { value: 0.2 } },
+  uniforms: { uImpasto: { value: 0.05 } },
   minPx: [2, 2], maxPx: [30, 30], cells: [0, 6], depthWrite: false,
 }), 22);
 sparkles.material.transparent = true;
@@ -461,11 +592,21 @@ const shadeScene = new THREE.Scene();
   const cm = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
   const box = (x, y, z, sx, sy, sz) => { const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), cm); m.position.set(x, y, z); m.frustumCulled = false; shadeScene.add(m); };
   const cyl = (x, y, z, r, h) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 14), cm); m.position.set(x, y, z); m.frustumCulled = false; shadeScene.add(m); };
-  box(-7.5, 2.2, -13, 8, 4.4, 6); box(-7.5, 5.3, -13, 8.6, 2.0, 6.4);
+  // REDO: house A's shade twin leans with the house (same LEAN, baked into the geometry)
+  const leanBox = (x, y, z, sx, sy, sz) => {
+    const g = new THREE.BoxGeometry(sx, sy, sz);
+    g.applyMatrix4(new THREE.Matrix4().makeTranslation(x, y, z));
+    g.applyMatrix4(LEAN);
+    const m = new THREE.Mesh(g, cm); m.frustumCulled = false; shadeScene.add(m);
+  };
+  leanBox(-7.5, 2.2, -13, 8, 4.4, 6); leanBox(-7.5, 5.3, -13, 8.6, 2.0, 6.4);
   box(6, 1.9, -13.5, 7, 3.8, 5.5); box(6, 4.6, -13.5, 7.4, 1.8, 6);
   box(12.5, 1.2, -3, 3.2, 2.4, 4); box(-12.5, 1.2, 2, 3.2, 2.4, 4);
   cyl(0, 0.4, 0, 2.7, 0.8); cyl(0, 0.9, 0, 0.5, 1.8);
-  for (const { c, r } of crownUnder) { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 8), cm); m.position.set(...c); m.frustumCulled = false; shadeScene.add(m); }
+  // REDO: the floating orb stands in the shade scene too — the low shadow sun stretches its
+  // shadow out of all proportion across the plaza
+  { const m = new THREE.Mesh(new THREE.SphereGeometry(ORB.r, 10, 8), cm); m.position.set(ORB.x, ORB.y, ORB.z); m.frustumCulled = false; shadeScene.add(m); }
+  for (const { c, r } of crownUnder) { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 8), cm); m.scale.set(1, 1.3, 1); m.position.set(c[0] + 0.14, c[1] + r * 0.14, c[2] - 0.05); m.frustumCulled = false; shadeScene.add(m); }
   for (const [tx, tz] of [[-12, -7.5], [12, -9.5], [-13, 7]]) cyl(tx, 1.15, tz, 0.2, 2.3);
 }
 const shade = createShade(renderer, shared, shadeScene, { sun: SHADOW_SUN, size: [2048, 2048], box: [30, 26], centre: [0, 1, -3], back: 110, near: 30, far: 240 });

@@ -107,8 +107,8 @@ document.getElementById('mute').addEventListener('click',e=>{e.stopPropagation()
 /* ---------- hex grid ---------- */
 const S=27;                       // hex radius (px, world units)
 const SQ3=Math.sqrt(3);
-const SQUASH=1.09;                // 3/4 top-down squash (= 0.86*VPITCH, keep in lockstep with VPITCH)
-const VPITCH=1.27;                // vertical pitch factor — stretches the field taller (screen-fill)
+const SQUASH=1.27;                // 3/4 top-down squash (= 0.86*VPITCH, keep in lockstep with VPITCH)
+const VPITCH=1.48;                // vertical pitch factor — stretches the field taller (screen-fill retrofit: 1.27->1.48 so the whole 3-floor structure fits the portrait screen unclipped at ~82% height)
 const LIFT=105;                   // screen px between floors
 const LAYERS=3;                   // 0 = bottom ... 2 = top
 function hexToXY(q,r){return [S*SQ3*(q+r/2), S*1.5*VPITCH*r];}
@@ -476,9 +476,9 @@ function draw(){
   ctx.setTransform(DPR,0,0,DPR,0,0);
   drawLava(t);
   if(!G){return;}
-  const sc=Math.min(W/452,H/760);G.scale=sc;
+  const sc=Math.min(W/530,H/890);G.scale=sc;
   const cx=W/2+(G.shake?(Math.random()-0.5)*G.shake:0);
-  const cy=H*0.5+161*sc+(G.shake?(Math.random()-0.5)*G.shake:0);
+  const cy=H*0.5+181*sc+(G.shake?(Math.random()-0.5)*G.shake:0);
   G.cx=cx;G.cy=cy;
   ctx.save();ctx.translate(cx,cy);ctx.scale(sc,sc);ctx.translate(-cx,-cy);
   // floors bottom -> top; runners drawn right after their floor

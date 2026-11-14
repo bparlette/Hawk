@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>TILT — Night Marbles</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    font-family:"Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif;
+    background:
+      radial-gradient(2px 2px at 12% 8%, #fff8 50%, transparent 51%),
+      radial-gradient(1.6px 1.6px at 78% 5%, #fff6 50%, transparent 51%),
+      radial-gradient(2px 2px at 34% 16%, #fff5 50%, transparent 51%),
+      radial-gradient(1.4px 1.4px at 90% 22%, #fff7 50%, transparent 51%),
+      radial-gradient(1.8px 1.8px at 55% 3%, #fff5 50%, transparent 51%),
+      radial-gradient(1.3px 1.3px at 5% 30%, #fff4 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 66% 13%, #fff4 50%, transparent 51%),
+      linear-gradient(180deg,#1b0f38 0%,#2a1660 45%,#3a1c74 78%,#241147 100%);
+    color:#efeaff; overflow:hidden;
+    display:flex; justify-content:center;
+  }
+  #app{width:100%;max-width:420px;height:100dvh;display:flex;flex-direction:column;position:relative}
+  /* ---------- HUD ---------- */
+  #hud{padding:10px 14px 6px;flex:0 0 auto}
+  #hudTop{display:flex;align-items:center;justify-content:space-between}
+  #title{font-weight:900;font-size:24px;letter-spacing:3px;color:#fff;
+    text-shadow:0 2px 0 #7b4dff,0 4px 14px #7b4dff88}
+  #title span{color:#ffd23c}
+  #lvlBtn{background:#4b2b9e;border:2px solid #8f6bff;color:#fff;font-weight:800;
+    border-radius:999px;padding:6px 14px;font-size:14px;cursor:pointer}
+  #hudStats{display:flex;gap:8px;margin-top:8px;align-items:stretch}
+  .stat{flex:1;background:#170b33cc;border:1.5px solid #6d4bd8;border-radius:14px;
+    padding:5px 4px;text-align:center}
+  .stat .lab{font-size:9px;letter-spacing:2px;color:#b7a6ff;font-weight:700}
+  .stat .val{font-size:20px;font-weight:900;line-height:1.05;color:#fff}
+  .stat .val small{font-size:11px;color:#b7a6ff;font-weight:700}
+  #pips{flex:1.3;background:#170b33cc;border:1.5px solid #6d4bd8;border-radius:14px;
+    padding:5px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+  #pips .lab{font-size:9px;letter-spacing:2px;color:#b7a6ff;font-weight:700}
+  #pipRow{display:flex;gap:5px}
+  .pip{width:17px;height:17px;border-radius:50%;position:relative;
+    box-shadow:inset -3px -4px 6px #0006, inset 2px 3px 4px #fff7, 0 1px 3px #0008}
+  .pip::after{content:"";position:absolute;inset:0;border-radius:50%;
+    background:radial-gradient(circle at 32% 28%, #fff, #fff0 42%)}
+  .pip.home{outline:2px solid #7dff9a;outline-offset:1px}
+  .pip .chk{position:absolute;right:-4px;bottom:-4px;width:11px;height:11px;border-radius:50%;
+    background:#37d95f;color:#fff;font-size:8px;font-weight:900;display:none;
+    align-items:center;justify-content:center;box-shadow:0 1px 3px #000a;z-index:2}
+  .pip.home .chk{display:flex}
+  /* ---------- Board ---------- */
+  #boardWrap{flex:1 1 auto;display:flex;align-items:center;justify-content:center;
+    padding:4px 10px;min-height:0;position:relative}
+  #boardBox{position:relative;border-radius:20px;padding:8px;
+    background:linear-gradient(180deg,#4a2b9e,#2c1660);
+    box-shadow:0 10px 30px #000a, inset 0 2px 0 #9d7fff88, inset 0 -3px 0 #0007}
+  canvas{display:block;border-radius:12px}
+  #dirHint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    font-size:110px;font-weight:900;color:#ffd23c;opacity:0;pointer-events:none;
+    text-shadow:0 4px 24px #000c;transition:opacity .15s;z-index:5}
+  #msgBar{flex:0 0 auto;text-align:center;font-size:13px;font-weight:700;color:#cdbfff;
+    min-height:20px;padding:0 12px}
+  #msgBar b{color:#ffd23c}
+  /* ---------- Controls ---------- */
+  #controls{flex:0 0 auto;display:flex;gap:10px;padding:8px 14px calc(12px + env(safe-area-inset-bottom))}
+  .cbtn{flex:1;background:linear-gradient(180deg,#5a38b8,#40238c);color:#fff;border:2px solid #8f6bff;
+    border-radius:16px;padding:12px 4px;font-size:15px;font-weight:800;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:1px;
+    box-shadow:0 4px 0 #241047, 0 6px 14px #0007}
+  .cbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #241047}
+  .cbtn .ic{font-size:19px;line-height:1}
+  .cbtn small{font-size:9px;letter-spacing:1.5px;color:#c4b2ff;font-weight:700}
+  /* ---------- Overlays ---------- */
+  .overlay{position:absolute;inset:0;background:#120826d9;display:none;
+    flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:20;
+    padding:24px;text-align:center;backdrop-filter:blur(3px)}
+  .overlay.show{display:flex}
+  #winStar{font-size:96px;line-height:1;color:#ffd23c;
+    text-shadow:0 0 34px #ffd23caa,0 6px 0 #c78f00;animation:pop .5s cubic-bezier(.2,2.2,.4,1)}
+  @keyframes pop{from{transform:scale(.2) rotate(-30deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+  #winTitle{font-size:38px;font-weight:900;letter-spacing:1px;color:#fff}
+  #winTitle.perfect{color:#ffd23c;text-shadow:0 3px 18px #ffd23c66}
+  #winStats{display:flex;gap:8px}
+  .wstat{background:#2a1660;border:1.5px solid #6d4bd8;border-radius:14px;padding:8px 14px;min-width:78px}
+  .wstat .lab{font-size:9px;letter-spacing:2px;color:#b7a6ff;font-weight:700}
+  .wstat .val{font-size:22px;font-weight:900}
+  .bigbtn{background:linear-gradient(180deg,#57d95e,#2fae3e);border:none;color:#fff;font-weight:900;
+    font-size:17px;border-radius:999px;padding:13px 34px;cursor:pointer;box-shadow:0 5px 0 #1c7a29,0 8px 18px #0008}
+  .bigbtn:active{transform:translateY(3px)}
+  .ghostbtn{background:#3a2278;border:2px solid #8f6bff;color:#fff;font-weight:800;
+    font-size:14px;border-radius:999px;padding:10px 24px;cursor:pointer}
+  #lvlGrid{display:grid;grid-template-columns:repeat(3,74px);gap:12px}
+  .lvlCell{height:74px;border-radius:18px;border:2px solid #8f6bff;background:#2a1660;color:#fff;
+    font-size:24px;font-weight:900;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .lvlCell small{font-size:9px;letter-spacing:1px;color:#b7a6ff;font-weight:700}
+  .lvlCell.cur{background:#5a38b8;border-color:#ffd23c}
+  .ovTitle{font-size:26px;font-weight:900;letter-spacing:2px}
+  .ovSub{font-size:13px;color:#cdbfff;font-weight:600;max-width:300px}
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud">
+    <div id="hudTop">
+      <div id="title">TILT<span>★</span></div>
+      <button id="lvlBtn">LEVEL 1 ▾</button>
+    </div>
+    <div id="hudStats">
+      <div id="pips"><div class="lab">GOALS</div><div id="pipRow"></div></div>
+      <div class="stat"><div class="lab">MOVES</div><div class="val" id="movesVal">0</div></div>
+      <div class="stat"><div class="lab">PAR</div><div class="val" id="parVal">0</div></div>
+      <div class="stat"><div class="lab">TIME</div><div class="val" id="timeVal">0:00</div></div>
+    </div>
+  </div>
+
+  <div id="boardWrap">
+    <div id="boardBox">
+      <canvas id="cv"></canvas>
+      <div id="dirHint">➜</div>
+    </div>
+  </div>
+  <div id="msgBar">Swipe or use arrow keys — one tilt slides <b>every</b> marble.</div>
+
+  <div id="controls">
+    <button class="cbtn" id="undoBtn"><span class="ic">↩️</span>Undo<small>STEP BACK</small></button>
+    <button class="cbtn" id="hintBtn"><span class="ic">💡</span>Hint<small>NEXT TILT</small></button>
+    <button class="cbtn" id="restartBtn"><span class="ic">🔄</span>Restart<small>LEVEL</small></button>
+  </div>
+
+  <div class="overlay" id="winOv">
+    <div id="winStar">★</div>
+    <div id="winTitle">Perfect!</div>
+    <div id="winStats">
+      <div class="wstat"><div class="lab">MOVES</div><div class="val" id="wMoves">0</div></div>
+      <div class="wstat"><div class="lab">PAR</div><div class="val" id="wPar">0</div></div>
+      <div class="wstat"><div class="lab">TIME</div><div class="val" id="wTime">0:00</div></div>
+    </div>
+    <button class="bigbtn" id="nextBtn">Next Level ➜</button>
+    <button class="ghostbtn" id="replayBtn">↩ Replay Level</button>
+  </div>
+
+  <div class="overlay" id="lvlOv">
+    <div class="ovTitle">LEVELS</div>
+    <div class="ovSub">One tilt slides every marble. Park each marble on its matching ring.</div>
+    <div id="lvlGrid"></div>
+    <button class="ghostbtn" id="lvlClose">Close</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ================= DATA ================= */
+const COLS = 7, ROWS = 9;
+const COLORS = {
+  blue:   {main:"#2f7bff", light:"#8fc2ff", dark:"#0d3f9e", ring:"#57a0ff"},
+  red:    {main:"#ff5a3c", light:"#ffb199", dark:"#a3250d", ring:"#ff7a5c"},
+  yellow: {main:"#ffc81f", light:"#ffe98a", dark:"#a97a00", ring:"#ffd94d"},
+  green:  {main:"#2fd35f", light:"#93f2ae", dark:"#0f7a30", ring:"#4fe07a"},
+  purple: {main:"#a55bff", light:"#d3a6ff", dark:"#5c1fa8", ring:"#bb82ff"},
+  pink:   {main:"#ff5fa8", light:"#ffabcf", dark:"#a81f5f", ring:"#ff82bb"}
+};
+const LEVELS = [
+ {
+  "par": 3,
+  "walls": [
+   [
+    5,
+    6
+   ],
+   [
+    6,
+    0
+   ],
+   [
+    6,
+    8
+   ]
+  ],
+  "marbles": [
+   {
+    "color": "blue",
+    "s": [
+     1,
+     8
+    ],
+    "g": [
+     5,
+     8
+    ]
+   },
+   {
+    "color": "red",
+    "s": [
+     2,
+     0
+    ],
+    "g": [
+     6,
+     7
+    ]
+   }
+  ]
+ },
+ {
+  "par": 5,
+  "walls": [
+   [
+    0,
+    6
+   ],
+   [
+    3,
+    1
+   ],
+   [
+    3,
+    7
+   ],
+   [
+    3,
+    8
+   ],
+   [
+    5,
+    6
+   ],
+   [
+    6,
+    5
+   ]
+  ],
+  "marbles": [
+   {
+    "color": "blue",
+    "s": [
+     4,
+     2
+    ],
+    "g": [
+     0,
+     7
+    ]
+   },
+   {
+    "color": "red",
+    "s": [
+     5,
+     1
+    ],
+    "g": [
+     1,
+     0
+    ]
+   },
+   {
+    "color": "yellow",
+    "s": [
+     2,
+     5
+    ],
+    "g": [
+     0,
+     0
+    ]
+   }
+  ]
+ },
+ {
+  "par": 7,
+  "walls": [
+   [
+    1,
+    5
+   ],
+   [
+    1,
+    6
+   ],
+   [
+    2,
+    2
+   ],
+   [
+    3,
+    3
+   ],
+   [
+    3,
+    6
+   ],
+   [
+    4,
+    8
+   ],
+   [
+    5,
+    6
+   ],
+   [
+    6,
+    6
+   ]
+  ],
+  "marbles": [
+   {
+    "color": "blue",
+    "s": [
+     6,
+     1
+    ],
+    "g": [
+     2,
+     5
+    ]
+   },
+   {
+    "color": "red",
+    "s": [
+     4,
+     4
+    ],
+    "g": [
+     0,
+     4
+    ]
+   },
+   {
+    "color": "yellow",
+    "s": [
+     5,
+     3
+    ],
+    "g": [
+     3,
+     5
+    ]
+   }
+  ]
+ },
+ {
+  "par": 12,
+  "walls": [
+   [
+    0,
+    0
+   ],
+   [
+    0,
+    4
+   ],
+   [
+    0,
+    6
+   ],
+   [
+    1,
+    0
+   ],
+   [
+    1,
+    7
+   ],
+   [
+    1,
+    8
+   ],
+   [
+    2,
+    4
+   ],
+   [
+    4,
+    6
+   ],
+   [
+    5,
+    4
+   ],
+   [
+    5,
+    5
+   ],
+   [
+    5,
+    6
+   ],
+   [
+    6,
+    1
+   ]
+  ],
+  "marbles": [
+   {
+    "color": "blue",
+    "s": [
+     2,
+     0
+    ],
+    "g": [
+     4,
+     5
+    ]
+   },
+   {
+    "color": "red",
+    "s": [
+     2,
+     1
+    ],
+    "g": [
+     5,
+     3
+    ]
+   },
+   {
+    "color": "yellow",
+    "s": [
+     2,
+     7
+    ],
+    "g": [
+     6,
+     8
+    ]
+   },
+   {
+    "color": "green",
+    "s": [
+     6,
+     6
+    ],
+    "g": [
+     6,
+     0
+    ]
+   },
+   {
+    "color": "purple",
+    "s": [
+     3,
+     0
+    ],
+    "g": [
+     3,
+     8
+    ]
+   }
+  ]
+ },
+ {
+  "par": 9,
+  "walls": [[3,6],[1,5],[5,3],[2,0],[5,1],[6,1],[4,8],[6,2],[5,8],[6,7]],
+  "marbles": [
+   { "color": "blue", "s": [4,5], "g": [1,0] },
+   { "color": "red", "s": [4,6], "g": [0,0] },
+   { "color": "yellow", "s": [2,6], "g": [4,0] }
+  ]
+ },
+ {
+  "par": 8,
+  "walls": [[5,5],[6,3],[4,1],[1,0],[2,6],[1,4],[5,7],[5,4],[0,5],[6,6],[1,6]],
+  "marbles": [
+   { "color": "blue", "s": [3,2], "g": [0,3] },
+   { "color": "red", "s": [3,5], "g": [6,8] },
+   { "color": "yellow", "s": [2,5], "g": [0,8] },
+   { "color": "green", "s": [1,5], "g": [0,4] }
+  ]
+ }
+];
+/* __END_LEVELS__ */
+</script>
+<script>
+"use strict";
+/* ================= ENGINE ================= */
+const DIRS = { U:{c:0,r:-1}, D:{c:0,r:1}, L:{c:-1,r:0}, R:{c:1,r:0} };
+const ARROWS = { U:"⬆", D:"⬇", L:"⬅", R:"➜" };
+
+/* Slide algorithm: process marbles leading-edge first (for R: highest col
+   first; L: lowest col; D: highest row; U: lowest row). Each marble walks
+   step-by-step until the next cell is out of bounds, a wall, or occupied by
+   an already-settled marble. Because leaders settle first, followers queue
+   exactly behind them — no two marbles can share or pass through a cell. */
+function slidePositions(positions, wallSet, dir){
+  const d = DIRS[dir], n = positions.length;
+  const order = positions.map((p,i)=>i);
+  if(dir==="R") order.sort((a,b)=>positions[b].c-positions[a].c);
+  if(dir==="L") order.sort((a,b)=>positions[a].c-positions[b].c);
+  if(dir==="D") order.sort((a,b)=>positions[b].r-positions[a].r);
+  if(dir==="U") order.sort((a,b)=>positions[a].r-positions[b].r);
+  const occ = new Set(positions.map(p=>p.c+","+p.r));
+  const out = positions.map(p=>({c:p.c, r:p.r}));
+  for(const i of order){
+    occ.delete(out[i].c+","+out[i].r);
+    let {c, r} = out[i];
+    for(;;){
+      const nc=c+d.c, nr=r+d.r;
+      if(nc<0||nc>=COLS||nr<0||nr>=ROWS) break;
+      if(wallSet.has(nc+","+nr)) break;
+      if(occ.has(nc+","+nr)) break;
+      c=nc; r=nr;
+    }
+    out[i]={c, r};
+    occ.add(c+","+r);
+  }
+  return out;
+}
+
+/* JS BFS solver over the game's own slide rules — used for Hint and QA. */
+function solveLevel(lv, maxDepth){
+  maxDepth = maxDepth || 16;
+  const wallSet = new Set(lv.walls.map(w=>w[0]+","+w[1]));
+  const start = lv.marbles.map(m=>({c:m.s[0], r:m.s[1]}));
+  const goalKey = lv.marbles.map(m=>m.g[0]+","+m.g[1]).join("|");
+  const key = ps => ps.map(p=>p.c+","+p.r).join("|");
+  if(key(start)===goalKey) return "";
+  const q=[[start,""]], seen=new Set([key(start)]);
+  while(q.length){
+    const [ps, path] = q.shift();
+    if(path.length>=maxDepth) continue;
+    for(const d of ["U","D","L","R"]){
+      const ns = slidePositions(ps, wallSet, d);
+      const k = key(ns);
+      if(k===key(ps)||seen.has(k)) continue;
+      const np = path+d;
+      if(k===goalKey) return np;
+      seen.add(k); q.push([ns, np]);
+    }
+  }
+  return null;
+}
+
+/* ================= STATE ================= */
+let cur = 0, marbles = [], wallSet = new Set(), moves = 0, history = [];
+let won = false, startTime = null, elapsed = 0, timerId = null, animating = false;
+let renderPos = []; // float pixel-space grid coords for animation
+let hintDir = null, hintUntil = 0;
+
+const $ = id => document.getElementById(id);
+const cv = $("cv"), ctx = cv.getContext("2d");
+let cell = 48, boardW = 0, boardH = 0, dpr = 1;
+
+function fmtTime(s){ return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); }
+
+function loadLevel(idx){
+  cur = idx;
+  const lv = LEVELS[idx];
+  wallSet = new Set(lv.walls.map(w=>w[0]+","+w[1]));
+  marbles = lv.marbles.map(m=>({ color:m.color, c:m.s[0], r:m.s[1], g:{c:m.g[0], r:m.g[1]} }));
+  renderPos = marbles.map(m=>({x:m.c, y:m.r}));
+  moves = 0; history = []; won = false; startTime = null; elapsed = 0;
+  stopTimer();
+  $("winOv").classList.remove("show");
+  $("lvlBtn").textContent = "LEVEL "+(idx+1)+" ▾";
+  $("parVal").textContent = lv.par;
+  buildPips(); updateHUD(); draw();
+}
+function buildPips(){
+  const row = $("pipRow"); row.innerHTML = "";
+  for(const m of LEVELS[cur].marbles){
+    const d = document.createElement("div");
+    d.className = "pip"; d.style.background = COLORS[m.color].main;
+    d.innerHTML = '<span class="chk">✓</span>';
+    row.appendChild(d);
+  }
+}
+function homeFlags(){ return marbles.map(m=>m.c===m.g.c && m.r===m.g.r); }
+function updateHUD(){
+  $("movesVal").textContent = moves;
+  $("timeVal").textContent = fmtTime(elapsed);
+  const flags = homeFlags();
+  [...$("pipRow").children].forEach((el,i)=>el.classList.toggle("home", !!flags[i]));
+}
+function startTimer(){
+  if(timerId) return;
+  startTime = Date.now() - elapsed*1000;
+  timerId = setInterval(()=>{ elapsed = Math.floor((Date.now()-startTime)/1000); $("timeVal").textContent = fmtTime(elapsed); }, 500);
+}
+function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
+
+/* ================= AUDIO ================= */
+let AC = null;
+function audioInit(){
+  try{ if(navigator.audioSession) navigator.audioSession.type = "playback"; }catch(e){}
+  if(!AC){
+    try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
+    if(AC){
+      const b = AC.createBuffer(1,1,22050), s = AC.createBufferSource();
+      s.buffer=b; s.connect(AC.destination); s.start(0);
+    }
+  }
+  if(AC && AC.state==="suspended") AC.resume();
+}
+function tone(freq, t0, dur, type, gain, slideTo){
+  if(!AC) return;
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type||"sine"; o.frequency.setValueAtTime(freq, AC.currentTime+t0);
+  if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, AC.currentTime+t0+dur);
+  g.gain.setValueAtTime(0.0001, AC.currentTime+t0);
+  g.gain.exponentialRampToValueAtTime(gain||0.12, AC.currentTime+t0+0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime+t0+dur);
+  o.connect(g); g.connect(AC.destination);
+  o.start(AC.currentTime+t0); o.stop(AC.currentTime+t0+dur+0.05);
+}
+function noiseBurst(dur, freq){
+  if(!AC) return;
+  const len = Math.floor(AC.sampleRate*dur), buf = AC.createBuffer(1,len,AC.sampleRate);
+  const ch = buf.getChannelData(0);
+  for(let i=0;i<len;i++) ch[i]=(Math.random()*2-1)*(1-i/len);
+  const src = AC.createBufferSource(); src.buffer=buf;
+  const f = AC.createBiquadFilter(); f.type="lowpass"; f.frequency.value=freq||500;
+  const g = AC.createGain(); g.gain.value=0.16;
+  src.connect(f); f.connect(g); g.connect(AC.destination); src.start();
+}
+function sndSlide(dist){ if(dist>0){ noiseBurst(0.10+Math.min(0.16,dist*0.02), 420); } }
+function sndStop(){ tone(150,0,0.09,"sine",0.16,70); }
+function sndHome(n){ tone(660+n*110,0,0.14,"sine",0.13); tone(990+n*110,0.07,0.18,"sine",0.10); }
+function sndWin(){ [523,659,784,1047,1319].forEach((f,i)=>tone(f,i*0.09,0.26,"triangle",0.13)); noiseBurst(0.3,2400); }
+function sndClick(){ tone(340,0,0.05,"square",0.05); }
+
+/* ================= MOVE ================= */
+function doSwipe(dir){
+  if(won || animating) return false;
+  if(!DIRS[dir]) return false;
+  const before = marbles.map(m=>({c:m.c, r:m.r}));
+  const after = slidePositions(before, wallSet, dir);
+  const changed = after.some((p,i)=>p.c!==before[i].c||p.r!==before[i].r);
+  if(!changed) return false;
+  history.push(before.map(p=>({...p})));
+  const homeBefore = homeFlags();
+  marbles.forEach((m,i)=>{ m.c=after[i].c; m.r=after[i].r; });
+  moves++;
+  if(!startTime && !timerId) startTimer();
+  const maxDist = Math.max(...after.map((p,i)=>Math.abs(p.c-before[i].c)+Math.abs(p.r-before[i].r)));
+  sndSlide(maxDist);
+  animateTo(after, Math.min(330, 110+maxDist*34), ()=>{
+    sndStop();
+    const hf = homeFlags();
+    hf.forEach((h,i)=>{ if(h && !homeBefore[i]) sndHome(i); });
+    if(hf.every(Boolean)){
+      won = true; stopTimer(); sndWin();
+      setTimeout(showWin, 260);
+    }
+    updateHUD();
+  });
+  updateHUD();
+  return true;
+}
+function animateTo(targets, dur, done){
+  animating = true;
+  const from = renderPos.map(p=>({...p})), t0 = performance.now();
+  function frame(t){
+    const k = Math.min(1,(t-t0)/dur), e = 1-Math.pow(1-k,3);
+    renderPos = targets.map((tg,i)=>({ x: from[i].x+(tg.c-from[i].x)*e, y: from[i].y+(tg.r-from[i].y)*e }));
+    draw();
+    if(k<1) requestAnimationFrame(frame);
+    else { animating=false; renderPos = targets.map(tg=>({x:tg.c,y:tg.r})); draw(); done&&done(); }
+  }
+  requestAnimationFrame(frame);
+}
+function undo(){
+  if(animating || !history.length) return false;
+  const prev = history.pop();
+  marbles.forEach((m,i)=>{ m.c=prev[i].c; m.r=prev[i].r; });
+  renderPos = marbles.map(m=>({x:m.c, y:m.r}));
+  moves = Math.max(0, moves-1);
+  won = false; $("winOv").classList.remove("show");
+  sndClick(); updateHUD(); draw();
+  return true;
+}
+function showWin(){
+  const perfect = moves <= LEVELS[cur].par;
+  $("winStar").style.display = perfect ? "block" : "none";
+  const t = $("winTitle");
+  t.textContent = perfect ? "Perfect!" : "Solved!";
+  t.className = perfect ? "perfect" : "";
+  t.id = "winTitle";
+  $("wMoves").textContent = moves;
+  $("wPar").textContent = LEVELS[cur].par;
+  $("wTime").textContent = fmtTime(elapsed);
+  $("nextBtn").textContent = cur < LEVELS.length-1 ? "Next Level ➜" : "↺ Play Again";
+  $("winOv").classList.add("show");
+}
+
+/* ================= DRAW ================= */
+function rr(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+function draw(){
+  ctx.clearRect(0,0,boardW,boardH);
+  const gap = Math.max(2, cell*0.055), rad = cell*0.20;
+  // tiles
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+    const x=c*cell+gap/2, y=r*cell+gap/2, w=cell-gap;
+    const g = ctx.createLinearGradient(x,y,x,y+w);
+    g.addColorStop(0,"#d3cdf5"); g.addColorStop(1,"#b3aae6");
+    ctx.fillStyle = wallSet.has(c+","+r) ? "#0000" : g;
+    if(!wallSet.has(c+","+r)){ rr(x,y,w,w,rad); ctx.fill();
+      ctx.fillStyle="#ffffff2e"; rr(x,y,w,w*0.42,rad); ctx.fill(); }
+  }
+  // goals (rings)
+  const t = performance.now()/600;
+  for(const m of marbles){
+    const col = COLORS[m.color], home = m.c===m.g.c&&m.r===m.g.r;
+    const cx=(m.g.c+0.5)*cell, cy=(m.g.r+0.5)*cell, rad2=cell*0.335;
+    ctx.save();
+    if(home){ ctx.shadowColor=col.main; ctx.shadowBlur=16+6*Math.sin(t); }
+    ctx.beginPath(); ctx.arc(cx,cy,rad2,0,Math.PI*2);
+    ctx.fillStyle = home ? col.main : col.main+"2e"; ctx.fill();
+    ctx.lineWidth = Math.max(3,cell*0.075); ctx.strokeStyle = col.ring; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx,cy,rad2*0.52,0,Math.PI*2);
+    ctx.fillStyle = home ? "#ffffff38" : "#24154766"; ctx.fill();
+    ctx.restore();
+    if(home){
+      ctx.strokeStyle="#fff"; ctx.lineWidth=Math.max(2.4,cell*0.07);
+      ctx.lineCap="round"; ctx.lineJoin="round";
+      ctx.beginPath();
+      ctx.moveTo(cx-rad2*0.30, cy+rad2*0.02);
+      ctx.lineTo(cx-rad2*0.08, cy+rad2*0.26);
+      ctx.lineTo(cx+rad2*0.34, cy-rad2*0.24);
+      ctx.stroke();
+    }
+  }
+  // walls (striped crates)
+  for(const key of wallSet){
+    const [c,r] = key.split(",").map(Number);
+    const x=c*cell+gap/2, y=r*cell+gap/2, w=cell-gap;
+    const g = ctx.createLinearGradient(x,y,x,y+w);
+    g.addColorStop(0,"#d9a45e"); g.addColorStop(1,"#b07c36");
+    rr(x,y,w,w,rad); ctx.fillStyle=g; ctx.fill();
+    ctx.save(); rr(x,y,w,w,rad); ctx.clip();
+    ctx.strokeStyle="#8a5a1e"; ctx.lineWidth=cell*0.11;
+    for(let k=-1;k<3;k++){
+      ctx.beginPath();
+      ctx.moveTo(x+k*w*0.62-w*0.3, y+w+3); ctx.lineTo(x+k*w*0.62+w*0.3, y-3); ctx.stroke();
+    }
+    ctx.fillStyle="#7c4f16";
+    [[0.22,0.24],[0.78,0.24],[0.22,0.78],[0.78,0.78]].forEach(([fx,fy])=>{
+      ctx.beginPath(); ctx.arc(x+w*fx,y+w*fy,Math.max(1.4,cell*0.045),0,Math.PI*2); ctx.fill();
+    });
+    ctx.restore();
+    rr(x,y,w,w,rad); ctx.strokeStyle="#6e4511"; ctx.lineWidth=2; ctx.stroke();
+  }
+  // marbles (glossy spheres)
+  marbles.forEach((m,i)=>{
+    const col = COLORS[m.color];
+    const cx=(renderPos[i].x+0.5)*cell, cy=(renderPos[i].y+0.5)*cell, rad2=cell*0.375;
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(cx,cy+rad2*0.82,rad2*0.86,rad2*0.26,0,0,Math.PI*2);
+    ctx.fillStyle="#160a3099"; ctx.fill();
+    const g = ctx.createRadialGradient(cx-rad2*0.38,cy-rad2*0.42,rad2*0.12, cx,cy,rad2*1.05);
+    g.addColorStop(0,col.light); g.addColorStop(0.35,col.main); g.addColorStop(1,col.dark);
+    ctx.beginPath(); ctx.arc(cx,cy,rad2,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx-rad2*0.34,cy-rad2*0.44,rad2*0.20,0,Math.PI*2);
+    ctx.fillStyle="#ffffffd9"; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+rad2*0.30,cy+rad2*0.38,rad2*0.30,0,Math.PI*2);
+    ctx.fillStyle="#ffffff22"; ctx.fill();
+    ctx.restore();
+    if(m.c===m.g.c&&m.r===m.g.r){
+      ctx.save(); ctx.beginPath(); ctx.arc(cx,cy,rad2+2.5,0,Math.PI*2);
+      ctx.strokeStyle="#7dff9a"; ctx.lineWidth=2.4; ctx.shadowColor="#7dff9a"; ctx.shadowBlur=8; ctx.stroke(); ctx.restore();
+    }
+  });
+  // hint arrow
+  if(hintDir && performance.now()<hintUntil){
+    const cx=boardW/2, cy=boardH/2;
+    ctx.save(); ctx.globalAlpha=0.9; ctx.fillStyle="#ffd23c";
+    ctx.font="900 "+Math.round(cell*1.5)+"px sans-serif";
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.shadowColor="#000"; ctx.shadowBlur=14;
+    ctx.fillText(ARROWS[hintDir], cx, cy); ctx.restore();
+  }
+}
+
+/* ================= SIZING ================= */
+function resize(){
+  const wrap = $("boardWrap");
+  const availW = Math.min(wrap.clientWidth-20, 420-20);
+  const availH = wrap.clientHeight-8;
+  cell = Math.floor(Math.min(availW/COLS, availH/ROWS));
+  cell = Math.max(30, cell);
+  boardW = cell*COLS; boardH = cell*ROWS;
+  dpr = Math.min(2, window.devicePixelRatio||1);
+  cv.width = boardW*dpr; cv.height = boardH*dpr;
+  cv.style.width = boardW+"px"; cv.style.height = boardH+"px";
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  draw();
+}
+window.addEventListener("resize", resize);
+
+/* ================= INPUT ================= */
+let touchX=null, touchY=null;
+cv.addEventListener("pointerdown", e=>{ audioInit(); touchX=e.clientX; touchY=e.clientY; });
+cv.addEventListener("pointerup", e=>{
+  if(touchX===null) return;
+  const dx=e.clientX-touchX, dy=e.clientY-touchY;
+  touchX=touchY=null;
+  if(Math.hypot(dx,dy)<24) return;
+  doSwipe(Math.abs(dx)>Math.abs(dy) ? (dx>0?"R":"L") : (dy>0?"D":"U"));
+});
+$("boardWrap").addEventListener("pointerdown", ()=>audioInit());
+document.addEventListener("pointerdown", ()=>audioInit());
+document.addEventListener("touchend", ()=>audioInit(), {passive:true});
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) audioInit(); });
+window.addEventListener("keydown", e=>{
+  const map = { ArrowUp:"U", ArrowDown:"D", ArrowLeft:"L", ArrowRight:"R" };
+  if(map[e.key]){ e.preventDefault(); audioInit(); doSwipe(map[e.key]); }
+  if(e.key==="u"||e.key==="U" && e.ctrlKey){}
+  if(e.key==="z" && (e.ctrlKey||e.metaKey)){ e.preventDefault(); undo(); }
+});
+$("undoBtn").addEventListener("click", ()=>{ audioInit(); undo(); });
+$("restartBtn").addEventListener("click", ()=>{ audioInit(); sndClick(); loadLevel(cur); $("msgBar").innerHTML="Level reset — <b>"+LEVELS[cur].par+"</b> tilts is par."; });
+$("hintBtn").addEventListener("click", ()=>{
+  audioInit();
+  const sol = solveLevel(LEVELS[cur]);
+  // replay history is not tracked as dirs; hint = solve from CURRENT state:
+  const lvNow = { walls: LEVELS[cur].walls, par: LEVELS[cur].par,
+    marbles: marbles.map((m,i)=>({ color:m.color, s:[m.c,m.r], g:[m.g.c,m.g.r] })) };
+  const s2 = solveLevel(lvNow);
+  const use = s2 || sol;
+  if(use && use.length){
+    hintDir = use[0]; hintUntil = performance.now()+1400;
+    $("dirHint").textContent = ARROWS[hintDir];
+    $("dirHint").style.opacity = 1;
+    setTimeout(()=>{ $("dirHint").style.opacity=0; hintDir=null; draw(); }, 1400);
+    $("msgBar").innerHTML = "Hint: tilt <b>"+({U:"UP ⬆",D:"DOWN ⬇",L:"LEFT ⬅",R:"RIGHT ➜"})[hintDir]+"</b> next.";
+    draw();
+  } else {
+    $("msgBar").textContent = won ? "Already solved!" : "No hint found from here — try Undo.";
+  }
+});
+$("nextBtn").addEventListener("click", ()=>{ sndClick(); loadLevel(cur<LEVELS.length-1 ? cur+1 : 0); });
+$("replayBtn").addEventListener("click", ()=>{ sndClick(); loadLevel(cur); });
+$("lvlBtn").addEventListener("click", ()=>{ buildLvlGrid(); $("lvlOv").classList.add("show"); });
+$("lvlClose").addEventListener("click", ()=>$("lvlOv").classList.remove("show"));
+function buildLvlGrid(){
+  const g = $("lvlGrid"); g.innerHTML="";
+  LEVELS.forEach((lv,i)=>{
+    const b = document.createElement("button");
+    b.className = "lvlCell"+(i===cur?" cur":"");
+    b.innerHTML = (i+1)+"<small>PAR "+lv.par+" · "+lv.marbles.length+" MARBLES</small>";
+    b.addEventListener("click", ()=>{ loadLevel(i); $("lvlOv").classList.remove("show"); });
+    g.appendChild(b);
+  });
+}
+
+/* ================= QA HOOKS ================= */
+window.__game = {
+  get level(){ return cur; },
+  get moves(){ return moves; },
+  get par(){ return LEVELS[cur].par; },
+  get won(){ return won; },
+  get animating(){ return animating; },
+  get elapsed(){ return elapsed; },
+  levels: LEVELS,
+  board(){
+    return { cols:COLS, rows:ROWS,
+      walls: LEVELS[cur].walls.map(w=>({c:w[0], r:w[1]})),
+      marbles: marbles.map(m=>({ color:m.color, c:m.c, r:m.r, goal:{c:m.g.c, r:m.g.r}, home:m.c===m.g.c&&m.r===m.g.r })),
+      moves, par: LEVELS[cur].par, won };
+  },
+  marblePositions(){ return marbles.map(m=>({c:m.c, r:m.r})); },
+  goals(){ return marbles.map(m=>({c:m.g.c, r:m.g.r})); },
+  swipe(dir){
+    const d = ({up:"U",down:"D",left:"L",right:"R",U:"U",D:"D",L:"L",R:"R"})[dir];
+    return doSwipe(d||dir);
+  },
+  undo(){ return undo(); },
+  restart(){ loadLevel(cur); },
+  loadLevel(i){ loadLevel(i); },
+  solve(i){ return solveLevel(LEVELS[i===undefined?cur:i]); },
+  setPositions(arr){ // test helper: teleport marbles (no history)
+    arr.forEach((p,i)=>{ if(marbles[i]){ marbles[i].c=p[0]; marbles[i].r=p[1]; } });
+    renderPos = marbles.map(m=>({x:m.c, y:m.r}));
+    won = homeFlags().every(Boolean);
+    updateHUD(); draw();
+  },
+  slidePositions, solveLevel
+};
+
+/* ================= BOOT ================= */
+loadLevel(0);
+resize();
+requestAnimationFrame(function loop(){ if(hintDir) draw(); requestAnimationFrame(loop); });
+</script>
+
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>

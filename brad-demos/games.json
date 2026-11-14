@@ -2829,7 +2829,7 @@
   },
   {
    "category": "AR",
-   "desc": "Linkle in her pool look doing the car-top dance in your room — browser AR plus Quick Look: place her on a real car roof or the floor, tap for a spin and hearts.",
+   "desc": "Linkle (dress rig) dances in your room to a 115 BPM groove — tap the ring on the beat for PERFECTs, tap her for a spin",
    "id": "linkle-ar-dance",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Linkle AR Dance",
@@ -3010,6 +3010,126 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Punch-Out AR",
    "url": "../games/punch-out-ar/"
+  },
+  {
+   "category": "Originals",
+   "desc": "Drive the gold Cybercab around a brownstone fountain plaza — the watercolor paints itself in as you go; hit 99% for the finale",
+   "id": "cybercab-fountain",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Cybercab Watercolor Fountain",
+   "url": "../games/cybercab-fountain/"
+  },
+  {
+   "category": "AR",
+   "desc": "High hand drops the seeds, low hand walks the gardener — snip every bloom the seeds grow",
+   "id": "planko-ar",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "AR Planko — Flower Garden",
+   "url": "../games/planko-ar/"
+  },
+  {
+   "category": "Arcade Hub",
+   "desc": "Pump bubble-jets and stack all 6 rings on the water tank — Double! Triple! combos",
+   "id": "ringtank",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "RingTank",
+   "url": "../games/ringtank/"
+  },
+  {
+   "category": "Arcade Hub",
+   "desc": "One-tap donut stacker — land each donut dead-center or the tower topples",
+   "id": "glazy",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Glazy",
+   "url": "../games/glazy/"
+  },
+  {
+   "category": "Arcade Hub",
+   "desc": "Tilt the whole board and slide every marble home — 6 levels, par is the perfect line",
+   "id": "tilt",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "TILT",
+   "url": "../games/tilt/"
+  },
+  {
+   "category": "Arcade Hub",
+   "desc": "4v4 penguin snowball war on the ice — knock out the other flock",
+   "id": "pengball",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "PENGBALL",
+   "url": "../games/pengball/"
+  },
+  {
+   "category": "Arcade Hub",
+   "desc": "Bonk Moblins, chain the combo to ×5 — bonk a cucco and the swarm ends you",
+   "id": "whack-a-moblin",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Whack-a-Moblin",
+   "url": "../games/whack-a-moblin/"
+  },
+  {
+   "category": "Arcade Hub",
+   "desc": "Aim, power, steer the Bombchu down the lane — full 10-frame bowling scoring",
+   "id": "bombchu-bowling",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Bombchu Bowling",
+   "url": "../games/bombchu-bowling/"
+  },
+  {
+   "category": "Arcade Hub",
+   "desc": "Stare-down duels — draw on the flash or it's a foul; duels get faster every round",
+   "id": "wild-gunman",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Wild Gunman",
+   "url": "../games/wild-gunman/"
+  },
+  {
+   "category": "Arcade Hub",
+   "desc": "Boardwalk shooting gallery — bolts fly slow, so lead your targets",
+   "id": "crossbow-gallery",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Crossbow Gallery",
+   "url": "../games/crossbow-gallery/"
+  },
+  {
+   "category": "Arcade Hub",
+   "desc": "Pots arc across the sky — center hits pay double, golden pots pay 5×",
+   "id": "clay-pot-skeet",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Clay Pot Skeet",
+   "url": "../games/clay-pot-skeet/"
+  },
+  {
+   "category": "Arcade Hub",
+   "desc": "Judgment shooting — drop Bokoblins and decoys, spare the townsfolk, never the cucco",
+   "id": "cucco-alley",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Cucco Alley",
+   "url": "../games/cucco-alley/"
+  },
+  {
+   "category": "Arcade Hub",
+   "desc": "One forgery hides in every grid of goods — find the tell before the clock runs out",
+   "id": "spot-the-fake",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "SPOT THE FAKE!",
+   "url": "../games/spot-the-fake/"
+  },
+  {
+   "category": "Arcade Hub",
+   "desc": "A giant storybook with a pose-shaped hole zooms in — strike the matching pose or BONK",
+   "id": "booksquirm",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "BOOKSQUIRM",
+   "url": "../games/booksquirm/"
+  },
+  {
+   "category": "Arcade Hub",
+   "desc": "Drag the beads, zero the crossings — 60 seconds, knots get denser every level",
+   "id": "untangle-it",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "UNTANGLE IT!",
+   "url": "../games/untangle-it/"
   }
  ]
 }

@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Clay Pot Skeet — Hyrule Vice</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:#1a1030;font-family:Verdana,Geneva,sans-serif;-webkit-user-select:none;user-select:none}
+  #app{position:fixed;inset:0;display:flex;flex-direction:column}
+  #hud{height:56px;flex:0 0 56px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:linear-gradient(180deg,#241243,#180b33);border-bottom:3px solid #ff9e3e;z-index:5}
+  .hudItem{display:flex;align-items:center;gap:5px;color:#fff;font-weight:900;font-size:20px;text-shadow:0 2px 0 #000}
+  .hudItem .ico{font-size:21px}
+  #hudCombo{color:#ffd23e;min-width:74px;justify-content:center}
+  #hudCombo.hot{color:#ff7b2e}
+  #hudLeft{color:#7ef0ff}
+  #hudMiss{font-size:15px;letter-spacing:1px}
+  #boardWrap{flex:1 1 auto;position:relative;min-height:0}
+  canvas#game{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+  .overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;background:rgba(16,6,36,.74);z-index:10;text-align:center;padding:20px}
+  .overlay.hidden{display:none}
+  .title{font-size:40px;font-weight:900;color:#ffb347;letter-spacing:1px;line-height:1.05;text-shadow:0 0 18px #ff2e88,0 4px 0 #7a2b00,0 6px 14px #000}
+  .title small{display:block;font-size:17px;color:#7ef0ff;text-shadow:0 0 12px #06c;letter-spacing:3px}
+  .howto{color:#ffeedd;font-size:14.5px;line-height:1.55;max-width:336px;font-weight:700}
+  .howto b{color:#ffd23e}.howto .bad{color:#ff8fa3}
+  .bigBtn{font-family:inherit;font-size:23px;font-weight:900;letter-spacing:1px;color:#33160a;background:linear-gradient(180deg,#ffd76e,#ff9e3e);border:0;border-radius:16px;padding:15px 40px;box-shadow:0 6px 0 #a34d00,0 10px 22px rgba(0,0,0,.6);cursor:pointer;touch-action:manipulation}
+  .bigBtn:active{transform:translateY(4px);box-shadow:0 2px 0 #a34d00}
+  .statGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px 26px;color:#fff;font-size:16px;font-weight:800}
+  .statGrid span{color:#ffd23e;font-size:25px}
+  .endTitle{font-size:36px;font-weight:900;color:#7ef0ff;text-shadow:0 0 16px #06c,0 4px 0 #063a5e}
+  #endRank{font-size:30px;color:#ffd23e;font-weight:900;text-shadow:0 0 14px #f80}
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud">
+    <div class="hudItem"><span class="ico">🪙</span><span id="hudScore">0</span></div>
+    <div class="hudItem" id="hudCombo"><span class="ico">🔥</span><span id="hudComboV">×1</span></div>
+    <div class="hudItem" id="hudMiss"><span id="hudMissV">🏺🏺🏺</span></div>
+    <div class="hudItem" id="hudLeft"><span class="ico">🏺</span><span id="hudLeftV">40</span></div>
+  </div>
+  <div id="boardWrap">
+    <canvas id="game"></canvas>
+    <div class="overlay" id="startScreen">
+      <div class="title">CLAY POT SKEET<small>★ HYRULE VICE ★</small></div>
+      <div class="howto">👆 <b>Tap a flying clay pot</b> to blast it mid-air!<br>
+        Dead-center taps score <b>DOUBLE</b>. Rare <b>golden pots = 5×</b>.<br>
+        Build 🔥 streaks for a combo multiplier.<br>
+        Let 3 pots crash and the launchers <b>SPEED UP!</b><br>
+        <span class="bad">🐔 NEVER shoot the Cucco — big penalty!</span><br>
+        Round = <b>40 launches</b>. Break them all!</div>
+      <button class="bigBtn" id="startBtn">▶ START</button>
+    </div>
+    <div class="overlay hidden" id="endScreen">
+      <div class="endTitle">🏁 ROUND OVER!</div>
+      <div id="endRank">RANK S</div>
+      <div class="statGrid">
+        <div>🪙 SCORE<br><span id="endScore">0</span></div>
+        <div>🏺 SHATTERED<br><span id="endShattered">0</span></div>
+        <div>🎯 ACCURACY<br><span id="endAcc">0%</span></div>
+        <div>🔥 BEST STREAK<br><span id="endStreak">0</span></div>
+        <div>✨ GOLDEN<br><span id="endGolden">0</span></div>
+        <div>💥 SHOTS<br><span id="endShots">0</span></div>
+      </div>
+      <button class="bigBtn" id="restartBtn">↻ PLAY AGAIN</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ================================================================
+   CLAY POT SKEET — Zelda × GTA skeet shooting.
+   Hyrule clay pots launch ballistically off Vice City rooftops at
+   golden hour. Tap to shoot. Real ballistic integration for pots,
+   real gravity/rotation physics for shards. Round = 40 launches.
+   ================================================================ */
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const wrap = document.getElementById('boardWrap');
+const hudScore = document.getElementById('hudScore');
+const hudComboV = document.getElementById('hudComboV');
+const hudComboEl = document.getElementById('hudCombo');
+const hudLeftV = document.getElementById('hudLeftV');
+const hudMissV = document.getElementById('hudMissV');
+const startScreen = document.getElementById('startScreen');
+const endScreen = document.getElementById('endScreen');
+
+let W = 0, H = 0, DPR = 1, horizonY = 0;
+function resize(){
+  const r = wrap.getBoundingClientRect();
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = Math.max(280, r.width); H = Math.max(380, r.height);
+  canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
+  horizonY = H * 0.84; // rooftop line: sky = 84% of canvas height
+}
+window.addEventListener('resize', resize);
+
+/* ---------------- Audio (synth only, iOS-safe) ---------------- */
+let AC = null;
+function audioInit(){
+  try{
+    if (navigator.audioSession) navigator.audioSession.type = 'playback';
+  }catch(e){}
+  if (!AC){
+    try{ AC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ AC = null; }
+    if (AC){
+      // silent-buffer unlock inside the gesture
+      const b = AC.createBuffer(1, 1, 22050), s = AC.createBufferSource();
+      s.buffer = b; s.connect(AC.destination); s.start(0);
+    }
+  }
+  if (AC && AC.state === 'suspended') AC.resume();
+}
+['pointerdown','touchend'].forEach(ev => document.addEventListener(ev, audioInit, {passive:true}));
+document.addEventListener('visibilitychange', ()=>{ if (!document.hidden) audioInit(); });
+function tone(freq, t0, dur, type, vol, slideTo){
+  if (!AC) return;
+  const t = AC.currentTime + t0, o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'square'; o.frequency.setValueAtTime(freq, t);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+function noiseBurst(dur, vol, freq){
+  if (!AC) return;
+  const n = Math.floor(AC.sampleRate * dur), buf = AC.createBuffer(1, n, AC.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  const s = AC.createBufferSource(); s.buffer = buf;
+  const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq || 1800; f.Q.value = 0.8;
+  const g = AC.createGain(); g.gain.value = vol;
+  s.connect(f); f.connect(g); g.connect(AC.destination); s.start();
+}
+const sfx = {
+  thump(){ tone(120, 0, 0.14, 'sine', 0.35, 55); noiseBurst(0.06, 0.12, 500); },
+  shatter(){ noiseBurst(0.16, 0.4, 2200); tone(1900, 0.01, 0.05, 'square', 0.10); tone(1350, 0.05, 0.05, 'square', 0.09); tone(2600, 0.09, 0.06, 'square', 0.08); },
+  center(){ tone(880, 0, 0.1, 'sine', 0.22); tone(1318, 0.07, 0.14, 'sine', 0.22); },
+  golden(){ [660, 880, 1108, 1318, 1760].forEach((f, i) => tone(f, i * 0.06, 0.12, 'triangle', 0.2)); },
+  squawk(){ tone(700, 0, 0.09, 'sawtooth', 0.25, 1400); tone(900, 0.1, 0.09, 'sawtooth', 0.25, 500); tone(750, 0.2, 0.12, 'sawtooth', 0.22, 1600); },
+  speedUp(){ tone(392, 0, 0.09, 'square', 0.18); tone(587, 0.08, 0.09, 'square', 0.18); tone(880, 0.16, 0.16, 'square', 0.2); },
+  miss(){ tone(220, 0, 0.1, 'triangle', 0.12, 160); noiseBurst(0.08, 0.15, 700); },
+  shot(){ noiseBurst(0.05, 0.14, 3000); tone(1500, 0, 0.05, 'square', 0.06, 700); }
+};
+
+/* ---------------- Game state ---------------- */
+const TOTAL_LAUNCHES = 40;
+const GRAV = 900;               // px/s^2 — real ballistic gravity
+const POT_R = 26;               // pot radius / break radius (tap within = hit)
+const SWEET_R = POT_R * 0.4;    // center "sweet ring" radius
+const SHOT_SPREAD = 26;         // visual shot spread radius
+const BASE_INTERVAL = 1.55;     // s between launches at round start
+const BASE_POINTS = 100, GOLD_POINTS = 500;
+
+let phase = 'ready';            // ready | playing | ended
+let score = 0, streak = 0, bestStreak = 0, misses = 0, missStreak = 0;
+let launched = 0, shattered = 0, shotsFired = 0, goldenHit = 0, cuccosHit = 0;
+let speedUpFactor = 1;          // interval multiplier (<1 = faster) from miss speed-ups
+let velFactor = 1;              // velocity multiplier from miss speed-ups
+let speedUpCount = 0;
+let launchTimer = 0, nextPotId = 1;
+let hitStopT = 0, flashA = 0, flashX = 0, flashY = 0, punchT = 0;
+let banner = null;              // {text, t, color}
+let lastHit = null;             // {type, center, points, id}
+let rngState = 1234567;
+function rnd(){ rngState = (rngState * 1103515245 + 12345) & 0x7fffffff; return rngState / 0x7fffffff; }
+
+let pots = [];     // {id,x,y,vx,vy,r,type,angle,va,side}
+let shards = [];   // {x,y,vx,vy,angle,va,size,color,life}
+let puffs = [];    // dust {x,y,vx,vy,r,life,maxLife}
+let pops = [];     // score pop texts {x,y,text,t,color,big}
+let rings = [];    // expanding rings {x,y,r,t,color}
+let shotFx = [];   // bolt streaks {x,y,t}
+let cucco = null;  // {x,y,vx,t}
+let stars = [];
+for (let i = 0; i < 40; i++) stars.push({x: Math.random(), y: Math.random() * 0.4, s: Math.random() * 1.6 + 0.4});
+
+function progress(){ return Math.min(1, launched / TOTAL_LAUNCHES); }
+function curInterval(){
+  // steady tightening across the round + miss-triggered speed-ups
+  return Math.max(0.55, BASE_INTERVAL * (1 - 0.35 * progress()) * speedUpFactor);
+}
+function curVelScale(){ return (1 + 0.30 * progress()) * velFactor; }
+function comboMult(){ return 1 + 0.5 * Math.floor(streak / 5); } // ×1, ×1.5 @5, ×2 @10…
+
+/* ---------------- Launching ---------------- */
+function launchPot(forcedType){
+  if (launched >= TOTAL_LAUNCHES && !forcedType) return null;
+  const side = rnd() < 0.5 ? 0 : 1; // 0 = left roof, 1 = right roof
+  const lx = side === 0 ? 26 + rnd() * 26 : W - 26 - rnd() * 26;
+  const ly = horizonY - 14 - rnd() * 26;
+  const vs = curVelScale();
+  const type = forcedType || (rnd() < 1 / 9 ? 'golden' : 'normal');
+  const goldenBoost = type === 'golden' ? 1.15 : 1;
+  const vx = (side === 0 ? 1 : -1) * (250 + rnd() * 120) * vs * goldenBoost;
+  const vy = -(520 + rnd() * 130) * vs * goldenBoost;
+  const pot = { id: nextPotId++, x: lx, y: ly, vx, vy, r: POT_R, type, angle: 0, va: (rnd() - 0.5) * 2.4, side };
+  pots.push(pot);
+  if (!forcedType) launched++;
+  launchTimer = 0;
+  sfx.thump();
+  // muzzle dust at launcher
+  for (let i = 0; i < 5; i++) puffs.push({x: lx, y: ly, vx: (rnd() - 0.5) * 60, vy: -rnd() * 50, r: 4 + rnd() * 5, life: 0, maxLife: 0.45});
+  return pot;
+}
+function maybeLaunchCucco(){
+  if (cucco || launched < 6) return;
+  if (rnd() < 0.10){
+    const dir = rnd() < 0.5 ? 1 : -1;
+    cucco = { x: dir > 0 ? -40 : W + 40, y: 90 + rnd() * 180, vx: dir * (120 + rnd() * 60), t: 0 };
+  }
+}
+
+/* ---------------- Shooting ---------------- */
+function spawnShards(pot){
+  const cols = pot.type === 'golden' ? ['#f7c948', '#e8a812', '#ffe9a0', '#d98e04'] : ['#c96f3f', '#a9502a', '#e08a52', '#8a3d1e', '#3e7d74'];
+  const n = 6 + Math.floor(rnd() * 5); // 6–10 shards
+  for (let i = 0; i < n; i++){
+    const a = rnd() * Math.PI * 2, sp = 60 + rnd() * 200;
+    shards.push({
+      x: pot.x, y: pot.y,
+      vx: pot.vx * 0.35 + Math.cos(a) * sp,
+      vy: pot.vy * 0.35 + Math.sin(a) * sp - 60,
+      angle: rnd() * Math.PI * 2, va: (rnd() - 0.5) * 14,
+      size: 5 + rnd() * 8, color: cols[i % cols.length], life: 0
+    });
+  }
+  for (let i = 0; i < 7; i++) puffs.push({x: pot.x + (rnd() - 0.5) * 24, y: pot.y + (rnd() - 0.5) * 24, vx: (rnd() - 0.5) * 46, vy: (rnd() - 0.5) * 30 - 12, r: 5 + rnd() * 7, life: 0, maxLife: 0.5 + rnd() * 0.3});
+}
+function shoot(tx, ty){
+  if (phase !== 'playing') return;
+  shotsFired++;
+  sfx.shot();
+  shotFx.push({x: tx, y: ty, t: 0});
+  // cucco check first (it's a bird, not a pot — and it's in front)
+  if (cucco){
+    const dx = tx - cucco.x, dy = ty - cucco.y;
+    if (dx * dx + dy * dy <= 32 * 32){
+      score = Math.max(0, score - 150);
+      streak = 0;
+      cuccosHit++;
+      pops.push({x: cucco.x, y: cucco.y - 20, text: '-150 SQUAWK!', t: 0, color: '#ff8fa3', big: false});
+      sfx.squawk();
+      cucco = null;
+      updateHUD();
+      return;
+    }
+  }
+  // nearest pot within break radius
+  let best = null, bestD = 1e9;
+  for (const p of pots){
+    const dx = tx - p.x, dy = ty - p.y, d = Math.hypot(dx, dy);
+    if (d <= p.r && d < bestD){ best = p; bestD = d; }
+  }
+  if (best){
+    const center = bestD <= SWEET_R;
+    const base = best.type === 'golden' ? GOLD_POINTS : BASE_POINTS;
+    const pts = Math.round(base * (center ? 2 : 1) * comboMult());
+    score += pts;
+    streak++; bestStreak = Math.max(bestStreak, streak);
+    missStreak = 0;
+    shattered++;
+    if (best.type === 'golden'){ goldenHit++; punchT = 0.22; sfx.golden(); }
+    lastHit = { type: best.type, center, points: pts, id: best.id };
+    spawnShards(best);
+    pots = pots.filter(p => p !== best);
+    hitStopT = 0.09;                       // FEEL: hit-stop 0.09 s
+    flashA = 0.35; flashX = best.x; flashY = best.y;  // FEEL: white flash 0.35
+    rings.push({x: best.x, y: best.y, r: 6, t: 0, color: best.type === 'golden' ? '#ffd23e' : '#ffffff'});
+    if (center){
+      rings.push({x: best.x, y: best.y, r: 2, t: -0.08, color: '#7ef0ff'});
+      pops.push({x: best.x, y: best.y - 34, text: 'CENTER! +' + pts, t: 0, color: '#7ef0ff', big: true});
+      sfx.center();
+    } else {
+      pops.push({x: best.x, y: best.y - 30, text: '+' + pts, t: 0, color: best.type === 'golden' ? '#ffd23e' : '#ffffff', big: best.type === 'golden'});
+    }
+    sfx.shatter();
+  }
+  updateHUD();
+}
+canvas.addEventListener('pointerdown', e => {
+  audioInit();
+  const r = canvas.getBoundingClientRect();
+  shoot(e.clientX - r.left, e.clientY - r.top);
+});
+
+/* ---------------- Update ---------------- */
+function potCrashed(p){
+  misses++; missStreak++;
+  pops.push({x: Math.max(30, Math.min(W - 30, p.x)), y: horizonY - 46, text: 'MISS', t: 0, color: '#ff8fa3', big: false});
+  for (let i = 0; i < 5; i++) puffs.push({x: p.x, y: horizonY - 4, vx: (rnd() - 0.5) * 90, vy: -rnd() * 70, r: 4 + rnd() * 6, life: 0, maxLife: 0.4});
+  sfx.miss();
+  if (missStreak >= 3){
+    missStreak = 0;
+    speedUpCount++;
+    speedUpFactor *= 0.85;
+    velFactor *= 1.12;
+    banner = { text: '⚡ SPEED UP!', t: 0, color: '#ffd23e' };
+    sfx.speedUp();
+  }
+  updateHUD();
+}
+function update(dt){
+  // launcher
+  if (launched < TOTAL_LAUNCHES){
+    launchTimer += dt;
+    if (launchTimer >= curInterval()){
+      const pot = launchPot(null);
+      if (pot){
+        maybeLaunchCucco();
+        // crossing double launches at higher levels
+        if (launched >= 16 && rnd() < 0.28 && launched < TOTAL_LAUNCHES) launchPot(null);
+      }
+    }
+  }
+  // pots: real ballistic integration
+  const alive = [];
+  for (const p of pots){
+    p.vy += GRAV * dt;
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    p.angle += p.va * dt;
+    if (p.y - p.r > horizonY + 6 || p.x < -60 || p.x > W + 60) potCrashed(p);
+    else alive.push(p);
+  }
+  pots = alive;
+  // shards: real gravity + rotation, tumble to the rooftops
+  shards = shards.filter(s => {
+    s.vy += GRAV * dt; s.x += s.vx * dt; s.y += s.vy * dt; s.angle += s.va * dt; s.life += dt;
+    return s.y < horizonY + 4 && s.life < 2.2;
+  });
+  puffs = puffs.filter(p => { p.life += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy -= 14 * dt; return p.life < p.maxLife; });
+  pops = pops.filter(p => { p.t += dt; p.y -= 42 * dt; return p.t < 0.95; });
+  rings = rings.filter(r => { r.t += dt; if (r.t > 0) r.r += 190 * dt; return r.t < 0.42; });
+  shotFx = shotFx.filter(s => { s.t += dt; return s.t < 0.16; });
+  if (cucco){
+    cucco.t += dt; cucco.x += cucco.vx * dt;
+    cucco.y += Math.sin(cucco.t * 7) * 22 * dt;
+    if (cucco.x < -60 || cucco.x > W + 60) cucco = null;
+  }
+  if (banner){ banner.t += dt; if (banner.t > 1.15) banner = null; }
+  // round end: all launches spent and sky clear
+  if (phase === 'playing' && launched >= TOTAL_LAUNCHES && pots.length === 0) endRound();
+}
+function endRound(){
+  phase = 'ended';
+  const acc = shotsFired ? Math.round(100 * shattered / shotsFired) : 0;
+  document.getElementById('endScore').textContent = score;
+  document.getElementById('endShattered').textContent = shattered + ' / ' + TOTAL_LAUNCHES;
+  document.getElementById('endAcc').textContent = acc + '%';
+  document.getElementById('endStreak').textContent = bestStreak;
+  document.getElementById('endGolden').textContent = goldenHit;
+  document.getElementById('endShots').textContent = shotsFired;
+  document.getElementById('endRank').textContent = 'RANK ' + (score >= 6000 ? 'S ★' : score >= 4500 ? 'A' : score >= 3000 ? 'B' : score >= 1500 ? 'C' : 'D');
+  endScreen.classList.remove('hidden');
+}
+
+/* ---------------- Drawing ---------------- */
+function drawSky(){
+  const g = ctx.createLinearGradient(0, 0, 0, horizonY);
+  g.addColorStop(0, '#3d2b6e'); g.addColorStop(0.38, '#8a4a8f');
+  g.addColorStop(0.68, '#e2607f'); g.addColorStop(1, '#ffb36b');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, horizonY + 2);
+  for (const s of stars){ ctx.globalAlpha = 0.5; ctx.fillStyle = '#ffe9ff'; ctx.fillRect(s.x * W, s.y * horizonY, s.s, s.s); }
+  ctx.globalAlpha = 1;
+  // sun, low on the horizon
+  const sx = W * 0.72, sy = horizonY - 66;
+  const sg = ctx.createRadialGradient(sx, sy, 6, sx, sy, 92);
+  sg.addColorStop(0, 'rgba(255,236,170,0.95)'); sg.addColorStop(0.35, 'rgba(255,190,100,0.55)'); sg.addColorStop(1, 'rgba(255,170,90,0)');
+  ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(sx, sy, 92, 0, 7); ctx.fill();
+  ctx.fillStyle = '#ffe9a8'; ctx.beginPath(); ctx.arc(sx, sy, 30, 0, 7); ctx.fill();
+  // distant clouds
+  ctx.fillStyle = 'rgba(255,190,190,0.35)';
+  for (const [cx, cy, cw] of [[0.16, 0.16, 92], [0.55, 0.10, 70], [0.86, 0.26, 104], [0.34, 0.32, 64]]){
+    ctx.beginPath(); ctx.ellipse(cx * W, cy * horizonY, cw / 2, 11, 0, 0, 7); ctx.ellipse(cx * W + 22, cy * horizonY - 8, cw / 3, 9, 0, 0, 7); ctx.fill();
+  }
+}
+function drawSkyline(){
+  // far silhouettes
+  ctx.fillStyle = '#4a2b5e';
+  const far = [[0, 150, 54], [52, 108, 44], [96, 176, 62], [158, 122, 40], [198, 158, 56], [254, 100, 42], [296, 168, 60], [356, 128, 46]];
+  for (const [x, h, w] of far) ctx.fillRect(x * (W / 402), horizonY - h * 0.72, w * (W / 402), h * 0.72);
+  // near rooftops (the play rooftops + launchers sit here)
+  ctx.fillStyle = '#241038';
+  ctx.fillRect(0, horizonY - 44, 86, H - horizonY + 44);
+  ctx.fillRect(W - 86, horizonY - 44, 86, H - horizonY + 44);
+  ctx.fillRect(86, horizonY - 18, W - 172, H - horizonY + 18);
+  ctx.fillStyle = '#1a0a2c'; ctx.fillRect(0, horizonY + 26, W, H - horizonY);
+  // lit windows
+  ctx.fillStyle = 'rgba(255,205,110,0.85)';
+  for (let i = 0; i < 26; i++){
+    const wx = ((i * 67) % Math.max(1, (W - 30))) + 8, wy = horizonY - 118 + ((i * 41) % 66);
+    ctx.fillRect(wx, wy, 5, 7);
+  }
+  // water towers + antennas on both launch roofs
+  ctx.strokeStyle = '#12061f'; ctx.fillStyle = '#160a29';
+  for (const bx of [16, W - 70]){
+    ctx.fillRect(bx + 8, horizonY - 96, 38, 30);            // tank
+    ctx.beginPath(); ctx.moveTo(bx + 4, horizonY - 96); ctx.lineTo(bx + 27, horizonY - 110); ctx.lineTo(bx + 50, horizonY - 96); ctx.fill();
+    ctx.fillRect(bx + 13, horizonY - 66, 5, 24); ctx.fillRect(bx + 36, horizonY - 66, 5, 24);
+    ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(bx + 58, horizonY - 44); ctx.lineTo(bx + 58, horizonY - 118); ctx.stroke();
+    ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(bx + 44, horizonY - 102); ctx.lineTo(bx + 72, horizonY - 102); ctx.stroke();
+  }
+  // launcher ramps
+  ctx.fillStyle = '#ff9e3e';
+  ctx.save(); ctx.translate(38, horizonY - 12); ctx.rotate(-0.5); ctx.fillRect(-6, -26, 12, 26); ctx.restore();
+  ctx.save(); ctx.translate(W - 38, horizonY - 12); ctx.rotate(0.5); ctx.fillRect(-6, -26, 12, 26); ctx.restore();
+  ctx.fillStyle = '#ffd23e';
+  ctx.beginPath(); ctx.arc(38, horizonY - 14, 6, 0, 7); ctx.arc(W - 38, horizonY - 14, 6, 0, 7); ctx.fill();
+}
+function drawPotBody(p){
+  const r = p.r, gold = p.type === 'golden';
+  ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(Math.sin(p.angle) * 0.35);
+  // body — classic Hyrule clay pot: round belly, narrow neck, flared rim
+  const body = ctx.createRadialGradient(-r * 0.35, -r * 0.4, r * 0.2, 0, 0, r * 1.15);
+  if (gold){ body.addColorStop(0, '#fff3b0'); body.addColorStop(0.5, '#f7c948'); body.addColorStop(1, '#c47f06'); }
+  else { body.addColorStop(0, '#eda06a'); body.addColorStop(0.5, '#c05f31'); body.addColorStop(1, '#7e3517'); }
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.42, -r * 0.52);
+  ctx.bezierCurveTo(-r * 1.02, -r * 0.18, -r * 0.98, r * 0.62, -r * 0.45, r * 0.86);
+  ctx.bezierCurveTo(-r * 0.18, r * 1.02, r * 0.18, r * 1.02, r * 0.45, r * 0.86);
+  ctx.bezierCurveTo(r * 0.98, r * 0.62, r * 1.02, -r * 0.18, r * 0.42, -r * 0.52);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = gold ? '#8a5a00' : '#5f2410'; ctx.lineWidth = 2; ctx.stroke();
+  // painted band with triangle pattern
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.88, r * 0.08); ctx.bezierCurveTo(-r * 0.4, r * 0.24, r * 0.4, r * 0.24, r * 0.88, r * 0.08);
+  ctx.lineTo(r * 0.8, r * 0.46); ctx.bezierCurveTo(r * 0.35, r * 0.6, -r * 0.35, r * 0.6, -r * 0.8, r * 0.46);
+  ctx.closePath(); ctx.clip();
+  ctx.fillStyle = gold ? '#fff0b3' : '#3e7d74'; ctx.fillRect(-r, r * 0.02, r * 2, r * 0.62);
+  ctx.fillStyle = gold ? '#c47f06' : '#f3e2b8';
+  for (let i = -2; i <= 2; i++){
+    ctx.beginPath(); ctx.moveTo(i * r * 0.34 - r * 0.13, r * 0.44); ctx.lineTo(i * r * 0.34, r * 0.14); ctx.lineTo(i * r * 0.34 + r * 0.13, r * 0.44); ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+  // neck + flared rim + dark mouth
+  ctx.fillStyle = gold ? '#e8a812' : '#a9502a';
+  ctx.fillRect(-r * 0.44, -r * 0.72, r * 0.88, r * 0.24);
+  ctx.beginPath(); ctx.ellipse(0, -r * 0.74, r * 0.56, r * 0.17, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = gold ? '#7a5200' : '#3c1a0a';
+  ctx.beginPath(); ctx.ellipse(0, -r * 0.75, r * 0.42, r * 0.11, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = gold ? '#8a5a00' : '#5f2410'; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.ellipse(0, -r * 0.74, r * 0.56, r * 0.17, 0, 0, 7); ctx.stroke();
+  // sweet-ring hint (faint inner ring)
+  ctx.strokeStyle = 'rgba(255,255,255,0.30)'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.arc(0, r * 0.18, SWEET_R, 0, 7); ctx.stroke();
+  // golden glitter
+  if (gold){
+    ctx.fillStyle = '#fffbe0';
+    const tw = performance.now() / 130;
+    for (let i = 0; i < 5; i++){
+      const gx = Math.sin(tw + i * 2.1) * r * 0.62, gy = Math.cos(tw * 1.3 + i * 1.7) * r * 0.55;
+      const s = 2.4 + Math.sin(tw * 2 + i) * 1.2;
+      ctx.beginPath(); ctx.moveTo(gx, gy - s); ctx.lineTo(gx + s * 0.4, gy); ctx.lineTo(gx, gy + s); ctx.lineTo(gx - s * 0.4, gy); ctx.closePath(); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+function drawCucco(){
+  if (!cucco) return;
+  const c = cucco, flap = Math.sin(c.t * 18) * 0.55, dir = c.vx > 0 ? 1 : -1;
+  ctx.save(); ctx.translate(c.x, c.y); ctx.scale(dir, 1);
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath(); ctx.ellipse(0, 0, 24, 15, 0, 0, 7); ctx.fill();        // body
+  ctx.beginPath(); ctx.arc(20, -10, 10, 0, 7); ctx.fill();                 // head
+  ctx.save(); ctx.translate(-2, -4); ctx.rotate(flap);                     // wing
+  ctx.fillStyle = '#e8e4da'; ctx.beginPath(); ctx.ellipse(-8, 0, 15, 7, -0.5, 0, 7); ctx.fill(); ctx.restore();
+  ctx.fillStyle = '#ff4757';                                               // comb
+  ctx.beginPath(); ctx.arc(16, -20, 4.4, 0, 7); ctx.arc(21, -21, 5, 0, 7); ctx.arc(26, -19, 4, 0, 7); ctx.fill();
+  ctx.fillStyle = '#ffa502';                                               // beak
+  ctx.beginPath(); ctx.moveTo(28, -11); ctx.lineTo(38, -8); ctx.lineTo(28, -5); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#1a1a2e'; ctx.beginPath(); ctx.arc(22, -11, 2.2, 0, 7); ctx.fill(); // eye
+  ctx.strokeStyle = '#ffa502'; ctx.lineWidth = 2.4;                        // legs
+  ctx.beginPath(); ctx.moveTo(-4, 13); ctx.lineTo(-6, 21); ctx.moveTo(6, 13); ctx.lineTo(8, 21); ctx.stroke();
+  ctx.fillStyle = '#ffd9d9';                                               // tail
+  ctx.beginPath(); ctx.ellipse(-24, -6, 9, 5, 0.6, 0, 7); ctx.fill();
+  ctx.restore();
+  // NO-SHOOT marker
+  ctx.save(); ctx.translate(c.x, c.y - 34);
+  ctx.strokeStyle = '#ff4757'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(0, 0, 9, 0, 7); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-6.4, 6.4); ctx.lineTo(6.4, -6.4); ctx.stroke();
+  ctx.restore();
+}
+function draw(){
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  // camera punch (golden pot): +7% zoom easing back
+  if (punchT > 0){
+    const s = 1 + 0.07 * (punchT / 0.22);
+    ctx.translate(W / 2, H / 2); ctx.scale(s, s); ctx.translate(-W / 2, -H / 2);
+  }
+  drawSky();
+  drawSkyline();
+  // shot streaks (crossbow bolt streak + spread ring)
+  for (const s of shotFx){
+    const a = 1 - s.t / 0.16;
+    ctx.strokeStyle = 'rgba(255,255,220,' + (0.9 * a) + ')'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(s.x - 4, H); ctx.lineTo(s.x, s.y); ctx.stroke();
+    ctx.strokeStyle = 'rgba(126,240,255,' + (0.8 * a) + ')'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(s.x, s.y, SHOT_SPREAD * (0.4 + 0.6 * (s.t / 0.16)), 0, 7); ctx.stroke();
+  }
+  for (const p of pots) drawPotBody(p);
+  drawCucco();
+  // shards — pot-colored polygons tumbling
+  for (const s of shards){
+    ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(s.angle);
+    ctx.fillStyle = s.color;
+    ctx.beginPath(); ctx.moveTo(-s.size, -s.size * 0.5); ctx.lineTo(s.size * 0.7, -s.size * 0.8); ctx.lineTo(s.size, s.size * 0.6); ctx.lineTo(-s.size * 0.4, s.size); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(60,25,8,0.6)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.restore();
+  }
+  // dust puffs
+  for (const p of puffs){
+    ctx.globalAlpha = 0.4 * (1 - p.life / p.maxLife);
+    ctx.fillStyle = '#e8c39a'; ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (1 + p.life * 1.6), 0, 7); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  // expanding score rings
+  for (const r of rings){
+    if (r.t < 0) continue;
+    ctx.strokeStyle = r.color; ctx.globalAlpha = 0.85 * (1 - r.t / 0.42); ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, 7); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  // white flash at break point (0.35 alpha)
+  if (flashA > 0.01){
+    const fg = ctx.createRadialGradient(flashX, flashY, 2, flashX, flashY, 54);
+    fg.addColorStop(0, 'rgba(255,255,255,' + flashA + ')'); fg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = fg; ctx.beginPath(); ctx.arc(flashX, flashY, 54, 0, 7); ctx.fill();
+  }
+  // score pops
+  for (const p of pops){
+    ctx.globalAlpha = 1 - p.t / 0.95;
+    ctx.font = '900 ' + (p.big ? 24 : 17) + 'px Verdana';
+    ctx.textAlign = 'center';
+    ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.strokeText(p.text, p.x, p.y);
+    ctx.fillStyle = p.color; ctx.fillText(p.text, p.x, p.y);
+  }
+  ctx.globalAlpha = 1;
+  // banner (SPEED UP!)
+  if (banner){
+    const inT = Math.min(1, banner.t / 0.12), outT = banner.t > 0.9 ? Math.max(0, 1 - (banner.t - 0.9) / 0.25) : 1;
+    ctx.globalAlpha = Math.min(inT, outT);
+    ctx.font = '900 32px Verdana'; ctx.textAlign = 'center';
+    ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(40,10,60,0.85)'; ctx.strokeText(banner.text, W / 2, H * 0.3);
+    ctx.fillStyle = banner.color; ctx.fillText(banner.text, W / 2, H * 0.3);
+    ctx.globalAlpha = 1;
+  }
+  // crosshair hint at bottom center (the "crossbow")
+  ctx.fillStyle = '#2b1845';
+  ctx.beginPath(); ctx.moveTo(W / 2 - 26, H); ctx.lineTo(W / 2, H - 34); ctx.lineTo(W / 2 + 26, H); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#ffd23e'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(W / 2 - 15, H - 20); ctx.lineTo(W / 2 + 15, H - 20); ctx.stroke();
+}
+
+/* ---------------- HUD / flow ---------------- */
+function updateHUD(){
+  hudScore.textContent = score;
+  hudComboV.textContent = '×' + comboMult().toFixed(comboMult() % 1 ? 1 : 0) + ' ·' + streak;
+  hudComboEl.classList.toggle('hot', streak >= 5);
+  hudLeftV.textContent = Math.max(0, TOTAL_LAUNCHES - launched);
+  const shown = Math.min(3, missStreak);
+  hudMissV.textContent = '💥'.repeat(shown) + '🏺'.repeat(3 - shown);
+  hudMissV.style.color = missStreak ? '#ff8fa3' : '#fff';
+}
+function startGame(){
+  audioInit();
+  score = 0; streak = 0; bestStreak = 0; misses = 0; missStreak = 0;
+  launched = 0; shattered = 0; shotsFired = 0; goldenHit = 0; cuccosHit = 0;
+  speedUpFactor = 1; velFactor = 1; speedUpCount = 0;
+  launchTimer = 0.9; pots = []; shards = []; puffs = []; pops = []; rings = []; shotFx = []; cucco = null;
+  banner = null; lastHit = null; hitStopT = 0; flashA = 0; punchT = 0;
+  phase = 'playing';
+  startScreen.classList.add('hidden');
+  endScreen.classList.add('hidden');
+  updateHUD();
+}
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('restartBtn').addEventListener('click', startGame);
+
+/* ---------------- Main loop (hit-stop freezes game dt) ---------------- */
+let last = performance.now();
+function frame(now){
+  requestAnimationFrame(frame);
+  let rdt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (flashA > 0) flashA = Math.max(0, flashA - rdt * 2.9);
+  if (punchT > 0) punchT = Math.max(0, punchT - rdt);
+  let gdt = rdt;
+  if (hitStopT > 0){ hitStopT -= rdt; gdt = 0; }   // frozen world, renderer keeps running
+  if (phase === 'playing' && gdt > 0) update(gdt);
+  else if (gdt > 0){ // keep shards/pops alive on end screen
+    shards = shards.filter(s => { s.vy += GRAV * gdt; s.x += s.vx * gdt; s.y += s.vy * gdt; s.angle += s.va * gdt; return s.y < horizonY + 4; });
+    pops = pops.filter(p => { p.t += gdt; return p.t < 0.95; });
+  }
+  draw();
+}
+resize();
+updateHUD();
+requestAnimationFrame(frame);
+
+/* ---------------- Test hooks ---------------- */
+window.__game = {
+  get score(){ return score; },
+  get streak(){ return streak; },
+  get misses(){ return misses; },
+  get missStreak(){ return missStreak; },
+  get launched(){ return launched; },
+  get shattered(){ return shattered; },
+  get shotsFired(){ return shotsFired; },
+  get goldenHit(){ return goldenHit; },
+  get cuccosHit(){ return cuccosHit; },
+  get phase(){ return phase; },
+  get interval(){ return curInterval(); },
+  get baseInterval(){ return BASE_INTERVAL; },
+  get speedFactor(){ return curVelScale(); },
+  get speedUpFactor(){ return speedUpFactor; },
+  get speedUpCount(){ return speedUpCount; },
+  get comboMult(){ return comboMult(); },
+  get lastHit(){ return lastHit; },
+  get totalLaunches(){ return TOTAL_LAUNCHES; },
+  get horizonY(){ return horizonY; },
+  get W(){ return W; }, get H(){ return H; },
+  get shardCount(){ return shards.length; },
+  get pots(){ return pots.map(p => ({ id: p.id, x: p.x, y: p.y, vx: p.vx, vy: p.vy, r: p.r, type: p.type })); },
+  get cucco(){ return cucco ? { x: cucco.x, y: cucco.y } : null; },
+  start: startGame,
+  forceLaunch(type){ return launchPot(type === 'golden' ? 'golden' : 'normal'); },
+  forceCucco(){ if (!cucco) cucco = { x: 60, y: 150, vx: 130, t: 0 }; return cucco; },
+  debugSetLaunched(n){ launched = n; },
+  debugFinish(){ launched = TOTAL_LAUNCHES; pots = []; if (phase === 'playing') endRound(); }
+};
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
