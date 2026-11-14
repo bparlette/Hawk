@@ -32,6 +32,11 @@
     text-shadow:3px 3px 0 #14101f, -1px -1px 0 #14101f; transition:all .18s ease-out; text-align:center; }
   #popup.show { opacity:1; transform:translate(-50%,-50%) scale(1); }
   #popup small { display:block; font-size:15px; color:#ffd23c; }
+  /* landmark flyby / near-miss banner */
+  #lmPop { top:calc(env(safe-area-inset-top,0px) + 178px); left:8px; font-size:16px; color:#7de8ff; opacity:0;
+    background:rgba(20,16,31,.88); border:2px solid #7de8ff; border-radius:10px; padding:6px 11px;
+    text-shadow:1px 1px 0 #14101f; transition:opacity .25s ease-out; box-shadow:2px 2px 0 rgba(0,0,0,.45); }
+  #lmPop.show { opacity:1; }
   /* minimap */
   #mmap { top:calc(env(safe-area-inset-top,0px) + 172px); right:8px; border:2px solid #14101f; border-radius:8px; box-shadow:2px 2px 0 rgba(0,0,0,.4); background:#223; }
   /* overlays */
@@ -82,6 +87,7 @@ canvas{touch-action:none}
 </div>
 
 <div class="ui" id="popup"></div>
+<div class="ui" id="lmPop"></div>
 <canvas class="ui" id="mmap" width="168" height="106"></canvas>
 
 <div id="touchUI">
@@ -209,6 +215,31 @@ scene.add(new THREE.HemisphereLight('#cfe6ff', '#5a6a52', 1.32));
 scene.add(new THREE.AmbientLight('#ffffff', 0.38)); // lifts shade-side facades the way Toad City's cel banding does
 function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
 addEventListener('resize', resize);
+
+// ---------- speed streaks: camera-space lines that whoosh past at speed (starry-ride v2 pattern) ----------
+scene.add(camera);
+const STREAKN = 26, streakPos = new Float32Array(STREAKN * 6), streakDat = [];
+for (let i = 0; i < STREAKN; i++) streakDat.push({ a: Math.random() * TAU, r: 2.0 + Math.random() * 2.6, z: -4 - Math.random() * 26 });
+const streakGeo = new THREE.BufferGeometry();
+streakGeo.setAttribute('position', new THREE.BufferAttribute(streakPos, 3));
+const streakMat = new THREE.LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0 });
+const streaks = new THREE.LineSegments(streakGeo, streakMat);
+streaks.frustumCulled = false;
+camera.add(streaks);
+function updateStreaks(dt, speed, ck) {
+  const k = clamp((Math.abs(speed) - 16) / 13, 0, 1) * (1 - ck);
+  streakMat.opacity = damp(streakMat.opacity, k * 0.5, 6, dt);
+  if (streakMat.opacity < 0.01) return;
+  const vz = (14 + Math.abs(speed) * 1.7) * dt;
+  for (let i = 0; i < STREAKN; i++) {
+    const p = streakDat[i]; p.z += vz;
+    if (p.z > -1.2) { p.z = -30; p.a = Math.random() * TAU; p.r = 2.0 + Math.random() * 2.6; }
+    const x = Math.cos(p.a) * p.r, y = Math.sin(p.a) * p.r, len = 0.7 + Math.abs(speed) * 0.05;
+    streakPos[i * 6] = x; streakPos[i * 6 + 1] = y; streakPos[i * 6 + 2] = p.z;
+    streakPos[i * 6 + 3] = x; streakPos[i * 6 + 4] = y; streakPos[i * 6 + 5] = p.z + len;
+  }
+  streakGeo.attributes.position.needsUpdate = true;
+}
 
 // ---------- canvas textures (Toad City paints its signs/facades on canvas too) ----------
 function ctex(w, h, draw) { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; }
@@ -502,7 +533,7 @@ function lmGroup(id) { const g = new THREE.Group(); const L = LM[id]; g.position
 // ---------- the bus: MTA-style city bus, canvas livery, sliding doors ----------
 const bus = { x: -95, z: -41, yaw: Math.PI / 2, speed: 0, steerVis: 0 }; // starts on Pratt St facing east
 const busG = new THREE.Group(); scene.add(busG);
-let doorL, doorR, wheelFL, wheelFR, wheelRL, wheelRR, destSignMat;
+let doorL, doorR, wheelFL, wheelFR, wheelRL, wheelRR, destSignMat, brakeLightMat, revLightMat;
 {
   const liverySide = ctex(1024, 256, (c, w, h) => {
     c.fillStyle = '#f2f2ee'; c.fillRect(0, 0, w, h);
@@ -545,6 +576,10 @@ let doorL, doorR, wheelFL, wheelFR, wheelRL, wheelRR, destSignMat;
   const doorMat = new THREE.MeshLambertMaterial({ color: '#9fc6d8' });
   doorL = box(0.08, 1.9, 0.78, doorMat, 1.32, 1.5, 3.4, true); doorR = box(0.08, 1.9, 0.78, doorMat, 1.32, 1.5, 4.2, true);
   busG.add(doorL, doorR);
+  // fare box just inside the front door (the driver's coin box — boarding riders pause here)
+  const fareBoxMesh = box(0.34, 0.8, 0.3, new THREE.MeshLambertMaterial({ color: '#2a2622' }), 1.02, 1.28, 4.78, true);
+  const fareSlot = box(0.2, 0.07, 0.2, new THREE.MeshLambertMaterial({ color: '#ffd23c' }), 1.02, 1.71, 4.78);
+  busG.add(fareBoxMesh, fareSlot);
   const wheelG = new THREE.CylinderGeometry(0.52, 0.52, 0.36, 14); wheelG.rotateZ(Math.PI / 2);
   const wheelM = new THREE.MeshLambertMaterial({ color: '#1b1a1d' });
   const hubM = new THREE.MeshLambertMaterial({ color: '#c9c9c9' });
@@ -552,10 +587,51 @@ let doorL, doorR, wheelFL, wheelFR, wheelRL, wheelRR, destSignMat;
   wheelFL = wheel(1.15, 3.7); wheelFR = wheel(-1.15, 3.7); wheelRL = wheel(1.15, -3.7); wheelRR = wheel(-1.15, -3.7);
   const mirrorM = darkMat;
   busG.add(box(0.08, 0.5, 0.08, mirrorM, 1.45, 2.6, 5.3), box(0.08, 0.5, 0.08, mirrorM, -1.45, 2.6, 5.3));
+  // brake + reverse lights on the rear face (proud of the painted ones): bright red while braking, white while reversing
+  brakeLightMat = new THREE.MeshBasicMaterial({ color: '#5f1214' });
+  revLightMat = new THREE.MeshBasicMaterial({ color: '#2e2e2e' });
+  busG.add(box(0.36, 0.52, 0.07, brakeLightMat, 0.95, 0.92, -5.53), box(0.36, 0.52, 0.07, brakeLightMat, -0.95, 0.92, -5.53));
+  busG.add(box(0.24, 0.34, 0.07, revLightMat, 0.45, 0.92, -5.53), box(0.24, 0.34, 0.07, revLightMat, -0.45, 0.92, -5.53));
   shadowed(busG);
 }
 // door world position (for passengers to walk to)
 function doorWorld() { const s = Math.sin(bus.yaw), c = Math.cos(bus.yaw); return { x: bus.x + c * 1.55 + s * 3.8, z: bus.z - s * 1.55 + c * 3.8 }; }
+// fare box world position (coin target for the boarding handover)
+function fareBoxWorld() { const s = Math.sin(bus.yaw), c = Math.cos(bus.yaw); return { x: bus.x + c * 1.02 + s * 4.78, y: 1.78, z: bus.z - s * 1.02 + c * 4.78 }; }
+// ---------- fare handover FX: a coin arcs from the rider's hand to the fare box, then a $ pops ----------
+const coinMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.03, 12), new THREE.MeshLambertMaterial({ color: '#ffd23c', emissive: '#8a6a00' }));
+coinMesh.visible = false; scene.add(coinMesh);
+const dollarSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: ctex(96, 96, (c, w, h) => { c.clearRect(0, 0, w, h); c.fillStyle = '#7dffc0'; c.strokeStyle = '#14101f'; c.lineWidth = 7; c.font = '900 74px Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.strokeText('$', w / 2, h / 2 + 4); c.fillText('$', w / 2, h / 2 + 4); }), transparent: true, depthWrite: false }));
+dollarSprite.scale.set(0.85, 0.85, 1); dollarSprite.visible = false; scene.add(dollarSprite);
+const fareFx = { t: -1, from: new THREE.Vector3(), to: new THREE.Vector3() };
+function startFareFx(fromPos) {
+  const fb = fareBoxWorld();
+  fareFx.from.set(fromPos.x, fromPos.y + 1.05, fromPos.z);
+  fareFx.to.set(fb.x, fb.y, fb.z);
+  fareFx.t = 0; coinMesh.visible = true;
+}
+function updateFareFx(dt) {
+  if (fareFx.t < 0) return;
+  fareFx.t += dt;
+  const t = fareFx.t;
+  if (t < 0.42) { // coin flight: quadratic arc, hand -> fare box slot
+    const p = t / 0.42, q = 1 - p;
+    coinMesh.position.set(
+      q * q * fareFx.from.x + 2 * q * p * (fareFx.from.x + fareFx.to.x) / 2 + p * p * fareFx.to.x,
+      q * q * fareFx.from.y + 2 * q * p * (Math.max(fareFx.from.y, fareFx.to.y) + 0.55) + p * p * fareFx.to.y,
+      q * q * fareFx.from.z + 2 * q * p * (fareFx.from.z + fareFx.to.z) / 2 + p * p * fareFx.to.z);
+    coinMesh.rotation.x += dt * 14; coinMesh.rotation.z += dt * 9;
+  } else coinMesh.visible = false;
+  if (t >= 0.38 && t < 1.0) { // $ pops at the box and floats up
+    const p = (t - 0.38) / 0.62;
+    dollarSprite.visible = true;
+    dollarSprite.position.set(fareFx.to.x, fareFx.to.y + 0.25 + p * 0.55, fareFx.to.z);
+    const sc = 0.6 + Math.sin(Math.min(1, p * 1.6) * Math.PI * 0.5) * 0.45;
+    dollarSprite.scale.set(sc, sc, 1);
+    dollarSprite.material.opacity = 1 - p * p;
+  } else dollarSprite.visible = false;
+  if (t >= 1.0) { fareFx.t = -1; coinMesh.visible = false; dollarSprite.visible = false; }
+}
 
 // ---------- passengers ----------
 const SHIRTS = ['#ff3d6e', '#39e6ff', '#ffd23c', '#7dffc0', '#ff7a1a', '#c9a0ff', '#f4f0e6', '#9dff6b'];
@@ -632,14 +708,20 @@ const CARS = [];
     for (const [wx, wz] of [[0.85, 1.35], [-0.85, 1.35], [0.85, -1.35], [-0.85, -1.35]]) { const w = new THREE.Mesh(wg, darkMat); w.position.set(wx, 0.33, wz); g.add(w); }
     shadowed(g); scene.add(g);
     const lp = buildSegs(LOOPS[i % 2]);
-    CARS.push({ g, s: (i / 7) * lp.total, v: 8.5 + (i % 3), segs: lp.segs, total: lp.total });
+    CARS.push({ g, s: (i / 7) * lp.total, v: 8.5 + (i % 3), segs: lp.segs, total: lp.total, ox: 0, oz: 0, ovx: 0, ovz: 0, spin: 0, spinV: 0, hitCd: 0 });
   }
   for (const c of CARS) c.update = (dt) => {
     c.s = (c.s + c.v * dt) % c.total;
     let sg = c.segs.find((s2) => c.s >= s2.at && c.s <= s2.at + s2.L) || c.segs[0];
     const t = (c.s - sg.at) / sg.L, x = lerp(sg.ax, sg.bx, t), z = lerp(sg.az, sg.bz, t);
-    c.g.position.set(x, 0, z); c.g.rotation.y = Math.atan2(sg.bx - sg.ax, sg.bz - sg.az);
-    c.x = x; c.z = z;
+    // shove physics: a hit car flies off its line and spins, then springs back to its lane
+    c.hitCd = Math.max(0, c.hitCd - dt);
+    c.ovx += -c.ox * 6.5 * dt; c.ovz += -c.oz * 6.5 * dt;
+    const dampF = Math.exp(-2.6 * dt); c.ovx *= dampF; c.ovz *= dampF;
+    c.ox += c.ovx * dt; c.oz += c.ovz * dt;
+    c.spinV += -c.spin * 7 * dt; c.spinV *= Math.exp(-2.6 * dt); c.spin += c.spinV * dt;
+    c.g.position.set(x + c.ox, 0, z + c.oz); c.g.rotation.y = Math.atan2(sg.bx - sg.ax, sg.bz - sg.az) + c.spin;
+    c.x = x; c.z = z; c.px = x + c.ox; c.pz = z + c.oz; // path position (x,z); rendered position (px,pz)
   };
 }
 
@@ -668,12 +750,14 @@ function beep(freq, t0, dur, type = 'sine', vol = 0.22, slide = 0) {
   g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + t0 + dur);
   o.connect(g); g.connect(masterGain); o.start(AC.currentTime + t0); o.stop(AC.currentTime + t0 + dur + 0.05);
 }
+const SFXC = { fare: 0, chime: 0, cheer: 0, crash: 0 }; // event counters (capture/verify hooks read these)
 const sfx = {
-  chime() { beep(880, 0, 0.16, 'sine', 0.25); beep(659, 0.13, 0.22, 'sine', 0.25); },        // door ding-ding
-  fare() { beep(1318, 0, 0.09, 'square', 0.14); beep(1760, 0.07, 0.14, 'square', 0.14); },     // coin blip
-  cheer() { [523, 659, 784, 1046].forEach((f, i) => beep(f, i * 0.07, 0.13, 'triangle', 0.2)); },
+  chime() { SFXC.chime++; beep(880, 0, 0.16, 'sine', 0.25); beep(659, 0.13, 0.22, 'sine', 0.25); },        // door ding-ding
+  fare() { SFXC.fare++; beep(1318, 0, 0.09, 'square', 0.14); beep(1760, 0.07, 0.14, 'square', 0.14); },     // coin blip
+  cheer() { SFXC.cheer++; [523, 659, 784, 1046].forEach((f, i) => beep(f, i * 0.07, 0.13, 'triangle', 0.2)); },
   sad() { beep(330, 0, 0.2, 'sawtooth', 0.1, -120); },
   honk() { beep(370, 0, 0.16, 'square', 0.12); beep(370, 0.2, 0.16, 'square', 0.12); },
+  crash() { SFXC.crash++; beep(392, 0, 0.14, 'square', 0.16); beep(392, 0.17, 0.2, 'square', 0.16); beep(1150, 0, 0.22, 'sawtooth', 0.07, -880); beep(130, 0, 0.2, 'triangle', 0.22, -70); }, // horn + tyre screech + thud: bus shoves a car
 };
 
 // ---------- input: keyboard + touch (gamepress pattern: floating stick steers, GO/BRAKE pedals) ----------
@@ -687,7 +771,9 @@ if (TOUCHABLE || Q.has('touch')) {
   const tui = $('touchUI'), base = $('stickBase'), knob = $('stickKnob');
   let stickId = null, anchorX = 0, anchorY = 0;
   const pedal = (el, key) => {
-    el.addEventListener('pointerdown', (e) => { e.preventDefault(); initAudio(); el.setPointerCapture(e.pointerId); touch[key] = true; el.classList.add('on'); });
+    // set the flag FIRST and guard setPointerCapture: on some browsers it throws for an
+    // already-released/synthetic pointer, and the old order silently killed the pedal.
+    el.addEventListener('pointerdown', (e) => { e.preventDefault(); initAudio(); touch[key] = true; el.classList.add('on'); try { el.setPointerCapture(e.pointerId); } catch (err) {} });
     const off = (e) => { touch[key] = false; el.classList.remove('on'); };
     el.addEventListener('pointerup', off); el.addEventListener('pointercancel', off); el.addEventListener('lostpointercapture', off);
     el.style.pointerEvents = 'auto';
@@ -720,7 +806,7 @@ function readInput() {
   if (KEYS.KeyA || KEYS.ArrowLeft) steer -= 1;
   if (KEYS.KeyD || KEYS.ArrowRight) steer += 1;
   if (KEYS.KeyW || KEYS.ArrowUp) throttle = 1;
-  if (KEYS.KeyS || KEYS.ArrowDown) brake = 1;
+  if (KEYS.KeyS || KEYS.ArrowDown || KEYS.Space) brake = 1; // S / Down / Space all brake
   if (touch.active || touch.steer) steer = touch.steer;
   if (touch.go) throttle = 1;
   if (touch.brake) brake = 1;
@@ -731,8 +817,9 @@ function readInput() {
 const G = {
   started: false, over: false, time: 180, fares: 0, paxServed: 0, combo: 0, bestCombo: 0, lastDrop: -99,
   mode: 'pickup', // pickup -> boarding -> dropoff -> alighting -> pickup...
-  target: null, group: null, aboard: [], elapsed: 0, doorOpen: 0, seq: [],
+  target: null, group: null, aboard: [], elapsed: 0, doorOpen: 0, seq: [], nearMiss: 0,
 };
+const seenLm = new Set(); // landmark flybys already announced this run
 function pickStop(exclude, nearX, nearZ, minD = 0) {
   const pool = STOPS.filter((s) => s !== exclude && Math.hypot(s.x - nearX, s.z - nearZ) >= minD);
   return pool[(Math.random() * pool.length) | 0];
@@ -742,7 +829,7 @@ function spawnGroup(stop) {
   const dest = pickStop(stop, stop.x, stop.z, 70) || pickStop(stop, 0, 0);
   const grp = { stop, dest, n, patience: 0, maxPatience: 0, figures: [] };
   const dist = Math.hypot(dest.x - stop.x, dest.z - stop.z);
-  grp.maxPatience = grp.patience = clamp(26 + dist * 0.55, 34, 95);
+  grp.maxPatience = grp.patience = clamp(30 + dist * 0.75, 45, 130); // generous: speed is for combo + fun, not survival
   const sideOff = stop.z === -41 ? 4.4 : stop.z === 41 ? -4.4 : 4.4;
   for (let i = 0; i < n; i++) {
     const f = makePerson();
@@ -751,6 +838,12 @@ function spawnGroup(stop) {
     scene.add(f); grp.figures.push(f); stop.waiting.push(f);
   }
   return grp;
+}
+function pickNextStop(fromStop) { // next pickup: prefer a tight hop (45-150 m) so the route never dead-heads across the map
+  const pool = STOPS.filter((s) => s !== fromStop);
+  const near = pool.filter((s) => { const d = Math.hypot(s.x - fromStop.x, s.z - fromStop.z); return d >= 45 && d <= 150; });
+  const src = near.length ? near : pool;
+  return src[(Math.random() * src.length) | 0];
 }
 function setTarget(stop, mode) {
   for (const s of STOPS) { s.ring.material.opacity = 0; s.beam.material.opacity = 0; }
@@ -763,9 +856,10 @@ function setTarget(stop, mode) {
 }
 function updateObjHUD() {
   const t = G.target; if (!t) return;
-  $('objMode').textContent = G.mode === 'pickup' ? '🟡 NEXT PICKUP' : '🟢 DROP-OFF';
+  const isPick = G.mode === 'pickup' || G.mode === 'boarding';
+  $('objMode').textContent = isPick ? '🟡 NEXT PICKUP' : '🟢 DROP-OFF';
   $('objName').textContent = t.name;
-  $('objSub').textContent = G.mode === 'pickup'
+  $('objSub').textContent = isPick
     ? (G.group ? G.group.n + (G.group.n > 1 ? ' riders' : ' rider') + ' waiting → headed to ' + G.group.dest.name : 'Riders waiting')
     : (G.aboard.length + (G.aboard.length === 1 ? ' rider' : ' riders') + ' aboard — drop them off!');
   $('patWrap').style.display = G.group ? 'block' : 'none';
@@ -775,9 +869,13 @@ function popup(html, sub) {
   p.classList.remove('show'); void p.offsetWidth; p.classList.add('show');
   clearTimeout(popup._t); popup._t = setTimeout(() => p.classList.remove('show'), 1500);
 }
+function lmPop(txt) { // landmark flybys + near-miss bonuses (smaller side banner, never blocks the fare popup)
+  const el = $('lmPop'); el.textContent = txt; el.classList.add('show');
+  clearTimeout(lmPop._t); lmPop._t = setTimeout(() => el.classList.remove('show'), 1700);
+}
 function startGame() {
   initAudio();
-  G.started = true; G.over = false; G.time = 180; G.fares = 0; G.paxServed = 0; G.combo = 0; G.bestCombo = 0; G.lastDrop = -99; G.elapsed = 0;
+  G.started = true; G.over = false; G.time = 180; G.fares = 0; G.paxServed = 0; G.combo = 0; G.bestCombo = 0; G.lastDrop = -99; G.elapsed = 0; G.nearMiss = 0; seenLm.clear();
   for (const s of STOPS) for (const f of s.waiting) scene.remove(f);
   for (const s of STOPS) s.waiting.length = 0;
   G.aboard = [];
@@ -809,15 +907,33 @@ function updateHUD() {
 $('hudTime').parentElement.id = 'timeChip';
 
 // ---------- boarding / alighting sequences ----------
+// Riders path AROUND the bus nose (never through the bus): sidewalk -> front corner ->
+// along the door face -> door threshold. Lead rider pauses at the fare box and pays.
+function seqPaths() {
+  const dw = doorWorld();
+  const s = Math.sin(bus.yaw), c = Math.cos(bus.yaw);
+  const fx = s, fz = c, rx = c, rz = -s; // bus forward / door-side (right) unit vectors
+  const P = (r, f) => ({ x: dw.x + rx * r + fx * f, z: dw.z + rz * r + fz * f });
+  return {
+    doorPt: P(0, 0), inPt: P(-1.05, 0.35),
+    corner: P(-2.2, 3.4), face: P(0.5, 1.6),
+    faceYaw: Math.atan2(-rx, -rz), // face the bus/driver while paying
+  };
+}
 function beginBoarding() {
   G.mode = 'boarding'; sfx.chime();
-  G.seq = G.group.figures.map((f, i) => ({ f, t: -i * 0.55, phase: 'walk' }));
+  const sp = seqPaths();
+  G.seq = G.group.figures.map((f, i) => ({ f, t: -i * 0.45, phase: 'walk', path: [sp.corner, sp.face, sp.doorPt], pi: 0, lead: i === 0, sp }));
   updateObjHUD();
 }
 function beginAlighting() {
   G.mode = 'alighting'; sfx.chime();
-  const dest = G.group.dest;
-  G.seq = G.aboard.map((f, i) => ({ f, t: -i * 0.5, phase: 'exit', spot: new THREE.Vector3(dest.x + (i - 1) * 0.9, 0, dest.z + (dest.z === 41 ? -4.4 : 4.4)) }));
+  const dest = G.group.dest, sp = seqPaths();
+  const n = G.aboard.length;
+  G.seq = G.aboard.map((f, i) => {
+    const spot = new THREE.Vector3(dest.x + (i - (n - 1) / 2) * 0.9, 0, dest.z + (dest.z === 41 ? -4.4 : 4.4));
+    return { f, t: -i * 0.45, phase: 'out', path: [sp.face, sp.corner, spot], pi: 0, spot, sp, t2: 0 };
+  });
   G.aboard = [];
   updateObjHUD();
 }
@@ -840,27 +956,58 @@ function finishAlighting() {
   popup('+$' + fare.toFixed(2), (G.combo >= 2 ? 'COMBO ×' + mult.toFixed(1).replace('.0', '') + ' · ' : '') + n + (n > 1 ? ' riders' : ' rider') + ' dropped at ' + G.group.dest.name);
   for (const e of G.seq) if (e.f) { scene.remove(e.f); }
   G.seq = [];
-  G.group = spawnGroup(pickStop(G.group.dest, bus.x, bus.z, 40));
+  G.group = spawnGroup(pickNextStop(G.group.dest));
   setTarget(G.group.stop, 'pickup');
   updateHUD();
 }
 function updateSeq(dt) {
-  const dw = doorWorld();
+  const inp0 = readInput();
+  if (inp0.throttle || inp0.brake) dt *= 2.6; // holding GO/BRAKE hurries the ceremony (skippable)
   let done = true;
   for (const e of G.seq) {
     if (e.t < 0) { e.t += dt; done = false; continue; }
     const f = e.f; if (!f) continue;
+    const WALK = 4.6; // brisk jog to the door — the ceremony stays snappy
     if (e.phase === 'walk') {
-      const d = Math.hypot(dw.x - f.position.x, dw.z - f.position.z);
-      if (d < 0.55) { e.phase = 'in'; }
-      else { const sp = 2.4 * dt; f.position.x += (dw.x - f.position.x) / d * sp; f.position.z += (dw.z - f.position.z) / d * sp; f.rotation.y = Math.atan2(dw.x - f.position.x, dw.z - f.position.z); done = false; }
-    } else if (e.phase === 'in') { f.visible = false; e.phase = 'done'; }
-    else if (e.phase === 'exit') {
-      if (!f.visible) { f.visible = true; f.position.set(dw.x, 0, dw.z); }
-      const d = Math.hypot(e.spot.x - f.position.x, e.spot.z - f.position.z);
-      if (d < 0.3) { e.phase = 'done'; }
-      else { const sp = 2.4 * dt; f.position.x += (e.spot.x - f.position.x) / d * sp; f.position.z += (e.spot.z - f.position.z) / d * sp; f.rotation.y = Math.atan2(e.spot.x - f.position.x, e.spot.z - f.position.z); done = false; }
-    } else if (e.phase === 'done') { /* settled */ }
+      const tgt = e.path[e.pi];
+      const dx = tgt.x - f.position.x, dz = tgt.z - f.position.z, d = Math.hypot(dx, dz);
+      const step = WALK * dt;
+      if (d <= Math.max(0.14, step)) {
+        f.position.x = tgt.x; f.position.z = tgt.z; e.pi++;
+        if (e.pi >= e.path.length) { // reached the door threshold (boarding) or the sidewalk spot (alighting)
+          if (G.mode === 'boarding') {
+            if (e.lead) { e.phase = 'fare'; e.t2 = 0; e.dinged = false; startFareFx(f.position); f.rotation.y = e.sp.faceYaw; }
+            else { e.phase = 'in'; e.t2 = 0; e.fromX = f.position.x; e.fromZ = f.position.z; }
+          } else e.phase = 'done';
+        }
+      } else {
+        f.position.x += dx / d * step; f.position.z += dz / d * step;
+        f.rotation.y = Math.atan2(dx, dz);
+      }
+      if (e.phase === 'walk') done = false;
+    } else if (e.phase === 'fare') { // lead rider hands the fare to the driver: coin flies, box dings, then they step up
+      done = false;
+      e.t2 += dt;
+      if (!e.dinged && e.t2 >= 0.3) { e.dinged = true; sfx.fare(); }
+      if (e.t2 >= 0.55) { e.phase = 'in'; e.t2 = 0; e.fromX = f.position.x; e.fromZ = f.position.z; }
+    } else if (e.phase === 'in') { // step UP into the bus
+      done = false;
+      e.t2 += dt / 0.22;
+      const p = Math.min(1, e.t2);
+      f.position.x = lerp(e.fromX, e.sp.inPt.x, p); f.position.z = lerp(e.fromZ, e.sp.inPt.z, p);
+      f.position.y = p * 0.45;
+      f.rotation.y = e.sp.faceYaw;
+      if (p >= 1) { f.visible = false; f.position.y = 0; e.phase = 'done'; }
+    } else if (e.phase === 'out') { // step DOWN out of the bus, then walk the path to the sidewalk
+      done = false;
+      if (!f.visible) { f.visible = true; f.position.set(e.sp.inPt.x, 0.45, e.sp.inPt.z); }
+      e.t2 += dt / 0.2;
+      const p = Math.min(1, e.t2);
+      f.position.x = lerp(e.sp.inPt.x, e.sp.doorPt.x, p); f.position.z = lerp(e.sp.inPt.z, e.sp.doorPt.z, p);
+      f.position.y = 0.45 * (1 - p);
+      f.rotation.y = Math.atan2(e.sp.face.x - e.sp.doorPt.x, e.sp.face.z - e.sp.doorPt.z);
+      if (p >= 1) { f.position.y = 0; e.phase = 'walk'; }
+    }
     if (e.phase !== 'done') done = false;
   }
   if (done && G.seq.length) {
@@ -870,7 +1017,7 @@ function updateSeq(dt) {
 }
 
 // ---------- collision: circle vs rects ----------
-function collide() {
+function collide(dt) {
   const R = 2.1;
   for (const c of COLL) {
     const nx = clamp(bus.x, c.x0, c.x1), nz = clamp(bus.z, c.z0, c.z1);
@@ -884,9 +1031,28 @@ function collide() {
     if (Math.abs(bus.speed) > 3) sfx.honk();
     bus.speed *= 0.35;
   }
+  // traffic: the BUS is the heavy one (mass ratio ~10:1) — a car that touches the bus gets
+  // shoved and spun aside; the bus is NEVER repositioned by a car and only sheds a little speed.
+  // Contact box is in bus space (longitudinal ±6.7, lateral ±2.35) so clean passes in the
+  // neighbouring lane (offset ~2.5) don't register — only a real overlap does.
+  const bfx = Math.sin(bus.yaw), bfz = Math.cos(bus.yaw), brx = bfz, brz = -bfx;
   for (const c of CARS) {
-    const dx = bus.x - c.x, dz = bus.z - c.z, d = Math.hypot(dx, dz);
-    if (d < 3.4 && d > 0.01) { bus.x = c.x + dx / d * 3.4; bus.z = c.z + dz / d * 3.4; bus.speed *= 0.6; }
+    const dx = (c.px ?? c.x) - bus.x, dz = (c.pz ?? c.z) - bus.z;
+    const long = dx * bfx + dz * bfz, lat = dx * brx + dz * brz;
+    if (Math.abs(lat) < 2.35 && Math.abs(long) < 6.7) {
+      const nlat = clamp(lat / 2.35, -1, 1);
+      let px = bfx * 0.85 + brx * nlat * 0.9, pz = bfz * 0.85 + brz * nlat * 0.9;
+      const pl = Math.hypot(px, pz) || 1; px /= pl; pz /= pl;
+      if (c.hitCd <= 0) {
+        const power = clamp(Math.abs(bus.speed) * 0.55, 2.5, 15); // impulse goes to the CAR
+        c.ovx += px * power; c.ovz += pz * power;
+        c.spinV += (nlat >= 0 ? -1 : 1) * (1.2 + Math.abs(bus.speed) * 0.09); // spun away from the bus
+        c.hitCd = 0.9;
+        bus.speed *= 0.94; // the bus barely notices
+        if (Math.abs(bus.speed) > 4) { sfx.crash(); lmPop('💥 OUTTA MY WAY!'); shakeT = Math.max(shakeT, 0.14); }
+      }
+      c.ovx += px * 8 * dt; c.ovz += pz * 8 * dt; // keep feeding the car out while they overlap
+    }
   }
 }
 
@@ -911,6 +1077,10 @@ function drawMap() {
 const clock = new THREE.Clock();
 let frames = 0, mapT = 0;
 const camPos = new THREE.Vector3(bus.x - 12, 6, bus.z);
+let cineK = 0; // 0 = chase cam, 1 = cinematic door-side close-up (boarding/alighting)
+let shakeT = 0; // collision camera shake (seconds remaining)
+const cinePosV = new THREE.Vector3(bus.x - 12, 6, bus.z);
+const lookV = new THREE.Vector3(), cineLookV = new THREE.Vector3();
 function tick() {
   requestAnimationFrame(tick);
   const dt = Math.min(clock.getDelta(), 0.05);
@@ -918,32 +1088,52 @@ function tick() {
   const inp = readInput();
   // --- bus physics (forgiving arcade) ---
   if (G.started && !G.over) {
-    if (inp.throttle) bus.speed += 9.5 * dt;
-    if (inp.brake) bus.speed += (bus.speed > 0.6 ? -15 : -6.5) * dt;
-    bus.speed -= bus.speed * 0.55 * dt; // drag
-    if (!inp.throttle && !inp.brake) bus.speed -= Math.sign(bus.speed) * Math.min(Math.abs(bus.speed), 2.2 * dt);
-    bus.speed = clamp(bus.speed, -7, 21);
-    const sf = clamp(Math.abs(bus.speed) / 5, 0, 1) * (1 - clamp(Math.abs(bus.speed) / 30, 0, 0.45));
-    bus.yaw += inp.steer * 0.92 * sf * Math.sign(bus.speed) * dt; // sign(speed): steering reverses while backing up, like a real bus
+    if (inp.brake) bus.speed += (bus.speed > 0.6 ? -26 : -9) * dt; // brake WINS over throttle and bites hard; held at a standstill it becomes reverse (GTA-style)
+    else if (inp.throttle) bus.speed += 16 * dt;
+    bus.speed -= bus.speed * 0.32 * dt; // drag (much slipperier than v1 — this bus MOVES now)
+    if (!inp.throttle && !inp.brake) bus.speed -= Math.sign(bus.speed) * Math.min(Math.abs(bus.speed), 3.0 * dt);
+    bus.speed = clamp(bus.speed, -8, 31.5);
+    G.lastBrake = inp.brake ? 1 : 0;
+    const sf = clamp(Math.abs(bus.speed) / 4.5, 0, 1) * (1 - clamp(Math.abs(bus.speed) / 40, 0, 0.38));
+    bus.yaw += inp.steer * 1.02 * sf * Math.sign(bus.speed) * dt; // sign(speed): steering reverses while backing up, like a real bus
     bus.steerVis = damp(bus.steerVis, inp.steer, 10, dt);
   }
   bus.x += Math.sin(bus.yaw) * bus.speed * dt;
   bus.z += Math.cos(bus.yaw) * bus.speed * dt;
-  collide();
+  collide(dt);
   busG.position.set(bus.x, 0, bus.z);
   busG.rotation.y = bus.yaw;
-  busG.rotation.z = -bus.steerVis * clamp(Math.abs(bus.speed) / 21, 0, 1) * 0.045;
+  busG.rotation.z = -bus.steerVis * clamp(Math.abs(bus.speed) / 31.5, 0, 1) * 0.045;
   const wSpin = bus.speed * dt / 0.52;
   for (const w of [wheelFL, wheelFR, wheelRL, wheelRR]) w.rotation.x += wSpin;
   wheelFL.rotation.y = wheelFR.rotation.y = bus.steerVis * 0.42;
+  // brake / reverse lights
+  if (brakeLightMat) brakeLightMat.color.set(inp.brake && G.started && !G.over ? '#ff2626' : '#5f1214');
+  if (revLightMat) revLightMat.color.set(bus.speed < -0.4 ? '#f2f2f2' : '#2e2e2e');
   // doors
   const doorTarget = (G.mode === 'boarding' || G.mode === 'alighting') ? 1 : 0;
   G.doorOpen = damp(G.doorOpen, doorTarget, 7, dt);
   doorL.position.z = 3.4 - G.doorOpen * 0.66; doorR.position.z = 4.2 + G.doorOpen * 0.66;
   // engine sound
-  if (AC && engGain) { const sr = Math.abs(bus.speed) / 21; engOsc.frequency.value = 50 + sr * 95 + (inp.throttle ? 9 : 0); engOsc2.frequency.value = 25 + sr * 46; engGain.gain.value = G.started && !G.over ? 0.05 + sr * 0.05 : 0.02; }
+  if (AC && engGain) { const sr = Math.abs(bus.speed) / 31.5; engOsc.frequency.value = 50 + sr * 95 + (inp.throttle ? 9 : 0); engOsc2.frequency.value = 25 + sr * 46; engGain.gain.value = G.started && !G.over ? 0.05 + sr * 0.05 : 0.02; }
   // --- traffic ---
   for (const c of CARS) c.update(dt);
+  // --- near-miss bonuses + landmark flybys (only while running a route) ---
+  if (G.started && !G.over) {
+    for (const c of CARS) {
+      const d = Math.hypot(bus.x - c.x, bus.z - c.z);
+      if (d < 5.8 && Math.abs(bus.speed) > 13) c._nm = true;
+      else if (c._nm && d > 7.5) { // skimmed past a car at speed and lived: +$1
+        c._nm = false; G.nearMiss++; G.fares += 1;
+        lmPop('💨 NEAR MISS! +$1.00'); beep(196, 0, 0.18, 'sawtooth', 0.09, 170); updateHUD();
+      }
+    }
+    for (const [id, name, x, z] of LANDMARKS) {
+      if (seenLm.has(id)) continue;
+      if (Math.hypot(bus.x - x, bus.z - z) < 30) { seenLm.add(id); lmPop('📍 ' + name); }
+    }
+  }
+  updateFareFx(dt);
   // --- game flow ---
   if (G.started && !G.over) {
     G.elapsed += dt; G.time -= dt;
@@ -984,14 +1174,35 @@ function tick() {
   cityG.userData.spark.material.map.offset.x = frames * 0.0006;
   if (cityG.userData.fortFlag) cityG.userData.fortFlag.rotation.y = Math.sin(frames * 0.05) * 0.24;
   if (cityG.userData.fedFlag) cityG.userData.fedFlag.rotation.y = Math.sin(frames * 0.04 + 2) * 0.24;
-  // camera: damped chase
+  // camera: damped chase — blending to the cinematic door-side close-up while boarding/alighting
   const fx = Math.sin(bus.yaw), fz = Math.cos(bus.yaw);
-  const cd = 11.5 + Math.abs(bus.speed) * 0.14;
+  const cd = 11.5 + Math.abs(bus.speed) * 0.22;
   camPos.x = damp(camPos.x, bus.x - fx * cd, 3.4, dt); camPos.z = damp(camPos.z, bus.z - fz * cd, 3.4, dt);
-  camPos.y = damp(camPos.y, 5.0 + Math.abs(bus.speed) * 0.05, 3.4, dt);
-  camera.position.copy(camPos);
-  camera.lookAt(bus.x + fx * 9, 1.6, bus.z + fz * 9);
-  camera.fov = damp(camera.fov, 62 + Math.abs(bus.speed) * 0.35, 3, dt); camera.updateProjectionMatrix();
+  camPos.y = damp(camPos.y, 5.0 + Math.abs(bus.speed) * 0.07, 3.4, dt);
+  const cineTgt = (G.mode === 'boarding' || G.mode === 'alighting') ? 1 : 0;
+  cineK = damp(cineK, cineTgt, cineTgt ? 3.0 : 2.2, dt);
+  const ck = cineK * cineK * (3 - 2 * cineK); // smoothstep blend
+  lookV.set(bus.x + fx * 9, 1.6, bus.z + fz * 9);
+  if (cineK > 0.003 || cineTgt) {
+    const dw = doorWorld(), rx = Math.cos(bus.yaw), rz = -Math.sin(bus.yaw);
+    // swing AHEAD of the nose on the DOOR side and look BACK at the door/fare-box area:
+    // a straight side view in portrait only fits ~1.6 m of flank (the paying rider at the
+    // fare box fell off the frame edge); the angled view compresses the walk-up path,
+    // the door and the coin handover into one frame while the flank recedes diagonally
+    const tx = dw.x + rx * 4.9 + fx * 3.9, tz = dw.z + rz * 4.9 + fz * 3.9;
+    if (cineTgt && cineK < 0.02) cinePosV.set(tx, 1.8, tz); // blend starts AT the door, never sweeps from a stale spot
+    cinePosV.x = damp(cinePosV.x, tx, 5, dt);
+    cinePosV.z = damp(cinePosV.z, tz, 5, dt);
+    cinePosV.y = damp(cinePosV.y, 1.8, 5, dt);
+    cineLookV.set(dw.x - rx * 0.1 + fx * 0.8, 1.02, dw.z - rz * 0.1 + fz * 0.8);
+    camera.position.lerpVectors(camPos, cinePosV, ck);
+    lookV.lerp(cineLookV, ck);
+  } else camera.position.copy(camPos);
+  if (shakeT > 0) { shakeT = Math.max(0, shakeT - dt); camera.position.x += (Math.random() - 0.5) * shakeT * 0.55; camera.position.y += (Math.random() - 0.5) * shakeT * 0.4; }
+  camera.lookAt(lookV);
+  const chaseFov = 62 + Math.abs(bus.speed) * 0.55 + ((inp.throttle && Math.abs(bus.speed) > 4) ? 2.5 : 0);
+  camera.fov = damp(camera.fov, chaseFov * (1 - ck) + 45 * ck, 4.5, dt); camera.updateProjectionMatrix();
+  updateStreaks(dt, bus.speed, ck);
   // sun shadow follows the bus — from the south-east so the facades the chase cam actually sees get direct light
   sun.position.set(bus.x + 40, 70, bus.z + 30); sun.target.position.set(bus.x, 0, bus.z);
   mapT += dt; if (mapT > 0.2) { mapT = 0; drawMap(); }
@@ -1011,7 +1222,8 @@ window.__bus = {
   G, bus, STOPS, COLL,
   frames: () => frames,
   start: startGame,
-  state: () => ({ mode: G.mode, fares: G.fares, pax: G.paxServed, aboard: G.aboard.length, target: G.target ? G.target.id : null, dest: G.group ? G.group.dest.id : null, speed: bus.speed, x: bus.x, z: bus.z, yaw: bus.yaw, time: G.time, waiting: G.group ? G.group.figures.length : 0 }),
+  state: () => ({ mode: G.mode, fares: G.fares, pax: G.paxServed, aboard: G.aboard.length, target: G.target ? G.target.id : null, dest: G.group ? G.group.dest.id : null, speed: bus.speed, x: bus.x, z: bus.z, yaw: bus.yaw, time: G.time, waiting: G.group ? G.group.figures.length : 0, cine: +cineK.toFixed(3), dings: SFXC.fare, chimes: SFXC.chime, cheers: SFXC.cheer, near: G.nearMiss, door: +G.doorOpen.toFixed(2), brake: G.lastBrake || 0, crashes: SFXC.crash }),
+  cars: () => CARS.map(c => ({ x: c.x, z: c.z, px: c.px ?? c.x, pz: c.pz ?? c.z, ox: c.ox || 0, oz: c.oz || 0, spin: +(c.spin || 0).toFixed(3) })),
   place: (x, z, yaw) => { bus.x = x; bus.z = z; bus.yaw = yaw; bus.speed = 0; camPos.set(x - Math.sin(yaw) * 12, 6, z - Math.cos(yaw) * 12); },
   key: (code, down) => { KEYS[code] = down; },
 };
