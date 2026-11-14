@@ -2890,6 +2890,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "EVERYTHING HATES YOU! AR",
    "url": "../games/everything-hates-you-ar/"
+  },
+  {
+   "category": "Originals",
+   "desc": "Plant bomb flowers, blast the pots, and outlast 3 bots in a Hyrule field — Bomberman arena, Zelda-skinned.",
+   "id": "bomb-bloom",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Bomb Bloom",
+   "url": "../games/bomb-bloom/"
   }
  ]
 }
