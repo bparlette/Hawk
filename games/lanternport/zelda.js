@@ -388,6 +388,14 @@ export const potRampage = {
     // Pots smash states: a `broken` flag, NOT vis — the pot builders turn it
     // into a real shatter with clay shards (see addShatter). The old vis
     // vanish read as "nothing happens" on Cherie's phone (Nov 13).
+    // pot0 is the FIRST pot on the bench — the one she walks up to and stands
+    // before — and it was never given a break at all (not in the original
+    // vanish choreography either): it sat intact through the whole rampage
+    // while every other pot smashed. Cherie's phone report, Nov 13: "It did
+    // the last one. But not the first one." It bursts on the same first-swing
+    // impact as pot1 (0.55 m away — inside the swing grammar the rampage
+    // segment already uses, where pots burst up to ~1 m from her arms).
+    A.pot0.broken = t >= PR.firstPot;
     A.pot1.broken = t >= PR.firstPot;
     A.pot2.broken = t >= PR.rampage + 60;
     A.pot3.broken = t >= PR.rampage + 160;
