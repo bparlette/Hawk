@@ -30,11 +30,14 @@ test('pot-rampage: all staged pots end broken', () => {
   const def = sceneById('pot-rampage');
   const S = def.set(new Game(7));
   def.act(S, def.duration - 1);
-  assert.equal(S.actors.find(a => a.id === 'pot1').vis, false);
-  assert.equal(S.actors.find(a => a.id === 'pot2').vis, false);
-  assert.equal(S.actors.find(a => a.id === 'pot3').vis, false);
-  assert.equal(S.actors.find(a => a.id === 'pot4').vis, false);
-  assert.equal(S.actors.find(a => a.id === 'bigpot').vis, false);
+  // Pots now end BROKEN (real shatter state) instead of invisible: the staged
+  // actor stays vis=true so StageView keeps posing it and the shard debris shows.
+  assert.equal(S.actors.find(a => a.id === 'pot1').broken, true);
+  assert.equal(S.actors.find(a => a.id === 'pot2').broken, true);
+  assert.equal(S.actors.find(a => a.id === 'pot3').broken, true);
+  assert.equal(S.actors.find(a => a.id === 'pot4').broken, true);
+  assert.equal(S.actors.find(a => a.id === 'bigpot').broken, true);
+  assert.equal(S.actors.find(a => a.id === 'bigpot').y, 1.58, 'big pot ends held overhead at the smash');
 });
 
 test('chest-fanfare: hold is at least 60 ticks', () => {
