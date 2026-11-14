@@ -110,6 +110,61 @@ function enhInstance(THREE, kit, key, { scale = 1, tint = 0xffffff } = {}) {
   return g;
 }
 
+/** Breakable-pot shatter: deterministic clay shards that burst when the staged
+ * state flips o.broken, then settle as a debris pile on the surface the pot
+ * rests on. View-only (like the splash/flash kinds): act() owns the timing via
+ * the broken flag, this owns the debris. The resting surface is the actor's
+ * spawn height (o.y at build): bench top for the bench pots, the floor for the
+ * big pot — so the big pot's shards fall the full height when it breaks
+ * overhead in her hands. The blob shadow follows the same rule: hidden while
+ * the pot is lifted, dropped to the resting surface once it breaks. */
+function addShatter(THREE, kit, g, o, { color, count, size, spread, yOff, blob }) {
+  const seed = [...(o.id || 'pot')].reduce((a, c) => a + c.charCodeAt(0), 7);
+  const mat = kit.toon(color, { rim: 0.4 });
+  const shards = new THREE.Group(); shards.visible = false; g.add(shards);
+  const parts = [];
+  for (let i = 0; i < count; i++) {
+    const h1 = hash(seed * 31 + i * 7), h2 = hash(seed * 57 + i * 13), h3 = hash(seed * 91 + i * 3);
+    const geo = i % 3 === 2
+      ? new THREE.BoxGeometry(size * (0.7 + h1 * 0.7), size * 0.35, size * (0.5 + h2 * 0.6))
+      : new THREE.TetrahedronGeometry(size * (0.55 + h1 * 0.6));
+    const m = new THREE.Mesh(geo, mat); m.castShadow = true; shards.add(m);
+    const ang = h1 * Math.PI * 2, rad = (0.35 + h2 * 0.65) * spread;
+    parts.push({ m, vx: Math.cos(ang) * rad, vz: Math.sin(ang) * rad, vy: 1.1 + h3 * 1.5, rx: h1 * 6.28, rz: h2 * 6.28, sx: (h2 - 0.5) * 9, sz: (h3 - 0.5) * 9, rest: size * 0.3, landDt: undefined, x: 0, y: yOff, z: 0 });
+  }
+  let breakT = null;
+  const spawnY = o.y || 0; // builder-time y = the resting surface (o is the live actor; its y moves with the lift)
+  const prevPose = g.userData.pose;
+  g.userData.pose = (a, time) => {
+    if (prevPose) prevPose(a, time);
+    const liftAmt = (a.y || 0) - spawnY;
+    if (!a.broken) {
+      breakT = null; shards.visible = false;
+      for (const p of parts) { p.landDt = undefined; p.x = 0; p.y = yOff; p.z = 0; }
+      if (g.userData.enhInner) g.userData.enhInner.visible = true;
+      if (blob) { blob.visible = liftAmt <= 0.05; blob.position.y = 0.006; }
+      return;
+    }
+    if (breakT === null) breakT = time;
+    if (g.userData.enhInner) g.userData.enhInner.visible = false;
+    shards.visible = true;
+    const dt = Math.max(0, time - breakT); // StageView pose time is in seconds (update(time, tick))
+    const floorLocal = spawnY - (a.y || 0); // resting surface in node-local units (negative when broken overhead)
+    if (blob) { blob.visible = true; blob.position.y = floorLocal + 0.006; }
+    for (const p of parts) {
+      if (p.landDt === undefined) {
+        p.x = p.vx * dt; p.z = p.vz * dt;
+        p.y = yOff + p.vy * dt - 4.9 * dt * dt;
+        if (dt > 0.05 && p.y <= floorLocal + p.rest) { p.landDt = dt; p.y = floorLocal + p.rest; }
+      }
+      p.m.position.set(p.x, p.y, p.z);
+      const spin = p.landDt !== undefined ? p.landDt : dt;
+      p.m.rotation.set(p.rx + p.sx * spin, 0, p.rz + p.sz * spin);
+    }
+  };
+  return g;
+}
+
 registerStageKind('pot', (THREE, kit, o) => {
   const v = ((o.variant || 0) % 4 + 4) % 4;
   const tint = [0xffffff, 0xeec39e, 0xd9906a, 0x9fc4b4][v]; // fired range: natural, pale, deep terracotta, glazed
@@ -119,13 +174,15 @@ registerStageKind('pot', (THREE, kit, o) => {
   g.userData.enhInner.rotation.y = hash(seed * 3 + v) * 6.28;
   const blob = blobShadow(THREE, 0.3 * s, 0.24); blob.position.y = 0.006; g.add(blob);
   if (o.tipped) { g.userData.enhInner.rotation.z = 1.82; g.userData.enhInner.position.y = 0.27 * s; blob.scale.set(1.5, 0.8, 1); }
+  addShatter(THREE, kit, g, o, { color: [0xb98a68, 0xd9b28c, 0xc47a4e, 0x8fae9f][v], count: 11, size: 0.11, spread: 0.6, yOff: 0.15, blob });
   return g;
 });
 
 // The big pot she lifts overhead: a crafted clay amphora (Polyfork), scaled to ~1.12 m.
-registerStageKind('bigpot', (THREE, kit) => {
+registerStageKind('bigpot', (THREE, kit, o) => {
   const g = enhInstance(THREE, kit, 'bigpot', { scale: 1.4 });
   const blob = blobShadow(THREE, 0.52, 0.3); blob.position.y = 0.006; g.add(blob);
+  addShatter(THREE, kit, g, o, { color: 0xa9603c, count: 15, size: 0.15, spread: 0.85, yOff: 0.55, blob });
   return g;
 });
 
@@ -328,12 +385,26 @@ export const potRampage = {
     j.pose = {};
     c.pose = {};
 
-    // Pots smash states
-    A.pot1.vis = t < PR.firstPot;
-    A.pot2.vis = t < PR.rampage + 60;
-    A.pot3.vis = t < PR.rampage + 160;
-    A.pot4.vis = t < PR.rampage + 260;
-    A.bigpot.vis = t < PR.bigPot + 50;
+    // Pots smash states: a `broken` flag, NOT vis — the pot builders turn it
+    // into a real shatter with clay shards (see addShatter). The old vis
+    // vanish read as "nothing happens" on Cherie's phone (Nov 13).
+    A.pot1.broken = t >= PR.firstPot;
+    A.pot2.broken = t >= PR.rampage + 60;
+    A.pot3.broken = t >= PR.rampage + 160;
+    A.pot4.broken = t >= PR.rampage + 260;
+    // The big pot rides in her hands through the lift segment, then breaks
+    // overhead: it leaves the ground with her crouch-and-hoist and settles at
+    // hand height (the GLB clip's impact frame lands at bigPot + 50, the same
+    // tick the staged pot breaks and the 'thump' cue fires).
+    A.bigpot.broken = t >= PR.bigPot + 50;
+    A.bigpot.x = 2.8; A.bigpot.z = 0.5; A.bigpot.y = 0; A.bigpot.yaw = 0;
+    if (t >= PR.bigPot && t < PR.bigPot + 50) {
+      const up = ramp(t, PR.bigPot, PR.bigPot + 34);
+      A.bigpot.y = up * 1.58;
+      A.bigpot.yaw = up * 0.5;
+    } else if (t >= PR.bigPot + 50) {
+      A.bigpot.y = 1.58; A.bigpot.yaw = 0.5; // held overhead at the break; shards fall from here
+    }
 
     if (t < PR.firstPot) {
       // Approach first pot and pick it up
