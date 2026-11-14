@@ -213,6 +213,9 @@ function move(s, p, dx, dy, sp) {
     return;
   }
   // Blocked head-on: drift toward the centre of the current lane if the tile ahead there is open.
+  // The drift corrects at least 2.5 px/tick (not just 1x speed), so grazing a pillar corner
+  // costs ~2 ticks instead of ~5 at base speed; after drifting, retry forward in the same
+  // tick so the player slides along the corner instead of stopping dead while correcting.
   const perp = dx ? p.y : p.x;
   const lane = tileOf(perp);
   const off = perp - (lane * T + T / 2);
@@ -220,10 +223,14 @@ function move(s, p, dx, dy, sp) {
     const ax = dx ? tileOf(p.x + dx * (HALF + 1)) : lane;
     const ay = dx ? lane : tileOf(p.y + dy * (HALF + 1));
     if (!solid(s, ax, ay, p)) {
-      const nudge = -Math.sign(off) * Math.min(sp, Math.abs(off));
+      const nudge = -Math.sign(off) * Math.min(Math.max(sp, 2.5), Math.abs(off));
       const sx = p.x + (dx ? 0 : nudge), sy = p.y + (dx ? nudge : 0);
       if (!blocked(s, p, sx, sy)) {
         p.x = sx; p.y = sy;
+        for (let k = 4; k >= 1; k--) {
+          const fx = p.x + (dx * sp * k) / 4, fy = p.y + (dy * sp * k) / 4;
+          if (!blocked(s, p, fx, fy)) { p.x = fx; p.y = fy; break; }
+        }
         return;
       }
     }
@@ -289,6 +296,7 @@ function closeIn(s) {
 function explode(s, first) {
   const queue = [first];
   const burned = new Set(), ff = s.cfg.friendlyFire || !s.cfg.teams, rings = [];
+  const pushes = [];
   while (queue.length) {
     const b = queue.pop();
     if (!s.bombs.includes(b)) continue;
@@ -302,6 +310,31 @@ function explode(s, first) {
       const other = s.bombs.find((o) => o.x === x && o.y === y);
       if (other) queue.push(other);
     }
+    // Shockwave: an arm that reaches full range without being spent on a wall, pot or
+    // another bomb shoves any player standing one tile past its tip one tile further.
+    for (const [dx, dy] of DIRS) {
+      let tip = null, spent = false;
+      for (let r = 1; r <= b.range; r++) {
+        const x = b.x + dx * r, y = b.y + dy * r;
+        const g = s.grid[y * W + x];
+        if (g === HARD) { spent = true; break; }
+        tip = [x, y];
+        if (g === SOFT || s.bombs.some((o) => o.x === x && o.y === y)) { spent = true; break; }
+      }
+      if (!tip || spent) continue;
+      const px = tip[0] + dx, py = tip[1] + dy;
+      for (const q of s.players) {
+        if (q.alive && tileOf(q.x) === px && tileOf(q.y) === py && !pushes.some((u) => u.q === q)) pushes.push({ q, dx, dy });
+      }
+    }
+  }
+  // Apply shoves once every chained bomb has gone off: never into flames or solid tiles,
+  // and a player already standing in flames is not rescued by the shove.
+  for (const { q, dx, dy } of pushes) {
+    if (!q.alive || burned.has(tileOf(q.y) * W + tileOf(q.x))) continue;
+    const tx = q.x + dx * T, ty = q.y + dy * T;
+    if (burned.has(tileOf(ty) * W + tileOf(tx)) || s.flames.some((f) => f.x === tileOf(tx) && f.y === tileOf(ty))) continue;
+    if (!blocked(s, q, tx, ty)) { q.x = tx; q.y = ty; q.vx = q.vy = 0; }
   }
   for (const c of rings) {
     for (const [x, y] of ringOf(s, c)) if (!s.bombs.some((o) => o.x === x && o.y === y)) s.bombs.push({ x, y, owner: c.owner, t: CLUSTER_DELAY, range: 1, pass: [], ty: B_MINI });

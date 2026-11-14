@@ -184,6 +184,16 @@
     white-space: nowrap;
   }
   #motionPill:active { transform: translateX(-50%) scale(0.96); }
+  .duckArrow {
+    position: fixed; top: 50%;
+    z-index: 3;
+    font-size: 21px; line-height: 1;
+    pointer-events: none;
+    text-shadow: 0 1px 5px rgba(0,0,0,0.7);
+    transform: translateY(-50%);
+    opacity: 0.94;
+    display: none;
+  }
   .hidden { display: none !important; }
 </style>
 <script type="importmap">
@@ -220,6 +230,8 @@ canvas{touch-action:none}
 
 <div id="bigMsg"></div>
 
+<div id="duckArrows" aria-hidden="true"></div>
+
 <button id="motionPill" class="hidden" type="button">📱 Enable motion look-around</button>
 
 <div id="start" class="overlay">
@@ -228,6 +240,7 @@ canvas{touch-action:none}
     <h1>DUCK SHOOT AR</h1>
     <p>Ducks are loose in <b>your</b> room! Your phone is the light gun — <b>aim with the crosshair</b> and tap <b>SHOOT</b>!</p>
     <p>🦆 Duck = <b>100</b> · ⭐ Golden duck = <b>500</b> · Hits build your combo: <b>×2 · ×3 · ×5</b> — but a miss breaks it!</p>
+    <p>🧭 Ducks fly <b>all around you</b> — turn to hunt them! Arrows at the screen edge point to ducks you can't see.</p>
     <button id="startBtn" class="playBtn" type="button">▶ PLAY</button>
     <p class="fine">Needs camera for the full AR feel.<br>No camera? No problem — the ducks get a cozy pond instead.</p>
   </div>
@@ -721,6 +734,17 @@ const ducks = [];   // every live duck (flying | falling)
 const flying = () => ducks.filter(d => d.state === 'fly');
 const ZBANDS = [-1.5, -2.1, -2.8, -3.6];
 
+/* PLAY FIELD (Nov 14): ducks play across a 280° arc around the player.
+   Each duck's whole flight runs inside a "sector" group rotated about the
+   player's vertical axis by the duck's azimuth, so all flight behaviour
+   below stays in the original local frame (fly along local X at a fixed
+   local z band) and only the sector turns. Spawning ±140° leaves an ~80°
+   dead zone directly behind and keeps spawn azimuths away from the
+   ±180° seam. Forced/QA spawns (test + pinned ducks) keep azimuth 0
+   unless an azimuth is passed explicitly. */
+const ARC_HALF_DEG = 140;
+const spawnAzimuthLog = [];
+
 function spawnDuck(force) {
   const f = force || {};
   const kind = f.kind || (Math.random() < 0.09 ? 'golden' : pick(['mallard', 'white', 'brown']));
@@ -732,14 +756,20 @@ function spawnDuck(force) {
   let speed = f.speed !== undefined ? f.speed : rand(1.15, 1.5) * lerp(1, 1.45, ramp);
   if (kind === 'golden') speed *= 1.35;
   const zig = f.zig !== undefined ? f.zig : Math.random() < 0.35;
+  const azimuth = f.azimuth !== undefined ? f.azimuth : (force ? 0 : rand(-ARC_HALF_DEG, ARC_HALF_DEG));
+  spawnAzimuthLog.push(azimuth);
   const parts = buildDuckMesh(kind);
   parts.root.position.set(startX, baseY, z);
   parts.root.rotation.y = dirSign > 0 ? 0 : Math.PI;
   const s = kind === 'golden' ? 0.85 : rand(0.88, 1.02);
   parts.root.scale.setScalar(s);
-  scene.add(parts.root);
+  const sector = new THREE.Group();
+  sector.rotation.y = THREE.MathUtils.degToRad(azimuth);
+  scene.add(sector);
+  sector.add(parts.root);
+  sector.add(parts.shadow);   // re-parents the blob shadow into the sector
   const d = {
-    kind, state: 'fly', t: 0,
+    kind, state: 'fly', t: 0, sector, azimuth,
     root: parts.root, bodyG: parts.bodyG, wings: parts.wings, shadow: parts.shadow,
     dirSign, z, baseY, speed, scale: s,
     bobAmp: rand(0.07, 0.18), bobFreq: rand(2.0, 3.4), ph: rand(0, 6.28),
@@ -764,8 +794,8 @@ function spawnPinnedDuck(kind) {
 }
 
 function freeDuck(d) {
-  scene.remove(d.root);
-  scene.remove(d.shadow);
+  if (d.sector) scene.remove(d.sector);   // root + shadow ride inside it
+  else { scene.remove(d.root); scene.remove(d.shadow); }
   const i = ducks.indexOf(d);
   if (i >= 0) ducks.splice(i, 1);
 }
@@ -802,7 +832,8 @@ function updateDuck(d, dt) {
     d.bodyG.rotation.z += 8.5 * dt;
     d.wings[0].rotation.x = 0.9; d.wings[1].rotation.x = -0.9;
     if (d.root.position.y <= 0.10) {
-      const p = projectToScreen(d.root.position.x, 0.1, d.root.position.z);
+      const wp = duckWorldPos(d);
+      const p = projectToScreen(wp.x, 0.1, wp.z);
       if (p) spawnRipple(p.x, p.y);
       noiseBurst(0.05, 0.06, 0, 1200);
       freeDuck(d);
@@ -821,6 +852,10 @@ function updateDuck(d, dt) {
 /* ============================== fx overlay (feathers, score pops, ripples) ============================== */
 const fx = [];
 const _pv = new THREE.Vector3();
+const _dwp = new THREE.Vector3();
+/* world position of a duck (its root lives inside a rotated sector group,
+   so root.position is sector-local, NOT world) */
+function duckWorldPos(d) { return d.root.getWorldPosition(_dwp); }
 function projectToScreen(x, y, z) {
   if (!camera) return null;
   _pv.set(x, y, z).project(camera);
@@ -960,7 +995,8 @@ function fire() {
     const base = hitDuck.kind === 'golden' ? 500 : 100;
     const pts = base * m;
     score += pts;
-    const p = projectToScreen(hitDuck.root.position.x, hitDuck.root.position.y, hitDuck.root.position.z);
+    const wp = duckWorldPos(hitDuck);
+    const p = projectToScreen(wp.x, wp.y, wp.z);
     if (p) {
       spawnFeathers(p.x, p.y, DUCK_TYPES[hitDuck.kind].main, hitDuck.kind === 'golden' ? 16 : 11);
       spawnScorePop(p.x, p.y, '+' + pts, hitDuck.kind === 'golden');
@@ -982,6 +1018,51 @@ shootBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); fire(); })
 window.addEventListener('keydown', (e) => {
   if (e.code === 'Space' || e.code === 'KeyZ') { e.preventDefault(); fire(); }
 });
+
+/* ================= off-view duck arrows =================
+   With ducks playing across 280°, some are always out of view. A small
+   edge arrow (icon only, HUD-budget-friendly) points the way to turn for
+   each off-view flying duck: left/right edge by bearing, height by the
+   duck's elevation. Shown only while playing, only for ducks actually
+   off-screen — a duck behind you gets an arrow on the side of the
+   shorter turn. */
+const arrowPool = [];
+function initDuckArrows() {
+  const wrap = document.getElementById('duckArrows');
+  if (!wrap) return;
+  for (let i = 0; i < 6; i++) {
+    const el = document.createElement('div');
+    el.className = 'duckArrow';
+    wrap.appendChild(el);
+    arrowPool.push(el);
+  }
+}
+const _av = new THREE.Vector3();
+const _aq = new THREE.Quaternion();
+function updateDuckArrows() {
+  let n = 0;
+  if (phase === 'playing' && camera) {
+    _aq.copy(camera.quaternion).invert();
+    for (const d of ducks) {
+      if (d.state !== 'fly' || n >= arrowPool.length) continue;
+      const wp = duckWorldPos(d);
+      const p = projectToScreen(wp.x, wp.y, wp.z);
+      _av.copy(wp).sub(camera.position).applyQuaternion(_aq);  // camera space: -Z ahead, +X right
+      const inFront = _av.z < -0.05;
+      if (inFront && p && Math.abs(p.ndcX) <= 0.97 && Math.abs(p.ndcY) <= 0.97) continue;  // on screen
+      const bearing = Math.atan2(_av.x, -_av.z);                 // + = duck is to your right
+      const elev = Math.atan2(_av.y, Math.hypot(_av.x, _av.z));
+      const el = arrowPool[n++];
+      const right = bearing >= 0;
+      el.textContent = right ? '🦆▶' : '◀🦆';
+      el.style.left = right ? 'auto' : '4px';
+      el.style.right = right ? '4px' : 'auto';
+      el.style.top = clamp(50 - elev * 95, 15, 82).toFixed(1) + '%';
+      el.style.display = 'block';
+    }
+  }
+  for (; n < arrowPool.length; n++) arrowPool[n].style.display = 'none';
+}
 
 /* ============================== game flow ============================== */
 function resetGame() {
@@ -1071,6 +1152,7 @@ function frame(t) {
   updateFx(dt);
   if (renderer) renderer.render(scene, camera);
   drawFx();
+  updateDuckArrows();
 }
 
 /* ============================== start flow ============================== */
@@ -1123,6 +1205,7 @@ document.getElementById('againBtn').addEventListener('click', () => {
 resize();
 initGL();
 buildPond();
+initDuckArrows();
 resize();
 updateHUD();
 requestAnimationFrame(frame);
@@ -1140,13 +1223,19 @@ window.__duck = {
   get timeLeft() { return timeLeft; },
   get aliveCount() { return flying().length; },
   ducks: () => ducks.map(d => {
-    const p = projectToScreen(d.root.position.x, d.root.position.y, d.root.position.z);
-    return { kind: d.kind, state: d.state, ndc: p ? { x: +p.ndcX.toFixed(3), y: +p.ndcY.toFixed(3) } : null,
+    const wp = duckWorldPos(d);
+    const p = projectToScreen(wp.x, wp.y, wp.z);
+    return { kind: d.kind, state: d.state, azimuth: +d.azimuth.toFixed(1),
+             world: { x: +wp.x.toFixed(2), y: +wp.y.toFixed(2), z: +wp.z.toFixed(2) },
+             ndc: p ? { x: +p.ndcX.toFixed(3), y: +p.ndcY.toFixed(3) } : null,
              screen: p ? { x: Math.round(p.x), y: Math.round(p.y) } : null };
   }),
   spawnNow: (kind) => spawnDuck(kind ? { kind } : undefined),
   spawnTestDuck: () => spawnTestDuck(),
   spawnPinnedDuck: (kind) => spawnPinnedDuck(kind),
+  spawnAt: (deg, opts) => spawnDuck(Object.assign({}, opts || {}, { azimuth: deg })),
+  spawnAzimuths: () => spawnAzimuthLog.slice(),
+  camDir: () => { const v = new THREE.Vector3(); camera.getWorldDirection(v); return { x: +v.x.toFixed(3), y: +v.y.toFixed(3), z: +v.z.toFixed(3) }; },
   fire: () => fire(),
   setTimeLeft: (s) => { timeLeft = s; },
   motion: () => ({ ok: MOTION.ok, ever: MOTION.ever, perm: MOTION.perm, needPerm: MOTION.needPerm, hasRef: !!MOTION.refQ }),

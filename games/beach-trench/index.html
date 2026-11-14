@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>BEACH TRENCH!</title>
+<style>
+html,body{margin:0;padding:0;background:#0b2a3a;height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-serif}
+#wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(#79c7e8,#cfeef8)}
+canvas{display:block;width:min(100vw,calc(100vh*420/860));height:min(100vh,calc(100vw*860/420));touch-action:none;background:#ffe9b8}
+.ui{position:absolute;z-index:1100}
+#hud{top:calc(env(safe-area-inset-top,0px) + 8px);left:50%;transform:translateX(-50%);width:min(96vw,400px);display:flex;justify-content:space-between;align-items:center;pointer-events:none}
+.chip{background:rgba(6,42,58,.72);color:#fff;border-radius:999px;padding:7px 12px;font-size:19px;font-weight:800;letter-spacing:.02em}
+#mute{pointer-events:auto;border:0;cursor:pointer;font-size:18px}
+#hint{top:calc(env(safe-area-inset-top,0px) + 56px);left:50%;transform:translateX(-50%);width:min(94vw,390px);text-align:center;background:rgba(255,255,255,.88);color:#17384a;border-radius:14px;padding:8px 10px;font-size:15px;font-weight:700;line-height:1.25;transition:opacity .4s}
+#hint.small{font-size:13px;padding:5px 8px;opacity:.92}
+#tools{bottom:calc(env(safe-area-inset-bottom,0px) + 12px);left:50%;transform:translateX(-50%);display:flex;gap:10px}
+#tools button{border:3px solid rgba(255,255,255,.85);border-radius:999px;padding:13px 20px;font-size:18px;font-weight:900;color:#17384a;background:#ffe08a;box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer}
+#tools button.on{background:#5ec8e8;color:#062a3a;transform:scale(1.06)}
+#banner{top:38%;left:50%;transform:translate(-50%,-50%);font-size:34px;font-weight:1000;color:#fff;text-shadow:0 3px 0 #d35400,0 6px 18px rgba(0,0,0,.4);opacity:0;pointer-events:none;text-align:center;width:95%}
+</style><style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head><body>
+<div id="wrap"><canvas id="c" width="420" height="860"></canvas>
+<div class="ui" id="hud"><div class="chip" id="waveChip">🌊 0/5</div><div class="chip" id="roundChip">🏖️ 1</div><div class="chip" id="waterChip">💧 0%</div><button class="chip" id="mute">🔊</button></div>
+<div class="ui" id="hint">Drag in the sand to dig a trench.<br>Tap PILE, then drag to build a wall.</div>
+<div class="ui" id="banner"></div>
+<div class="ui" id="tools"><button id="digBtn" class="on">⛏️ DIG</button><button id="pileBtn">🧱 PILE</button></div>
+</div>
+<script>
+'use strict';
+const W=420,H=860,cv=document.getElementById('c'),ctx=cv.getContext('2d');
+const COLS=120,CW=W/COLS,BASE=600; // y of elevation 0
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), lerp=(a,b,t)=>a+(b-a)*t;
+// elevation units: pixels of height above BASE
+let elev=[],baseElev=[];
+function freshBeach(){
+ elev=[];baseElev=[];
+ for(let i=0;i<COLS;i++){
+   const x=i/(COLS-1);
+   // seabed low left, beach rises to plateau right
+   let e;
+   if(x<0.22) e=-90+ x*180; // -90..-50 seabed under sea
+   else if(x<0.45) e=-50+(x-0.22)/0.23*150; // slope up to 100
+   else e=100+Math.sin(x*9)*4+(x-0.45)*22; // plateau ~100-112
+   elev.push(e);baseElev.push(e);
+ }
+ // gentle pre-made play area flatten near trench/wall zones handled by player
+}
+freshBeach();
+const surfY=i=>BASE-elev[i];
+const colAt=x=>clamp(Math.floor(x/CW),0,COLS-1);
+// zones: wall zone cols 36..52 (x126..182), trench zone 58..78 (x203..273), castle col ~100
+const WALL_A=46,WALL_B=54,TRENCH_A=58,TRENCH_B=80,CASTLE_I=102;
+let G={phase:'build',wave:0,round:1,trenchWater:0,trenchLevel:-999,waveT:4.2,waveAnim:0,waveReach:0,carried:24,mode:'dig',muted:false,interacted:false,drainT:0,breachI:-1,overTop:false,time:0,msg:''};
+let particles=[],flows=[];
+let seaPhase=0;
+// deterministic-ish grain pattern
+let grain=[];for(let i=0;i<500;i++)grain.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.4,a:Math.random()*.18+.05});
+// AUDIO
+let AC=null,master=null,noiseBuf=null,scrapeGain=null,scrapeFilter=null;
+function initAudio(){
+ if(AC) {AC.resume&&AC.resume();return;}
+ try{
+  AC=new (window.AudioContext||window.webkitAudioContext)();
+  if(navigator.audioSession) navigator.audioSession.type='playback';
+  master=AC.createGain();master.gain.value=G.muted?0:0.5;master.connect(AC.destination);
+  const len=AC.sampleRate*2,buf=AC.createBuffer(1,len,AC.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<len;i++)d[i]=Math.random()*2-1; noiseBuf=buf;
+  // scrape loop source (gain 0 until digging)
+  const src=AC.createBufferSource();src.buffer=buf;src.loop=true;
+  scrapeFilter=AC.createBiquadFilter();scrapeFilter.type='bandpass';scrapeFilter.frequency.value=900;scrapeFilter.Q.value=.8;
+  scrapeGain=AC.createGain();scrapeGain.gain.value=0;src.connect(scrapeFilter);scrapeFilter.connect(scrapeGain);scrapeGain.connect(master);src.start();
+  // silent buffer in first gesture (iOS)
+  const s=AC.createBuffer(1,1,AC.sampleRate),o=AC.createBufferSource();o.buffer=s;o.connect(AC.destination);o.start();
+ }catch(e){}
+}
+function washSound(big){
+ if(!AC||G.muted)return;
+ const src=AC.createBufferSource();src.buffer=noiseBuf;src.loop=true;
+ const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=big?700:500;
+ const g=AC.createGain();g.gain.setValueAtTime(0,AC.currentTime);
+ g.gain.linearRampToValueAtTime(big?.34:.18,AC.currentTime+.7);
+ g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+(big?2.6:1.8));
+ src.connect(f);f.connect(g);g.connect(master);src.start();src.stop(AC.currentTime+3);
+}
+function plop(freq){
+ if(!AC||G.muted)return; const o=AC.createOscillator(),g=AC.createGain();
+ o.type='sine';o.frequency.setValueAtTime(freq||380,AC.currentTime);o.frequency.exponentialRampToValueAtTime(90,AC.currentTime+.18);
+ g.gain.setValueAtTime(.22,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.22);
+ o.connect(g);g.connect(master);o.start();o.stop(AC.currentTime+.25);
+}
+function ding(){ if(!AC||G.muted)return; const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=1180;g.gain.setValueAtTime(.12,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.3);o.connect(g);g.connect(master);o.start();o.stop(AC.currentTime+.32);}
+// TERRAIN EDITING
+function slump(){
+ for(let pass=0;pass<2;pass++)for(let i=0;i<COLS-1;i++){
+   const d=elev[i]-elev[i+1],max=16;
+   if(Math.abs(d)>max){const mv=(Math.abs(d)-max)*.35*Math.sign(d);elev[i]-=mv;elev[i+1]+=mv;}
+ }
+}
+function spawnSand(x,y,n,col){n=Math.min(n,8);if(particles.length>320)return;for(let i=0;i<n;i++)particles.push({x:x+(Math.random()-.5)*14,y:y-Math.random()*8,vx:(Math.random()-.5)*70,vy:-Math.random()*90-20,g:260,life:.7+Math.random()*.4,t:0,col:col||'#d9a75f',r:1+Math.random()*2.2,type:'sand'});}
+function spawnFoam(x,y,n){for(let i=0;i<n;i++)particles.push({x:x+(Math.random()-.5)*10,y:y+(Math.random()-.5)*6,vx:(Math.random()-.5)*40,vy:-Math.random()*30,g:60,life:.8+Math.random()*.5,t:0,col:'#ffffff',r:1.5+Math.random()*2.5,type:'foam'});}
+function digAt(x,amount){
+ const ci=colAt(x),r=3;let removed=0;
+ for(let i=ci-r;i<=ci+r;i++){if(i<28||i>=COLS)continue;const fall=1-Math.abs(i-ci)/(r+1);const take=amount*fall;elev[i]-=take;removed+=take;}
+ slump();G.carried+=removed*.6;
+ spawnSand(x,surfY(ci),Math.min(16,4+removed|0));
+ return removed;
+}
+function pileAt(x,amount){
+ const ci=colAt(x),r=3;let used=0;
+ for(let i=ci-r;i<=ci+r;i++){if(i<28||i>=COLS)continue;const fall=1-Math.abs(i-ci)/(r+1);const add=amount*fall;elev[i]+=add;used+=add;}
+ slump();G.carried=Math.max(0,G.carried-used*.4);
+ spawnSand(x,surfY(ci)-14,7,'#eec27f');
+ return used;
+}
+function wallInfo(){
+ let minI=WALL_A,minE=1e9,maxE=-1e9;
+ for(let i=WALL_A;i<=WALL_B;i++){if(elev[i]<minE){minE=elev[i];minI=i;}if(elev[i]>maxE)maxE=elev[i];}
+ return {minI,minE,maxE};
+}
+function trenchInfo(){
+ let minE=1e9,sum=0;for(let i=TRENCH_A;i<=TRENCH_B;i++){minE=Math.min(minE,elev[i]);sum+=elev[i];}
+ return {minE,avg:sum/(TRENCH_B-TRENCH_A+1)};
+}
+// WAVES
+function showBanner(t,ms){const b=document.getElementById('banner');b.textContent=t;b.style.opacity=1;setTimeout(()=>b.style.opacity=0,ms||1300);}
+function setHint(t,small){const h=document.getElementById('hint');h.innerHTML=t;h.classList.toggle('small',!!small);}
+function startWave(){
+ if(G.phase!=='build'||G.waveAnim>0)return;
+ G.wave++;G.waveAnim=1.9;G.overTop=false;
+ const big=G.wave>=5;
+ washSound(big);
+ // runup elevation the wave can climb: rounds raise it slightly
+ const runup=big?165:66+(G.round-1)*6+G.wave*1.6+Math.random()*4;
+ G.waveReach=runup;
+ // find how far inland water gets: advance while elev < runup
+ let reach=0;for(let i=24;i<COLS;i++){if(elev[i]<runup)reach=i;else break;}
+ G.reachI=reach;
+ updateHUD();
+ if(big) doBreach();
+ else{
+   // erosion / overtop check at wall
+   const w=wallInfo();
+   if(w.minE<runup){ // water overtops a low spot slightly
+     G.overTop=true;
+     for(let i=w.minI-1;i<=w.minI+1;i++)if(i>=0)elev[i]-=3;
+     spawnFoam(w.minI*CW,surfY(w.minI),18);
+     setHint('⚠️ Water slipped over a low spot! Pile the wall higher.',true);
+   }else{
+     // holds: slight erosion at face
+     for(let i=WALL_A;i<=WALL_A+2;i++)elev[i]-=1.2;
+     spawnFoam(WALL_A*CW,BASE-runup,16);
+   }
+   slump();
+ }
+}
+function doBreach(){
+ const w=wallInfo();G.breachI=w.minI;
+ for(let i=w.minI-3;i<=w.minI+3;i++){if(i<0||i>=COLS)continue;const f=1-Math.abs(i-w.minI)/4;elev[i]-=(34*f+10);}
+ slump();
+ spawnSand(w.minI*CW,surfY(w.minI)-10,46,'#d9a75f');spawnFoam(w.minI*CW,surfY(w.minI),30);
+ if(navigator.vibrate)try{navigator.vibrate(10);}catch(e){}
+ showBanner('💥 BREACH!',1500);
+ // fill the trench: water level sits above trench floor, below plateau
+ const tr=trenchInfo();
+ G.trenchLevel=Math.max(tr.minE+34, 62);
+ G.trenchWater=0;G.phase='flooding';
+ setTimeout(()=>plop(300),350);setTimeout(()=>plop(220),700);
+ setHint('🌊 The trench filled up!<br>Dig a channel to the sea 🚪➡️🌊',true);
+}
+function checkDrain(){
+ if(G.phase!=='flooded')return false;
+ // channel: a continuous path from trench left edge to sea where every col elev < trenchLevel-4
+ // find path: columns from TRENCH_A down to 28 must ALL be below trenchLevel-4 (a dug channel through wall)
+ let ok=true,worst=-1e9;
+ for(let i=29;i<TRENCH_A;i++){worst=Math.max(worst,elev[i]);if(elev[i]>=G.trenchLevel-4){ok=false;break;}}
+ if(ok){G.phase='draining';G.drainT=0;plop(420);setHint('💧 It\'s draining!',true);
+   for(let i=30;i<TRENCH_A;i+=3)flows.push({i,t:Math.random()*.4});}
+ return ok;
+}
+// POINTER
+let ptr=null;
+cv.addEventListener('pointerdown',e=>{initAudio();G.interacted=true;ptr={x:e.offsetX,y:e.offsetY,moved:0};cv.setPointerCapture&&cv.setPointerCapture(e.pointerId);applyTool(e.offsetX,e.offsetY,1);});
+cv.addEventListener('pointermove',e=>{if(!ptr)return;const dx=e.offsetX-ptr.x,dy=e.offsetY-ptr.y;ptr.moved+=Math.abs(dx)+Math.abs(dy);ptr.x=e.offsetX;ptr.y=e.offsetY;applyTool(e.offsetX,e.offsetY,Math.min(1.6,.6+ptr.moved/60));
+ if(scrapeGain)scrapeGain.gain.value=G.muted?0:clamp(ptr.moved/900,.02,.16);});
+function endPtr(){ptr=null;if(scrapeGain)scrapeGain.gain.value=0;if(G.phase==='flooded')checkDrain();if(G.interacted)setHint(G.phase==='flooded'?'Dig a channel to the sea 🌊':'',G.interacted);if(G.phase!=='flooded'&&G.interacted)document.getElementById('hint').style.opacity=.0;}
+cv.addEventListener('pointerup',endPtr);cv.addEventListener('pointercancel',endPtr);
+document.addEventListener('pointerdown',()=>{initAudio();},{once:false});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&AC)AC.resume();});
+function applyTool(x,y,s){
+ if(y<70)return; // HUD zone
+ if(G.mode==='dig'){digAt(x,3.2*s);if(G.phase==='flooded')checkDrain();}
+ else pileAt(x,3.0*s);
+}
+// BUTTONS
+const digBtn=document.getElementById('digBtn'),pileBtn=document.getElementById('pileBtn');
+function setMode(m){G.mode=m;digBtn.classList.toggle('on',m==='dig');pileBtn.classList.toggle('on',m==='pile');}
+digBtn.onclick=()=>setMode('dig');pileBtn.onclick=()=>setMode('pile');
+const muteBtn=document.getElementById('mute');muteBtn.onclick=()=>{G.muted=!G.muted;muteBtn.textContent=G.muted?'🔇':'🔊';if(master)master.gain.value=G.muted?0:.5;};
+function updateHUD(){
+ document.getElementById('waveChip').textContent='🌊 '+Math.min(G.wave,5)+'/5';
+ document.getElementById('roundChip').textContent='🏖️ '+G.round;
+ document.getElementById('waterChip').textContent='💧 '+Math.round(G.trenchWater*100)+'%';
+}
+updateHUD();
+</script>
+<script>
+'use strict';
+const SEA_E=18;
+const LITE=location.search.includes('lite');
+if(LITE){cv.width=210;cv.height=430;ctx.scale(.5,.5);}
+const SKY_G=ctx.createLinearGradient(0,0,0,560);SKY_G.addColorStop(0,'#6ec3ea');SKY_G.addColorStop(1,'#d8f2fb');
+const SAND_G=ctx.createLinearGradient(0,520,0,H);SAND_G.addColorStop(0,'#f6d488');SAND_G.addColorStop(.5,'#eebd6d');SAND_G.addColorStop(1,'#d9a75f');
+const SEA_G=ctx.createLinearGradient(0,BASE-18,0,H);SEA_G.addColorStop(0,'#37b6d9');SEA_G.addColorStop(1,'#1177a8');
+function drawCastle(x,y){
+ ctx.save();ctx.translate(x,y);
+ ctx.fillStyle='#e8bd76';ctx.strokeStyle='#b8894a';ctx.lineWidth=2;
+ ctx.fillRect(-26,-34,52,34);ctx.strokeRect(-26,-34,52,34);
+ ctx.fillRect(-26,-52,14,18);ctx.fillRect(12,-52,14,18);ctx.fillRect(-7,-46,14,12);
+ ctx.strokeRect(-26,-52,14,18);ctx.strokeRect(12,-52,14,18);
+ ctx.fillStyle='#8a5a28';ctx.fillRect(-5,-20,10,20); // door
+ ctx.strokeStyle='#8a5a28';ctx.beginPath();ctx.moveTo(0,-46);ctx.lineTo(0,-74);ctx.stroke();
+ ctx.fillStyle='#ff4757';ctx.beginPath();ctx.moveTo(0,-74);ctx.lineTo(20,-68);ctx.lineTo(0,-62);ctx.closePath();ctx.fill();
+ ctx.restore();
+}
+function sandPolygon(){
+ ctx.beginPath();ctx.moveTo(0,H);
+ for(let i=0;i<COLS;i++)ctx.lineTo(i*CW+CW/2,surfY(i));
+ ctx.lineTo(W,H);ctx.closePath();
+}
+function update(dt){
+ // phase logic
+ if(G.phase==='build'){
+   if(G.waveAnim>0){G.waveAnim-=dt;if(G.waveAnim<=0){G.waveAnim=0;if(G.wave>=5){/*breach already set flooding*/} }}
+   else{G.waveT-=dt;if(G.waveT<=0){startWave();G.waveT=5.5;}}
+ }else if(G.phase==='flooding'){
+   G.trenchWater=Math.min(1,G.trenchWater+dt/1.4);updateHUD();
+   if(G.trenchWater>=1){G.phase='flooded';updateHUD();}
+ }else if(G.phase==='draining'){
+   G.trenchWater=Math.max(0,G.trenchWater-dt/2.4);G.drainT+=dt;updateHUD();
+   if(Math.random()<.4){const i=30+Math.floor(Math.random()*(TRENCH_A-30));spawnFoam(i*CW,surfY(i)-4,1);}
+   if(G.trenchWater<=0){G.round++;G.wave=0;G.waveT=4.5;G.phase='build';freshBeach();showBanner('🏖️ Round '+G.round,1200);ding();setHint('New beach! Dig again ⛏️',true);setTimeout(()=>{document.getElementById('hint').style.opacity=0;},2500);document.getElementById('hint').style.opacity=1;updateHUD();}
+ }
+ // particles
+ particles=particles.filter(p=>{p.t+=dt;if(p.t>p.life)return false;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=p.g*dt;return true;});
+}
+let last=performance.now();
+function frame(now){
+ const dt=Math.min(.05,(now-last)/1000);last=now;G.time+=dt;seaPhase+=dt;
+ if(!G.frozen)update(dt);
+ render();
+ requestAnimationFrame(frame);
+}
+function render(){
+ // sky
+ ctx.fillStyle=SKY_G;ctx.fillRect(0,0,W,H);
+ ctx.fillStyle='#fff3a0';ctx.beginPath();ctx.arc(362,86,30,0,7);ctx.fill();
+ ctx.fillStyle='rgba(255,255,255,.9)';
+ [[70,90,26],[112,84,18],[250,60,20],[286,54,14]].forEach(c=>{ctx.beginPath();ctx.arc(c[0]+Math.sin(seaPhase*.2+c[0])*3,c[1],c[2],0,7);ctx.fill();});
+ // distant sea sparkle band behind sand (drawn before sand, visible left)
+ const seaY=BASE-SEA_E;
+ // sand body
+ sandPolygon();ctx.fillStyle=SAND_G;ctx.fill();
+ ctx.strokeStyle='#c08f3e';ctx.lineWidth=2.5;ctx.beginPath();for(let i=0;i<COLS;i++){const x=i*CW+CW/2,y=surfY(i);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();
+ // grain speckles on sand (clipped approx by y>surf) cheap: dots whose y between surface and surface+90
+ if(!LITE){ctx.save();sandPolygon();ctx.clip();grain.forEach(g=>{ctx.globalAlpha=g.a;ctx.fillStyle='#a9762f';ctx.fillRect(g.x,(surfY(colAt(g.x)))+((g.y*7)%110),g.r,g.r);});ctx.restore();ctx.globalAlpha=1;}
+ // trench label + wall label (early rounds)
+ if(G.round===1&&G.wave<3){ctx.fillStyle='rgba(90,55,10,.85)';ctx.font='bold 14px system-ui';ctx.textAlign='center';const wi=wallInfo();ctx.fillText('WALL ↓',((WALL_A+WALL_B)/2)*CW,BASE-wi.maxE-16);ctx.fillText('↓ TRENCH',((TRENCH_A+TRENCH_B)/2)*CW,surfY(TRENCH_A)-64);}
+ // sea water (left, over seabed)
+ ctx.save();ctx.beginPath();ctx.rect(0,360,190,H-360);ctx.clip();
+ ctx.fillStyle=SEA_G;
+ ctx.beginPath();ctx.moveTo(0,H);ctx.lineTo(0,seaY+Math.sin(seaPhase*1.7)*3);
+ for(let x=0;x<=190;x+=10)ctx.lineTo(x,seaY+Math.sin(seaPhase*1.7+x*.05)*3);
+ // shoreline follows sand until sea level crossing (~col 38)
+ ctx.lineTo(190,H);ctx.closePath();ctx.fill();
+ ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=3;ctx.beginPath();for(let x=0;x<=168;x+=8){const y=seaY+Math.sin(seaPhase*1.7+x*.05)*3;x?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();
+ ctx.restore();
+ // wave tongue animation
+ if(G.waveAnim>0&&G.reachI){
+   const p=1-G.waveAnim/1.9,env=Math.sin(Math.PI*clamp(p,0,1));
+   const rx=lerp(120,G.reachI*CW,env),topY=BASE-G.waveReach-6;
+   ctx.fillStyle='rgba(64,178,219,.82)';ctx.beginPath();
+   ctx.moveTo(0,topY+26);ctx.quadraticCurveTo(rx*.55,topY+6,rx,topY+16+Math.sin(seaPhase*9)*2);
+   ctx.quadraticCurveTo(rx+16,topY+30,rx,topY+44);
+   ctx.lineTo(0,BASE+40);ctx.closePath();ctx.fill();
+   ctx.strokeStyle='rgba(255,255,255,.95)';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(rx-26,topY+34);ctx.quadraticCurveTo(rx+4,topY+12,rx+2,topY+40);ctx.stroke();
+   if(Math.random()<.6)spawnFoam(rx,topY+30,2);
+ }
+ // trench pooled water
+ if(G.trenchWater>0){
+   const lvl=G.trenchLevel,wy=BASE-lvl;
+   ctx.fillStyle='rgba(54,170,214,.88)';
+   ctx.beginPath();let started=false;
+   for(let i=TRENCH_A-8;i<=TRENCH_B+4;i++){
+     if(elev[i]<lvl){const x=i*CW;if(!started){ctx.moveTo(x,wy);started=true;}ctx.lineTo(x+CW,wy);ctx.lineTo(x+CW,surfY(i));ctx.lineTo(x,surfY(i));}
+   }
+   ctx.closePath();ctx.fill();
+   // surface shine line only over actual basin cols
+   ctx.strokeStyle='rgba(255,255,255,.8)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(TRENCH_A*CW,wy+Math.sin(seaPhase*3)*1.5);ctx.lineTo((TRENCH_B+4)*CW,wy+Math.cos(seaPhase*3)*1.5);ctx.stroke();
+   // drain flow stream
+   if(G.phase==='draining'){ctx.strokeStyle='rgba(80,190,230,.9)';ctx.lineWidth=5;ctx.beginPath();for(let i=29;i<TRENCH_A;i+=2){const x=i*CW,y=surfY(i)-3;i===29?ctx.moveTo(x,y):ctx.lineTo(x,y);}ctx.stroke();}
+ }
+ drawCastle(CASTLE_I*CW+CW/2,surfY(CASTLE_I)+2);
+ // kid bucket + spade props near castle
+ ctx.fillStyle='#ff6b81';ctx.fillRect(CASTLE_I*CW-52,surfY(CASTLE_I)-14,16,14);ctx.fillStyle='#3742fa';ctx.fillRect(CASTLE_I*CW+34,surfY(CASTLE_I)-4,18,5);
+ // particles
+ particles.forEach(p=>{ctx.globalAlpha=clamp(1-p.t/p.life,0,1);ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();});ctx.globalAlpha=1;
+ // wave counter pips
+}
+updateHUD();
+requestAnimationFrame(frame);
+// TEST HOOKS
+window.__game={
+ state:()=>({phase:G.phase,wave:G.wave,round:G.round,trenchWater:+G.trenchWater.toFixed(3),trenchLevel:G.trenchLevel,wallMin:wallInfo().minE,wallMax:wallInfo().maxE,wallMinI:wallInfo().minI,trenchMin:trenchInfo().minE,breachI:G.breachI,carried:Math.round(G.carried),mode:G.mode,elevMin:Math.min(...elev),time:+G.time.toFixed(1)}),
+ digAt:(x,n)=>{for(let k=0;k<(n||6);k++)digAt(x,4);},
+ pileAt:(x,n)=>{for(let k=0;k<(n||6);k++)pileAt(x,4);},
+ digPx:(x,y,n)=>{for(let k=0;k<(n||6);k++)digAt(x,4);},
+ setMode:(m)=>setMode(m),
+ forceWave:()=>{if(G.waveAnim<=0){G.waveT=0;startWave();}},
+ fastForwardWaves:(count)=>{let c=0;while(c<count&&G.phase==='build'){G.waveAnim=0;startWave();G.waveAnim=0;c++;}return G.wave;},
+ checkDrain:()=>checkDrain(),
+ freeze:(v)=>{G.frozen=!!v;},
+ step:(sec)=>{let n=Math.ceil(sec/0.05);for(let i=0;i<n;i++)update(0.05);updateHUD();},
+ elev:()=>elev.slice(),
+ reset:()=>{G.round=1;G.wave=0;G.trenchWater=0;G.phase='build';freshBeach();updateHUD();}
+};
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body></html>

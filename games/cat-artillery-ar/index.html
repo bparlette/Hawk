@@ -110,7 +110,7 @@ canvas{touch-action:none}
   <div class="card">
     <div class="big">🐱💣</div>
     <h1>CAT ARTILLERY AR</h1>
-    <p>Your <b>cat fortress</b> is set up on the floor. Enemy castles, statues and crate piles are dug in across the room!</p>
+    <p>You're the <b>cat gunner</b> — first-person, paws on the cannon! Enemy castles, statues and crate piles are dug in across the room!</p>
     <p><b>Drag</b> to aim — the dotted arc shows exactly where the shell will fly — then <b>release to fire</b>. Smash all <b>8 targets</b> with <b>14 shells</b>.</p>
     <button id="startBtn" class="playBtn" type="button">▶ START</button>
     <p class="fine">Needs camera for the full AR feel.<br>No camera? No problem — you get a cozy room instead.</p>
@@ -415,9 +415,13 @@ function drawRoom() {
 /* ============================== GL setup ============================== */
 const glCanvas = document.getElementById('gl');
 let renderer = null, scene = null;
-const CAM_BASE = new THREE.Vector3(0, 1.92, 4.4);
-const CAM_LOOK = new THREE.Vector3(0, 0.05, -1.05);
+/* FIRST-PERSON GUNNER VIEW (Cherie, Nov 14): the camera sits at the
+   gunner's spot, right behind the cannon breech — no character in frame,
+   the cannon alone occupies a modest strip at the bottom-center. */
+const CAM_BASE = new THREE.Vector3(0, 0.98, 2.94);
+const CAM_LOOK = new THREE.Vector3(0, 0.10, -1.05);
 let shakeT = 0;
+let recoil = 0;
 
 function resize() {
   W = window.innerWidth; H = window.innerHeight;
@@ -448,7 +452,8 @@ function blobShadow(parent, x, z, r, opacity) {
   parent.add(m); return m;
 }
 
-/* cat figure from primitives — used for the gunner + statues */
+/* cat figure from primitives — used for the statues (the gunner is now
+   first-person: the player IS the gunner, so no cat is built for them) */
 function buildCat(colorMain, colorBelly) {
   const g = new THREE.Group();
   const fur = mat(colorMain, 0.95), belly = mat(colorBelly || colorMain, 0.95);
@@ -484,37 +489,71 @@ let targets = [];   // {group, x, z, r, h, alive, kind}
 let craters = [];
 
 function buildFortress() {
+  /* FIRST-PERSON GUNNER VIEW (Cherie, Nov 14): the tower, battlements,
+     flag and gunner cat are GONE — they only existed for the old
+     behind-the-fortress camera, and their backs filled the frame. What
+     remains is YOUR cannon, seen from right behind the breech.
+     ROUND 2 — SLIM + GHOSTED (Cherie, Nov 14, later): "Even less of
+     cannon because we don't want it to block the view… make it more see
+     through kind of like original punch out game where it's mesh or just
+     make it ghosted opaque." So the whole cannon shrank by roughly half,
+     sank lower on its mount, and every cannon material is now
+     semi-transparent (opacity 0.40; the muzzle ring + sight bead stay at
+     0.62–0.65 so the aim direction still reads) — a Punch-Out!! ghost
+     weapon hugging the bottom-center. The yaw/pitch pivot GROUPS sit
+     exactly where they always did, so aim, the solver, the arc preview
+     and muzzlePos() ballistics are byte-for-byte as before; only the
+     barrel mesh rides 0.10 lower inside the pitch group (parallel to
+     the shot line), and the shell still spawns at the muzzle and
+     visibly leaves it. */
   fortress = new THREE.Group();
   fortress.position.copy(FORT_POS);
-  const stone = mat(0x9aa3ad, 0.95), stoneD = mat(0x767f88, 0.95), wood = mat(0x8a5a33, 0.9);
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.72, 0.16, 8), stoneD);
-  base.position.y = 0.08; fortress.add(base);
-  box(fortress, 0.78, 0.44, 0.78, 0, 0.38, 0, stone);
-  // battlements
-  for (let i = 0; i < 4; i++) {
-    const a = i * Math.PI / 2 + Math.PI / 4;
-    box(fortress, 0.16, 0.14, 0.16, Math.sin(a) * 0.32, 0.67, Math.cos(a) * 0.32, stoneD);
-  }
-  box(fortress, 0.86, 0.07, 0.86, 0, 0.615, 0, wood); // deck
-  // cannon: yaw group -> pitch group -> barrel
+  // ghost materials — local to the cannon (NOT the shared mat() cache,
+  // so targets/statues keep their solid materials)
+  const ghost = (color, rough, op) => new THREE.MeshStandardMaterial({
+    color, roughness: rough, metalness: 0.02, transparent: true, opacity: op, depthWrite: false
+  });
+  const wood = ghost(0x8a5a33, 0.9, 0.40), woodD = ghost(0x6f4525, 0.9, 0.40);
+  const iron = ghost(0x3c4148, 0.5, 0.40), ironD = ghost(0x2f3339, 0.5, 0.40);
+  const postMat = ghost(0x4e3018, 0.95, 0.40);
+  const ringMat = ghost(0x2f3339, 0.5, 0.62); // muzzle ring: stronger, anchors the aim read
+  // slim center pedestal down to a flat floor plate (grounds the cannon;
+  // it leans away from the gunner and hides behind the breech/carriage, so
+  // from the gunner's seat it reads as one narrow ghost spine at the very
+  // bottom-center — NOT a splayed trestle filling the frame)
+  const post = box(fortress, 0.06, 0.52, 0.08, 0, 0.27, -0.10, postMat);
+  post.rotation.x = 0.16;
+  const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.135, 0.035, 18), postMat);
+  plate.position.set(0, 0.018, -0.14); fortress.add(plate);
+  box(fortress, 0.20, 0.04, 0.26, 0, 0.545, -0.02, woodD); // mount cap under the pivot
+  // cannon: yaw group -> pitch group -> barrel (same pivot as the old build)
   cannonYaw = new THREE.Group(); cannonYaw.position.set(0, 0.65, 0.05); fortress.add(cannonYaw);
   cannonPitch = new THREE.Group(); cannonYaw.add(cannonPitch);
-  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.075, 0.46, 12), mat(0x3c4148, 0.5));
-  barrel.rotation.x = Math.PI / 2; barrel.position.z = -0.16; cannonPitch.add(barrel);
-  const breech = new THREE.Mesh(new THREE.SphereGeometry(0.095, 12, 10), mat(0x2f3339, 0.5));
-  cannonPitch.add(breech);
-  box(cannonYaw, 0.3, 0.07, 0.3, 0, -0.06, 0.02, wood);
-  // gunner cat on the deck
-  gunnerCat = buildCat(0xf59b3c, 0xffe3c2);
-  gunnerCat.scale.setScalar(0.92);
-  gunnerCat.position.set(0.24, 0.65, 0.22);
-  gunnerCat.rotation.y = Math.PI - 0.4; // cat model faces +z; the field is -z, so turn it around
-  fortress.add(gunnerCat);
-  // flag
-  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.62, 8), wood);
-  pole.position.set(-0.3, 0.95, 0.28); fortress.add(pole);
-  flagMesh = box(fortress, 0.26, 0.15, 0.015, -0.17, 1.18, 0.28, mat(0xe84f6d, 0.7));
-  blobShadow(fortress, 0, 0, 0.85, 0.30);
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.040, 0.46, 14), iron);
+  barrel.rotation.x = Math.PI / 2; barrel.position.set(0, -0.10, -0.15); cannonPitch.add(barrel);
+  const muzzleRing = new THREE.Mesh(new THREE.CylinderGeometry(0.060, 0.060, 0.055, 14), ringMat);
+  muzzleRing.rotation.x = Math.PI / 2; muzzleRing.position.set(0, -0.10, -0.3625); cannonPitch.add(muzzleRing);
+  // tiny sight bead on top of the muzzle ring — the aim-direction anchor
+  box(cannonPitch, 0.016, 0.030, 0.016, 0, -0.032, -0.3625, ghost(0x2f3339, 0.5, 0.65));
+  const breech = new THREE.Mesh(new THREE.SphereGeometry(0.068, 14, 12), ironD);
+  breech.position.set(0, -0.10, 0.03); cannonPitch.add(breech);
+  const knob = new THREE.Mesh(new THREE.SphereGeometry(0.024, 10, 8), wood);
+  knob.position.set(0, -0.10, 0.095); cannonPitch.add(knob);
+  // carriage cheeks + spoked-look wheels either side of the breech
+  box(cannonYaw, 0.035, 0.09, 0.20, -0.082, -0.155, 0.0, wood);
+  box(cannonYaw, 0.035, 0.09, 0.20, 0.082, -0.155, 0.0, wood);
+  const wheelGeo = new THREE.CylinderGeometry(0.088, 0.088, 0.030, 16);
+  for (const sx of [-1, 1]) {
+    const wheel = new THREE.Mesh(wheelGeo, woodD);
+    wheel.rotation.z = Math.PI / 2;
+    wheel.position.set(sx * 0.118, -0.175, 0.0);
+    cannonYaw.add(wheel);
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.030, 0.030, 0.036, 10), iron);
+    hub.rotation.z = Math.PI / 2; hub.position.copy(wheel.position); cannonYaw.add(hub);
+  }
+  // ghost parts composite last so the Punch-Out see-through blends cleanly
+  fortress.traverse(o => { if (o.isMesh) o.renderOrder = 20; });
+  blobShadow(fortress, 0, 0, 0.26, 0.16);
   scene.add(fortress);
 }
 
@@ -550,7 +589,8 @@ function buildTarget(def) {
     const stoneC = mat(0xb9c0c7, 0.95);
     box(g, 0.4, 0.22, 0.4, 0, 0.11, 0, mat(0x8d959e, 0.95));
     const cat = buildCat(0xb9c0c7, 0xcdd4da);
-    cat.position.y = 0.22; cat.rotation.y = Math.PI; // face the fortress (+z)
+    cat.position.y = 0.22; // buildCat faces +z already = toward the gunner;
+    // the old build rotated it PI here, which showed the player its BACK
     g.add(cat);
     h = 0.82;
   } else { // crates
@@ -791,6 +831,7 @@ function fire() {
   scene.add(mesh);
   shell = { mesh, p: muzzlePos(), v: aimVelocity(), trailAcc: 0 };
   mesh.position.copy(shell.p);
+  recoil = 1; // the FP cannon kicks back toward the gunner on firing
   sndLob();
   whistleStart();
   updateHUD();
@@ -934,7 +975,7 @@ function initGL() {
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
   renderer.setSize(W, H);
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(60, W / H, 0.05, 100);
+  camera = new THREE.PerspectiveCamera(68, W / H, 0.05, 100);
   camera.position.copy(CAM_BASE);
   camera.lookAt(CAM_LOOK);
   baseCamQ = camera.quaternion.clone();
@@ -961,12 +1002,23 @@ function frame(t) {
   if (camera) {
     let sx = 0, sy = 0;
     if (shakeT > 0) { shakeT -= dt; sx = rand(-1, 1) * shakeT * 0.05; sy = rand(-1, 1) * shakeT * 0.05; }
-    camera.position.set(CAM_BASE.x + parX * 0.4 + sx, CAM_BASE.y - parY * 0.2 + sy, CAM_BASE.z);
+    // gentler positional drift than the old build, so the FP cannon stays
+    // anchored at the bottom-center of the frame while looking around
+    camera.position.set(CAM_BASE.x + parX * 0.22 + sx, CAM_BASE.y - parY * 0.12 + sy, CAM_BASE.z);
     if (!applyMotionCamera()) camera.lookAt(CAM_LOOK.x - parX * 0.22, CAM_LOOK.y, CAM_LOOK.z);
     if (shakeT > 0) camera.position.y += sy;
   }
   if (flagMesh) flagMesh.rotation.y = Math.sin(t * 0.006) * 0.3;
   if (gunnerCat && phase === 'aim' && !shell) gunnerCat.position.y = 0.65 + Math.sin(t * 0.003) * 0.012;
+  // FP cannon recoil: kick toward the gunner (+z) with a fast spring decay
+  if (fortress) {
+    if (recoil > 0.002) {
+      recoil *= Math.exp(-dt * 8);
+      fortress.position.set(FORT_POS.x, FORT_POS.y + recoil * 0.012, FORT_POS.z + recoil * 0.07);
+    } else if (fortress.position.z !== FORT_POS.z) {
+      fortress.position.copy(FORT_POS);
+    }
+  }
   stepShell(dt);
   stepTrail(dt);
   updateSpawns();
