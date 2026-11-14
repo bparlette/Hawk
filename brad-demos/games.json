@@ -2994,6 +2994,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Mr. Baseball 2",
    "url": "../games/mr-baseball-2/"
+  },
+  {
+   "category": "AR",
+   "desc": "The defender in AR — neon ledges floating in your room, toss & swing",
+   "id": "mr-baseball-2-ar",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Mr. Baseball 2 AR",
+   "url": "../games/mr-baseball-2-ar/"
   }
  ]
 }
