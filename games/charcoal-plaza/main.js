@@ -417,79 +417,63 @@ const shadeScene = new THREE.Scene();
 }
 const shade = createShade(renderer, shared, shadeScene, { sun: SUN, size: [2048, 2048], box: [30, 26], centre: [0, 1, -3], back: 110, near: 30, far: 240 });
 
-// --- Her, walking: the Juniper walk GLB under this same painter. Her own texture survives only
-//     as VALUE — each texel's luminance places it in the charcoal range — and she is modeled by
-//     the same sun and shade pictures as everything else: a deep velvet mass on her shadow side,
-//     smudged grays across her middle, and on her strongest-lit planes the tone is erased back
-//     out to the paper, the kneaded-eraser move that is charcoal's only way to make a highlight.
-//     The clip plays on her bones; her hips are re-anchored over herPos every tick so her body —
-//     not the bone — stays where the controls put her, and she travels at the speed her stride
-//     was measured to cover (see REF_SPEED below), so feet and ground agree.
-function paintTex(shared, srcMat) {
-  const tint = srcMat.color ? [srcMat.color.r, srcMat.color.g, srcMat.color.b] : [1, 1, 1];
-  let map = srcMat.map || null;
-  if (!map) {
-    map = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
-    map.needsUpdate = true;
-  }
-  return new THREE.ShaderMaterial({
-    glslVersion: THREE.GLSL3,
-    side: THREE.DoubleSide,
-    uniforms: { ...shared, tMap: { value: map }, uTint: { value: new THREE.Color(...tint) } },
-    vertexShader: /* glsl */ `
-      #include <common>
-      #include <skinning_pars_vertex>
-      out vec3 vWorld; out vec3 vN; out vec3 vBind; out vec2 vUv;
-      void main() {
-        #include <beginnormal_vertex>
-        #include <skinbase_vertex>
-        #include <skinnormal_vertex>
-        #include <begin_vertex>
-        #include <skinning_vertex>
-        vec4 w = modelMatrix * vec4(transformed, 1.0);
-        vWorld = w.xyz;
-        vN = normalize(mat3(modelMatrix) * objectNormal);
-        vBind = position;
-        vUv = uv;
-        gl_Position = projectionMatrix * viewMatrix * w;
-      }`,
-    fragmentShader: /* glsl */ `
-      ${COMMON}
-      uniform sampler2D tMap; uniform vec3 uTint;
-      in vec3 vWorld; in vec3 vN; in vec3 vBind; in vec2 vUv;
-      layout(location = 0) out vec4 outC;
-      void main() {
-        vec3 Nn = normalize(vN);
-        if (!gl_FrontFacing) Nn = -Nn;
-        vec3 tex = texture(tMap, vUv).rgb * uTint;
-        float lum = dot(tex, vec3(0.3, 0.59, 0.11)); // her texture read as pure value: charcoal keeps no colour
-        float n = texture(tNoise, vBind.xy * 0.024 + vBind.z * 0.017).r;
-        float m = texture(tNoise, vBind.yx * 0.007 + 0.4).g;
-        float lit = sunAt(vWorld + Nn * 0.08) * clamp(dot(Nn, uSunDir) * 1.15 + 0.18, 0.0, 1.0);
-        // her tonal place: what the texel is worth, pushed up where the sun models her and down
-        // where it leaves her — then blended through the same smudged paint3 as the whole plaza
-        float tone = clamp(lum * 1.15 + (lit - 0.5) * 0.8, 0.0, 1.0);
-        vec3 c = paint3(vec3(0.82, 0.80, 0.76), vec3(0.50, 0.485, 0.46), vec3(0.095, 0.09, 0.083), tone, n);
-        // ERASED HIGHLIGHTS: where the light is strongest, the kneaded eraser lifts the tone back
-        // out to paper white — crisp-ish pale shapes sitting on the smudge, gated toward her
-        // brighter materials so the black of her shadow side is never touched by them
-        float erase = smoothstep(0.74, 0.95, lit) * (0.35 + 0.65 * smoothstep(0.35, 0.8, lum));
-        c = mix(c, vec3(0.94, 0.92, 0.87), erase * 0.9);
-        c += uBounce * max(-Nn.y, 0.0) * (1.0 - lit) * 0.5;
-        c *= 0.94 + 0.12 * m; // powder variation across her surface, so the tone is hand-worked, not sprayed
-        if (!gl_FrontFacing) c *= 0.6;
-        // no rim line, no ink: her silhouette is held by the velvet black of her shadow side
-        // against the pale masses behind her, exactly as a charcoal figure holds an edge
-        outC = vec4(hazed(c, vWorld), 1.0);
-      }`,
-  });
-}
-const gltf = await new GLTFLoader().loadAsync('./assets/juniper_walk.glb');
+// --- Her, walking: NOT the old Juniper walk GLB under this painter any more. Following the
+//     Oil Paint pilot (plaza-real-walker), the hero is the verified walk-fix v2 pool rig,
+//     brought in AS IS and UNPAINTED — the only non-charcoal thing in the world. She keeps
+//     her own PBR materials and real light (the two scene lights below, hers alone: every
+//     charcoal surface here uses custom shaders that ignore scene lights), and the finish
+//     pass leaves her alone via the frame-alpha marker (see finish.js). What the painter
+//     used to do to her — texture read as pure value, smudged grays, highlights erased back
+//     out to the paper — went away with the paintTex() shader that did it. The clip plays on
+//     her bones; her hips are re-anchored over herPos every tick so her body — not the bone —
+//     stays where the controls put her, and she travels at the speed her stride was measured
+//     to cover (see REF_SPEED below), so feet and ground agree.
+// --- daylight for the one unpainted thing: colours follow the pool-stroll recipe this rig
+//     was proven under; the sun is swung to the plaza's own SUN so her shading agrees with
+//     the drawn light (and with the figure shadow the shade pass draws of her each frame).
+//     No shadow maps — her ground shadow is the shade system's figure picture, as before.
+scene.add(new THREE.HemisphereLight(0xcfeeff, 0x8a7a5f, 1.0));
+const herSun = new THREE.DirectionalLight(0xfff1d6, 1.9);
+herSun.position.copy(SUN).multiplyScalar(40);
+scene.add(herSun);
+
+const gltf = await new GLTFLoader().loadAsync('./assets/pool_colorfix_v2.glb');
 const HER_MESH_OBJS = [];
 let hipsBone = null, footL = null, footR = null;
 gltf.scene.traverse((o) => {
   if (o.isMesh) {
-    o.material = paintTex(shared, o.material);
+    // AS IS — she keeps her own materials. Three load-time normalizations, all carried over
+    // from the pool games and the oil pilot: (1) Hunyuan GLBs omit metallicFactor, whose
+    // glTF default of 1.0 renders near-black without an environment map, so metalness goes
+    // to 0; (2) she writes frame-target alpha 0.5 — the marker the finish reads to leave a
+    // surface's detail and colour alone (finish.js), so the charcoal shafts/rub/wipe/grade
+    // never touch her. The alpha is written by the fragment-tail injection in (3), NOT by
+    // material.opacity: this three version forces alpha to 1.0 for opaque built-in
+    // materials, so opacity alone never reaches the framebuffer (measured: a raw shader
+    // writing 0.5 lands 128 in the target; MeshStandardMaterial at opacity 0.5 lands 255).
+    // opacity is still set so the intent is on the material; the injection does the work.
+    // Blending stays off and depth writing stays on, so nothing about how she renders or
+    // occludes changes — only the alpha byte in the picture differs. (3) the sRGB encode
+    // appended to her fragment tail restores her own display transform: her material
+    // outputs linear light, which in her own games the renderer tone-mapped and
+    // sRGB-encoded on the way to the screen; this plaza's frame is a linear-display
+    // pipeline (the painter's shaders author display-ready values and the finish writes
+    // them raw), so without the encode she reads near-black. Her textures, colours and
+    // shading model are untouched — the same class of load-time fix as (1), not a treatment.
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    for (const m of mats) {
+      if ('metalness' in m) m.metalness = 0;
+      m.opacity = 0.5;
+      m.onBeforeCompile = (sh) => {
+        sh.fragmentShader = sh.fragmentShader.replace(
+          '#include <colorspace_fragment>',
+          `#include <colorspace_fragment>
+           gl_FragColor.rgb = mix(gl_FragColor.rgb * 12.92,
+             1.055 * pow(max(gl_FragColor.rgb, vec3(0.0)), vec3(1.0 / 2.4)) - 0.055,
+             step(vec3(0.0031308), gl_FragColor.rgb));
+           gl_FragColor.a = 0.5; // the finish's hands-off marker, per (2) above`);
+      };
+    }
     o.frustumCulled = false;
     o.layers.enable(1); // the shade system's figure camera (layer 1) must see her for her shadow
     HER_MESH_OBJS.push(o);
