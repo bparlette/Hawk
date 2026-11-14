@@ -2930,6 +2930,70 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Castle Busters: Vice × Hyrule",
    "url": "../games/castle-busters/"
+  },
+  {
+   "category": "Originals",
+   "desc": "Dig the trench, pile the wall, hold back 5 waves — sand ASMR vs the sea",
+   "id": "beach-trench",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Beach Trench!",
+   "url": "../games/beach-trench/"
+  },
+  {
+   "category": "Arcade Hub",
+   "desc": "Light cycles vs 3 AI — trap them in your trail",
+   "id": "temporal-trails",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Temporal Trails",
+   "url": "../games/temporal-trails/"
+  },
+  {
+   "category": "Arcade Hub",
+   "desc": "Microgames at rising speed — 4 seconds each, 3 hearts",
+   "id": "microgame-rush",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Microgame Rush",
+   "url": "../games/microgame-rush/"
+  },
+  {
+   "category": "Arcade Hub",
+   "desc": "Last one standing on crumbling hex floors over lava — you + 5 bots",
+   "id": "hexagon-heat",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Hexagon Heat",
+   "url": "../games/hexagon-heat/"
+  },
+  {
+   "category": "Arcade Hub",
+   "desc": "Bullet-hell dodge: graze bullets, chain the multiplier, survive 90 seconds",
+   "id": "bullet-barrage",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Bullet Barrage",
+   "url": "../games/bullet-barrage/"
+  },
+  {
+   "category": "Arcade Hub",
+   "desc": "Shove through the penguin crowd across the ice to the fish flag",
+   "id": "pushy-penguins",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Pushy Penguins",
+   "url": "../games/pushy-penguins/"
+  },
+  {
+   "category": "Viral Demos",
+   "desc": "Top-down Vice beach town: sword, pots, cars, cuccos — Zelda × GTA sandbox",
+   "id": "hyrule-vice",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Hyrule Vice",
+   "url": "../games/hyrule-vice/"
+  },
+  {
+   "category": "Classic Homebrew",
+   "desc": "Toss & swing — defend the left across 5 floors",
+   "id": "mr-baseball-2",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Mr. Baseball 2",
+   "url": "../games/mr-baseball-2/"
   }
  ]
 }

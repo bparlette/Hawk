@@ -585,8 +585,15 @@ function makeBlobTexture() {
 }
 let blobGeo = null, blobMat = null;
 
+/* Ground clip plane (Nov 14): with the fake ground patch gone, zombie parts
+   below y=0 are clipped away instead of occluded — a rising zombie is only
+   drawn from the floor line up, so it truly bursts out of the real surface
+   (and a killed one sinks back into it). Nothing is rendered AT the floor. */
+const GROUND_CLIP = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+
 function initGL() {
   renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gl'), alpha: true, antialias: true });
+  renderer.localClippingEnabled = true;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setClearColor(0x000000, 0);
@@ -601,26 +608,13 @@ function initGL() {
   dirLight.position.set(2.5, 4.5, 3.0);
   scene.add(dirLight);
   blobGeo = new THREE.PlaneGeometry(1, 1);
-  blobMat = new THREE.MeshBasicMaterial({ map: makeBlobTexture(), transparent: true, depthWrite: false, opacity: 0.75 });
+  blobMat = new THREE.MeshBasicMaterial({ map: makeBlobTexture(), transparent: true, depthWrite: false, opacity: 0.75, clippingPlanes: [GROUND_CLIP] });
 }
 
-/* the ground — a big dark dirt patch the horde crosses (reads in AR + fallback) */
-function buildGround() {
-  const mat = new THREE.Mesh(
-    new THREE.CircleGeometry(8.5, 40),
-    new THREE.MeshStandardMaterial({ color: 0x3a3128, roughness: 1, transparent: true, opacity: 0.94 })
-  );
-  mat.rotation.x = -Math.PI / 2;
-  mat.position.set(0, -0.01, -0.5);
-  scene.add(mat);
-  const inner = new THREE.Mesh(
-    new THREE.CircleGeometry(5.2, 36),
-    new THREE.MeshStandardMaterial({ color: 0x463b2f, roughness: 1, transparent: true, opacity: 0.6 })
-  );
-  inner.rotation.x = -Math.PI / 2;
-  inner.position.set(0, -0.004, -0.5);
-  scene.add(inner);
-}
+/* NO ground patch (AR-MAX rule, Nov 14): the horde crosses the player's REAL
+   floor — the camera feed shows through everywhere. Zombies still read as
+   grounded via their burst-through spawn (crack decal + debris + dust at the
+   spawn point) and their soft per-zombie contact blob shadow. */
 
 /* ============================== zombies (all code-built) ============================== */
 const SKIN_MATS = [0x7fae4c, 0x6f9e44, 0x8fae56, 0x74985a].map(c =>
@@ -648,6 +642,7 @@ function buildZombieMesh(type) {
   const parts = [];
   const add = (geo, mat, x, y, z, zone) => {
     const m = new THREE.Mesh(geo, mat.clone());   // clone: hit-flash tints per-zombie emissive
+    m.material.clippingPlanes = [GROUND_CLIP];    // buried half stays invisible (see GROUND_CLIP)
     m.position.set(x, y, z);
     m.userData.zone = zone;
     m.userData.zombieRoot = g;
@@ -1241,7 +1236,6 @@ document.getElementById('againBtn').addEventListener('click', () => {
 /* ============================== boot + test hook ============================== */
 resize();
 initGL();
-buildGround();
 resize();
 updateHUD();
 requestAnimationFrame(frame);

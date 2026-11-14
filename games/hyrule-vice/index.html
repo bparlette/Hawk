@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>HYRULE VICE</title>
+<style>
+  html,body{margin:0;padding:0;background:#191324;height:100%;overflow:hidden;touch-action:none;
+    -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
+    font-family:ui-rounded,"Arial Rounded MT Bold",Arial,sans-serif}
+  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#191324}
+  #stage{position:relative;width:min(100vw,calc(100vh*420/860));aspect-ratio:420/860;max-height:100vh}
+  canvas{width:100%;height:100%;display:block;image-rendering:pixelated;background:#0f6f96}
+  #hud{position:absolute;top:0;left:0;right:0;z-index:1200;display:flex;justify-content:space-between;
+    align-items:flex-start;padding:8px 10px;pointer-events:none}
+  #hearts{display:flex;gap:2px}
+  #hearts img{width:26px;height:22px;image-rendering:pixelated}
+  #hearts img.off{opacity:.18;filter:grayscale(1)}
+  #stars{font-size:24px;letter-spacing:2px;color:#3a3f4a;text-shadow:0 2px 0 #191324;line-height:1;padding-top:2px}
+  #stars .on{color:#f5d90a}
+  #gembox{display:flex;align-items:center;gap:4px;background:rgba(25,19,36,.55);border-radius:12px;padding:3px 9px 3px 5px}
+  #gembox img{width:18px;height:22px;image-rendering:pixelated}
+  #gemn{color:#8fe3c0;font-weight:900;font-size:19px}
+  #overlay{position:absolute;inset:0;z-index:1300;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;background:rgba(25,19,36,.72);text-align:center;padding:20px;box-sizing:border-box}
+  #overlay h1{margin:0 0 4px;font-size:44px;letter-spacing:2px;color:#ec2c8c;
+    text-shadow:3px 3px 0 #14b8a6,6px 6px 0 #191324}
+  #overlay h2{margin:0 0 14px;font-size:19px;color:#5eead4;letter-spacing:4px}
+  #overlay p{color:#f2f2ee;font-size:16px;line-height:1.45;max-width:320px;margin:4px 0}
+  #overlay .big{font-size:22px}
+  #startbtn{margin-top:16px;pointer-events:auto;background:#ec2c8c;color:#fff;border:3px solid #191324;
+    border-radius:14px;font-size:21px;font-weight:900;padding:12px 34px;box-shadow:0 4px 0 #191324;cursor:pointer}
+  #startbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #191324}
+  .hidden{display:none!important}
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+  <canvas id="cv" width="420" height="860"></canvas>
+  <div id="hud">
+    <div id="hearts"></div>
+    <div id="stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+    <div id="gembox"><img src="sprites/png/gem_base.png" alt=""><span id="gemn">0/10</span></div>
+  </div>
+  <div id="overlay">
+    <h1>HYRULE VICE</h1>
+    <h2>VICE CITY × HYRULE</h2>
+    <p class="big">🗣️ The heroine at the ⛲ fountain needs <b style="color:#8fe3c0">💎×10</b> to open the chest.</p>
+    <p>⚔️ Smash pots · 🚗 steal a car · ⭐ don't get caught<br>🐔 And whatever you do… don't hit a cucco.</p>
+    <button id="startbtn">▶ PLAY</button>
+  </div>
+</div></div>
+
+<script>
+/* ---- gptouch.js inlined (kit standard, gamepress docs/TOUCH.md) so the game also runs from file:// ---- */
+/**
+ * kit/gptouch.js — Modern mobile touch standard for gamepress games.
+ *
+ * The industry-standard mobile layout (Brawl Stars / Genshin / Archero style):
+ *   LEFT HALF  (x < innerWidth/2): floating virtual joystick. No fixed pad —
+ *              touching anywhere anchors the stick under the thumb, drag gives
+ *              a normalized vector clamped to maxRadius, release resets.
+ *   RIGHT HALF: circular action buttons in a fixed bottom-right cluster
+ *              (default A=primary, B=secondary). Generous touch targets,
+ *              scale-tween on press.
+ *
+ * Touch hygiene: PointerEvent API with per-pointerId tracking, so the joystick
+ * and buttons never cancel each other. touch-action:none kills scroll/zoom
+ * rubber-banding.
+ *
+ * Usage (game template, ~5 lines):
+ *   import { TouchController, isTouchDevice } from '../_vendor/gptouch.js';
+ *   const TC = isTouchDevice() ? new TouchController({
+ *     buttons: [ { id: 'a', label: '⚔' }, { id: 'b', label: '🛡' } ],
+ *   }) : null;
+ *   // in update(dt): call ONCE per frame
+ *   const ti = TC ? TC.getInput() : null;
+ *   const left  = (ti && ti.x < -0.35) || g.keys.ArrowLeft;
+ *   const right = (ti && ti.x >  0.35) || g.keys.ArrowRight;
+ *   const atk   = (ti && ti.aPressed)   || g.pressed.Space;
+ *
+ * Contract:
+ *   - Zero dependencies, ESM, no THREE / canvas needed (DOM overlay).
+ *   - No-op on desktop: isTouchDevice() is false, so TC is null and the
+ *     game's keyboard path runs untouched. `?touch=0` forces it off.
+ *   - getInput() returns the state; *Pressed edge flags auto-consume on read,
+ *     so call it exactly once per frame.
+ *   - Headless/bot runs (drive, botcheck) see no touch device -> null -> the
+ *     old g.btn/keyboard path runs, bots unaffected.
+ */
+
+/** True when this device has touch input. Honors ?touch=0 to force off. */
+function isTouchDevice() {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+  try {
+    if (new URLSearchParams(location.search).get('touch') === '0') return false;
+  } catch (e) { /* non-browser */ }
+  return ('ontouchstart' in window)
+    || (navigator.maxTouchPoints > 0)
+    || (typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches);
+}
+
+/**
+ * Pure: clamp a drag delta to maxRadius, normalize to [-1, 1].
+ * Returns { x, y, mag } where mag is 0..1 throw distance.
+ */
+function clampStick(dx, dy, maxRadius) {
+  const dist = Math.hypot(dx, dy);
+  if (dist < 1e-9 || maxRadius <= 0) return { x: 0, y: 0, mag: 0 };
+  const cl = Math.min(dist, maxRadius);
+  const nx = dx / dist, ny = dy / dist, m = cl / maxRadius;
+  return { x: nx * m, y: ny * m, mag: m };
+}
+
+/**
+ * Pure: clampStick + deadzone. Below deadzone -> zero; above rescales so the
+ * usable throw still spans 0..1 (full-throw feel preserved).
+ */
+function stickVector(dx, dy, maxRadius, deadzone = 0) {
+  const c = clampStick(dx, dy, maxRadius);
+  if (c.mag < deadzone || c.mag < 1e-9) return { x: 0, y: 0, mag: 0 };
+  const m = deadzone >= 1 ? 1 : (c.mag - deadzone) / (1 - deadzone);
+  return { x: (c.x / c.mag) * m, y: (c.y / c.mag) * m, mag: m };
+}
+
+const BTN_STYLE = {
+  position: 'absolute',
+  borderRadius: '50%',
+  border: '2px solid rgba(255,255,255,.45)',
+  background: 'rgba(20,20,35,.38)',
+  color: '#fff',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontFamily: 'system-ui, sans-serif',
+  fontWeight: '800',
+  transform: 'scale(1)',
+  transition: 'transform .06s ease, background .06s ease',
+  WebkitTapHighlightColor: 'transparent',
+  userSelect: 'none',
+  pointerEvents: 'auto',
+  touchAction: 'none',
+};
+
+class TouchController {
+  /**
+   * options:
+   *   buttons:  [{ id, label, size? }] — default A/B. Up to 4 supported.
+   *   maxRadius: stick throw in px (default 56)
+   *   deadzone:  stick deadzone 0..1 (default 0.18)
+   *   force:     build the DOM even on non-touch devices (testing)
+   *   zIndex:    overlay z-index (default 1000)
+   */
+  constructor(options = {}) {
+    this.maxRadius = options.maxRadius || 56;
+    this.deadzone = options.deadzone ?? 0.18;
+    this.zIndex = options.zIndex || 1000;
+    this.enabled = false;
+    this.vector = { x: 0, y: 0 };
+    this._buttons = {};   // id -> { held, pressed, el, pointerId, def }
+    this._defs = (options.buttons && options.buttons.length ? options.buttons : [
+      { id: 'a', label: 'A' },
+      { id: 'b', label: 'B' },
+    ]).slice(0, 4);
+    this._activeStickId = null;
+    this._stickOrigin = { x: 0, y: 0 };
+    this._els = null;
+    this._onDown = null; this._onMove = null; this._onUp = null;
+
+    const want = options.force === true || isTouchDevice();
+    if (want && typeof document !== 'undefined') {
+      this._initDOM();
+      this._bindEvents();
+      this.enabled = true;
+    }
+  }
+
+  _initDOM() {
+    const overlay = document.createElement('div');
+    Object.assign(overlay.style, {
+      position: 'fixed', inset: '0', width: '100vw', height: '100vh',
+      pointerEvents: 'auto', touchAction: 'none', userSelect: 'none',
+      WebkitUserSelect: 'none', WebkitTapHighlightColor: 'transparent',
+      zIndex: String(this.zIndex),
+    });
+
+    const base = document.createElement('div');
+    Object.assign(base.style, {
+      position: 'absolute', width: this.maxRadius * 2 + 'px', height: this.maxRadius * 2 + 'px',
+      borderRadius: '50%', border: '2px solid rgba(255,255,255,.4)',
+      background: 'rgba(255,255,255,.07)', transform: 'translate(-50%,-50%)',
+      display: 'none', pointerEvents: 'none',
+    });
+    const knob = document.createElement('div');
+    Object.assign(knob.style, {
+      position: 'absolute', width: Math.round(this.maxRadius * 0.92) + 'px', height: Math.round(this.maxRadius * 0.92) + 'px',
+      borderRadius: '50%', background: 'rgba(255,255,255,.5)',
+      boxShadow: '0 0 12px rgba(255,255,255,.35)', transform: 'translate(-50%,-50%)',
+      display: 'none', pointerEvents: 'none',
+    });
+
+    overlay.appendChild(base);
+    overlay.appendChild(knob);
+
+    // Right-side circular cluster, primary button biggest and lowest.
+    this._defs.forEach((def, i) => {
+      const size = def.size || (i === 0 ? 84 : 64);
+      const el = document.createElement('div');
+      Object.assign(el.style, BTN_STYLE, {
+        right: (20 + i * 92) + 'px',
+        bottom: (96 - i * 30) + 'px',
+        width: size + 'px', height: size + 'px',
+        fontSize: Math.round(size * 0.32) + 'px',
+      });
+      el.textContent = def.label || def.id.toUpperCase();
+      el.dataset.gptouch = def.id;
+      overlay.appendChild(el);
+      this._buttons[def.id] = { held: false, pressed: false, el, pointerId: null, def };
+    });
+
+    document.body.appendChild(overlay);
+    this._els = { overlay, base, knob };
+  }
+
+  _hitButton(x, y) {
+    for (const id in this._buttons) {
+      const b = this._buttons[id];
+      const r = b.el.getBoundingClientRect();
+      // generous touch target: pad the rect by 8px
+      if (x >= r.left - 8 && x <= r.right + 8 && y >= r.top - 8 && y <= r.bottom + 8) return b;
+    }
+    return null;
+  }
+
+  _bindEvents() {
+    const { overlay, base, knob } = this._els;
+
+    this._onDown = (e) => {
+      if (e.cancelable) e.preventDefault(); // every pointer on the overlay is game input, never a browser gesture
+      // Buttons win over the stick no matter which half they're on.
+      const b = this._hitButton(e.clientX, e.clientY);
+      if (b && b.pointerId === null) {
+        b.pointerId = e.pointerId;
+        b.held = true; b.pressed = true;
+        b.el.style.transform = 'scale(0.86)';
+        b.el.style.background = 'rgba(255,255,255,.45)';
+        e.preventDefault();
+        return;
+      }
+      // Left half: floating stick anchors under the thumb.
+      if (e.clientX < window.innerWidth / 2 && this._activeStickId === null && !b) {
+        this._activeStickId = e.pointerId;
+        this._stickOrigin = { x: e.clientX, y: e.clientY };
+        base.style.left = e.clientX + 'px'; base.style.top = e.clientY + 'px'; base.style.display = 'block';
+        knob.style.left = e.clientX + 'px'; knob.style.top = e.clientY + 'px'; knob.style.display = 'block';
+        e.preventDefault();
+      }
+    };
+
+    this._onMove = (e) => {
+      if (e.pointerId !== this._activeStickId) return;
+      const dx = e.clientX - this._stickOrigin.x;
+      const dy = e.clientY - this._stickOrigin.y;
+      const v = stickVector(dx, dy, this.maxRadius, this.deadzone);
+      this.vector.x = v.x; this.vector.y = v.y;
+      // Knob follows the clamped (pre-deadzone) throw so it tracks the thumb.
+      const c = clampStick(dx, dy, this.maxRadius);
+      const dist = Math.hypot(dx, dy) || 1e-9;
+      knob.style.left = (this._stickOrigin.x + (dx / dist) * c.mag * this.maxRadius) + 'px';
+      knob.style.top = (this._stickOrigin.y + (dy / dist) * c.mag * this.maxRadius) + 'px';
+      if (e.cancelable) e.preventDefault();
+    };
+
+    const release = (e) => {
+      if (e.pointerId === this._activeStickId) {
+        this._activeStickId = null;
+        this.vector.x = 0; this.vector.y = 0;
+        base.style.display = 'none'; knob.style.display = 'none';
+      }
+      for (const id in this._buttons) {
+        const b = this._buttons[id];
+        if (e.pointerId === b.pointerId) {
+          b.pointerId = null; b.held = false;
+          b.el.style.transform = 'scale(1)';
+          b.el.style.background = 'rgba(20,20,35,.38)';
+        }
+      }
+    };
+    this._onUp = release;
+
+    overlay.addEventListener('pointerdown', this._onDown);
+    overlay.addEventListener('pointermove', this._onMove);
+    overlay.addEventListener('pointerup', this._onUp);
+    overlay.addEventListener('pointercancel', this._onUp);
+    // Browser-gesture kill switch: iOS Safari pinch-zoom ignores
+    // touch-action alone, so swallow touchstart/touchmove outright and
+    // block Safari's proprietary gesture events. Without this, a second
+    // finger landing off-button starts a pinch and zooms the page.
+    this._onTouch = (e) => { if (e.cancelable) e.preventDefault(); };
+    overlay.addEventListener('touchstart', this._onTouch, { passive: false });
+    overlay.addEventListener('touchmove', this._onTouch, { passive: false });
+    this._onGesture = (e) => { e.preventDefault(); };
+    document.addEventListener('gesturestart', this._onGesture, { passive: false });
+    document.addEventListener('gesturechange', this._onGesture, { passive: false });
+  }
+
+  /**
+   * Read the current input. Call exactly once per frame — the *Pressed edge
+   * flags auto-consume on read. Returns { x, y } (stick, -1..1) plus one
+   * entry per button: { [id]: held, [id]Pressed: edge }.
+   */
+  getInput() {
+    const out = { x: this.vector.x, y: this.vector.y };
+    for (const id in this._buttons) {
+      const b = this._buttons[id];
+      out[id] = b.held;
+      out[id + 'Pressed'] = b.pressed;
+      b.pressed = false; // consume edge
+    }
+    // Convenience aliases when the default a/b layout is used.
+    if (!('a' in out)) { out.a = false; out.aPressed = false; }
+    if (!('b' in out)) { out.b = false; out.bPressed = false; }
+    return out;
+  }
+
+  /** Remove the overlay and unbind. Safe to call when disabled. */
+  destroy() {
+    if (!this._els) return;
+    const { overlay } = this._els;
+    overlay.removeEventListener('pointerdown', this._onDown);
+    overlay.removeEventListener('pointermove', this._onMove);
+    overlay.removeEventListener('pointerup', this._onUp);
+    overlay.removeEventListener('pointercancel', this._onUp);
+    if (this._onTouch) { overlay.removeEventListener('touchstart', this._onTouch); overlay.removeEventListener('touchmove', this._onTouch); }
+    if (this._onGesture) { document.removeEventListener('gesturestart', this._onGesture); document.removeEventListener('gesturechange', this._onGesture); }
+    overlay.remove();
+    this._els = null;
+    this.enabled = false;
+    this._buttons = {};
+  }
+}
+
+</script>
+<script>
+
+/* ================= sprites (PixelHand-authored, sprites/png/) ================= */
+const SPR = {};
+const SPR_FILES = {
+  hero_down0:'hero_down0',hero_down1:'hero_down1',hero_up0:'hero_up0',hero_up1:'hero_up1',
+  hero_left0:'hero_left0',hero_left1:'hero_left1',hero_right0:'hero_right0',hero_right1:'hero_right1',
+  guard_down0:'guard_down0',guard_down1:'guard_down1',guard_up0:'guard_up0',guard_up1:'guard_up1',
+  guard_left0:'guard_left0',guard_left1:'guard_left1',guard_right0:'guard_right0',guard_right1:'guard_right1',
+  heroine0:'heroine_idle0',heroine1:'heroine_idle1',
+  car_pink:'car_pink_body',car_teal:'car_teal_body',car_grape:'car_grape_body',
+  cucco_idle:'cucco_idle',cucco_flap:'cucco_flap',
+  chest_closed:'chest_closed',chest_open:'chest_open',
+  gem:'gem_base',heart:'heart_base',pot:'pot_base',palm:'palm_base',
+  t_water:'tile_water_base',t_sand:'tile_sand_base',t_road:'tile_road_base',t_walk:'tile_walk_base',
+  t_plaza:'tile_plaza_base',t_stone:'tile_stone_base',t_roof:'tile_roof_base',t_facade:'tile_facade_base'
+};
+let sprLoaded = 0, sprTotal = 0;
+for (const k in SPR_FILES) { sprTotal++; const im = new Image();
+  im.onload = () => sprLoaded++; im.src = 'sprites/png/' + SPR_FILES[k] + '.png'; SPR[k] = im; }
+
+/* ================= audio (WebAudio synth, iOS rules) ================= */
+let AC = null, master = null;
+function audioInit() {
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain(); master.gain.value = 0.5; master.connect(AC.destination);
+    const len = AC.sampleRate * 0.05, buf = AC.createBuffer(1, len, AC.sampleRate);
+    const src = AC.createBufferSource(); src.buffer = buf; src.connect(master); src.start();
+  } catch (e) { AC = null; }
+}
+function tone(f0, f1, dur, type, vol, when = 0) {
+  if (!AC) return; const t = AC.currentTime + when;
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'square'; o.frequency.setValueAtTime(f0, t);
+  o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
+  g.gain.setValueAtTime(vol || 0.2, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.02);
+}
+function noise(dur, vol, freq, when = 0) {
+  if (!AC) return; const t = AC.currentTime + when;
+  const len = Math.max(1, AC.sampleRate * dur), buf = AC.createBuffer(1, len, AC.sampleRate);
+  const d = buf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  const src = AC.createBufferSource(); src.buffer = buf;
+  const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq || 1200; f.Q.value = 0.8;
+  const g = AC.createGain(); g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  src.connect(f); f.connect(g); g.connect(master); src.start(t);
+}
+const SFX = {
+  swing() { noise(0.09, 0.12, 2600); },
+  pot()   { noise(0.16, 0.3, 900); tone(1900, 900, 0.08, 'triangle', 0.15); tone(2600, 1400, 0.06, 'triangle', 0.1, 0.03); },
+  gem()   { tone(1318, 1318, 0.07, 'square', 0.14); tone(1760, 1760, 0.09, 'square', 0.14, 0.06); tone(2637, 2637, 0.14, 'square', 0.12, 0.12); },
+  heart() { tone(880, 1320, 0.12, 'sine', 0.2); },
+  cluck() { tone(700 + Math.random() * 300, 300, 0.07, 'square', 0.13); },
+  squawk(){ for (let i = 0; i < 5; i++) tone(900 + Math.random() * 500, 350, 0.08, 'sawtooth', 0.12, i * 0.07); },
+  door()  { tone(220, 160, 0.09, 'square', 0.15); tone(330, 260, 0.07, 'square', 0.12, 0.09); },
+  bump()  { noise(0.1, 0.25, 300); tone(120, 60, 0.12, 'sine', 0.3); },
+  star()  { tone(1046, 1046, 0.06, 'square', 0.14); tone(1568, 1568, 0.1, 'square', 0.14, 0.05); },
+  siren() { tone(660, 660, 0.16, 'triangle', 0.05); tone(880, 880, 0.16, 'triangle', 0.05, 0.16); },
+  hurt()  { tone(300, 90, 0.18, 'sawtooth', 0.2); },
+  busted(){ [392, 330, 262, 196].forEach((f, i) => tone(f, f, 0.22, 'triangle', 0.22, i * 0.17)); },
+  clear() { [523, 659, 784, 1046, 784, 1046, 1318].forEach((f, i) => tone(f, f, 0.16, 'square', 0.16, i * 0.11)); }
+};
+let engineOsc = null, engineGain = null;
+function engine(on, rpm) {
+  if (!AC) return;
+  if (on && !engineOsc) {
+    engineOsc = AC.createOscillator(); engineOsc.type = 'sawtooth';
+    engineGain = AC.createGain(); engineGain.gain.value = 0.0;
+    const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 500;
+    engineOsc.connect(f); f.connect(engineGain); engineGain.connect(master); engineOsc.start();
+  }
+  if (engineOsc) {
+    engineOsc.frequency.value = 55 + (rpm || 0) * 130;
+    engineGain.gain.setTargetAtTime(on ? 0.055 : 0.0, AC.currentTime, 0.08);
+    if (!on) { const o = engineOsc; setTimeout(() => { try { o.stop(); } catch (e) {} }, 250); engineOsc = null; }
+  }
+}
+
+/* ================= world ================= */
+const TS = 32, MW = 50, MH = 50;                 // tile px, map w/h in tiles
+const WORLD_W = MW * TS, WORLD_H = MH * TS;
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+// tile codes: 0 water 1 sand 2 road 3 walk 4 plaza 5 stone 6 roof(solid) 7 facade(solid) 8 fountain(solid water)
+const T = { WATER:0, SAND:1, ROAD:2, WALK:3, PLAZA:4, STONE:5, ROOF:6, FACADE:7, FOUNTAIN:8 };
+const TILE_IMG = [ 't_water','t_sand','t_road','t_walk','t_plaza','t_stone','t_roof','t_facade','t_water' ];
+const SOLID = new Set([T.WATER, T.ROOF, T.FACADE, T.FOUNTAIN]);
+const grid = new Uint8Array(MW * MH);
+function tileAt(tx, ty) { if (tx < 0 || ty < 0 || tx >= MW || ty >= MH) return T.WATER; return grid[ty * MW + tx]; }
+function solidAtPx(x, y) { return SOLID.has(tileAt(Math.floor(x / TS), Math.floor(y / TS))); }
+
+let seed = 1234567;
+function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+
+const buildings = [];   // {x,y,w,h} px rects, solid
+function buildTown() {
+  grid.fill(T.WALK);
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
+    if (x < 3 || y > MH - 4) grid[y * MW + x] = T.WATER;                    // sea W + S
+    else if (x < 5 || y > MH - 6) grid[y * MW + x] = T.SAND;                // beach band
+  }
+  const vRoads = [11, 25, 39], hRoads = [12, 27, 41];
+  for (const c of vRoads) for (let y = 0; y < MH - 5; y++) { grid[y * MW + c] = T.ROAD; grid[y * MW + c + 1] = T.ROAD; }
+  for (const r of hRoads) for (let x = 4; x < MW; x++) { grid[r * MW + x] = T.ROAD; grid[(r + 1) * MW + x] = T.ROAD; }
+  // central plaza around fountain (tiles 22..29 x, 20..27 y)
+  for (let y = 20; y < 28; y++) for (let x = 22; x < 30; x++) grid[y * MW + x] = T.PLAZA;
+  for (let y = 23; y < 25; y++) for (let x = 25; x < 27; x++) grid[y * MW + x] = T.FOUNTAIN;
+  // building blocks between roads
+  const blocks = [
+    [6,4,4,6],[14,4,8,6],[29,4,7,6],[41,4,6,6],
+    [6,15,4,8],[14,15,8,9],[33,15,4,9],[41,15,6,9],
+    [6,30,4,8],[14,30,6,8],[33,30,4,8],[41,30,6,8],
+    [14,44,8,3],[29,44,8,3]
+  ];
+  for (const [bx, by, bw, bh] of blocks) {
+    for (let y = by; y < by + bh; y++) for (let x = bx; x < bx + bw; x++) {
+      if (grid[y * MW + x] === T.ROAD) continue;
+      grid[y * MW + x] = (y === by + bh - 1) ? T.FACADE : T.ROOF;
+    }
+    buildings.push({ x: bx * TS, y: by * TS, w: bw * TS, h: bh * TS });
+  }
+}
+buildTown();
+const fountainPx = { x: 26 * TS, y: 24 * TS };
+
+/* ================= entities & state ================= */
+const G = {
+  started: false, over: false, cleared: false, bustedT: 0, koT: 0,
+  gems: 0, mayhem: 0, wanted: 0, hearts: 5, maxHearts: 5,
+  bust: 0, swarmT: 0, swarmWarnT: 0, sirenT: 0, mayhemCalmT: 0, time: 0
+};
+const player = { x: fountainPx.x - 70, y: fountainPx.y + 60, r: 12, dir: 'down', frame: 0, animT: 0,
+                 mode: 'foot', car: null, swingT: 0, iframes: 0, speedWalk: 148 };
+const heroine = { x: fountainPx.x + 66, y: fountainPx.y + 26, frame: 0, animT: 0 };
+const chest = { x: 25.5 * TS, y: 19.4 * TS, open: false };
+let pots = [], gemsArr = [], palmsArr = [], cuccos = [], guards = [], cars = [], parts = [], floaters = [];
+
+function spawnPots() {
+  pots = [];
+  const spots = [];
+  for (const b of buildings) { spots.push([b.x - 20, b.y + b.h + 14]); spots.push([b.x + b.w + 16, b.y + b.h + 14]); }
+  spots.push([23 * TS, 21 * TS], [29 * TS, 26 * TS], [22.5 * TS, 27 * TS], [12 * TS, 13.5 * TS],
+             [38 * TS, 28.5 * TS], [8 * TS, 43 * TS], [20 * TS, 42.5 * TS], [44 * TS, 13 * TS], [6.5 * TS, 25 * TS]);
+  for (const [x, y] of spots) { if (!solidAtPx(x, y)) pots.push({ x, y, alive: true, respawnT: 0 }); }
+}
+function spawnPalms() {
+  palmsArr = [];
+  const cand = [];
+  for (let y = 2; y < MH - 2; y++) for (let x = 3; x < MW; x++) {
+    const t = tileAt(x, y);
+    if ((t === T.SAND || t === T.WALK || t === T.PLAZA) && rnd() < 0.03) cand.push([x * TS + 16, y * TS + 10]);
+  }
+  cand.push([22 * TS + 8, 20 * TS + 6], [29 * TS + 20, 20 * TS + 6], [22 * TS + 8, 27 * TS + 20], [29 * TS + 20, 27 * TS + 20]);
+  for (const [x, y] of cand) palmsArr.push({ x, y, r: 7 });
+}
+function palmAt(x, y) { for (const p of palmsArr) { const dx = x - p.x, dy = y - (p.y + 14); if (dx * dx + dy * dy < 15 * 15) return p; } return null; }
+function makeCar(kind, x, y, ang) {
+  return { kind, x, y, ang, speed: 0, r: 24, parked: true, skid: 0 };
+}
+function spawnCars() {
+  cars = [ makeCar('car_pink', 24 * TS, 30.5 * TS, Math.PI),
+           makeCar('car_teal', 12.5 * TS, 20 * TS, Math.PI / 2),
+           makeCar('car_grape', 40 * TS, 34 * TS, -Math.PI / 2) ];
+}
+function spawnCuccos() {
+  cuccos = [];
+  const homes = [[16 * TS, 18 * TS], [35 * TS, 22 * TS], [10 * TS, 36 * TS]];
+  for (const [x, y] of homes) cuccos.push({ x, y, hx: x, hy: y, dir: 'down', frame: 0, animT: 0, state: 'idle', wt: rnd() * 2, swarm: false, peckCd: 0 });
+}
+function spawnGuard(x, y) { guards.push({ x, y, r: 12, dir: 'down', frame: 0, animT: 0, touchT: 0, stunT: 0 }); }
+function resetWorld() {
+  spawnPots(); spawnPalms(); spawnCars(); spawnCuccos();
+  guards = []; gemsArr = []; parts = []; floaters = [];
+  Object.assign(G, { gems: 0, mayhem: 0, wanted: 0, hearts: G.maxHearts, bust: 0, swarmT: 0, swarmWarnT: 0, cleared: false, bustedT: 0, koT: 0 });
+  chest.open = false;
+  player.x = fountainPx.x - 70; player.y = fountainPx.y + 60; player.mode = 'foot'; player.car = null; player.dir = 'down';
+}
+resetWorld();
+
+/* ================= input ================= */
+const tc = new TouchController({ buttons: [ { id: 'a', label: '⚔️' }, { id: 'b', label: '💨' } ] });
+const keys = {};
+addEventListener('keydown', e => { keys[e.code] = true; if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault(); });
+addEventListener('keyup', e => keys[e.code] = false);
+function readInput() {
+  const ti = tc.getInput();
+  let x = ti.x, y = ti.y;
+  if (keys.ArrowLeft || keys.KeyA) x -= 1; if (keys.ArrowRight || keys.KeyD) x += 1;
+  if (keys.ArrowUp || keys.KeyW) y -= 1; if (keys.ArrowDown || keys.KeyS) y += 1;
+  const m = Math.hypot(x, y); if (m > 1) { x /= m; y /= m; }
+  return { x, y,
+    a: ti.a || !!keys.Space, aPressed: ti.aPressed || !!keys.__spaceEdge,
+    b: ti.b || !!keys.ShiftLeft || !!keys.ShiftRight, bPressed: ti.bPressed };
+}
+addEventListener('keydown', e => { if (e.code === 'Space') keys.__spaceEdge = true; });
+
+/* ================= helpers ================= */
+function collideMove(e, nx, ny, r) {
+  // axis-separated circle move vs solid tiles + palms + buildings; returns hit flag
+  let hit = false;
+  if (!solidAtPx(nx + Math.sign(nx - e.x) * r, e.y) && !solidAtPx(nx + Math.sign(nx - e.x) * r, e.y - r * 0.6) && !solidAtPx(nx + Math.sign(nx - e.x) * r, e.y + r * 0.6) && !palmAt(nx, e.y)) e.x = nx; else hit = true;
+  if (!solidAtPx(e.x, ny + Math.sign(ny - e.y) * r) && !solidAtPx(e.x - r * 0.6, ny + Math.sign(ny - e.y) * r) && !solidAtPx(e.x + r * 0.6, ny + Math.sign(ny - e.y) * r) && !palmAt(e.x, ny)) e.y = ny; else hit = true;
+  e.x = Math.max(r, Math.min(WORLD_W - r, e.x)); e.y = Math.max(r, Math.min(WORLD_H - r, e.y));
+  return hit;
+}
+function addMayhem(n) {
+  const before = G.wanted;
+  G.mayhem += n; G.mayhemCalmT = 0;
+  G.wanted = Math.max(G.wanted, Math.min(5, 1 + Math.floor(G.mayhem / 3)));
+  if (G.wanted > before) { SFX.star(); floater(player.x, player.y - 34, '⭐', '#f5d90a'); }
+  while (guards.length < G.wanted + 1 && G.wanted > 0) {
+    const a = rnd() * Math.PI * 2;
+    spawnGuard(player.x + Math.cos(a) * 480, player.y + Math.sin(a) * 480);
+  }
+}
+function floater(x, y, txt, color) { floaters.push({ x, y, txt, color: color || '#fff', t: 0 }); }
+function burst(x, y, colors, n, spd) {
+  for (let i = 0; i < n; i++) { const a = rnd() * Math.PI * 2, s = (0.3 + rnd() * 0.7) * (spd || 90);
+    parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 40, t: 0, life: 0.5 + rnd() * 0.4, c: colors[i % colors.length], sz: 2 + rnd() * 3 }); }
+}
+function damage(n) {
+  if (player.iframes > 0 || G.over) return;
+  G.hearts -= n; player.iframes = 1.1; SFX.hurt(); burst(player.x, player.y - 10, ['#dd4a68', '#ffffff'], 8, 80);
+  if (G.hearts <= 0) { G.hearts = 0; G.koT = 2.2; engine(false); SFX.busted(); }
+}
+function respawnAtFountain() {
+  if (player.car) { player.car.parked = true; player.car.speed = 0; }
+  player.mode = 'foot'; player.car = null;
+  player.x = fountainPx.x - 70; player.y = fountainPx.y + 60;
+  G.hearts = G.maxHearts; G.mayhem = 0; G.wanted = 0; G.bust = 0; guards = [];
+  cuccos = cuccos.filter(c => !c.swarm);
+}
+
+/* ================= update ================= */
+const DIRV = { down: [0, 1], up: [0, -1], left: [-1, 0], right: [1, 0] };
+function dirFromVec(x, y, cur) {
+  if (Math.abs(x) < 0.01 && Math.abs(y) < 0.01) return cur;
+  return Math.abs(x) > Math.abs(y) ? (x > 0 ? 'right' : 'left') : (y > 0 ? 'down' : 'up');
+}
+function update(dt, inp) {
+  G.time += dt;
+  if (player.iframes > 0) player.iframes -= dt;
+  if (player.swingT > 0) player.swingT -= dt;
+  heroine.animT += dt; heroine.frame = Math.floor(heroine.animT * 1.6) % 2;
+
+  /* --- wanted decay & siren --- */
+  G.mayhemCalmT += dt;
+  if (G.mayhemCalmT > 12 && G.mayhem > 0) { G.mayhem = Math.max(0, G.mayhem - dt * 0.7); G.wanted = G.mayhem <= 0 ? 0 : Math.max(1, Math.min(5, 1 + Math.floor(G.mayhem / 3))); if (G.wanted === 0) guards = []; }
+  if (G.wanted >= 2) { G.sirenT -= dt; if (G.sirenT <= 0) { SFX.siren(); G.sirenT = 1.4; } }
+
+  /* --- player on foot --- */
+  if (player.mode === 'foot') {
+    engine(false);
+    const sp = player.speedWalk * (inp.b ? 1.45 : 1);
+    const mx = inp.x * sp * dt, my = inp.y * sp * dt;
+    if (mx || my) {
+      player.dir = dirFromVec(inp.x, inp.y, player.dir);
+      collideMove(player, player.x + mx, player.y + my, player.r);
+      player.animT += dt; player.frame = Math.floor(player.animT * 8) % 2;
+    }
+    // enter car takes priority over the sword when a car is in reach
+    let enteredCar = false;
+    if (inp.aPressed) {
+      for (const c of cars) if (Math.hypot(c.x - player.x, c.y - player.y) < 52) {
+        player.mode = 'car'; player.car = c; player.carT = G.time; c.parked = false; SFX.door(); enteredCar = true; break;
+      }
+    }
+    // sword swing
+    if (!enteredCar && inp.aPressed && player.swingT <= 0) {
+      player.swingT = 0.28; SFX.swing();
+      const [dx, dy] = DIRV[player.dir];
+      const hx = player.x + dx * 26, hy = player.y + dy * 26;
+      for (const p of pots) if (p.alive && Math.hypot(p.x - hx, p.y - hy) < 24) smashPot(p);
+      for (const c of cuccos) if (!c.swarm && Math.hypot(c.x - hx, c.y - hy) < 26) hitCucco(c);
+      for (const g of guards) if (Math.hypot(g.x - hx, g.y - hy) < 26 && g.stunT <= 0) {
+        g.stunT = 1.6; g.x += dx * 22; g.y += dy * 22; SFX.bump(); addMayhem(2); floater(g.x, g.y - 30, '💫', '#fff');
+      }
+    }
+    // chest
+    if (!chest.open && Math.hypot(chest.x - player.x, chest.y - player.y) < 34) {
+      if (G.gems >= 10) { chest.open = true; G.cleared = true; SFX.clear(); burst(chest.x, chest.y, ['#f2df9e', '#8fe3c0', '#ffffff'], 40, 150); }
+      else floater(chest.x, chest.y - 26, '💎 ' + G.gems + '/10', '#8fe3c0');
+    }
+  }
+
+  /* --- player driving --- */
+  if (player.mode === 'car') {
+    const c = player.car;
+    const maxF = 335, maxR = -110;
+    if (inp.y < -0.05) c.speed += 300 * -inp.y * dt; else if (inp.y > 0.05) c.speed -= (c.speed > 5 ? 420 : 130) * inp.y * dt;
+    c.speed -= c.speed * 0.7 * dt; if (Math.abs(c.speed) < 2 && inp.y === 0) c.speed = 0;
+    c.speed = Math.max(maxR, Math.min(maxF, c.speed));
+    const steerAuthority = Math.min(1, Math.abs(c.speed) / 90);
+    if (Math.abs(c.speed) > 3) c.ang += inp.x * 2.35 * steerAuthority * dt * Math.sign(c.speed) * (inp.b ? 1.25 : 1);
+    const vx = Math.sin(c.ang) * c.speed, vy = -Math.cos(c.ang) * c.speed;
+    let nx = c.x + vx * dt, ny = c.y + vy * dt;
+    if (inp.b && Math.abs(c.speed) > 120) { nx += Math.cos(c.ang) * c.speed * 0.22 * dt; ny += Math.sin(c.ang) * c.speed * 0.22 * dt; c.skid = 0.2; }
+    const before = { x: c.x, y: c.y };
+    const hitWall = collideMove(c, nx, ny, 20);
+    if (hitWall && Math.abs(c.speed) > 130) { SFX.bump(); burst(c.x, c.y - 8, ['#cfd3da', '#f5d90a'], 10, 110); c.speed *= -0.25; }
+    else if (hitWall) c.speed *= 0.6;
+    // run over pots & cuccos & palms
+    for (const p of pots) if (p.alive && Math.hypot(p.x - c.x, p.y - c.y) < 30) { smashPot(p, true); if (Math.abs(c.speed) > 60) c.speed *= 0.92; }
+    for (const cu of cuccos) if (!cu.swarm && cu.state === 'idle' && Math.hypot(cu.x - c.x, cu.y - c.y) < 30) hitCucco(cu);
+    const pl = palmAt(c.x, c.y); if (pl && Math.abs(c.speed) > 100) { burst(pl.x, pl.y, ['#27a243', '#57cc5e'], 12, 120); palmsArr.splice(palmsArr.indexOf(pl), 1); addMayhem(1); SFX.bump(); c.speed *= 0.75; }
+    player.x = c.x; player.y = c.y; player.dir = dirFromVec(Math.sin(c.ang), -Math.cos(c.ang), player.dir);
+    engine(true, Math.abs(c.speed) / 335);
+    if (inp.bPressed && Math.abs(c.speed) < 12) { /* B reserved: exit only when nearly stopped + long press below */ }
+    if (inp.aPressed && G.time - (player.carT || 0) > 0.35) {
+      // exit car (A while driving; debounced so the entry tap can't insta-exit)
+      const ex = c.x + Math.cos(c.ang) * 30, ey = c.y + Math.sin(c.ang) * 30;
+      if (!solidAtPx(ex, ey)) { player.mode = 'foot'; player.x = ex; player.y = ey; c.parked = true; c.speed = 0; player.car = null; SFX.door(); engine(false); }
+    }
+    void before;
+  }
+
+  /* --- gems pickup --- */
+  for (const g of gemsArr) {
+    if (g.got) continue;
+    const d = Math.hypot(g.x - player.x, g.y - player.y);
+    if (d < 60) { g.x += (player.x - g.x) * dt * 6; g.y += (player.y - g.y) * dt * 6; }
+    if (d < 20) { g.got = true; G.gems++; SFX.gem(); floater(player.x, player.y - 32, '💎 ' + G.gems + '/10', '#8fe3c0'); }
+  }
+  gemsArr = gemsArr.filter(g => !g.got);
+  for (const p of pots) if (!p.alive) { p.respawnT -= dt; if (p.respawnT <= 0) p.alive = true; }
+
+  /* --- cuccos --- */
+  if (G.swarmWarnT > 0) {
+    G.swarmWarnT -= dt;
+    if (G.swarmWarnT <= 0) {
+      G.swarmT = 9; SFX.squawk();
+      for (let i = 0; i < 34; i++) {
+        const a = (i / 34) * Math.PI * 2;
+        cuccos.push({ x: player.x + Math.cos(a) * 460, y: player.y + Math.sin(a) * 330, hx: 0, hy: 0,
+                      dir: 'down', frame: 0, animT: 0, state: 'swarm', wt: 0, swarm: true, peckCd: rnd() });
+      }
+    }
+  }
+  if (G.swarmT > 0) G.swarmT -= dt;
+  for (const c of cuccos) {
+    c.animT += dt;
+    if (c.swarm) {
+      if (G.swarmT <= 0) { // disperse
+        const a = Math.atan2(c.y - player.y, c.x - player.x);
+        c.x += Math.cos(a) * 200 * dt; c.y += Math.sin(a) * 200 * dt;
+        if (Math.hypot(c.x - player.x, c.y - player.y) > 560) c.dead = true;
+        continue;
+      }
+      const d = Math.hypot(player.x - c.x, player.y - c.y);
+      const sp = d > 26 ? 205 : 40;
+      c.x += (player.x - c.x) / (d || 1) * sp * dt; c.y += (player.y - c.y) / (d || 1) * sp * dt;
+      c.frame = Math.floor(c.animT * 10) % 2;
+      c.peckCd -= dt;
+      if (d < 24 && c.peckCd <= 0) { c.peckCd = 1.4; damage(1); SFX.cluck(); }
+    } else if (c.state === 'flee') {
+      const a = Math.atan2(c.y - player.y, c.x - player.x);
+      c.x += Math.cos(a) * 130 * dt; c.y += Math.sin(a) * 130 * dt;
+      c.frame = Math.floor(c.animT * 12) % 2;
+      c.wt -= dt; if (c.wt <= 0) { c.state = 'idle'; }
+    } else {
+      c.wt -= dt;
+      if (c.wt <= 0) { c.wt = 1 + rnd() * 2.5; c.tx = c.hx + (rnd() - 0.5) * 70; c.ty = c.hy + (rnd() - 0.5) * 70; }
+      if (c.tx !== undefined) {
+        const d = Math.hypot(c.tx - c.x, c.ty - c.y);
+        if (d > 4) { c.x += (c.tx - c.x) / d * 26 * dt; c.y += (c.ty - c.y) / d * 26 * dt; c.frame = Math.floor(c.animT * 6) % 2; }
+      }
+      if (rnd() < dt * 0.3) SFX.cluck();
+    }
+  }
+  cuccos = cuccos.filter(c => !c.dead);
+
+  /* --- guards --- */
+  for (const g of guards) {
+    if (g.stunT > 0) { g.stunT -= dt; continue; }
+    const d = Math.hypot(player.x - g.x, player.y - g.y);
+    const targetSpeed = player.mode === 'car' ? Math.abs(player.car.speed) : 0;
+    const gsp = 152 + G.wanted * 7;
+    if (d > 20) {
+      const nx = g.x + (player.x - g.x) / d * gsp * dt, ny = g.y + (player.y - g.y) / d * gsp * dt;
+      collideMove(g, nx, ny, g.r);
+      g.animT += dt; g.frame = Math.floor(g.animT * 8) % 2;
+      g.dir = dirFromVec(player.x - g.x, player.y - g.y, g.dir);
+    }
+    void targetSpeed;
+    // tackle damage
+    if (d < 22 && player.mode === 'foot') { g.touchT += dt; if (g.touchT > 0.5) { g.touchT = 0; damage(1); } }
+    else g.touchT = Math.max(0, g.touchT - dt);
+  }
+  /* busted meter */
+  let busting = false;
+  if (G.wanted > 0 && guards.length) {
+    if (player.mode === 'foot') busting = guards.some(g => Math.hypot(g.x - player.x, g.y - player.y) < 30);
+    else busting = Math.abs(player.car.speed) < 45 && guards.filter(g => Math.hypot(g.x - player.x, g.y - player.y) < 64).length >= 2;
+  }
+  G.bust = Math.max(0, Math.min(1, G.bust + (busting ? dt / 1.5 : -dt / 0.8)));
+  if (G.bust >= 1 && G.bustedT <= 0) { G.bustedT = 2.4; SFX.busted(); engine(false); }
+
+  /* particles & floaters */
+  for (const p of parts) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 260 * dt; }
+  parts = parts.filter(p => p.t < p.life);
+  for (const f of floaters) { f.t += dt; f.y -= 26 * dt; }
+  floaters = floaters.filter(f => f.t < 1.1);
+}
+function smashPot(p, byCar) {
+  p.alive = false; p.respawnT = 25; SFX.pot();
+  burst(p.x, p.y - 6, ['#9c5527', '#ddb08c', '#6b421f'], 12, 110);
+  const roll = rnd();
+  if (roll < 0.55) gemsArr.push({ x: p.x, y: p.y, got: false });
+  else if (roll < 0.7) { /* heart drop: instant heal pickup rendered as floater + heal */ if (G.hearts < G.maxHearts) { G.hearts++; SFX.heart(); floater(p.x, p.y - 24, '❤️', '#efa3b4'); } else gemsArr.push({ x: p.x, y: p.y, got: false }); }
+  addMayhem(byCar ? 1 : 1);
+}
+function hitCucco(c) {
+  if (c.state === 'swarm' || G.swarmWarnT > 0 || G.swarmT > 0) return;
+  c.state = 'flee'; c.wt = 1.6; SFX.squawk(); addMayhem(2);
+  floater(c.x, c.y - 26, '🐔💢', '#fff');
+  G.swarmWarnT = 2.5;
+}
+
+/* ================= render ================= */
+const heartsEl = document.getElementById('hearts');
+for (let i = 0; i < G.maxHearts; i++) { const im = new Image(); im.src = 'sprites/png/heart_base.png'; heartsEl.appendChild(im); }
+const starEls = document.querySelectorAll('#stars span');
+const gemnEl = document.getElementById('gemn');
+function syncHud() {
+  [...heartsEl.children].forEach((im, i) => im.className = i < G.hearts ? '' : 'off');
+  starEls.forEach((s, i) => s.className = i < G.wanted ? 'on' : '');
+  gemnEl.textContent = G.gems + '/10';
+}
+function drawSprite(img, x, y, w, h) { if (img && img.complete && img.naturalWidth) ctx.drawImage(img, Math.round(x - w / 2), Math.round(y - h), w, h); }
+function render() {
+  const camX = Math.max(0, Math.min(WORLD_W - 420, player.x - 210));
+  const camY = Math.max(0, Math.min(WORLD_H - 860, player.y - 430));
+  ctx.save(); ctx.translate(-Math.round(camX), -Math.round(camY));
+  const tx0 = Math.max(0, Math.floor(camX / TS)), tx1 = Math.min(MW - 1, tx0 + 15);
+  const ty0 = Math.max(0, Math.floor(camY / TS)), ty1 = Math.min(MH - 1, ty0 + 28);
+  for (let y = ty0; y <= ty1; y++) for (let x = tx0; x <= tx1; x++) {
+    const im = SPR[TILE_IMG[grid[y * MW + x]]];
+    if (im && im.complete && im.naturalWidth) ctx.drawImage(im, x * TS, y * TS, TS, TS);
+  }
+  // fountain sparkle
+  ctx.fillStyle = 'rgba(159,220,255,.5)';
+  const ft = Math.floor(G.time * 3) % 2;
+  ctx.fillRect(25 * TS + 10 + ft * 20, 23 * TS + 12, 5, 5); ctx.fillRect(26 * TS + 18 - ft * 16, 24 * TS + 16, 5, 5);
+  // chest
+  drawSprite(SPR[chest.open ? 'chest_open' : 'chest_closed'], chest.x, chest.y + 14, 44, 34);
+  // pots, gems
+  for (const p of pots) if (p.alive) drawSprite(SPR.pot, p.x, p.y + 12, 26, 26);
+  for (const g of gemsArr) { const bob = Math.sin(G.time * 5 + g.x) * 3; drawSprite(SPR.gem, g.x, g.y + 12 + bob, 20, 24); }
+  // palms (trunk base collision point at p.y+14; sprite 20x28 x2)
+  for (const p of palmsArr) drawSprite(SPR.palm, p.x, p.y + 26, 44, 62);
+  // heroine + quest bubble
+  drawSprite(SPR['heroine' + heroine.frame], heroine.x, heroine.y + 20, 32, 40);
+  const nearHeroine = Math.hypot(heroine.x - player.x, heroine.y - player.y) < 95;
+  if (nearHeroine && !G.cleared) {
+    ctx.fillStyle = 'rgba(255,255,255,.94)'; ctx.strokeStyle = '#191324'; ctx.lineWidth = 2;
+    const bx = heroine.x - 88, by = heroine.y - 78;
+    ctx.beginPath(); ctx.roundRect(bx, by, 176, 40, 10); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#191324'; ctx.font = 'bold 15px Arial'; ctx.textAlign = 'center';
+    ctx.fillText(G.gems >= 10 ? 'The chest! Open it! ✨' : 'Bring me 💎×10 for the chest!', heroine.x, by - 18 + 26);
+  }
+  // cuccos
+  for (const c of cuccos) drawSprite(SPR[c.frame ? 'cucco_flap' : 'cucco_idle'], c.x, c.y + 10, 28, 24);
+  // parked + driven cars
+  for (const c of cars) {
+    ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.ang);
+    if (SPR[c.kind] && SPR[c.kind].complete) ctx.drawImage(SPR[c.kind], -20, -36, 40, 72);
+    ctx.restore();
+  }
+  // guards
+  for (const g of guards) {
+    if (g.stunT > 0) { ctx.font = '16px Arial'; ctx.textAlign = 'center'; ctx.fillText('💫', g.x, g.y - 46); }
+    drawSprite(SPR['guard_' + g.dir + g.frame], g.x, g.y + 20, 32, 40);
+  }
+  // player
+  if (player.mode === 'foot') {
+    if (!(player.iframes > 0 && Math.floor(G.time * 14) % 2)) {
+      drawSprite(SPR['hero_' + player.dir + player.frame], player.x, player.y + 20, 32, 40);
+      if (player.swingT > 0) {
+        const [dx, dy] = DIRV[player.dir];
+        ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 5; ctx.beginPath();
+        const a0 = Math.atan2(dy, dx) - 0.9, a1 = Math.atan2(dy, dx) + 0.9;
+        ctx.arc(player.x, player.y - 8, 30, a0 + (0.28 - player.swingT) * 4, a1); ctx.stroke();
+        ctx.strokeStyle = '#cfd3da'; ctx.lineWidth = 3; ctx.beginPath();
+        ctx.moveTo(player.x + dx * 12, player.y - 10 + dy * 12);
+        ctx.lineTo(player.x + dx * 34, player.y - 10 + dy * 34); ctx.stroke();
+      }
+    }
+  }
+  // particles
+  for (const p of parts) { ctx.globalAlpha = 1 - p.t / p.life; ctx.fillStyle = p.c; ctx.fillRect(p.x - p.sz / 2, p.y - p.sz / 2, p.sz, p.sz); }
+  ctx.globalAlpha = 1;
+  // floaters
+  ctx.font = 'bold 17px Arial'; ctx.textAlign = 'center';
+  for (const f of floaters) { ctx.globalAlpha = 1 - f.t / 1.1; ctx.fillStyle = f.color; ctx.fillText(f.txt, f.x, f.y); }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+  // swarm warning vignette
+  if (G.swarmWarnT > 0 || G.swarmT > 0) {
+    ctx.strokeStyle = 'rgba(221,74,104,.55)'; ctx.lineWidth = 10 + Math.sin(G.time * 10) * 4;
+    ctx.strokeRect(0, 0, 420, 860);
+    ctx.font = '900 26px Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+    ctx.fillText('🐔 THE SWARM IS COMING 🐔', 210, 110);
+  }
+  // busted bar
+  if (G.bust > 0.02) {
+    ctx.fillStyle = 'rgba(25,19,36,.7)'; ctx.fillRect(110, 56, 200, 18);
+    ctx.fillStyle = '#dd4a68'; ctx.fillRect(112, 58, 196 * G.bust, 14);
+    ctx.font = 'bold 13px Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.fillText('🚨 BUSTED? 🚨', 210, 69);
+  }
+  if (G.bustedT > 0) banner('🚔 BUSTED!');
+  if (G.koT > 0) banner('💥 KNOCKED OUT');
+  if (G.cleared) banner('★ CLEARED ★');
+}
+function banner(txt) {
+  ctx.fillStyle = 'rgba(25,19,36,.55)'; ctx.fillRect(0, 360, 420, 120);
+  ctx.font = '900 44px Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#f5d90a';
+  ctx.fillText(txt, 210, 432);
+}
+
+/* ================= overlay / flow ================= */
+const overlay = document.getElementById('overlay');
+const startbtn = document.getElementById('startbtn');
+function startGame() {
+  audioInit(); overlay.classList.add('hidden'); G.started = true;
+  floater(heroine.x, heroine.y - 50, '💎×10 → chest!', '#8fe3c0');
+}
+startbtn.addEventListener('click', startGame);
+overlay.addEventListener('pointerdown', () => { if (!G.started) startGame(); });
+addEventListener('pointerdown', () => audioInit(), { passive: true });
+addEventListener('touchend', () => { if (AC && AC.state === 'suspended') AC.resume(); }, { passive: true });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && AC && AC.state === 'suspended') AC.resume(); });
+
+let lastT = performance.now();
+function loop(now) {
+  requestAnimationFrame(loop);
+  let dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
+  if (G.started && sprLoaded >= sprTotal) {
+    const inp = readInput();
+    if (G.bustedT > 0) { G.bustedT -= dt; if (G.bustedT <= 0) respawnAtFountain(); }
+    else if (G.koT > 0) { G.koT -= dt; if (G.koT <= 0) respawnAtFountain(); }
+    else if (!G.cleared) update(dt, inp);
+    else { G.time += dt; for (const p of parts) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 260 * dt; } parts = parts.filter(p => p.t < p.life); }
+  }
+  render(); syncHud();
+}
+requestAnimationFrame(loop);
+
+/* verification hooks */
+window.__hv = {
+  state() { return { started: G.started, gems: G.gems, wanted: G.wanted, hearts: G.hearts, mayhem: G.mayhem,
+    mode: player.mode, px: Math.round(player.x), py: Math.round(player.y), dir: player.dir,
+    guards: guards.length, cuccos: cuccos.length, swarmT: Math.round(G.swarmT * 10) / 10, swarmWarnT: Math.round(G.swarmWarnT * 10) / 10,
+    bust: Math.round(G.bust * 100) / 100, busted: G.bustedT > 0, cleared: G.cleared, chestOpen: chest.open,
+    carSpeed: player.car ? Math.round(player.car.speed) : 0,
+    potsAlive: pots.filter(p => p.alive).length,
+    nearestPot: (() => { let best = null, bd = 1e9; for (const p of pots) if (p.alive) { const d = Math.hypot(p.x - player.x, p.y - player.y); if (d < bd) { bd = d; best = { x: Math.round(p.x), y: Math.round(p.y), d: Math.round(d) }; } } return best; })(),
+    firstCucco: cuccos.filter(c => !c.swarm).map(c => ({ x: Math.round(c.x), y: Math.round(c.y), state: c.state }))[0] || null,
+    chestPos: { x: Math.round(chest.x), y: Math.round(chest.y) },
+    heroinePos: { x: Math.round(heroine.x), y: Math.round(heroine.y) } }; },
+  start() { startGame(); },
+  giveGems(n) { G.gems = n; },
+  teleport(x, y) { if (player.mode === 'car' && player.car) { player.car.x = x; player.car.y = y; } player.x = x; player.y = y; }
+};
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>

@@ -4,7 +4,7 @@ import {
 } from "./sim.js";
 
 const DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]];
-const ESCAPE_MAX = 6, DOOM_HORIZON = 120, DOOM_TIME = 40, SPIKE_HORIZON = 100, HOLDER_FLEE = 2;
+const ESCAPE_MAX = 9, DOOM_HORIZON = 120, DOOM_TIME = 40, SPIKE_HORIZON = 100, HOLDER_FLEE = 2;
 const LEVELS = {
   easy: { margin: 0, bombP: 0.4, idle: 0.5, grabP: 0.4, itemRange: 8 },
   normal: { margin: 16, bombP: 0.8, idle: 0, grabP: 1, itemRange: 8 },
@@ -105,6 +105,30 @@ export function think(s, id, rand = Math.random, level = "normal") {
   };
 
   const tm = dangerMap(s, null, id, p);
+  // No timed escape exists: buy time instead of freezing on the doomed tile — head for the
+  // reachable tile that blows latest (arrival timing ignored; a moving bot can get lucky,
+  // a standing one cannot).
+  const desperate = (tm) => {
+    const seen = new Set([idx(me.x, me.y)]);
+    let frontier = [[me.x, me.y, -1, 0]], best = null;
+    while (frontier.length) {
+      const next = [];
+      for (const [x, y, first, depth] of frontier) {
+        const t = tm[idx(x, y)];
+        if (depth > 0 && t > 0 && (!best || t > best.t || (t === best.t && depth > best.depth))) best = { dir: first, t, depth };
+        if (depth >= ESCAPE_MAX) continue;
+        DIRS.forEach(([dx, dy], k) => {
+          const nx = x + dx, ny = y + dy, i = idx(nx, ny);
+          if (nx < 0 || ny < 0 || nx >= W || ny >= H || seen.has(i) || s.floor?.[i] >= TELE) return;
+          if (s.grid[i] !== 0 || s.bombs.some((b) => b.x === nx && b.y === ny && solidBomb(b)) || tm[i] === 0) return;
+          seen.add(i);
+          next.push([nx, ny, depth === 0 ? k : first, depth + 1]);
+        });
+      }
+      frontier = next;
+    }
+    return best;
+  };
   const bad = (x, y) => s.items.some((it) => it.x === x && it.y === y && AVOID.includes(it.type));
   const spikeFar = (x, y) => s.floor?.[idx(x, y)] === SPIKE && tm[idx(x, y)] > SPIKE_HORIZON;
   const safe = (x, y) => (tm[idx(x, y)] === Infinity || spikeFar(x, y)) && !bad(x, y);
@@ -114,7 +138,7 @@ export function think(s, id, rand = Math.random, level = "normal") {
   const extras = s.cfg?.bombs || s.cfg?.abilities;
 
   if (tm[idx(me.x, me.y)] !== Infinity && !spikeFar(me.x, me.y)) {
-    const r = flee(tm);
+    const r = flee(tm) || desperate(tm);
     const out = r ? steer(r.dir) : {};
     if (extras) {
       const t = tm[idx(me.x, me.y)];

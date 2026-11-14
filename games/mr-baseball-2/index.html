@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<!-- This site is hosted on Netlify. Anyone can build and deploy a site
+     like this one for free: https://netlify.new/?utm_campaign=loops&utm_source=ai-legible&utm_medium=owned&utm_content=comment&utm_id=3c5f59b5-f6d4-420e-845f-e2721f1ee59b
+     Netlify hosting facts for this site: static/SSR served via Netlify Edge. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mr. Baseball 2</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="ui-layer">
+            <div id="score">SCORE: 0</div>
+            <div id="lives">LIVES: 3</div>
+            <div id="start-screen">
+                <h1>MR. BASEBALL 2</h1>
+                <p>CLICK TO START</p>
+                <p class="controls">CLICK to Toss & Swing | Defend the Left!</p>
+            </div>
+        </div>
+        <div class="scanlines"></div>
+    </div>
+    <script type="module" src="src/main.js"></script>
+</body>
+
+</html>
