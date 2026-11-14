@@ -531,6 +531,12 @@ resetWorld();
 
 /* ================= input ================= */
 const tc = new TouchController({ buttons: [ { id: 'a', label: '⚔️' }, { id: 'b', label: '💨' } ] });
+/* FIX (Nov 14): the gptouch overlay is a body-level fixed layer; inside the
+   transformed #stage stacking context it swallows EVERY tap on touch
+   devices — the start overlay's PLAY button (z-1300, but in-context) was
+   unreachable on phones while desktop (no touch overlay) worked. Hide the
+   touch overlay until the game starts; startGame() restores it. */
+if (tc._els) tc._els.overlay.style.display = 'none';
 const keys = {};
 addEventListener('keydown', e => { keys[e.code] = true; if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault(); });
 addEventListener('keyup', e => keys[e.code] = false);
@@ -874,6 +880,7 @@ const overlay = document.getElementById('overlay');
 const startbtn = document.getElementById('startbtn');
 function startGame() {
   audioInit(); overlay.classList.add('hidden'); G.started = true;
+  if (tc._els) tc._els.overlay.style.display = ''; // touch controls live now (see fix note at tc creation)
   floater(heroine.x, heroine.y - 50, '💎×10 → chest!', '#8fe3c0');
 }
 startbtn.addEventListener('click', startGame);

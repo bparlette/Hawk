@@ -3002,6 +3002,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Mr. Baseball 2 AR",
    "url": "../games/mr-baseball-2-ar/"
+  },
+  {
+   "category": "AR",
+   "desc": "Punch-Out AR — Big Bruno Hoggs, ghost gloves, hold to block",
+   "id": "punch-out-ar",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Punch-Out AR",
+   "url": "../games/punch-out-ar/"
   }
  ]
 }
