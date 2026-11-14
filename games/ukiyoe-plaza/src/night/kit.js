@@ -60,7 +60,10 @@ export function createKit(shared, { palettes, head = '', light, origin = [0, 0, 
       d.addScaledVector(nn, -d.dot(nn));
       if (d.lengthSq() < 1e-6) d.copy(e1);
       d.normalize().addScaledVector(new THREE.Vector3().crossVectors(nn, d), (rand() - 0.5) * 0.35);
-      stroke(p, nn, d, size[0] * (0.8 + 0.4 * rand()), size[1] * (0.75 + 0.5 * rand()), pal, tone * (0.88 + 0.24 * rand()), lift * (0.4 + 1.2 * rand()));
+      // NO per-stroke tone rattle: the old (0.88 + 0.24 * rand()) multiplier made every
+      // dab a slightly different brightness, which read as speckle/mottle across a wall.
+      // A printed block is one ink at one strength — the tone passes through untouched.
+      stroke(p, nn, d, size[0] * (0.8 + 0.4 * rand()), size[1] * (0.75 + 0.5 * rand()), pal, tone, lift * (0.4 + 1.2 * rand()));
     }
   }
 
@@ -199,7 +202,9 @@ export function createKit(shared, { palettes, head = '', light, origin = [0, 0, 
         layout(location = 0) out vec4 outC;
         void main() {
           float r = texture(tNoise, (vWorld.xz + vWorld.y) * 0.9).r;
-          vec3 c = kitPaint(vWorld, normalize(vN), int(vPal + 0.5), vTone, r) * 0.94;
+          // the underpainting carries the SAME flat ink as the strokes over it (the old
+          // * 0.94 left a darker sheet showing between dabs, which read as grain)
+          vec3 c = kitPaint(vWorld, normalize(vN), int(vPal + 0.5), vTone, r);
           outC = vec4(${haze ? 'hazed(c, vWorld)' : 'c'}, 1.0);
         }`,
     }));
