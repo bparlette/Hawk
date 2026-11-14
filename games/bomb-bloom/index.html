@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1d3319">
+<title>Bomb Bloom — Hyrule Bomb-Flower Arena</title>
+<meta name="description" content="A Bomberman-style arena in a Hyrule field: plant bomb flowers, blast the pots, outlast 3 bots.">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    background: linear-gradient(#2a5225, #152809);
+    color: #fff; font-family: system-ui, -apple-system, sans-serif;
+    overflow: hidden; height: 100dvh;
+    display: flex; flex-direction: column; align-items: center;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #hud {
+    width: 100%; max-width: 640px; z-index: 2000; pointer-events: none;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: calc(6px + env(safe-area-inset-top)) 16px 6px;
+    font-size: 19px; text-shadow: 0 1px 2px #000;
+  }
+  #hud .grp { display: flex; gap: 14px; align-items: center; }
+  #hud b { font-variant-numeric: tabular-nums; }
+  #stage { width: min(100vw, calc((100dvh - 175px) * 1.0714), 640px); margin-top: auto; }
+  #hint { margin-bottom: auto; }
+  canvas {
+    width: 100%; height: auto; display: block;
+    image-rendering: pixelated; image-rendering: crisp-edges;
+    border-radius: 6px; box-shadow: 0 8px 34px #000a;
+    background: #17171f; touch-action: none;
+  }
+  #hint { opacity: .8; font-size: 13px; padding: 8px 12px; text-align: center; }
+  .ov {
+    position: fixed; inset: 0; z-index: 3000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; text-align: center; padding: 24px;
+    background: rgba(13, 26, 8, .82);
+  }
+  .ov .big { font-size: 58px; line-height: 1; }
+  .ov h1 { font-size: 34px; margin: 0; letter-spacing: .5px; }
+  .ov p { margin: 0; font-size: 16px; opacity: .9; max-width: 340px; }
+  .ov button {
+    font-size: 21px; font-weight: 800; padding: 15px 32px;
+    border-radius: 999px; border: 0; cursor: pointer;
+    background: #ffd23c; color: #20300f; box-shadow: 0 4px 0 #b8912a;
+  }
+  .ov button:active { transform: translateY(2px); box-shadow: 0 2px 0 #b8912a; }
+  .hidden { display: none !important; }
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+  <div id="hud">
+    <div class="grp"><span>💣<b id="hBombs">1</b></span><span>🔥<b id="hRange">2</b></span><span>👟<b id="hSpeed">1</b></span></div>
+    <div class="grp"><span>🤖<b id="hAlive">3</b></span><span>⏱<b id="hTime">0:00</b></span></div>
+  </div>
+
+  <div id="stage"><canvas id="c" width="240" height="224"></canvas></div>
+  <div id="hint">🕹️ left thumb to move · 💣 button to plant a bomb flower</div>
+
+  <div class="ov" id="startOv">
+    <div class="big">🌸💣</div>
+    <h1>BOMB BLOOM</h1>
+    <p>Plant bomb flowers in the Hyrule field. Blast the pots, grab the power-ups, and be the last one standing against 3 bots.</p>
+    <button id="btnStart">▶ START</button>
+  </div>
+
+  <div class="ov hidden" id="endOv">
+    <div class="big" id="endEmoji">🏆</div>
+    <h1 id="endTitle">YOU WIN!</h1>
+    <button id="btnAgain">↻ PLAY AGAIN</button>
+  </div>
+
+<script type="module">
+import { newGame, step } from './sim.js';
+import { think } from './ai.js';
+import { draw, CW, CH } from './render.js';
+import { setSuits } from './look.js';
+import { TouchController, isTouchDevice } from './gptouch.js';
+
+// Zelda suit for the hero (green tunic), distinct rivals. Source character art is unchanged.
+setSuits(['#43a047', '#8e44ad', '#e8453c', '#3c7be8']);
+
+const cv = document.getElementById('c');
+cv.width = CW; cv.height = CH;
+const ctx = cv.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+const el = (id) => document.getElementById(id);
+
+// ---------- audio (procedural WebAudio, iOS-safe) ----------
+let AC = null;
+try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+function audio() {
+  if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+  if (AC && AC.state === 'suspended') AC.resume();
+  return AC;
+}
+for (const ev of ['pointerdown', 'touchend']) addEventListener(ev, () => audio(), { passive: true });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) audio(); });
+function tone(f0, f1, dur, type = 'square', vol = 0.14, when = 0) {
+  const ac = audio(); if (!ac) return;
+  const t = ac.currentTime + when;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(f0, t);
+  o.frequency.exponentialRampToValueAtTime(Math.max(f1, 1), t + dur);
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(g); g.connect(ac.destination);
+  o.start(t); o.stop(t + dur + 0.03);
+}
+function boomSound() {
+  const ac = audio(); if (!ac) return;
+  const n = Math.floor(ac.sampleRate * 0.35);
+  const buf = ac.createBuffer(1, n, ac.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  const src = ac.createBufferSource(); src.buffer = buf;
+  const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 850;
+  const g = ac.createGain(); g.gain.value = 0.28;
+  src.connect(f); f.connect(g); g.connect(ac.destination);
+  src.start();
+  tone(130, 38, 0.32, 'sine', 0.30);
+}
+
+// ---------- game state ----------
+let S = null, running = false, over = false, auto = false, speedMul = 1;
+const botMem = [null, null, null, null];
+const game = { me: 0, banner: '', retro: false, s: null };
+let prev = { bombs: 0, flames: 0, alive: [true, true, true, true] };
+
+function freshState(seed) {
+  const s = newGame(4, seed, { mode: 'classic', layout: 'classic' });
+  s.cfg.theme = 'hyrule';
+  return s;
+}
+function sfx() {
+  if (S.bombs.length > prev.bombs) tone(320, 150, 0.09, 'square', 0.10);
+  if (S.flames.length > 0 && prev.flames === 0) boomSound();
+  S.players.forEach((p, i) => { if (prev.alive[i] && !p.alive) tone(620, 85, 0.35, 'sawtooth', 0.13); });
+  prev = { bombs: S.bombs.length, flames: S.flames.length, alive: S.players.map((p) => p.alive) };
+}
+function start() {
+  S = freshState((Date.now() % 2147483646) + 1);
+  game.s = S;
+  botMem.fill(null);
+  prev = { bombs: 0, flames: 0, alive: [true, true, true, true] };
+  over = false; running = true;
+  el('startOv').classList.add('hidden');
+  el('endOv').classList.add('hidden');
+  audio();
+}
+function endRound() {
+  over = true;
+  const w = S.winner;
+  el('endEmoji').textContent = w === 0 ? '🏆' : w === -1 ? '🤝' : '💥';
+  el('endTitle').textContent = w === 0 ? 'YOU WIN!' : w === -1 ? 'DRAW' : 'THE BOTS WIN';
+  el('endOv').classList.remove('hidden');
+  if (w === 0) [523, 659, 784, 1047].forEach((f, i) => tone(f, f, 0.16, 'triangle', 0.16, i * 0.11));
+  else tone(320, 70, 0.6, 'sawtooth', 0.12);
+}
+el('btnStart').addEventListener('click', start);
+el('btnAgain').addEventListener('click', start);
+
+// ---------- input: keyboard + gptouch, merged ----------
+const keys = {};
+let bombQ = false;
+addEventListener('keydown', (e) => {
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
+  keys[e.code] = true;
+  if (e.code === 'Space' && !e.repeat) bombQ = true;
+  if (e.code === 'KeyR' && over) start();
+});
+addEventListener('keyup', (e) => { keys[e.code] = false; });
+const TC = isTouchDevice() ? new TouchController({ buttons: [{ id: 'a', label: '💣' }], zIndex: 1000 }) : null;
+let touchIn = { x: 0, y: 0, aPressed: false };
+
+function playerInput() {
+  let dx = 0, dy = 0;
+  if (keys.ArrowLeft || keys.KeyA) dx -= 1;
+  if (keys.ArrowRight || keys.KeyD) dx += 1;
+  if (keys.ArrowUp || keys.KeyW) dy -= 1;
+  if (keys.ArrowDown || keys.KeyS) dy += 1;
+  if (touchIn.x < -0.35) dx = -1; else if (touchIn.x > 0.35) dx = 1;
+  if (touchIn.y < -0.35) dy = -1; else if (touchIn.y > 0.35) dy = 1;
+  if (touchIn.aPressed) bombQ = true;
+  const inp = { dx, dy, bomb: bombQ };
+  bombQ = false;
+  return inp;
+}
+function botInput(id) {
+  if ((S.tick + id) % 6 === 0) botMem[id] = think(S, id, Math.random, 'normal');
+  const inp = { ...botMem[id] };
+  if (botMem[id]) { botMem[id].bomb = false; botMem[id].act = false; }
+  return inp;
+}
+function tick() {
+  if (!S || over) return;
+  const steps = (!S.players[0].alive && !auto ? 3 : 1) * speedMul;
+  for (let k = 0; k < steps && !S.done; k++) {
+    const inputs = {};
+    inputs[0] = auto ? botInput(0) : playerInput();
+    for (const p of S.players) if (p.id !== 0) inputs[p.id] = botInput(p.id);
+    step(S, inputs);
+    sfx();
+  }
+  if (S.done) endRound();
+}
+
+// ---------- HUD (icons + numbers) ----------
+function hud() {
+  if (!S) return;
+  const p = S.players[0];
+  el('hBombs').textContent = p.bombs;
+  el('hRange').textContent = p.range;
+  el('hSpeed').textContent = p.speed;
+  el('hAlive').textContent = S.players.slice(1).filter((q) => q.alive).length;
+  const t = Math.floor(S.tick / 60);
+  el('hTime').textContent = Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+}
+
+// ---------- main loop: fixed 60 Hz sim, draw every frame ----------
+S = freshState(20261113);
+game.s = S;
+let last = 0, acc = 0;
+function loop(ts) {
+  requestAnimationFrame(loop);
+  if (TC) touchIn = TC.getInput();
+  draw(ctx, game);
+  hud();
+  if (!running || over) { last = ts; return; }
+  if (!last) last = ts;
+  let dt = ts - last; last = ts;
+  if (dt > 250) dt = 250;
+  acc += dt;
+  while (acc >= 1000 / 60) { acc -= 1000 / 60; tick(); if (over) break; }
+}
+requestAnimationFrame(loop);
+
+// Debug/test hooks (used by the headless verification harness).
+window.__dbg = {
+  get s() { return S; },
+  get over() { return over; },
+  start,
+  auto: (v) => { auto = !!v; },
+  speed: (v) => { speedMul = v | 0 || 1; },
+  bomb: () => { bombQ = true; },
+};
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
