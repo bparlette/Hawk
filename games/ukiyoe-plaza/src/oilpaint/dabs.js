@@ -135,8 +135,10 @@ void main() {
   float rake = 0.5 * g.x - 0.7 * g.y;
   vec3 col = mix(vC1, vC2, smoothstep(0.56, 0.66, t.b)); // a hard graphic step, not a streaked blend
   if (vGlaze.w > 0.5) {
-    // the wanderer's shadow: a soft plum glaze that slides over the paint and follows its streaks a little
-    float lit = figSunSoft(vGlaze.xyz + vec3((t.b - 0.5) * 0.012, (t.r - 0.5) * 0.012, 0.0));
+    // the wanderer's shadow: ONE flat indigo glaze in the shape of her shade — the soft
+    // multi-tap read is hardened to a step, so the shadow's edge is a printed edge,
+    // not a penumbra that slides and feathers over the paint
+    float lit = step(0.5, figSunSoft(vGlaze.xyz + vec3((t.b - 0.5) * 0.012, (t.r - 0.5) * 0.012, 0.0)));
     col = mix(col * uGlazeMul + uGlazeAdd, col, lit);
   }
   col *= mix(0.985, 1.015, t.r); // the paint is level: the sheet's height barely moves the colour
