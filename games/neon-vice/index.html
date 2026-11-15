@@ -91,7 +91,7 @@ canvas{touch-action:none}
   <div id="vehnote"></div>
   <button class="bigbtn" id="playbtn" disabled>▶ PLAY</button>
   <div id="loadmsg">loading Vice City…</div>
-  <p class="fine">Walk: joystick / WASD · A or E: enter &amp; exit car · B or Shift: sprint · Space: handbrake<br>Vice City: answer the phone, pick up the man, park at the door — $35,000. Liberty City: the bank job pays $50,000.</p>
+  <p class="fine">On foot: &#9664; &#9654; turn &middot; &#9650; walk &middot; &#9660; step back (tank controls, like &rsquo;97) &middot; &#128663; / E: enter &amp; exit car &middot; &#9889; / Shift: sprint &middot; Space: handbrake<br>Vice City: answer the phone, pick up the man, park at the door — $35,000. Liberty City: the bank job pays $50,000.</p>
 </div>
 
 <div class="screen hidden" id="bustedscreen">
@@ -522,12 +522,16 @@ const tc = new TouchController({ buttons: [
 if (tc._els && tc._els.overlay) tc._els.overlay.style.display = 'none';
 let aEdge = false, prevA = false;
 function readInput() {
-  const s = tc.getInput ? tc.getInput() : { x: 0, y: 0, buttons: {} };
+  const s = tc.getInput ? tc.getInput() : { x: 0, y: 0 };
   const ix = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0) + (s.x || 0);
   const iy = (keys.KeyS || keys.ArrowDown ? 1 : 0) - (keys.KeyW || keys.ArrowUp ? 1 : 0) + (s.y || 0);
-  const aNow = !!(s.buttons && s.buttons.a) || !!keys.KeyE || !!keys.Enter;
+  // gptouch getInput() returns FLAT button fields ({a, aPressed, b, bPressed}) --
+  // there is no s.buttons object; reading one made touch A/B permanently dead.
+  // aPressed is gptouch's latched press edge (consumed by this read): OR-ing it
+  // in means even a tap shorter than one frame still registers exactly once.
+  const aNow = !!s.a || !!s.aPressed || !!keys.KeyE || !!keys.Enter;
   aEdge = aNow && !prevA; prevA = aNow;
-  return { x: clamp(ix, -1, 1), y: clamp(iy, -1, 1), sprint: !!(s.buttons && s.buttons.b) || !!keys.ShiftLeft || !!keys.ShiftRight,
+  return { x: clamp(ix, -1, 1), y: clamp(iy, -1, 1), sprint: !!s.b || !!keys.ShiftLeft || !!keys.ShiftRight,
            brake: !!keys.Space, a: aNow };
 }
 
@@ -617,10 +621,14 @@ function carPerf(info) {
     acc: 3.5 + info.accel * 0.55, brake: 6 + info.braking * 0.65,
     steer: (0.5 + info.handling * 0.055) * (info.turning / 100), grip: 0.80 + info.grip * 0.016 };
 }
-// ped walk frames: offsets within the PED sprite table, identical layout in
-// style001 (base 645) and style003 (base 660) — verified on both sheets.
-let PEDF = { down: [687, 688], up: [696, 697], right: [701, 702], left: [716, 717], fallen: 685 };
-function pedFrames() { const b = G24.starts.PED; return { down: [b + 42, b + 43], up: [b + 51, b + 52], right: [b + 56, b + 57], left: [b + 71, b + 72], fallen: b + 40 }; }
+// ped walk frames: stand-first 4-frame cycles, offsets within the PED sprite
+// table. The PED bank's first 100 sprites are BYTE-IDENTICAL between style001
+// (base 645) and style003 (base 660) -- verified mechanically -- so the cycles
+// proven in The Original apply unchanged. The old 2-frame sets were wrong:
+// down alternated the front stand with the BACK view (peds glided, legs never
+// moved). Left reuses the one profile set, mirrored in setPedFrame.
+let PEDF = { down: [702, 698, 702, 699], up: [703, 704, 703, 705], right: [717, 721, 717, 721], left: [717, 721, 717, 721], fallen: 700 };
+function pedFrames() { const b = G24.starts.PED; return { down: [b + 42, b + 38, b + 42, b + 39], up: [b + 43, b + 44, b + 43, b + 45], right: [b + 57, b + 61, b + 57, b + 61], left: [b + 57, b + 61, b + 57, b + 61], fallen: b + 40 }; }
 function makePed(x, z, opts = {}) {
   const mesh = flatSprite(PEDF.down[0], 1.05);
   mesh.position.set(x, heightAt(x, z) + 0.06, z);
@@ -632,7 +640,9 @@ function makePed(x, z, opts = {}) {
 }
 function removePed(ped) { scene.remove(ped.mesh); ped.dead = true; const i = peds.indexOf(ped); if (i >= 0) peds.splice(i, 1); }
 function setPedFrame(ped, key, moving) {
-  const fr = !moving ? PEDF[key][0] : PEDF[key][Math.floor(ped.phase * 2.4) % 2];
+  const set = PEDF[key];
+  const fr = !moving ? set[0] : set[Math.floor(ped.phase * 2.4) % set.length];
+  ped.mesh.scale.x = key === 'left' ? -1 : 1; // bank has one profile set; west = mirrored east
   if (fr === ped.frame) return; ped.frame = fr;
   setMeshSprite(ped.mesh, fr, 1.05);
 }
@@ -1042,14 +1052,26 @@ function playerUpdate(dt, input) {
     return;
   }
   AU.engine(0, 0);
-  const mag = Math.hypot(input.x, input.y);
-  if (mag > 0.12) {
-    const sp = input.sprint ? 6.4 : 3.6;
-    const dx = input.x / Math.max(1, mag), dz = input.y / Math.max(1, mag);
-    player.heading = Math.atan2(dx, -dz);
-    ped.x += dx * sp * dt; ped.z += dz * sp * dt;
+  // TANK CONTROLS on foot — faithful to the 1997 original (Cherie Nov 14
+  // 22:02: "Fix Enhanced the same way"). Left/right rotates the character
+  // in place; forward walks along the CURRENT heading; back steps backward
+  // without flipping heading. No snap-turn, no glide: releasing the input
+  // stops movement the same frame. (Replaces the twin-stick snap-heading
+  // movement this build originally shipped with.)
+  const TURN = 3.2; // rad/s
+  if (Math.abs(input.x) > 0.12) {
+    player.heading += input.x * TURN * dt;
+    if (player.heading > Math.PI) player.heading -= 2 * Math.PI;
+    else if (player.heading < -Math.PI) player.heading += 2 * Math.PI;
+  }
+  let sp = 0;
+  if (input.y < -0.12) sp = input.sprint ? 6.4 : 3.6;   // walk / sprint forward
+  else if (input.y > 0.12) sp = -3.6 * 0.55;            // back-step, heading kept
+  if (sp !== 0) {
+    ped.x += Math.sin(player.heading) * sp * dt;
+    ped.z += -Math.cos(player.heading) * sp * dt;
     collideCircle(ped, 0.55);
-    ped.phase += dt * (input.sprint ? 3.4 : 2.4);
+    ped.phase += dt * 2.4 * (Math.abs(sp) / 3.6);
     setPedFrame(ped, pedDirKey(player.heading), true);
   } else setPedFrame(ped, pedDirKey(player.heading), false);
   player.x = ped.x; player.z = ped.z;
