@@ -163,6 +163,12 @@ export class Renderer {
 
   draw(S, cam, t, time) {
     const g = this.ctx, vw = this.vw, vh = this.vh, dpr = this.dpr;
+    // ?prof: per-section CPU time (ms, exponential average) in window.__prof
+    let P = null;
+    if (this.prof) {
+      let t0 = performance.now(), cur = 'start';
+      P = (name) => { const t1 = performance.now(); this.prof[cur] = (this.prof[cur] || 0) * 0.9 + (t1 - t0) * 0.1; t0 = t1; cur = name; };
+    }
     const G = grade(t);
     const zoom = cam.zoom || 1;
     const hw = vw / 2 / zoom, hh = vh / 2 / zoom;
@@ -173,6 +179,7 @@ export class Renderer {
       ctx.translate(hw - cam.x, hh - cam.y);
     };
 
+    P && P('ground');
     // ---------------- 1. ground
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.globalCompositeOperation = 'source-over';
@@ -188,6 +195,7 @@ export class Renderer {
     }
     this.drawOcean(g, G, t, time, vx0, vy0, vx1, vy1);
 
+    P && P('ocean');
     // ---------------- 2. shadows -> one layer, tinted, multiplied once (no double-dark overlaps)
     const sg = this.shadowCv.getContext('2d');
     sg.setTransform(1, 0, 0, 1, 0, 0);
@@ -216,6 +224,7 @@ export class Renderer {
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
 
+    P && P('shadows');
     // ---------------- 3. colour sprites
     worldTf(g);
     for (const s of this.statics) if (s.kind === 'pier' || s.kind === 'fountain' || s.kind === 'lifeguard') if (inView(s.bb)) this.drawEntry(g, s.e.color, s.x, s.y);
@@ -241,6 +250,7 @@ export class Renderer {
       if (inView(s.bb)) this.drawEntry(g, s.e.color, s.x, s.y);
     }
 
+    P && P('sprites');
     // painted surface grain (world-anchored)
     g.globalCompositeOperation = 'soft-light';
     g.globalAlpha = 0.22;
@@ -249,27 +259,25 @@ export class Renderer {
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
 
+    P && P('grain');
     // ---------------- 4. grade
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.globalCompositeOperation = 'multiply';
     g.fillStyle = `rgb(${G.mul[0]},${G.mul[1]},${G.mul[2]})`;
     g.fillRect(0, 0, vw, vh);
-    // low-sun warmth: soft-light pushes lit surfaces toward gold and deepens contrast
-    if (G.warm > 0.01) {
-      g.globalCompositeOperation = 'soft-light';
-      g.fillStyle = `rgba(255,150,50,${G.warm})`;
-      g.fillRect(0, 0, vw, vh);
-    }
-    if (G.glow > 0.01) {
+    // low-sun warmth + glow from the west, one soft-light pass: pushes lit surfaces toward gold,
+    // deepens contrast, and cools toward the east
+    if (G.warm + G.glow > 0.01) {
       g.globalCompositeOperation = 'soft-light';
       const gr = g.createLinearGradient(0, vh * 0.3, vw, vh * 0.8);
-      gr.addColorStop(0, `rgba(255,190,90,${G.glow * 1.6})`);
-      gr.addColorStop(0.6, `rgba(255,110,120,${G.glow * 0.6})`);
-      gr.addColorStop(1, `rgba(120,80,200,${G.glow * 0.8})`);
+      gr.addColorStop(0, `rgba(255,170,70,${Math.min(1, G.warm + G.glow * 1.4)})`);
+      gr.addColorStop(0.6, `rgba(255,135,90,${Math.min(1, G.warm * 0.9 + G.glow * 0.5)})`);
+      gr.addColorStop(1, `rgba(150,90,200,${Math.min(1, G.warm * 0.5 + G.glow * 0.8)})`);
       g.fillStyle = gr;
       g.fillRect(0, 0, vw, vh);
     }
 
+    P && P('grade');
     // ---------------- 5. light layer (additive)
     const lg = this.lightCv.getContext('2d');
     lg.setTransform(1, 0, 0, 1, 0, 0);
@@ -300,6 +308,7 @@ export class Renderer {
       if (c.siren) this.drawSiren(lg, c, time);
     }
     lg.globalAlpha = 1;
+    P && P('lights');
     // composite light + bloom
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.globalCompositeOperation = 'lighter';
@@ -319,6 +328,7 @@ export class Renderer {
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
 
+    P && P('bloom');
     // vignette
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     const vg = g.createRadialGradient(vw / 2, vh / 2, vh * 0.32, vw / 2, vh / 2, vh * 0.72);
@@ -326,6 +336,7 @@ export class Renderer {
     vg.addColorStop(1, `rgba(20,10,40,${0.35 + 0.2 * t})`);
     g.fillStyle = vg;
     g.fillRect(0, 0, vw, vh);
+    P && P('end');
   }
 
   drawOcean(g, G, t, time, vx0, vy0, vx1, vy1) {

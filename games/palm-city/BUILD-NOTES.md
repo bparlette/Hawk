@@ -88,6 +88,27 @@ All run from `games/palm-city/`:
 | `blender -b -P tools/bake_sprites.py -- buildings hotel` | one group / one asset (`cars`, `peds`, `buildings`, `props`); `--quick` for low samples |
 | `node tools/sim_run.mjs 34` | runs the real sim + demo autopilot headless; exits 0 only if the demo jacks a car and gets busted |
 | `node tools/shot.mjs out.png "demo" --seq 8 --every 4000` | phone-size (420×860, touch, iPhone-like) screenshots in real Chrome; non-zero exit on any page error |
+| `node tools/touch_check.mjs [prefix]` | drives the controls with real CDP touch events: joystick walk → button jack → stick drive → button exit |
+| `node tools/profile.mjs` | CPU ms per render section (`?prof`) and per ground-chunk paint |
 | `cd tools && npm install` | installs `playwright-core` for `shot.mjs` (uses the system Chrome) |
 
 `tools/reference_frames.jpg` is the art-direction anchor the screenshots were judged against.
+
+## Status against the reference frames (honest read, Nov 15 2026)
+
+`shots/compare.jpg` puts the reference sheet next to four 420×860 captures (golden hour, mid,
+dusk, demo at 15 s). Where it matches: violet painted streets, warm low sun with long cast
+shadows from towers and palms, neon spilling and streaking on wet asphalt, warm window spill and
+glowing glass roofs at dusk, headlight cones. Where it does **not** yet match:
+
+- **Brushwork is too timid.** The references are dense, swirling, saturated paint; ours reads as
+  soft gouache. Next: bigger, curl-following dabs on the ground and a stronger stroke pass on the
+  sprites (Kuwahara r=3 + oriented strokes), skies-in-puddles swirls.
+- **Roofs are the weakest asset.** Straight-down roofs carry little story; they need richer
+  rooftop dressing (gardens, laundry lines, tiled terraces, rooftop signage) and more colour
+  variety between buildings.
+- **Dusk is hazy rather than deep.** The references get their punch from near-black blues against
+  hot yellow windows; our dusk grade is still too grey-lavender.
+- Not yet verified on a physical iPhone. Headless Chrome composites canvas in software, so its
+  frame times (50–80 ms) are not representative; CPU work is ~2 ms/frame + one 6–13 ms
+  ground-chunk paint when streaming (M4).
