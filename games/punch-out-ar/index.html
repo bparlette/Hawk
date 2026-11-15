@@ -185,6 +185,7 @@
     cursor: pointer;
   }
   .playBtn:active { transform: scale(0.96); }
+.playBtn:disabled { filter: grayscale(.7); opacity: .65; }
   .card .fine { font-size: 13px; opacity: 0.65; margin-top: 14px; }
   .ctlGrid {
     display: grid; grid-template-columns: 1fr 1fr; gap: 5px 14px;
@@ -211,7 +212,7 @@
   .hidden { display: none !important; }
 </style>
 <script type="importmap">
-{ "imports": { "three": "./vendor/three.module.js" } }
+{ "imports": { "three": "./vendor/three.module.js", "three/addons/": "./vendor/addons/" } }
 </script>
 <style id="moth-game-guard">
 html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
@@ -232,7 +233,7 @@ canvas{touch-action:none}
     <div class="chip" id="timeChip">⏱ <b><span id="timeLeft">90</span></b></div>
   </div>
   <div id="bossBarWrap">
-    <div id="bossNameRow"><span id="bossName">🥓 BIG BRUNO HOGGS</span><span id="bossHpTxt">100</span></div>
+    <div id="bossNameRow"><span id="bossName">🌿 LINKLE — the Hyrule Hurricane</span><span id="bossHpTxt">100</span></div>
     <div id="bossBarOuter"><div id="bossBar"></div></div>
     <div id="stunRow"><span class="star">⭐</span><div id="stunOuter"><div id="stunBar"></div></div><span id="camTag">📷 AR room</span></div>
   </div>
@@ -256,18 +257,18 @@ canvas{touch-action:none}
 
 <div id="start" class="overlay">
   <div class="card">
-    <div class="big">🥊🐷🥊</div>
+    <div class="big">🥊🌿🥊</div>
     <h1>PUNCH-OUT AR</h1>
-    <p>The Vice City Bacon Belt champ <b>BIG BRUNO HOGGS</b> is standing in <b>your</b> room — and he wants his title back!</p>
+    <p>The Hyrule Hurricane <b>LINKLE</b> is standing in <b>your</b> room — and she wants the crown back!</p>
     <div class="ctlGrid">
       <span>👆 High left / right</span><span>→ face punch</span>
       <span>👇 Low left / right</span><span>→ body punch</span>
       <span>✊ Hold anywhere</span><span>→ BLOCK</span>
-      <span>⭐ Punch his wind-up</span><span>→ COUNTER stun!</span>
+      <span>⭐ Punch her wind-up</span><span>→ COUNTER stun!</span>
     </div>
-    <p>Body blows fill his ⭐ meter. Counter his wind-up or fill the meter to stun him — then unload! Don't get hit: you've got ❤️❤️❤️.</p>
-    <button id="startBtn" class="playBtn" type="button">▶ FIGHT!</button>
-    <p class="fine">Needs camera for the full AR feel.<br>No camera? He'll meet you in the neon Vice Gym instead.</p>
+    <p>Body blows fill her ⭐ meter. Counter her wind-up or fill the meter to stun her — then unload! Don't get hit: you've got ❤️❤️❤️.</p>
+    <button id="startBtn" class="playBtn" type="button" disabled>⏳ LOADING…</button>
+    <p class="fine">Needs camera for the full AR feel.<br>No camera? She'll meet you in the neon Vice Gym instead.</p>
   </div>
 </div>
 
@@ -285,6 +286,7 @@ canvas{touch-action:none}
 
 <script type="module">
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 'use strict';
 /* ============================== helpers ============================== */
@@ -362,12 +364,12 @@ function noiseBurst(dur, vol, delay, lowHz) {
 const sndWhoosh = () => { noiseBurst(0.09, 0.10, 0, 2400); tone(300, 620, 0.07, 'sine', 0.03); };
 const sndThud = () => { tone(150, 55, 0.13, 'sine', 0.30); noiseBurst(0.07, 0.14, 0, 900); };            // body blow
 const sndSmack = () => { tone(700, 180, 0.08, 'triangle', 0.20); noiseBurst(0.05, 0.16, 0, 4200); };     // face hit
-const sndClang = () => { tone(1250, 1180, 0.10, 'square', 0.07); tone(1870, 1790, 0.08, 'square', 0.05, 0.01); }; // bounced off his guard
+const sndClang = () => { tone(1250, 1180, 0.10, 'square', 0.07); tone(1870, 1790, 0.08, 'square', 0.05, 0.01); }; // bounced off her guard
 const sndBlock = () => { tone(220, 120, 0.09, 'sine', 0.22); noiseBurst(0.06, 0.12, 0, 1400); };         // your guard eats it
 const sndHurt = () => { tone(320, 70, 0.28, 'sawtooth', 0.22); noiseBurst(0.16, 0.20, 0, 700); };
-const sndGrunt = () => { tone(rand(120, 150), 70, 0.14, 'square', 0.075, 0, 500); };
-const sndSnort = () => { noiseBurst(0.07, 0.10, 0, 500); noiseBurst(0.07, 0.09, 0.09, 450); };
-const sndTaunt = () => { [300, 260, 340, 240].forEach((f, i) => tone(f, f * 0.8, 0.11, 'square', 0.07, i * 0.11, 700)); };
+const sndGrunt = () => { tone(rand(300, 360), 180, 0.12, 'square', 0.06, 0, 900); };
+const sndEffort = () => { noiseBurst(0.08, 0.09, 0, 1600); tone(520, 300, 0.09, 'sine', 0.05); };
+const sndTaunt = () => { [660, 550, 770, 880].forEach((f, i) => tone(f, f * 1.05, 0.10, 'triangle', 0.06, i * 0.10, 1200)); };
 const sndWindup = () => { tone(180, 720, 0.34, 'sine', 0.06); };
 const sndCounter = () => { tone(880, 880, 0.08, 'triangle', 0.14); tone(1318, 1318, 0.14, 'triangle', 0.14, 0.06); noiseBurst(0.08, 0.10, 0, 5000); };
 const sndStar = () => { [1046, 1318, 1568].forEach((f, i) => tone(f, f, 0.10, 'triangle', 0.10, i * 0.05)); };
@@ -407,9 +409,9 @@ const ROUND_LEN = 90;
 /* ---- the boss is data: add future bosses as more entries ---- */
 const BOSSES = [
   {
-    id: 'bruno',
-    name: '🥓 BIG BRUNO HOGGS',
-    rankLine: 'THE BACON BELT IS YOURS!',
+    id: 'linkle',
+    name: '🌿 LINKLE — the Hyrule Hurricane',
+    rankLine: 'THE HYRULE CROWN IS YOURS!',
     maxHP: 120,
     pattern: ['jab', 'cross', 'taunt', 'hook', 'jab', 'haymaker', 'cross', 'hook', 'taunt', 'haymaker', 'double'],
     moves: {
@@ -449,7 +451,7 @@ const enrage = () => bossHP <= BOSS.maxHP * 0.35 && bossHP > 0;
 /* ================= AR motion: permission-in-gesture + 3DOF look-around =================
    Same chassis as Duck Shoot AR: iOS only honors DeviceOrientationEvent
    .requestPermission() inside the tap itself, so the ask happens
-   synchronously in the FIGHT tap. Look-around is gentle here — Bruno
+   synchronously in the FIGHT tap. Look-around is gentle here — the boss
    stays your whole world; the phone sway just sells the room. */
 let baseCamQ = null;
 let hemiLight = null, dirLight = null;
@@ -598,7 +600,7 @@ function drawRoom(t) {
   ctx.shadowColor = '#19d3da'; ctx.shadowBlur = 16;
   ctx.fillStyle = '#8ff4f7';
   ctx.font = '800 ' + Math.round(W * 0.045) + 'px -apple-system, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('BACON BELT CHAMPIONSHIP', W / 2 + parX * -8, H * 0.165);
+  ctx.fillText('HYRULE CROWN CHAMPIONSHIP', W / 2 + parX * -8, H * 0.165);
   ctx.restore();
   // hanging lamp cones
   for (const lx of [0.22, 0.5, 0.78]) {
@@ -664,7 +666,7 @@ function initGL() {
   dirLight = new THREE.DirectionalLight(0xfff1da, lightBase.dir);
   dirLight.position.set(2.5, 4.5, 3.0);
   scene.add(dirLight);
-  // drama: overhead spot pool + Vice-pink rim from behind Bruno
+  // drama: overhead spot pool + Vice-pink rim from behind the boss
   const spot = new THREE.SpotLight(0xcfeaff, 180, 30, 0.62, 0.55, 1.6);
   spot.position.set(0, 5.6, 0.4);
   spot.target.position.set(0, 1.2, BOSS_Z);
@@ -771,207 +773,37 @@ function buildRing() {
   return g;
 }
 
-/* ============================== BIG BRUNO HOGGS ==============================
-   A hog brute prizefighter, built with the ducks' discipline (shared
-   geometry, per-part materials) pushed much further: layered snout, jaw
-   with underbite tusks, brow ridge, mohawk, gold chain, satin trunks,
-   taped wrists and oversized gloves — every part placed to read as ONE
-   character, never a pile of primitives. */
-const BMAT = {
-  hide:  new THREE.MeshStandardMaterial({ color: 0xa9663f, roughness: 0.62 }),
-  belly: new THREE.MeshStandardMaterial({ color: 0xc98d5f, roughness: 0.7 }),
-  snout: new THREE.MeshStandardMaterial({ color: 0xe0a184, roughness: 0.55 }),
-  nose:  new THREE.MeshStandardMaterial({ color: 0xd9798f, roughness: 0.45 }),
-  dark:  new THREE.MeshStandardMaterial({ color: 0x241611, roughness: 0.5 }),
-  ivory: new THREE.MeshStandardMaterial({ color: 0xf2e8d5, roughness: 0.35 }),
-  white: new THREE.MeshStandardMaterial({ color: 0xf7f3ea, roughness: 0.35 }),
-  gold:  new THREE.MeshStandardMaterial({ color: 0xffc93c, roughness: 0.28, metalness: 0.85, emissive: 0x3a2800 }),
-  satin: new THREE.MeshStandardMaterial({ color: 0xd6266e, roughness: 0.34, metalness: 0.12 }),
-  satinTrim: new THREE.MeshStandardMaterial({ color: 0x19d3da, roughness: 0.4 }),
-  tape:  new THREE.MeshStandardMaterial({ color: 0xf5f2ea, roughness: 0.8 }),
-  boot:  new THREE.MeshStandardMaterial({ color: 0x0e7f86, roughness: 0.45 }),
-  mohawk: new THREE.MeshStandardMaterial({ color: 0xff2e88, roughness: 0.5, emissive: 0x8f1049 }),
-  brow:  new THREE.MeshStandardMaterial({ color: 0x6e4526, roughness: 0.8 })
-};
-function bossGloveMat() {
-  return new THREE.MeshStandardMaterial({ color: 0xc2183f, roughness: 0.38, metalness: 0.05, emissive: 0x000000 });
-}
+/* ============================== LINKLE — the Hyrule Hurricane ==============================
+   The rigged dress heroine (juniper_rig — the Fable retarget that animates
+   so well in Lanternport) steps in as the prizefighter. Her stance sway is
+   the idle-stand clip; everything else — guard, wind-ups, punches, the
+   star-stun slump, the KO — is procedural bone work layered over the clip
+   each frame (see the pose section below). Pose deltas are authored as
+   WORLD-axis angles and converted into each bone's local frame from its
+   CURRENT world quaternion each frame, so a pose means the same thing
+   regardless of how the Noesis export wound the local axes. Boxing gloves ride her hands:
+   green with gold cuffs, one material per arm so the wind-up telegraph
+   can flash the attacking glove exactly like the house standard. */
+const LINKLE_TARGET_H = 3.15;   // world units tall in the ring — she is slim, so she stands taller than the previous champ (~2.94) to fill the same frame
+
 function sph(mat, sx, sy, sz, x, y, z, seg) {
   const m = new THREE.Mesh(new THREE.SphereGeometry(1, seg || 20, seg ? Math.round(seg * 0.75) : 15), mat);
   m.scale.set(sx, sy, sz); m.position.set(x, y, z);
   return m;
 }
-function capsule(mat, r, len, x, y, z) {
-  const m = new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 6, 14), mat);
-  m.position.set(x, y, z);
-  return m;
+function gloveMat() {
+  return new THREE.MeshStandardMaterial({ color: 0x1fae54, roughness: 0.38, metalness: 0.05, emissive: 0x000000, emissiveIntensity: 1 });
 }
 
-let boss = null;   // { root, bodyG, headG, jaw, armL, armR, stars, shadow, mats... }
-function buildBoss() {
+let boss = null;
+function buildLinkle() {
   const root = new THREE.Group();
   root.position.set(0, 0, BOSS_Z);
-  root.scale.setScalar(0.90);
-  const bodyG = new THREE.Group();          // lean / bounce pivot at the hips
-  bodyG.position.y = 1.12;
-  root.add(bodyG);
+  scene.add(root);
+  const inner = new THREE.Group();          // rig scale + soles offset live here
+  root.add(inner);
 
-  /* ---- legs + boots (in root: feet stay planted while the body sways) ---- */
-  for (const s of [-1, 1]) {
-    const leg = capsule(BMAT.hide, 0.17, 0.34, 0.36 * s, 0.48, 0);
-    root.add(leg);
-    const boot = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.17, 0.56), BMAT.boot);
-    boot.position.set(0.36 * s, 0.085, 0.09);
-    root.add(boot);
-    const bootToe = sph(BMAT.boot, 0.15, 0.085, 0.12, 0.36 * s, 0.07, 0.36);
-    root.add(bootToe);
-    const lace = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.03, 0.3), BMAT.satinTrim);
-    lace.position.set(0.36 * s, 0.175, 0.08);
-    root.add(lace);
-  }
-
-  /* ---- satin trunks + gold belt ---- */
-  const trunks = new THREE.Mesh(new THREE.CylinderGeometry(0.60, 0.74, 0.55, 24), BMAT.satin);
-  trunks.position.y = -0.12;
-  bodyG.add(trunks);
-  const trimL = new THREE.Mesh(new THREE.CylinderGeometry(0.745, 0.75, 0.1, 24, 1, true), BMAT.satinTrim);
-  trimL.position.y = -0.36;
-  bodyG.add(trimL);
-  const belt = new THREE.Mesh(new THREE.TorusGeometry(0.615, 0.055, 10, 28), BMAT.gold);
-  belt.rotation.x = Math.PI / 2; belt.position.y = 0.14;
-  bodyG.add(belt);
-  const buckle = sph(BMAT.gold, 0.13, 0.10, 0.05, 0, 0.12, 0.60);
-  bodyG.add(buckle);
-
-  /* ---- torso: belly, barrel chest, pecs, back hump ---- */
-  const belly = sph(BMAT.belly, 0.74, 0.68, 0.58, 0, 0.42, 0.06);
-  bodyG.add(belly);
-  const chest = sph(BMAT.hide, 0.92, 0.78, 0.66, 0, 0.92, 0.0);
-  bodyG.add(chest);
-  for (const s of [-1, 1]) {
-    const pec = sph(BMAT.belly, 0.40, 0.32, 0.20, 0.30 * s, 0.98, 0.52);
-    bodyG.add(pec);
-    const shoulder = sph(BMAT.hide, 0.30, 0.28, 0.28, 0.82 * s, 1.12, 0.02);
-    bodyG.add(shoulder);
-  }
-  const hump = sph(BMAT.hide, 0.62, 0.5, 0.4, 0, 1.05, -0.38);
-  bodyG.add(hump);
-  const bellyBtn = sph(BMAT.dark, 0.035, 0.045, 0.02, 0, 0.38, 0.635);
-  bodyG.add(bellyBtn);
-  /* gold chain + star pendant, slung on the chest */
-  const chain = new THREE.Mesh(new THREE.TorusGeometry(0.40, 0.042, 10, 30), BMAT.gold);
-  chain.position.set(0, 1.02, 0.47); chain.rotation.x = 1.12;
-  bodyG.add(chain);
-  const pendant = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.035, 20), BMAT.gold);
-  pendant.rotation.x = Math.PI / 2 - 0.35; pendant.position.set(0, 0.68, 0.72);
-  bodyG.add(pendant);
-
-  /* ---- neck + head ---- */
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.30, 0.26, 14), BMAT.hide);
-  neck.position.y = 1.42;
-  bodyG.add(neck);
-  const headG = new THREE.Group();
-  headG.position.y = 1.52;
-  bodyG.add(headG);
-  const skull = sph(BMAT.hide, 0.52, 0.47, 0.455, 0, 0.16, 0);
-  headG.add(skull);
-  const cheekL = sph(BMAT.hide, 0.24, 0.2, 0.2, -0.3, 0.0, 0.22);
-  const cheekR = sph(BMAT.hide, 0.24, 0.2, 0.2, 0.3, 0.0, 0.22);
-  headG.add(cheekL); headG.add(cheekR);
-  /* brow ridge */
-  const browRidge = sph(BMAT.brow, 0.42, 0.11, 0.16, 0, 0.33, 0.36);
-  headG.add(browRidge);
-  /* snout: muzzle + nose pad + nostrils */
-  const muzzle = sph(BMAT.snout, 0.335, 0.215, 0.24, 0, -0.02, 0.36);
-  headG.add(muzzle);
-  const nosePad = sph(BMAT.nose, 0.20, 0.115, 0.10, 0, 0.075, 0.545);
-  headG.add(nosePad);
-  for (const s of [-1, 1]) {
-    const nostril = sph(BMAT.dark, 0.042, 0.055, 0.03, 0.088 * s, 0.075, 0.63);
-    headG.add(nostril);
-  }
-  /* jaw with underbite tusks */
-  const jaw = new THREE.Group();
-  jaw.position.set(0, -0.14, 0.05);
-  headG.add(jaw);
-  const jawMesh = sph(BMAT.snout, 0.35, 0.17, 0.27, 0, -0.07, 0.13);
-  jaw.add(jawMesh);
-  const mouth = sph(BMAT.dark, 0.26, 0.05, 0.1, 0, -0.015, 0.335);
-  jaw.add(mouth);
-  for (const s of [-1, 1]) {
-    const tusk = new THREE.Mesh(new THREE.ConeGeometry(0.048, 0.17, 10), BMAT.ivory);
-    tusk.position.set(0.155 * s, 0.045, 0.315);
-    jaw.add(tusk);
-    const tooth = new THREE.Mesh(new THREE.ConeGeometry(0.032, 0.09, 8), BMAT.ivory);
-    tooth.position.set(0.07 * s, -0.06, 0.35); tooth.rotation.x = Math.PI;
-    jaw.add(tooth);
-  }
-  /* eyes + angry brows (pupils tracked for dizzy swap) */
-  const pupils = [];
-  for (const s of [-1, 1]) {
-    const white = sph(BMAT.white, 0.088, 0.098, 0.06, 0.185 * s, 0.20, 0.415);
-    headG.add(white);
-    const pupil = sph(BMAT.dark, 0.042, 0.05, 0.03, 0.185 * s, 0.20, 0.465);
-    headG.add(pupil);
-    pupils.push(pupil);
-    const brow = new THREE.Mesh(new THREE.BoxGeometry(0.21, 0.05, 0.06), BMAT.brow);
-    brow.position.set(0.19 * s, 0.335, 0.44);
-    brow.rotation.z = -0.48 * s;
-    headG.add(brow);
-  }
-  /* hog ears */
-  for (const s of [-1, 1]) {
-    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.34, 10), BMAT.hide);
-    ear.position.set(0.40 * s, 0.52, -0.02);
-    ear.rotation.z = -0.65 * s;
-    ear.scale.z = 0.55;
-    headG.add(ear);
-    const inner = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.2, 8), BMAT.nose);
-    inner.position.set(0.40 * s, 0.51, 0.045);
-    inner.rotation.z = -0.65 * s;
-    inner.scale.z = 0.4;
-    headG.add(inner);
-  }
-  /* neon mohawk: a fin of overlapping blades down the skull */
-  const hawk = new THREE.Group();
-  const hawkSizes = [0.13, 0.19, 0.23, 0.24, 0.21, 0.16, 0.11];
-  hawkSizes.forEach((r, i) => {
-    const blade = sph(BMAT.mohawk, 0.035, r, r * 0.9, 0, 0.56 + Math.sin(i / (hawkSizes.length - 1) * Math.PI) * 0.05, 0.26 - i * 0.105);
-    hawk.add(blade);
-  });
-  headG.add(hawk);
-
-  /* ---- arms: shoulder pivot -> upper arm -> elbow pivot -> forearm -> glove ---- */
-  function buildArm(side) { // side: -1 left, +1 right (boss's own left/right; he faces us)
-    const shoulderG = new THREE.Group();
-    shoulderG.position.set(0.80 * side, 1.14, 0.03);
-    bodyG.add(shoulderG);
-    const upper = capsule(BMAT.hide, 0.20, 0.36, 0, -0.28, 0);
-    shoulderG.add(upper);
-    const elbowG = new THREE.Group();
-    elbowG.position.y = -0.60;
-    shoulderG.add(elbowG);
-    const fore = capsule(BMAT.hide, 0.165, 0.30, 0, -0.24, 0);
-    elbowG.add(fore);
-    const wrap = new THREE.Mesh(new THREE.CylinderGeometry(0.185, 0.175, 0.16, 12), BMAT.tape);
-    wrap.position.y = -0.44;
-    elbowG.add(wrap);
-    const gloveG = new THREE.Group();
-    gloveG.position.y = -0.56;
-    elbowG.add(gloveG);
-    const gMat = bossGloveMat();
-    const mitt = sph(gMat, 0.295, 0.33, 0.35, 0, -0.14, 0.02);
-    gloveG.add(mitt);
-    const thumb = sph(gMat, 0.115, 0.16, 0.13, -0.20 * side, -0.10, 0.10);
-    gloveG.add(thumb);
-    const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.23, 0.15, 12), BMAT.tape);
-    cuff.position.y = 0.06;
-    gloveG.add(cuff);
-    return { shoulderG, elbowG, gloveG, gMat, side };
-  }
-  const armL = buildArm(-1), armR = buildArm(1);
-
-  /* ---- stun stars orbiting the head ---- */
+  /* stun stars (same construction the game has always used) */
   const starShape = new THREE.Shape();
   for (let i = 0; i < 10; i++) {
     const a = (i / 10) * Math.PI * 2 - Math.PI / 2, r = i % 2 === 0 ? 0.085 : 0.038;
@@ -983,27 +815,108 @@ function buildBoss() {
   const starMat = new THREE.MeshBasicMaterial({ color: 0xffd76a, side: THREE.DoubleSide });
   const stars = new THREE.Group();
   const starMeshes = [];
-  for (let i = 0; i < 6; i++) {
-    const st = new THREE.Mesh(starGeo, starMat);
-    stars.add(st); starMeshes.push(st);
-  }
-  stars.position.y = 1.95;
+  for (let i = 0; i < 6; i++) { const st = new THREE.Mesh(starGeo, starMat); stars.add(st); starMeshes.push(st); }
   stars.visible = false;
-  bodyG.add(stars);
+  root.add(stars);
 
-  /* ---- blob shadow on the canvas ---- */
+  /* soft blob shadow on the canvas */
   const shadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({
     map: blobTex, transparent: true, depthWrite: false, opacity: 0.5
   }));
   shadow.rotation.x = -Math.PI / 2;
   shadow.position.set(0, 0.115, BOSS_Z);
-  shadow.scale.set(2.6, 1.6, 1);
+  shadow.scale.set(1.9, 1.25, 1);
   scene.add(shadow);
 
-  scene.add(root);
-  return { root, bodyG, headG, jaw, armL, armR, stars, starMeshes, shadow, belly,
-           pupils, hawkMat: BMAT.mohawk,
-           pose: { lean: 0, sway: 0, headTilt: 0, headNod: 0, jawOpen: 0 } };
+  const B = {
+    root, inner, stars, starMeshes, shadow,
+    rigReady: false, mixer: null, gltfScene: null, bone2Pin: null,
+    bones: {}, ctrl: {}, poseCur: {},
+    armL: { gMat: null, side: -1 }, armR: { gMat: null, side: 1 },
+    gloveL: null, gloveR: null, headAnchor: null, bodyAnchor: null,
+    lunge: 0,
+    info() { return { ready: B.rigReady, scale: inner.scale.x }; }
+  };
+
+  const startBtn = document.getElementById('startBtn');
+  const loader = new GLTFLoader();
+  Promise.all([
+    loader.loadAsync('./assets/juniper_rig.glb'),
+    loader.loadAsync('./assets/idle-stand.glb')
+  ]).then(([rig, idle]) => {
+    const gltfScene = rig.scene;
+    gltfScene.traverse(o => { if (o.isSkinnedMesh) o.frustumCulled = false; });
+    inner.add(gltfScene);
+    B.gltfScene = gltfScene;
+    /* TRUE size: Box3.setFromObject reads bind geometry and lies for this
+       rig (158%-of-frame giant in the AR Dance build's first cut) — union
+       the SkinnedMesh.computeBoundingBox() volumes instead. */
+    gltfScene.updateMatrixWorld(true);
+    const box = new THREE.Box3(); let any = false;
+    gltfScene.traverse(o => { if (o.isSkinnedMesh) {
+      o.computeBoundingBox();
+      const b = o.boundingBox.clone().applyMatrix4(o.matrixWorld);
+      if (!b.isEmpty()) { box.union(b); any = true; }
+    }});
+    const h = any ? Math.max(1, box.max.y - box.min.y) : 146;
+    const s = LINKLE_TARGET_H / h;
+    inner.scale.setScalar(s);
+    if (any) inner.position.y = -box.min.y * s;   // soles exactly on the canvas
+
+    /* bones. Arm mapping verified NUMERICALLY (handScreen hook): the
+       bone_19 hand projects right of centre, bone_20 left — so game 'L'
+       (screen-left punches, as ever) drives the bone_16 chain. */
+    const BN = n => gltfScene.getObjectByName(n);
+    const bones = {
+      hips: BN('bone_2'), spine: BN('bone_9'), mid: BN('bone_10'), chest: BN('bone_11'), neck: BN('bone_12'),
+      upL: BN('bone_16'), foreL: BN('bone_18'), handL: BN('bone_20'),
+      upR: BN('bone_15'), foreR: BN('bone_17'), handR: BN('bone_19')
+    };
+    B.bones = bones;
+    for (const k in bones) {
+      const b = bones[k]; if (!b) continue;
+      B.ctrl[k] = { bone: b };
+      B.poseCur[k] = { x: 0, y: 0, z: 0 };
+    }
+
+    /* boxing gloves on her hands — big enough to read at phone size */
+    function makeGlove(handBone, mat, thumbSide) {
+      const g = new THREE.Group();
+      g.position.set(0, 4.0, 0);
+      g.add(sph(mat, 8.2, 9.0, 10.0, 0, 7.0, 1.0));
+      const thumb = sph(mat, 3.5, 4.8, 3.8, thumbSide * 6.2, 2.0, 5.5);
+      g.add(thumb);
+      const cuff = new THREE.Mesh(new THREE.CylinderGeometry(6.0, 6.9, 6.5, 14),
+        new THREE.MeshStandardMaterial({ color: 0xffc93c, roughness: 0.32, metalness: 0.65 }));
+      cuff.position.y = -1.8;
+      g.add(cuff);
+      handBone.add(g);
+      return g;
+    }
+    const gmL = gloveMat(), gmR = gloveMat();
+    B.gloveL = makeGlove(bones.handL, gmL, -1);
+    B.gloveR = makeGlove(bones.handR, gmR, 1);
+    B.armL.gMat = gmL; B.armR.gMat = gmR;
+
+    /* fx anchors: face + chest (hit pops, stun stars ride these) */
+    const ha = new THREE.Object3D(); ha.position.set(0, 15, 3); bones.neck.add(ha); B.headAnchor = ha;
+    const ba = new THREE.Object3D(); ba.position.set(0, 4, 5); bones.chest.add(ba); B.bodyAnchor = ba;
+
+    /* stance clip + root pin (bone_2 is the only bone with translation
+       tracks; pin its X/Z to the settled pose so she boxes in place) */
+    B.mixer = new THREE.AnimationMixer(gltfScene);
+    const act = B.mixer.clipAction(idle.animations[0]);
+    act.setLoop(THREE.LoopRepeat, Infinity);
+    act.play();
+    B.mixer.update(0.05);
+    if (bones.hips) B.bone2Pin = bones.hips.position.clone();
+    B.rigReady = true;
+    if (startBtn) { startBtn.disabled = false; startBtn.textContent = '▶ FIGHT!'; }
+  }).catch(err => {
+    console.error('Linkle load failed', err);
+    if (startBtn) startBtn.textContent = '⚠ LOAD FAILED — RELOAD';
+  });
+  return B;
 }
 
 /* ============================== player ghost gloves ============================== */
@@ -1134,12 +1047,23 @@ function bigMsg(txt) {
 let stunT = 0, lastPunchAt = -9, hitSnap = 0, headSquashT = 0, bellySquashT = 0, glovesFlashT = 0;
 let endShown = false;
 
+const _hw = new THREE.Vector3();
 function bossHeadScreen() {
-  const p = projectToScreen(rand(-0.08, 0.08), 2.78, BOSS_Z + 0.55);
+  if (boss && boss.headAnchor) {
+    boss.headAnchor.getWorldPosition(_hw);
+    const p = projectToScreen(_hw.x + rand(-0.05, 0.05), _hw.y, _hw.z);
+    if (p) return p;
+  }
+  const p = projectToScreen(0, 2.6, BOSS_Z + 0.4);
   return p || { x: W / 2, y: H * 0.3 };
 }
 function bossBodyScreen() {
-  const p = projectToScreen(rand(-0.15, 0.15), 2.0, BOSS_Z + 0.6);
+  if (boss && boss.bodyAnchor) {
+    boss.bodyAnchor.getWorldPosition(_hw);
+    const p = projectToScreen(_hw.x + rand(-0.1, 0.1), _hw.y, _hw.z);
+    if (p) return p;
+  }
+  const p = projectToScreen(0, 1.9, BOSS_Z + 0.4);
   return p || { x: W / 2, y: H * 0.5 };
 }
 function setBossState(s) { bossState = s; stateT = 0; }
@@ -1150,7 +1074,7 @@ function enterStun(dur) {
   stunMeter = 100;
   starPunchUsed = false;
   if (boss) boss.stars.visible = true;
-  sndSnort();
+  sndEffort();
   sndCrowd();
   updateHUD();
 }
@@ -1192,7 +1116,7 @@ function doPunch(type) {
   sndWhoosh();
 
   if (bossState === 'windup') {
-    /* COUNTER! Punching his wind-up stuns him — the heart of Punch-Out. */
+    /* COUNTER! Punching her wind-up stuns her — the heart of Punch-Out. */
     counters += 1;
     score += 250;
     lastResult = 'counter';
@@ -1280,7 +1204,7 @@ function nextMove() {
   moveArm = currentMove.arm || 'L';
   contactDone = false; secondContactDone = false;
   if (name === 'taunt') { setBossState('taunt'); sndTaunt(); if (Math.random() < 0.7) bigMsg(pick(['😝 "THAT ALL?"', '😝 "NICE TRY, KID!"', '🐷 *SNORT*'])); }
-  else { setBossState('windup'); sndWindup(); if (currentMove.big) sndSnort(); }
+  else { setBossState('windup'); sndWindup(); if (currentMove.big) sndEffort(); }
 }
 
 function updateFight(dt) {
@@ -1348,8 +1272,8 @@ function endFight(result) {
   const titles = {
     'KO': ['🏆', '★ KO! ★', BOSS.rankLine],
     'DECISION-W': ['🏆', 'DECISION WIN!', 'The judges saw enough — the belt is yours!'],
-    'TKO': ['🥴', 'TKO...', 'Bruno keeps the belt. Ice those knuckles.'],
-    'DECISION-L': ['🥴', 'DECISION LOSS', 'Bruno out-pointed you. Rematch?']
+    'TKO': ['🥴', 'TKO...', 'Linkle keeps the crown. Ice those knuckles.'],
+    'DECISION-L': ['🥴', 'DECISION LOSS', 'Linkle out-pointed you. Rematch?']
   };
   const [emoji, title, rank] = titles[result] || titles['TKO'];
   document.getElementById('endEmoji').textContent = emoji;
@@ -1389,157 +1313,237 @@ function resetFight() {
     boss.armR.gMat.emissive.setHex(0x000000);
   }
   setBossState('intro');
-  bigMsg('🥓 BIG BRUNO!');
+  bigMsg('🌿 LINKLE!');
   updateHUD();
 }
 
-/* ============================== boss animation ============================== */
-const ARM_GUARD = { shX: -0.55, in: 0.30, elX: -2.02 };
-function armTargets(arm, t) {
-  /* returns pose targets for one arm given the fight state */
-  const isAtk = (bossState === 'windup' || bossState === 'punch') &&
-    ((bossState === 'punch' && currentMove && currentMove.twice && (stateT / currentMove.punch) >= 0.45)
-      ? (arm.side === (moveArm === 'L' ? 1 : -1))
-      : (arm.side === (moveArm === 'L' ? -1 : 1)));
-  const T = { shX: ARM_GUARD.shX, in: ARM_GUARD.in, elX: ARM_GUARD.elX, lunge: 0, gscale: 1, rate: 11 };
-  if (bossState === 'windup') {
-    if (isAtk) { T.shX = 0.55; T.in = 0.08; T.elX = -0.55; T.lunge = -0.20; T.rate = 7; }
-    else { T.in = 0.40; }
-  } else if (bossState === 'punch' && currentMove) {
-    if (isAtk) {
-      const p = stateT / currentMove.punch;
-      let q = currentMove.twice ? (p < 0.45 ? p / 0.45 : (p - 0.45) / 0.55) : p;
-      q = clamp(q, 0, 1);
-      const ext = q < 0.4 ? easeOut(q / 0.4) : 1 - easeInOut((q - 0.4) / 0.6);
-      T.shX = lerp(0.3, -1.52, ext);
-      T.elX = lerp(-0.8, -0.08, ext);
-      T.in = currentMove.hook ? lerp(0.1, -0.6, ext) : lerp(0.15, 0.05, ext);
-      T.lunge = 0.95 * ext * (currentMove.lunge || 0.8);
-      T.gscale = 1 + 0.55 * ext;
-      T.rate = 40;
-    } else { T.in = 0.42; }
-  } else if (bossState === 'stunned') {
-    T.shX = -0.08; T.in = 0.10; T.elX = -0.45; T.rate = 6;
-  } else if (bossState === 'taunt') {
-    T.shX = -0.45; T.in = -0.62; T.elX = -1.15; T.rate = 8;
-  } else if (bossState === 'ko') {
-    T.shX = stateT < 0.4 ? -2.5 : -0.4; T.in = -0.3; T.elX = -0.3; T.rate = 5;
-  } else if (bossState === 'celebrate') {
-    T.shX = -2.7; T.in = -0.15; T.elX = -0.25; T.rate = 7;
-  } else if (bossState === 'intro') {
-    T.shX = -0.3 + Math.sin(t * 9 + arm.side) * 0.35; T.in = 0.2; T.elX = -0.9; T.rate = 9;
+/* ============================== Linkle pose + animation ==============================
+   Pose channels are {x,y,z} WORLD-axis angles in degrees. Arm triples are
+   authored for her RIGHT arm (the +X chain); the left arm mirrors Y and Z.
+   Channels: hips, spine (drives bone_9 + a share of bone_10), chest, neck,
+   up/fore per arm. Each frame: the mixer writes the idle clip, then the
+   approached pose deltas multiply on top — reactions included. */
+let stateTGlobal = 0;
+let snapPose = false;               // QA: one-frame pose snap for stills
+
+const D2R = Math.PI / 180;
+function armMirror(tri, side) { return side < 0 ? { x: tri.x, y: -tri.y, z: -tri.z } : tri; }
+
+function linklePose(t) {
+  const atkS = moveArm === 'L' ? -1 : 1;   // game 'L' = the -X arm chain
+  const st = bossState;
+  const P = {
+    hips: { x: 3, y: 0, z: 0 }, spine: { x: 5, y: 0, z: 0 },
+    chest: { x: 3, y: 0, z: 0 }, neck: { x: -3, y: 0, z: 0 },
+    upL: null, foreL: null, upR: null, foreR: null,
+    rates: { hips: 8, spine: 8, chest: 8, neck: 9, upL: 11, foreL: 11, upR: 11, foreR: 11 },
+    lungeT: 0, lungeRate: 10, gsL: 1, gsR: 1
+  };
+  const GU = { x: -44, y: 0, z: 0 }, GF = { x: -56, y: 10, z: 0 };   // guard (right-arm frame; grid-tuned: fists land wide on her cheeks)
+  function armPose(s) {
+    let up = GU, fore = GF, rate = 11, gs = 1;
+    const isAtk = (st === 'windup' || st === 'punch') && currentMove &&
+      ((st === 'punch' && currentMove.twice && (stateT / Math.max(0.01, currentMove.punch)) >= 0.45) ? s === -atkS : s === atkS);
+    if (st === 'windup' && currentMove) {
+      if (isAtk) {
+        if (currentMove.big) { up = { x: -120, y: 0, z: -8 }; fore = { x: -105, y: 0, z: 0 }; }
+        else if (currentMove.hook) { up = { x: -38, y: 26, z: 0 }; fore = { x: -70, y: 10, z: 0 }; }
+        else { up = { x: -20, y: 0, z: 0 }; fore = { x: -100, y: -6, z: 0 }; }
+        rate = 7;
+      } else fore = { x: -70, y: 6, z: 0 };              // off hand guards tighter
+    } else if (st === 'punch' && currentMove) {
+      if (isAtk) {
+        const p = clamp(stateT / Math.max(0.01, currentMove.punch), 0, 1);
+        const q = currentMove.twice ? (p < 0.45 ? p / 0.45 : (p - 0.45) / 0.55) : p;
+        const ext = q < 0.4 ? easeOut(q / 0.4) : 1 - easeInOut((q - 0.4) / 0.6);
+        if (currentMove.big) {
+          up = { x: lerp(-110, -30, ext), y: 0, z: 0 };
+          fore = { x: lerp(-100, -6, ext), y: 0, z: 0 };
+        } else if (currentMove.hook) {
+          up = { x: -52, y: lerp(24, -30, ext), z: 0 };
+          fore = { x: lerp(-68, -34, ext), y: lerp(8, -16, ext), z: 0 };
+        } else {
+          up = { x: lerp(-24, -80, ext), y: 0, z: 0 };
+          fore = { x: lerp(-96, -4, ext), y: -8, z: 0 };
+        }
+        gs = 1 + 0.38 * ext; rate = 40;
+        P.lungeT = Math.max(P.lungeT, ext * (currentMove.lunge || 0.8));
+      } else fore = { x: -70, y: 6, z: 0 };
+    } else if (st === 'stunned') { up = { x: -6, y: 0, z: 0 }; fore = { x: -12, y: 0, z: 0 }; rate = 6; }
+    else if (st === 'taunt') { up = { x: 16, y: 0, z: 12 }; fore = { x: -92, y: -24, z: 0 }; rate = 8; }
+    else if (st === 'ko') { up = { x: -30, y: 0, z: 20 }; fore = { x: -20, y: 0, z: 0 }; rate = 5; }
+    else if (st === 'celebrate') { up = { x: -160, y: 0, z: 8 }; fore = { x: -14, y: 0, z: 0 }; rate = 7; }
+    else if (st === 'intro') {
+      fore = { x: GF.x + Math.sin(t * 9 + (s < 0 ? 0 : 1.6)) * 9, y: GF.y, z: GF.z }; rate = 9;
+    }
+    return { up: armMirror(up, s), fore: armMirror(fore, s), rate, gs };
   }
-  return T;
+  const aL = armPose(-1), aR = armPose(1);
+  P.upL = aL.up; P.foreL = aL.fore; P.upR = aR.up; P.foreR = aR.fore;
+  P.rates.upL = P.rates.foreL = aL.rate; P.rates.upR = P.rates.foreR = aR.rate;
+  P.gsL = aL.gs; P.gsR = aR.gs;
+
+  /* body language per state */
+  if (st === 'windup' && currentMove) {
+    const coil = atkS * 13;
+    P.spine = { x: -3, y: coil * 0.4, z: 0 }; P.chest = { x: -2, y: coil, z: 0 };
+    P.hips = { x: -1, y: coil * 0.5, z: 0 }; P.neck = { x: -5, y: -coil * 0.5, z: 0 };
+  } else if (st === 'punch' && currentMove) {
+    const p = clamp(stateT / Math.max(0.01, currentMove.punch), 0, 1);
+    const ext = p < 0.4 ? easeOut(p / 0.4) : 1 - easeInOut((p - 0.4) / 0.6);
+    P.spine = { x: 3 + 9 * ext, y: -atkS * 6 * ext, z: 0 };
+    P.chest = { x: 2 + 7 * ext, y: -atkS * 13 * ext, z: 0 };
+    P.neck = { x: -4 - 4 * ext, y: atkS * 10 * ext, z: 0 };
+    P.hips = { x: 3 + 4 * ext, y: -atkS * 5 * ext, z: 0 };
+  } else if (st === 'stunned') {
+    P.hips = { x: 6, y: 0, z: 0 }; P.spine = { x: 13, y: 0, z: 0 };
+    P.chest = { x: 10, y: 0, z: 0 };
+    P.neck = { x: 22, y: 0, z: Math.sin(t * 6.5) * 9 };
+  } else if (st === 'taunt') {
+    P.chest = { x: -6, y: 0, z: 0 }; P.neck = { x: -9, y: 0, z: 0 };
+    P.hips = { x: 0, y: 0, z: Math.sin(t * 2.2) * 4 };
+  } else if (st === 'celebrate') {
+    P.chest = { x: -7, y: 0, z: 0 }; P.neck = { x: -11, y: 0, z: 0 };
+  } else if (st === 'ko') {
+    P.spine = { x: 5, y: 0, z: 0 }; P.neck = { x: 8, y: 0, z: 0 };
+  }
+  /* hit reactions ride on top of whatever she's doing */
+  if (headSquashT > 0) {
+    const k = Math.sin((headSquashT / 0.22) * Math.PI);
+    P.neck.x -= 26 * k; P.chest.x -= 10 * k;
+  }
+  if (bellySquashT > 0) {
+    const k = Math.sin((bellySquashT / 0.22) * Math.PI);
+    P.spine.x += 15 * k; P.hips.x += 7 * k;
+  }
+  if (Math.abs(hitSnap) > 0.003) { P.hips.z += hitSnap * 20; P.neck.z += hitSnap * 26; }
+  if (DEBUG_POSE) for (const k in DEBUG_POSE) if (P[k] && typeof P[k] === 'object') P[k] = DEBUG_POSE[k];
+  return P;
 }
-function applyArm(arm, T, dt) {
-  const c = arm.cur || (arm.cur = { shX: ARM_GUARD.shX, in: ARM_GUARD.in, elX: ARM_GUARD.elX, lunge: 0, gscale: 1 });
-  c.shX = approach(c.shX, T.shX, T.rate, dt);
-  c.in = approach(c.in, T.in, T.rate, dt);
-  c.elX = approach(c.elX, T.elX, T.rate, dt);
-  c.lunge = approach(c.lunge, T.lunge, T.rate, dt);
-  c.gscale = approach(c.gscale, T.gscale, T.rate, dt);
-  arm.shoulderG.rotation.set(c.shX, 0, -arm.side * c.in);
-  arm.elbowG.rotation.x = c.elX;
-  arm.shoulderG.position.z = 0.03 + c.lunge;
-  arm.gloveG.scale.setScalar(c.gscale);
+let DEBUG_POSE = null;
+
+const _dq = new THREE.Quaternion(), _dq2 = new THREE.Quaternion(), _wv3 = new THREE.Vector3();
+const _wqNow = new THREE.Quaternion(), _wqInv = new THREE.Quaternion(), _axv = new THREE.Vector3();
+const AX = { x: new THREE.Vector3(1, 0, 0), y: new THREE.Vector3(0, 1, 0), z: new THREE.Vector3(0, 0, 1) };
+/* Pose deltas are WORLD-axis angles. The conversion axes come from the
+   bone's CURRENT world quaternion (read after the mixer wrote the clip
+   pose, parents already posed) — the bind pose would be wrong for the
+   arms, whose clip pose hangs ~90° away from the T-pose bind. */
+function applyBoneDelta(B, key, ang, scaleF) {
+  const c = B.ctrl[key]; if (!c) return;
+  const s = scaleF || 1;
+  c.bone.getWorldQuaternion(_wqNow);
+  _wqInv.copy(_wqNow).invert();
+  _axv.copy(AX.x).applyQuaternion(_wqInv); _dq.setFromAxisAngle(_axv, ang.x * s * D2R);
+  _axv.copy(AX.y).applyQuaternion(_wqInv); _dq2.setFromAxisAngle(_axv, ang.y * s * D2R); _dq.multiply(_dq2);
+  _axv.copy(AX.z).applyQuaternion(_wqInv); _dq2.setFromAxisAngle(_axv, ang.z * s * D2R); _dq.multiply(_dq2);
+  c.bone.quaternion.multiply(_dq);
+}
+function approachAng(cur, tgt, rate, dt) {
+  cur.x = approach(cur.x, tgt.x, rate, dt);
+  cur.y = approach(cur.y, tgt.y, rate, dt);
+  cur.z = approach(cur.z, tgt.z, rate, dt);
 }
 
 function updateBoss(dt, t) {
   if (!boss) return;
   const B = boss;
   stateTGlobal += dt;
-  /* --- root: walk-in, weave, KO fall --- */
+  if (headSquashT > 0) headSquashT -= dt;
+  if (bellySquashT > 0) bellySquashT -= dt;
+  hitSnap = approach(hitSnap, 0, 2.2, dt);
+  const pdt = snapPose ? 0.55 : dt; snapPose = false;
+
+  const P = B.rigReady ? linklePose(t) : null;
+  if (P) B.lunge = approach(B.lunge, P.lungeT * 0.42, P.lungeRate || 10, pdt);
+
+  /* ---- root motion: intro walk-in, KO fall, fight sway ---- */
   if (bossState === 'intro') {
     const p = clamp(stateT / 1.35, 0, 1);
     B.root.position.z = lerp(-3.7, BOSS_Z, easeOut(p));
-    B.root.position.y = Math.abs(Math.sin(t * 9)) * 0.05;
-    B.root.position.x = 0;
+    B.root.position.y = Math.abs(Math.sin(p * Math.PI * 5)) * 0.09 * (1 - p);
+    B.root.rotation.x = approach(B.root.rotation.x, 0, 8, dt);
   } else if (bossState === 'ko') {
     const p = clamp(stateT / 1.05, 0, 1);
-    const fall = easeOut(clamp(p / 0.72, 0, 1));
-    const settle = p > 0.72 ? Math.sin((p - 0.72) / 0.28 * Math.PI) * 0.05 : 0;
-    B.root.rotation.x = -1.22 * fall + settle;
+    const fall = easeInOut(p);
+    B.root.rotation.x = -1.22 * fall + Math.sin(p * 22) * 0.02 * (1 - p);
     B.root.position.z = BOSS_Z + 0.55 * fall;
-    B.root.position.x = 0;
-  } else {
-    B.root.position.z = BOSS_Z;
-    B.root.position.x = bossState === 'idle' ? Math.sin(t * 0.9) * 0.07 : Math.sin(t * 1.7) * 0.03;
     B.root.position.y = 0;
+  } else {
     B.root.rotation.x = approach(B.root.rotation.x, 0, 8, dt);
-    if (bossState === 'celebrate') B.root.position.y = Math.abs(Math.sin(t * 6)) * 0.09;
+    B.root.position.z = approach(B.root.position.z, BOSS_Z + B.lunge, 7, dt);
+    B.root.position.x = Math.sin(t * 0.7) * 0.05;
+    if (bossState === 'celebrate') B.root.position.y = Math.abs(Math.sin(t * 7)) * 0.12;
+    else if (bossState === 'taunt') B.root.position.y = Math.sin(t * 2.2) * 0.03;
+    else if (bossState === 'idle') B.root.position.y = Math.sin(t * 2.3) * 0.02;
+    else B.root.position.y = 0;
   }
-  /* --- body: bounce, lean, squash --- */
-  const bounce = bossState === 'stunned' ? Math.sin(t * 2.2) * 0.02
-    : bossState === 'idle' ? Math.sin(t * 2.3) * 0.032
-    : Math.sin(t * 2.0) * 0.02;
-  B.bodyG.position.y = 1.12 + bounce;
-  let leanT = 0.02 * Math.sin(t * 1.4);
-  if (bossState === 'windup') leanT = -0.14;
-  else if (bossState === 'punch') leanT = 0.24;
-  else if (bossState === 'stunned') leanT = 0.05;
-  else if (bossState === 'taunt') leanT = -0.08;
-  B.bodyG.rotation.x = approach(B.bodyG.rotation.x, leanT, 9, dt);
-  B.bodyG.rotation.z = bossState === 'stunned' ? Math.sin(t * 2.4) * 0.055
-    : approach(B.bodyG.rotation.z, hitSnap * 0.4, 10, dt);
-  hitSnap = approach(hitSnap, 0, 7, dt);
-  if (bellySquashT > 0) {
-    bellySquashT -= dt;
-    const s = Math.sin(clamp(bellySquashT / 0.22, 0, 1) * Math.PI) * 0.16;
-    B.belly.scale.set(0.74 * (1 + s), 0.68 * (1 - s * 0.7), 0.58 * (1 + s));
-  }
-  /* --- head: aim, wobble, squash, dizzy pupils --- */
-  B.headG.rotation.y = bossState === 'idle' ? Math.sin(t * 0.55) * 0.09 : approach(B.headG.rotation.y, 0, 6, dt);
-  B.headG.rotation.z = bossState === 'stunned' ? Math.sin(t * 6.5) * 0.16 : approach(B.headG.rotation.z, hitSnap * 0.8, 9, dt);
-  B.headG.rotation.x = bossState === 'taunt' ? -0.18 : bossState === 'windup' ? -0.08 : 0;
-  if (headSquashT > 0) {
-    headSquashT -= dt;
-    const s = Math.sin(clamp(headSquashT / 0.22, 0, 1) * Math.PI) * 0.17;
-    B.headG.scale.set(1 + s, 1 - s * 0.75, 1 + s * 0.8);
-  } else B.headG.scale.set(1, 1, 1);
-  const dizzy = bossState === 'stunned' || bossState === 'ko';
-  B.pupils.forEach((pup, i) => {
-    const s = i === 0 ? -1 : 1;
-    pup.position.x = approach(pup.position.x, dizzy ? 0.10 * s : 0.185 * s, 8, dt);
-    pup.position.y = approach(pup.position.y, dizzy ? 0.26 : 0.20, 8, dt);
-  });
-  /* --- jaw --- */
-  let jawT = 0.04;
-  if (bossState === 'taunt') jawT = 0.30 + Math.sin(t * 13) * 0.14;
-  else if (bossState === 'stunned') jawT = 0.26;
-  else if (bossState === 'ko') jawT = 0.34;
-  else if (bossState === 'windup') jawT = 0.14;
-  B.jaw.rotation.x = approach(B.jaw.rotation.x, jawT, 8, dt);
-  /* --- arms --- */
-  applyArm(B.armL, armTargets(B.armL, t), dt);
-  applyArm(B.armR, armTargets(B.armR, t), dt);
-  /* --- telegraph flash on the winding glove --- */
-  B.armL.gMat.emissive.setHex(0x000000); B.armL.gMat.emissiveIntensity = 1;
-  B.armR.gMat.emissive.setHex(0x000000); B.armR.gMat.emissiveIntensity = 1;
-  if (bossState === 'windup' && currentMove) {
-    const atk = moveArm === 'L' ? B.armL : B.armR;
-    atk.gMat.emissive.setHex(0xff2a1a);
-    atk.gMat.emissiveIntensity = 0.45 + 0.45 * Math.sin(t * 26);
-    atk.gMat.emissiveIntensity *= currentMove.big ? 1.5 : 1;
-  }
-  if (enrage() && bossState !== 'ko') B.hawkMat.emissiveIntensity = 1.4;
-  /* --- stun stars orbit --- */
-  if (B.stars.visible) {
-    B.stars.rotation.y += dt * 3.4;
-    B.starMeshes.forEach((st, i) => {
-      const a = (i / B.starMeshes.length) * Math.PI * 2;
-      st.position.set(Math.cos(a) * 0.66, Math.sin(stateTGlobal * 5 + i * 1.3) * 0.06, Math.sin(a) * 0.66);
-      st.rotation.y = -a;
-    });
-    if (bossState === 'stunned' && Math.random() < dt * 2.2) {
-      const p = bossHeadScreen();
-      spawnSweat(p.x, p.y);
+
+  /* ---- rig: idle clip first, procedural pose layered on top ---- */
+  if (B.rigReady && B.mixer) {
+    /* epsilon dt: with dt=0 (QA freeze) the mixer does not re-apply the
+       clip pose, and the pose deltas below would compound frame over
+       frame — a hair of advance keeps every frame idempotent */
+    B.mixer.update(dt === 0 ? 0.0001 : dt);
+    const hb = B.bones.hips;
+    if (hb && B.bone2Pin) { hb.position.x = B.bone2Pin.x; hb.position.z = B.bone2Pin.z; }
+    if (P) {
+      for (const k of ['hips', 'spine', 'chest', 'neck', 'upL', 'foreL', 'upR', 'foreR'])
+        approachAng(B.poseCur[k], P[k], P.rates[k] || 9, pdt);
+      applyBoneDelta(B, 'hips', B.poseCur.hips);
+      applyBoneDelta(B, 'spine', B.poseCur.spine, 0.7);
+      applyBoneDelta(B, 'mid', B.poseCur.spine, 0.45);
+      applyBoneDelta(B, 'chest', B.poseCur.chest);
+      applyBoneDelta(B, 'neck', B.poseCur.neck);
+      applyBoneDelta(B, 'upL', B.poseCur.upL); applyBoneDelta(B, 'foreL', B.poseCur.foreL);
+      applyBoneDelta(B, 'upR', B.poseCur.upR); applyBoneDelta(B, 'foreR', B.poseCur.foreR);
+      if (B.gloveL) B.gloveL.scale.setScalar(P.gsL);
+      if (B.gloveR) B.gloveR.scale.setScalar(P.gsR);
     }
   }
-  /* --- shadow follows --- */
+
+  /* ---- telegraph: the winding glove flashes red; enrage tints both ---- */
+  if (B.armL.gMat && B.armR.gMat) {
+    const enr = enrage() && bossState !== 'ko';
+    B.armL.gMat.emissive.setHex(enr ? 0x38160a : 0x000000);
+    B.armR.gMat.emissive.setHex(enr ? 0x38160a : 0x000000);
+    B.armL.gMat.emissiveIntensity = 1; B.armR.gMat.emissiveIntensity = 1;
+    if (bossState === 'windup' && currentMove) {
+      const atk = (moveArm === 'L' ? B.armL : B.armR).gMat;
+      atk.emissive.setHex(0xff2a1a);
+      atk.emissiveIntensity = (currentMove.big ? 1.5 : 1) * (0.65 + 0.5 * Math.abs(Math.sin(t * 14)));
+    }
+  }
+
+  /* ---- stun stars orbit her head; sweat while stunned ---- */
+  if (B.stars.visible) {
+    if (B.headAnchor) {
+      B.root.updateMatrixWorld(true);
+      B.headAnchor.getWorldPosition(_wv3);
+      const lp = B.root.worldToLocal(_wv3);
+      B.stars.position.set(lp.x, lp.y + 0.24, lp.z + 0.05);
+    }
+    B.stars.rotation.y += dt * 3.4;
+    B.starMeshes.forEach((st, i) => {
+      const a = (i / B.starMeshes.length) * Math.PI * 2 + stateTGlobal * 3.4;
+      st.position.set(Math.cos(a) * 0.42, Math.sin(a * 2) * 0.05, Math.sin(a) * 0.42);
+      st.rotation.z = a;
+    });
+    if (bossState === 'stunned' && Math.random() < dt * 7) {
+      const d = sweatPool.find(s => !s.visible);
+      if (d) {
+        const hs = bossHeadScreen();
+        d.visible = true; d.userData.life = 0.55;
+        d.position.set(hs.x + rand(-26, 26), hs.y + rand(-8, 8));
+        d.style.left = d.position.x + 'px'; d.style.top = d.position.y + 'px';
+      }
+    }
+  }
+
   B.shadow.position.x = B.root.position.x;
+  B.shadow.position.z = B.root.position.z + 0.15;
   B.shadow.material.opacity = bossState === 'ko' ? 0.35 : 0.5;
 }
-let stateTGlobal = 0;
 
 /* ============================== player gloves update ============================== */
 function updateGloves(dt) {
@@ -1736,7 +1740,7 @@ document.getElementById('againBtn').addEventListener('click', () => {
 resize();
 initGL();
 buildRing();
-boss = buildBoss();
+boss = buildLinkle();
 gloves = buildPlayerGloves();
 bossNameEl.textContent = BOSS.name;
 resize();
@@ -1769,6 +1773,47 @@ window.__game = {
     if (!boss) return null;
     const p = projectToScreen(boss.root.position.x, 2.2, BOSS_Z + 0.3);
     return p ? { x: Math.round(p.x), y: Math.round(p.y) } : null;
+  },
+  bossReady: () => !!(boss && boss.rigReady),
+  bossInfo: () => (boss && boss.info) ? boss.info() : null,
+  setPose: (state, moveName, arm, p) => {
+    if (!boss) return false;
+    if (moveName && BOSS.moves[moveName]) {
+      currentMove = Object.assign({}, BOSS.moves[moveName], { name: moveName });
+      moveArm = arm || currentMove.arm || 'L';
+    }
+    if (boss.stars) boss.stars.visible = (state === 'stunned' || state === 'ko');
+    setBossState(state);
+    const dur = state === 'windup' ? (currentMove ? currentMove.windup : 0.6)
+      : state === 'punch' ? (currentMove ? currentMove.punch : 0.2)
+      : state === 'taunt' ? 1.15 : 1;
+    stateT = (p || 0) * dur;
+    snapPose = true;
+    return true;
+  },
+  snap: () => { snapPose = true; },
+  debugPose: (obj) => { DEBUG_POSE = obj; snapPose = true; return true; },
+  handScreen: () => {
+    if (!boss || !boss.rigReady) return null;
+    const v = new THREE.Vector3();
+    const proj = (bone) => {
+      if (!bone) return null;
+      bone.getWorldPosition(v);
+      const p = projectToScreen(v.x, v.y, v.z);
+      return p ? { x: Math.round(p.x), y: Math.round(p.y) } : null;
+    };
+    return { L: proj(boss.bones.handL), R: proj(boss.bones.handR), head: proj(boss.bones.neck) };
+  },
+  debugBones: () => {
+    if (!boss || !boss.rigReady) return null;
+    const q = new THREE.Quaternion(), out = { rootX: +boss.root.rotation.x.toFixed(3), poseCur: {} };
+    for (const k of ['hips', 'spine', 'chest', 'neck']) {
+      const c = boss.ctrl[k]; if (!c) continue;
+      c.bone.getWorldQuaternion(q);
+      out[k] = [q.x, q.y, q.z, q.w].map(v => +v.toFixed(3));
+    }
+    for (const k in boss.poseCur) out.poseCur[k] = { x: +boss.poseCur[k].x.toFixed(1), y: +boss.poseCur[k].y.toFixed(1), z: +boss.poseCur[k].z.toFixed(1) };
+    return out;
   },
   punch: (type) => doPunch(type),
   setBlock: (b) => { hookBlock = !!b; refreshBlocking(); },
