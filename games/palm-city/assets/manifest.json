@@ -1,0 +1,284 @@
+{
+ "cars": {
+  "conv_mint": {
+   "angles": 32,
+   "color": {
+    "file": "car_conv_mint.png",
+    "h": 64.0,
+    "ox": -32.0,
+    "oy": -32.0,
+    "w": 64.0
+   },
+   "cols": 8,
+   "kind": "convertible",
+   "length": 46.0,
+   "light": {
+    "file": "car_conv_mint_light.png",
+    "h": 220.0,
+    "ox": -35.0,
+    "oy": -160.0,
+    "w": 70.0
+   },
+   "shadow": {
+    "file": "car_conv_mint_sh.png",
+    "h": 96.0,
+    "ox": -36.41,
+    "oy": -51.11,
+    "w": 96.0
+   },
+   "width": 19.0
+  },
+  "conv_rose": {
+   "angles": 32,
+   "color": {
+    "file": "car_conv_rose.png",
+    "h": 64.0,
+    "ox": -32.0,
+    "oy": -32.0,
+    "w": 64.0
+   },
+   "cols": 8,
+   "kind": "convertible",
+   "length": 46.0,
+   "light": {
+    "file": "car_conv_rose_light.png",
+    "h": 220.0,
+    "ox": -35.0,
+    "oy": -160.0,
+    "w": 70.0
+   },
+   "shadow": {
+    "file": "car_conv_rose_sh.png",
+    "h": 96.0,
+    "ox": -36.41,
+    "oy": -51.11,
+    "w": 96.0
+   },
+   "width": 19.0
+  },
+  "police": {
+   "angles": 32,
+   "color": {
+    "file": "car_police.png",
+    "h": 64.0,
+    "ox": -32.0,
+    "oy": -32.0,
+    "w": 64.0
+   },
+   "cols": 8,
+   "kind": "police",
+   "length": 46.0,
+   "light": {
+    "file": "car_police_light.png",
+    "h": 220.0,
+    "ox": -35.0,
+    "oy": -160.0,
+    "w": 70.0
+   },
+   "shadow": {
+    "file": "car_police_sh.png",
+    "h": 96.0,
+    "ox": -36.41,
+    "oy": -51.11,
+    "w": 96.0
+   },
+   "width": 19.0
+  },
+  "sedan_coral": {
+   "angles": 32,
+   "color": {
+    "file": "car_sedan_coral.png",
+    "h": 64.0,
+    "ox": -32.0,
+    "oy": -32.0,
+    "w": 64.0
+   },
+   "cols": 8,
+   "kind": "sedan",
+   "length": 46.0,
+   "light": {
+    "file": "car_sedan_coral_light.png",
+    "h": 220.0,
+    "ox": -35.0,
+    "oy": -160.0,
+    "w": 70.0
+   },
+   "shadow": {
+    "file": "car_sedan_coral_sh.png",
+    "h": 96.0,
+    "ox": -36.41,
+    "oy": -51.11,
+    "w": 96.0
+   },
+   "width": 19.0
+  },
+  "sedan_cream": {
+   "angles": 32,
+   "color": {
+    "file": "car_sedan_cream.png",
+    "h": 64.0,
+    "ox": -32.0,
+    "oy": -32.0,
+    "w": 64.0
+   },
+   "cols": 8,
+   "kind": "sedan",
+   "length": 46.0,
+   "light": {
+    "file": "car_sedan_cream_light.png",
+    "h": 220.0,
+    "ox": -35.0,
+    "oy": -160.0,
+    "w": 70.0
+   },
+   "shadow": {
+    "file": "car_sedan_cream_sh.png",
+    "h": 96.0,
+    "ox": -36.41,
+    "oy": -51.11,
+    "w": 96.0
+   },
+   "width": 19.0
+  },
+  "sedan_plum": {
+   "angles": 32,
+   "color": {
+    "file": "car_sedan_plum.png",
+    "h": 64.0,
+    "ox": -32.0,
+    "oy": -32.0,
+    "w": 64.0
+   },
+   "cols": 8,
+   "kind": "sedan",
+   "length": 46.0,
+   "light": {
+    "file": "car_sedan_plum_light.png",
+    "h": 220.0,
+    "ox": -35.0,
+    "oy": -160.0,
+    "w": 70.0
+   },
+   "shadow": {
+    "file": "car_sedan_plum_sh.png",
+    "h": 96.0,
+    "ox": -36.41,
+    "oy": -51.11,
+    "w": 96.0
+   },
+   "width": 19.0
+  },
+  "sedan_teal": {
+   "angles": 32,
+   "color": {
+    "file": "car_sedan_teal.png",
+    "h": 64.0,
+    "ox": -32.0,
+    "oy": -32.0,
+    "w": 64.0
+   },
+   "cols": 8,
+   "kind": "sedan",
+   "length": 46.0,
+   "light": {
+    "file": "car_sedan_teal_light.png",
+    "h": 220.0,
+    "ox": -35.0,
+    "oy": -160.0,
+    "w": 70.0
+   },
+   "shadow": {
+    "file": "car_sedan_teal_sh.png",
+    "h": 96.0,
+    "ox": -36.41,
+    "oy": -51.11,
+    "w": 96.0
+   },
+   "width": 19.0
+  },
+  "taxi": {
+   "angles": 32,
+   "color": {
+    "file": "car_taxi.png",
+    "h": 64.0,
+    "ox": -32.0,
+    "oy": -32.0,
+    "w": 64.0
+   },
+   "cols": 8,
+   "kind": "taxi",
+   "length": 46.0,
+   "light": {
+    "file": "car_taxi_light.png",
+    "h": 220.0,
+    "ox": -35.0,
+    "oy": -160.0,
+    "w": 70.0
+   },
+   "shadow": {
+    "file": "car_taxi_sh.png",
+    "h": 96.0,
+    "ox": -36.41,
+    "oy": -51.11,
+    "w": 96.0
+   },
+   "width": 19.0
+  },
+  "van_sky": {
+   "angles": 32,
+   "color": {
+    "file": "car_van_sky.png",
+    "h": 64.0,
+    "ox": -32.0,
+    "oy": -32.0,
+    "w": 64.0
+   },
+   "cols": 8,
+   "kind": "van",
+   "length": 49.0,
+   "light": {
+    "file": "car_van_sky_light.png",
+    "h": 220.0,
+    "ox": -35.0,
+    "oy": -160.0,
+    "w": 70.0
+   },
+   "shadow": {
+    "file": "car_van_sky_sh.png",
+    "h": 96.0,
+    "ox": -36.41,
+    "oy": -51.11,
+    "w": 96.0
+   },
+   "width": 20.0
+  },
+  "van_sun": {
+   "angles": 32,
+   "color": {
+    "file": "car_van_sun.png",
+    "h": 64.0,
+    "ox": -32.0,
+    "oy": -32.0,
+    "w": 64.0
+   },
+   "cols": 8,
+   "kind": "van",
+   "length": 49.0,
+   "light": {
+    "file": "car_van_sun_light.png",
+    "h": 220.0,
+    "ox": -35.0,
+    "oy": -160.0,
+    "w": 70.0
+   },
+   "shadow": {
+    "file": "car_van_sun_sh.png",
+    "h": 96.0,
+    "ox": -36.41,
+    "oy": -51.11,
+    "w": 96.0
+   },
+   "width": 20.0
+  }
+ }
+}
