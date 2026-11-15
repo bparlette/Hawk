@@ -3130,6 +3130,22 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "UNTANGLE IT!",
    "url": "../games/untangle-it/"
+  },
+  {
+   "category": "Originals",
+   "desc": "Link loose in the real Vice City — hookshot zips, paraglider drops, cucco swarm wanted system",
+   "id": "hyrule-vice-city",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Hyrule Vice City",
+   "url": "../games/hyrule-vice-city/"
+  },
+  {
+   "category": "Originals",
+   "desc": "Skate score attack on real Vice Beach — every curb grindable, manuals, combos, 2-minute runs",
+   "id": "kickflip-vice",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Kickflip Vice",
+   "url": "../games/kickflip-vice/"
   }
  ]
 }
