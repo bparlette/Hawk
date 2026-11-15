@@ -81,7 +81,7 @@ canvas{touch-action:none}
   </div>
   <button class="bigbtn" id="playbtn" disabled>▶ PLAY</button>
   <div id="loadmsg">loading Liberty City…</div>
-  <p class="fine">Walk: joystick / WASD · A or E: enter &amp; exit car · B or Shift: sprint · Space: handbrake<br>Follow the ringing phone in each city. Liberty City's bank job pays $50,000 · Vice City $35,000 · San Andreas $25,000.</p>
+  <p class="fine">On foot: ◀ ▶ turn · ▲ walk · ▼ step back (joystick or WASD) · A or E: enter &amp; exit car · B or Shift: sprint · Space: handbrake<br>Follow the ringing phone in each city. Liberty City's bank job pays $50,000 · Vice City $35,000 · San Andreas $25,000.</p>
 </div>
 
 <div class="screen hidden" id="bustedscreen">
@@ -982,14 +982,19 @@ function playerUpdate(dt, input) {
     return;
   }
   AU.engine(0, 0);
-  const mag = Math.hypot(input.x, input.y);
-  if (mag > 0.12) {
-    const sp = input.sprint ? 6.4 : 3.6;
-    const dx = input.x / Math.max(1, mag), dz = input.y / Math.max(1, mag);
-    player.heading = Math.atan2(dx, -dz);
-    ped.x += dx * sp * dt; ped.z += dz * sp * dt;
+  // TANK CONTROLS — faithful to the real 1997 game: left/right ROTATES the
+  // ped in place, forward walks along his current facing, back steps
+  // backward slowly without turning. No inertia: release and he stops.
+  const TURN = Math.PI / 0.55; // ~5.71 rad/s — a 180° turn takes ~0.55 s, brisk like the original
+  if (Math.abs(input.x) > 0.08) player.heading += input.x * TURN * dt;
+  let sp = 0;
+  if (input.y < -0.12) sp = input.sprint ? 6.4 : 3.6;   // forward along facing
+  else if (input.y > 0.12) sp = -3.6 * 0.55;            // back-step at ~55% of walk speed
+  if (sp !== 0) {
+    ped.x += Math.sin(player.heading) * sp * dt;
+    ped.z += -Math.cos(player.heading) * sp * dt;
     collideCircle(ped, 0.55);
-    ped.phase += dt * (input.sprint ? 3.4 : 2.4);
+    ped.phase += dt * Math.abs(sp) * 0.62; // leg cycle tracks actual movement speed
     setPedFrame(ped, pedDirKey(player.heading), true);
   } else setPedFrame(ped, pedDirKey(player.heading), false);
   player.x = ped.x; player.z = ped.z;
