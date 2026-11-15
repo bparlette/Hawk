@@ -241,10 +241,56 @@ def kuwahara(img, r=2):
     return out
 
 
-def shadow_to_alpha(img):
-    """Cycles shadow catcher with transparent film: keep alpha, colour -> black."""
+def night_clean(img, fade=0.12):
+    """Night light layer for additive use: remove the ambient floor and fade frame edges to exact black,
+    so the additive sprite never shows a rectangle."""
+    rgb = img[..., :3].copy()
+    h, w = rgb.shape[:2]
+    border = np.concatenate([rgb[0], rgb[-1], rgb[:, 0], rgb[:, -1]])
+    floor = np.percentile(border, 60, axis=0)
+    rgb = np.clip(rgb - floor * 1.05, 0, 1)
+    yy = np.linspace(0, 1, h)[:, None]
+    xx = np.linspace(0, 1, w)[None, :]
+    def ramp(t):
+        t = np.clip(t / fade, 0, 1)
+        return t * t * (3 - 2 * t)
+    mask = ramp(xx) * ramp(1 - xx) * ramp(yy) * ramp(1 - yy)
+    out = np.zeros((h, w, 4), dtype=np.float32)
+    out[..., :3] = rgb * mask[..., None]
+    out[..., 3] = 1
+    return out
+
+
+def shadow_to_alpha(img, full=0.6):
+    """Cycles shadow catcher with transparent film: keep alpha, colour -> black.
+    The catcher leaves the sky fill in, so a full cast shadow reads ~0.6; normalise that to 1 so
+    the game alone decides shadow strength per time of day."""
     out = np.zeros_like(img)
-    out[..., 3] = np.clip(img[..., 3], 0, 1)
+    out[..., 3] = np.clip(img[..., 3] / full, 0, 1)
+    return out
+
+
+def ink(img, line=0.55, inner=0.35):
+    """Storybook finish: a soft dark-plum outline around the silhouette plus watercolour-style
+    edge darkening on internal value changes."""
+    a = img[..., 3]
+    # silhouette outline: dilated alpha minus alpha
+    dil = a.copy()
+    for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1)):
+        dil = np.maximum(dil, np.roll(np.roll(a, dy, 0), dx, 1))
+    rim = np.clip(dil - a, 0, 1) * line
+    lum = (img[..., :3] * a[..., None]).mean(axis=2)
+    gy = np.abs(np.roll(lum, 1, 0) - np.roll(lum, -1, 0))
+    gx = np.abs(np.roll(lum, 1, 1) - np.roll(lum, -1, 1))
+    edge = np.clip((gx + gy) * 2.2, 0, 1) * inner
+    out = img.copy()
+    plum = np.array([0.16, 0.08, 0.2])
+    out[..., :3] = out[..., :3] * (1 - edge[..., None]) + plum * edge[..., None]
+    # composite the outline under/around the sprite
+    na = a + rim * (1 - a)
+    w = np.where(na > 1e-4, rim * (1 - a) / np.maximum(na, 1e-4), 0)
+    out[..., :3] = out[..., :3] * (1 - w[..., None]) + plum * w[..., None]
+    out[..., 3] = na
     return out
 
 
@@ -539,7 +585,7 @@ def bake_cars():
             set_pass('color')
             frame(0, 0, CAR_FRAME, CAR_FRAME, CAR_PPM)
             render(f'{TMP}/c.png')
-            col.append(kuwahara(load_np(f'{TMP}/c.png'), 1))
+            col.append(ink(kuwahara(load_np(f'{TMP}/c.png'), 1), 0.5, 0.25))
             set_pass('shadow')
             scx, scy = SHADOW_DIR.x * 1.2, SHADOW_DIR.y * 1.2
             frame(scx, scy, CAR_SH_FRAME, CAR_SH_FRAME, CAR_SH_PPM)
@@ -553,7 +599,7 @@ def bake_cars():
         set_pass('night')
         frame(0, 5.0, 7.0, 22.0, 8)
         render(f'{TMP}/n.png')
-        save_np(load_np(f'{TMP}/n.png'), f'{OUT}/car_{name}_light.png')
+        save_np(night_clean(load_np(f'{TMP}/n.png'), 0.06), f'{OUT}/car_{name}_light.png')
         MANIFEST['cars'][name] = {
             'kind': kind, 'angles': CAR_ANGLES, 'cols': 8,
             'color': manifest_entry(f'car_{name}.png', 0, 0, CAR_FRAME, CAR_FRAME),
@@ -619,8 +665,8 @@ def build_ped(shirt, pants, skin, hair, headwear, shoes):
     objs.append(limb('legL', (-0.1, 0, 0.9), 0.82, 0.075, m_pants, m_shoe, foot=True))
     objs.append(limb('legR', (0.1, 0, 0.9), 0.82, 0.075, m_pants, m_shoe, foot=True))
     objs.append(sphere((0, 0, 0.98), 0.17, m_pants, scale=(1.05, 0.75, 0.7)))
-    objs.append(sphere((0, 0, 1.28), 0.24, m_shirt, scale=(1.0, 0.6, 1.2)))      # torso
-    objs.append(sphere((0, 0, 1.47), 0.25, m_shirt, scale=(1.0, 0.55, 0.38)))    # shoulders
+    objs.append(sphere((0, 0, 1.28), 0.26, m_shirt, scale=(1.0, 0.65, 1.2)))      # torso
+    objs.append(sphere((0, 0, 1.47), 0.28, m_shirt, scale=(1.0, 0.6, 0.4)))    # shoulders
     objs.append(limb('armL', (-0.27, 0, 1.48), 0.55, 0.06, m_shirt, m_skin, end_r=0.06))
     objs.append(limb('armR', (0.27, 0, 1.48), 0.55, 0.06, m_shirt, m_skin, end_r=0.06))
     objs.append(sphere((0, 0.01, 1.66), 0.115, m_skin))                           # head
@@ -645,11 +691,11 @@ def build_ped(shirt, pants, skin, hair, headwear, shoes):
 
 
 def pose_ped(limbs, stride):
-    a = math.radians(32) * stride
+    a = math.radians(17) * stride
     limbs['legL'].rotation_euler = (a, 0, 0)
     limbs['legR'].rotation_euler = (-a, 0, 0)
-    limbs['armL'].rotation_euler = (-a * 0.9, 0, 0.12)
-    limbs['armR'].rotation_euler = (a * 0.9, 0, -0.12)
+    limbs['armL'].rotation_euler = (-a * 1.3, -0.12, 0)
+    limbs['armR'].rotation_euler = (a * 1.3, 0.12, 0)
 
 
 def bake_peds():
@@ -670,7 +716,7 @@ def bake_peds():
                 set_pass('color')
                 frame(0, 0, PED_FRAME, PED_FRAME, PED_PPM)
                 render(f'{TMP}/c.png')
-                col.append(kuwahara(load_np(f'{TMP}/c.png'), 1))
+                col.append(ink(kuwahara(load_np(f'{TMP}/c.png'), 1), 0.6, 0.2))
                 set_pass('shadow')
                 frame(scx, scy, PED_SH_FRAME, PED_SH_FRAME, PED_SH_PPM)
                 render(f'{TMP}/s.png')
@@ -739,7 +785,7 @@ def tile_mat(name, color):
 
 def facade_windows(W, D, floors, rnd, lit=0.75, shop=False, floor_h=3.2):
     """Emissive window panes on all four walls of a WxD box (lower floors only: they light the street)."""
-    win = mat('window', srgb('#3a3a52'), rough=0.2, emit=WARM_WINDOW, night=7.0, day=0.0, noise=0)
+    win = mat('window', srgb('#3a3a52'), rough=0.2, emit=WARM_WINDOW, night=4.0, day=0.0, noise=0)
     quads = []
     eps = 0.03
     for f in range(min(floors, 4)):
@@ -772,9 +818,30 @@ def facade_windows(W, D, floors, rnd, lit=0.75, shop=False, floor_h=3.2):
 def flat_block(cx, cy, W, D, H, wall, roof, parapet, par_h=0.6, par_w=0.35):
     cube((cx, cy, H / 2), (W, D, H), wall)
     cube((cx, cy, H + 0.02), (W - 0.1, D - 0.1, 0.06), roof)
+    roof_clutter(cx, cy, W - 1, D - 1, H, random.Random(int(W * 100 + D)), n=int(W * D / 30) + 3)
     for (px, py, sx, sy) in [(cx, cy + D / 2 - par_w / 2, W, par_w), (cx, cy - D / 2 + par_w / 2, W, par_w),
                              (cx + W / 2 - par_w / 2, cy, par_w, D), (cx - W / 2 + par_w / 2, cy, par_w, D)]:
         cube((px, py, H + par_h / 2), (sx, sy, par_h), parapet, bevel=0.05)
+
+
+def roof_clutter(cx, cy, W, D, z, rnd, n=10):
+    """Tar patches, membrane seams, vents and pipes so no flat roof reads as a blank rectangle."""
+    tar = mat('tar', srgb('#5a5260'), rough=0.9, noise=0.2, noise_scale=18)
+    seam = mat('seam', srgb('#e8dccb'), rough=0.8, noise=0)
+    vent = mat('vent', srgb('#9a969c'), rough=0.5, metal=0.5, noise=0)
+    for i in range(int(W / 2.2)):
+        cube((cx - W / 2 + 1 + i * 2.2, cy, z + 0.07), (0.06, D - 1.4, 0.02), seam)
+    for i in range(n):
+        x = cx + rnd.uniform(-W / 2 + 1, W / 2 - 1)
+        y = cy + rnd.uniform(-D / 2 + 1, D / 2 - 1)
+        k = rnd.random()
+        if k < 0.35:
+            cube((x, y, z + 0.08), (rnd.uniform(0.8, 2.5), rnd.uniform(0.8, 2.0), 0.03), tar)
+        elif k < 0.75:
+            cyl((x, y, z + 0.3), rnd.uniform(0.12, 0.25), 0.6, vent, verts=12)
+        else:
+            L = rnd.uniform(2, 5)
+            cube((x, y, z + 0.25), (L, 0.18, 0.18), vent, rot=(0, 0, rnd.choice([0, math.pi / 2])))
 
 
 def ac_unit(x, y, z, metal, dark):
@@ -793,7 +860,7 @@ def water_tank(x, y, z, wood, dark):
     track(c)
 
 
-def skylights(cx, cy, W, D, z, nx, ny, rnd, glow=4.0):
+def skylights(cx, cy, W, D, z, nx, ny, rnd, glow=1.2):
     glass = mat('skylight', srgb('#9fb6d8'), rough=0.08, spec=1.0, emit=(1.0, 0.8, 0.5), night=glow, day=0.0, noise=0)
     frame_m = mat('skyframe', srgb('#d8d0c4'), rough=0.6, noise=0)
     for i in range(nx):
@@ -876,7 +943,7 @@ def palm_crown(x, y, z, rnd, radius=3.0, fronds=11):
         sphere((x + math.cos(a) * 0.25, y + math.sin(a) * 0.25, z - 0.2), 0.16, nut, segs=8)
 
 
-def palm_tree(x, y, rnd, height=None):
+def palm_tree(x, y, rnd, height=None, lean_m=1.2):
     trunk = mat('trunk', srgb('#8a6a4a'), rough=0.9, noise=0.2, noise_scale=20)
     H = height or rnd.uniform(7.0, 10.0)
     lean = rnd.uniform(0, math.pi * 2)
@@ -885,7 +952,7 @@ def palm_tree(x, y, rnd, height=None):
     px, py, pz = x, y, 0
     for i in range(segs):
         t = (i + 1) / segs
-        nx_, ny_ = x + lx * 1.2 * t * t, y + ly * 1.2 * t * t
+        nx_, ny_ = x + lx * lean_m * t * t, y + ly * lean_m * t * t
         nz = H * t
         mx, my, mz = (px + nx_) / 2, (py + ny_) / 2, (pz + nz) / 2
         dv = Vector((nx_ - px, ny_ - py, nz - pz))
@@ -911,7 +978,7 @@ def build_building(b):
         flat_block(0, 0, W, D, H, wall, gravel('#cfc2b4'), mat('par', srgb('#fbe8d2'), rough=0.6))
         # rooftop pool deck on the south half
         deck = mat('deck', srgb('#b8865a'), rough=0.7, noise=0.25, noise_scale=10)
-        water = mat('pool', srgb('#3fc6d8'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=3.5, day=0.15, noise=0.1, noise_scale=3)
+        water = mat('pool', srgb('#3fc6d8'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=1.2, day=0.0, noise=0.1, noise_scale=3)
         cube((0, -D / 4, H + 0.1), (W - 2.0, D / 2 - 1.5, 0.12), deck)
         cube((-W / 6, -D / 4, H + 0.17), (W / 2.2, D / 4, 0.06), water)
         for i in range(5):
@@ -993,7 +1060,7 @@ def build_building(b):
         flat_block(-W / 2 + 4.5, 0, 9.0, D, H, wall, roof_m, par)
         flat_block(4.5, D / 2 - 4.0, W - 9.0, 8.0, H, wall, roof_m, par)
         court = mat('court', srgb('#e9d9bf'), rough=0.8, noise=0.15, noise_scale=8)
-        water = mat('pool', srgb('#43c8dc'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=3.0, day=0.15, noise=0.1, noise_scale=3)
+        water = mat('pool', srgb('#43c8dc'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=1.2, day=0.0, noise=0.1, noise_scale=3)
         cube((4.5, -4.0, 0.06), (W - 9.4, D - 8.4, 0.1), court)
         cube((4.5, -4.5, 0.13), (W - 15, D - 15, 0.06), water, bevel=0.6)
         for i in range(4):
@@ -1011,7 +1078,7 @@ def build_building(b):
     elif style == 'office':
         wall = mat('wall', srgb('#c9cdd8'), rough=0.5)
         flat_block(0, 0, W, D, H, wall, gravel('#9ea0a8'), mat('par', srgb('#e8e6ea'), rough=0.5), par_h=1.0, par_w=0.5)
-        glassroof = mat('atrium', srgb('#7fa6c8'), rough=0.06, spec=1.0, emit=(1.0, 0.78, 0.5), night=5.0, day=0.0, noise=0)
+        glassroof = mat('atrium', srgb('#7fa6c8'), rough=0.06, spec=1.0, emit=(1.0, 0.78, 0.5), night=1.4, day=0.0, noise=0)
         cube((-W / 5, -D / 5, H + 1.0), (W / 2.6, D / 2.6, 2.0), wall)
         cube((-W / 5, -D / 5, H + 2.1), (W / 2.6 - 0.3, D / 2.6 - 0.3, 0.5), glassroof, taper=(0.4, 1.0))
         cube((W / 4, D / 4, H + 2.0), (W / 3, D / 3, 4.0), wall, bevel=0.1)
@@ -1019,7 +1086,7 @@ def build_building(b):
         for i in range(2):
             for j in range(2):
                 ac_unit(W / 4 - 1.2 + i * 2.4, D / 4 - 1 + j * 2, H + 4.1, metal, dark)
-        skylights(W / 4, -D / 4, W / 3, D / 3, H, 3, 3, rnd, glow=3.0)
+        skylights(W / 4, -D / 4, W / 3, D / 3, H, 3, 3, rnd, glow=1.0)
         heli = mat('helipad', srgb('#3a3c46'), rough=0.8, noise=0.05)
         cyl((-W / 4, D / 4, H + 0.12), 3.2, 0.1, heli, verts=40)
         text_obj('H', (-W / 4, D / 4, H + 0.2), 3.0, mat('hpaint', srgb('#f2e6c8'), rough=0.7, noise=0), extrude=0.01)
@@ -1061,7 +1128,7 @@ def build_building(b):
         wall = mat('wall', srgb('#c98b6b'), rough=0.8)
         cube((0, 0, H / 2), (W, D, H), wall)
         roofm = mat('saw', srgb('#bcb4ac'), rough=0.5, metal=0.4, noise=0.12, noise_scale=8)
-        glass = mat('sawglass', srgb('#8fb0cc'), rough=0.1, spec=1.0, emit=(1.0, 0.8, 0.55), night=3.0, day=0.0, noise=0)
+        glass = mat('sawglass', srgb('#8fb0cc'), rough=0.1, spec=1.0, emit=(1.0, 0.8, 0.55), night=1.0, day=0.0, noise=0)
         n = int(W / 4.0)
         for i in range(n):
             x0 = -W / 2 + i * W / n
@@ -1094,7 +1161,7 @@ def build_building(b):
             hip_roof(wx, wy, wing_w, wing_d, H - 2, min(wing_w, wing_d) * 0.32, tiles)
         # yard: pool, deck, hedge, lounge
         deck = mat('deck', srgb('#c89a6a'), rough=0.7, noise=0.25, noise_scale=12)
-        water = mat('pool', srgb('#3fc6d8'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=3.0, day=0.15, noise=0.1, noise_scale=3)
+        water = mat('pool', srgb('#3fc6d8'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=1.2, day=0.0, noise=0.1, noise_scale=3)
         pw, pd = W * 0.42, D * 0.22
         px_, py_ = W / 2 - pw / 2 - 1.2, -D / 2 + pd / 2 + 1.5
         cube((px_, py_, 0.05), (pw + 2.2, pd + 2.2, 0.1), deck)
@@ -1129,7 +1196,7 @@ def bake_buildings():
         set_pass('color')
         frame(0, 0, W + 2 * m, D + 2 * m, BLD_PPM)
         render(f'{TMP}/c.png')
-        save_np(kuwahara(load_np(f'{TMP}/c.png'), 2), f'{OUT}/bld_{b["id"]}.png')
+        save_np(ink(kuwahara(load_np(f'{TMP}/c.png'), 2)), f'{OUT}/bld_{b["id"]}.png')
         set_pass('shadow')
         scx, scy, sw, shh = shadow_frame_for(-W / 2 - 1, -D / 2 - 1, W / 2 + 1, D / 2 + 1, top)
         frame(scx, scy, sw, shh, BLD_SH_PPM)
@@ -1139,7 +1206,7 @@ def bake_buildings():
         nm = 9.0
         frame(0, 0, W + 2 * nm, D + 2 * nm, BLD_NIGHT_PPM)
         render(f'{TMP}/n.png')
-        save_np(load_np(f'{TMP}/n.png'), f'{OUT}/bld_{b["id"]}_night.png')
+        save_np(night_clean(load_np(f'{TMP}/n.png')), f'{OUT}/bld_{b["id"]}_night.png')
         MANIFEST['buildings'][b['id']] = {
             'color': manifest_entry(f'bld_{b["id"]}.png', 0, 0, W + 2 * m, D + 2 * m),
             'shadow': manifest_entry(f'bld_{b["id"]}_sh.png', scx, scy, sw, shh),
@@ -1150,8 +1217,140 @@ def bake_buildings():
         print(f'building {b["id"]} baked in {time.time() - t0:.1f}s', flush=True)
 
 
+
+# ============================================================================= PROPS
+def build_lamp():
+    pole = mat('pole', srgb('#3a3644'), rough=0.5, metal=0.6, noise=0)
+    cyl((0, 0, 3.0), 0.09, 6.0, pole, verts=10)
+    cube((0.7, 0, 5.95), (1.4, 0.12, 0.1), pole)
+    head = mat('lamphead', srgb('#fff0c8'), rough=0.3, emit=(1.0, 0.78, 0.45), night=30, day=0.2, noise=0)
+    cube((1.35, 0, 5.85), (0.6, 0.32, 0.14), pole, bevel=0.04)
+    cube((1.35, 0, 5.77), (0.5, 0.24, 0.04), head)
+    point_light((1.35, 0, 5.4), 900, (1.0, 0.74, 0.42), radius=0.3)
+    return 1.35, 0.0, 6.2  # light centre offset (m) + height
+
+
+def build_pier(rnd):
+    """Wooden pier running east from the beach into the water, two moored sailboats + a runabout."""
+    plank_cols = ['#a87a52', '#9a6c46', '#b88a5e', '#8e6440']
+    L, Wd = LAYOUT['pier']['w'] / UPM, LAYOUT['pier']['h'] / UPM
+    posts = mat('posts', srgb('#5a4030'), rough=0.9, noise=0.2)
+    pm = [mat('plank%d' % i, srgb(c), rough=0.85, noise=0.25, noise_scale=20) for i, c in enumerate(plank_cols)]
+    for i in range(int(L / 0.45)):
+        x = -L / 2 + 0.22 + i * 0.45
+        cube((x, rnd.uniform(-0.05, 0.05), 1.0), (0.4, Wd, 0.1), pm[rnd.randrange(4)])
+    for i in range(int(L / 3) + 1):
+        for sy in (-1, 1):
+            cyl((-L / 2 + i * 3, sy * (Wd / 2 + 0.1), 0.6), 0.16, 1.4, posts, verts=10)
+    rail = mat('rail', srgb('#f2e6d0'), rough=0.6, noise=0)
+    for sy in (-1, 1):
+        cube((0, sy * (Wd / 2 - 0.05), 1.9), (L, 0.08, 0.08), rail)
+    lamp_head = mat('pierlamp', srgb('#fff0c8'), rough=0.3, emit=(1.0, 0.78, 0.45), night=25, day=0.2, noise=0)
+    for i in range(4):
+        x = -L / 2 + 4 + i * (L - 8) / 3
+        cyl((x, Wd / 2 - 0.1, 2.2), 0.05, 2.4, posts, verts=8)
+        sphere((x, Wd / 2 - 0.1, 3.45), 0.18, lamp_head, segs=10)
+        point_light((x, Wd / 2 - 0.1, 3.2), 250, (1.0, 0.75, 0.45), radius=0.2)
+    hull_cols = ['#f4efe6', '#e8f0f4', '#f6e0c8']
+    for k, (bx, by, sail) in enumerate([(L / 2 - 6, Wd / 2 + 2.6, True), (L / 2 - 16, -Wd / 2 - 2.4, True), (-L / 2 + 14, Wd / 2 + 2.0, False)]):
+        hull = mat('hull', srgb(hull_cols[k]), rough=0.3, coat=0.8, noise=0.03)
+        deck = mat('bdeck', srgb('#c09a6a'), rough=0.7, noise=0.2, noise_scale=14)
+        if sail:
+            sphere((bx, by, 0.4), 1.0, hull, scale=(4.2, 1.35, 0.6), segs=20)
+            sphere((bx, by, 0.75), 1.0, deck, scale=(3.6, 1.05, 0.25), segs=20)
+            mast = mat('mast', srgb('#d8d4cc'), rough=0.4, metal=0.5, noise=0)
+            cyl((bx + 0.8, by, 6.0), 0.07, 11.0, mast, verts=8)
+            cube((bx - 1.2, by, 2.0), (4.0, 0.12, 0.12), mast)
+            cube((bx - 0.6, by, 2.15), (3.0, 0.35, 0.25), mat('sailcover', srgb('#2a5a8a'), rough=0.7, noise=0.05))
+        else:
+            sphere((bx, by, 0.35), 1.0, hull, scale=(2.6, 1.0, 0.5), segs=20)
+            cube((bx + 0.3, by, 0.9), (1.2, 1.3, 0.5), mat('wind', srgb('#1d2a44'), rough=0.05, spec=1.0, noise=0), taper=(0.7, 0.7))
+            cube((bx - 1.0, by, 0.75), (1.6, 1.4, 0.1), deck)
+    return L, Wd
+
+
+def build_fountain():
+    stone = mat('stone', srgb('#e6d6c0'), rough=0.8, noise=0.15, noise_scale=10)
+    water = mat('fwater', srgb('#5ccfe0'), rough=0.05, spec=1.0, emit=(0.4, 0.85, 1.0), night=1.2, day=0.0, noise=0.1, noise_scale=4)
+    cyl((0, 0, 0.3), 3.2, 0.6, stone, verts=40)
+    cyl((0, 0, 0.55), 2.8, 0.1, water, verts=40)
+    cyl((0, 0, 1.0), 0.5, 2.0, stone, verts=20)
+    cyl((0, 0, 2.0), 1.2, 0.2, stone, verts=30)
+    cyl((0, 0, 2.08), 1.0, 0.06, water, verts=30)
+    sphere((0, 0, 2.6), 0.35, water, scale=(1, 1, 1.6))
+    point_light((0, 0, 0.8), 120, (0.5, 0.85, 1.0), radius=0.5)
+
+
+def build_lifeguard():
+    wood = mat('lgwood', srgb('#f2b8a0'), rough=0.7, noise=0.1)
+    roof = mat('lgroof', srgb('#3ab0b8'), rough=0.6, noise=0.08)
+    post = mat('lgpost', srgb('#e8e0d0'), rough=0.7, noise=0)
+    for dx in (-1, 1):
+        for dy in (-1, 1):
+            cube((dx * 1.1, dy * 1.1, 1.2), (0.15, 0.15, 2.4), post)
+    cube((0, 0, 2.9), (2.8, 2.8, 1.2), wood, bevel=0.06)
+    hip_roof(0, 0, 2.8, 2.8, 3.5, 0.9, roof, overhang=0.35)
+    cube((0, -2.4, 1.2), (1.0, 2.0, 0.08), post, rot=(0.55, 0, 0))
+
+
+def bake_static(name, builder, half, top, ppm=BLD_PPM, night=True, night_half=None, kuw=2):
+    """Render one static prop centred on its anchor. half = half-extent (m) of the colour frame."""
+    hx, hy = half if isinstance(half, tuple) else (half, half)
+    set_pass('color')
+    frame(0, 0, hx * 2, hy * 2, ppm)
+    render(f'{TMP}/c.png')
+    save_np(ink(kuwahara(load_np(f'{TMP}/c.png'), kuw)), f'{OUT}/{name}.png')
+    entry = {'color': manifest_entry(f'{name}.png', 0, 0, hx * 2, hy * 2)}
+    set_pass('shadow')
+    scx, scy, sw, shh = shadow_frame_for(-hx, -hy, hx, hy, top)
+    frame(scx, scy, sw, shh, BLD_SH_PPM)
+    render(f'{TMP}/s.png')
+    save_np(shadow_to_alpha(load_np(f'{TMP}/s.png')), f'{OUT}/{name}_sh.png')
+    entry['shadow'] = manifest_entry(f'{name}_sh.png', scx, scy, sw, shh)
+    if night:
+        nx, ny = night_half if night_half else (hx + 8, hy + 8)
+        set_pass('night')
+        frame(0, 0, nx * 2, ny * 2, BLD_NIGHT_PPM)
+        render(f'{TMP}/n.png')
+        save_np(night_clean(load_np(f'{TMP}/n.png')), f'{OUT}/{name}_night.png')
+        entry['night'] = manifest_entry(f'{name}_night.png', 0, 0, nx * 2, ny * 2)
+    return entry
+
+
+def bake_props():
+    reset()
+    P = MANIFEST.setdefault('props', {})
+    want = lambda n: not ONLY or n in ONLY
+    for i, (hgt, seed) in enumerate([(8.5, 101), (10.0, 202), (7.0, 303)]):
+        if not want(f'palm{i}'):
+            continue
+        rnd = random.Random(seed)
+        # build at origin with no lean so the crown is centred on the anchor
+        palm_tree(0, 0, rnd, height=hgt, lean_m=0.6)
+        P[f'palm{i}'] = bake_static(f'palm{i}', None, 4.6, hgt + 0.8, night=False)
+        save_manifest(); clear_asset()
+    if want('lamp'):
+        lx, ly, lh = build_lamp()
+        e = bake_static('lamp', None, (2.2, 0.8), lh, night=True, night_half=(10, 10))
+        P['lamp'] = e
+        save_manifest(); clear_asset()
+    if want('pier'):
+        L, Wd = build_pier(random.Random(7))
+        P['pier'] = bake_static('pier', None, (L / 2 + 0.5, Wd / 2 + 4.5), 11.5, night=True, night_half=(L / 2 + 4, Wd / 2 + 8))
+        save_manifest(); clear_asset()
+    if want('fountain'):
+        build_fountain()
+        P['fountain'] = bake_static('fountain', None, 3.6, 3.0, night=True, night_half=(9, 9))
+        save_manifest(); clear_asset()
+    if want('lifeguard'):
+        build_lifeguard()
+        P['lifeguard'] = bake_static('lifeguard', None, (2.4, 3.6), 4.5, night=False)
+        save_manifest(); clear_asset()
+    print('props baked', flush=True)
+
+
 # ============================================================================= main
-GROUPS = {'cars': bake_cars, 'peds': bake_peds, 'buildings': bake_buildings}
+GROUPS = {'cars': bake_cars, 'peds': bake_peds, 'buildings': bake_buildings, 'props': bake_props}
 
 if __name__ == '__main__':
     todo = list(GROUPS) if GROUP == 'all' else [GROUP]

@@ -13,15 +13,15 @@ const CPX = CHUNK * PX_PER_UNIT; // 512
 
 // Daylight albedo per surface (the time-of-day grade is applied later, in the lighting pass).
 const PAL = {
-  road:      { base: [78, 76, 98],   var: [22, 18, 26], dabs: ['#5d5a78', '#6b6386', '#4b4a66', '#7a6f8c', '#585c7c', '#8a7690'] },
-  sidewalk:  { base: [206, 172, 150], var: [18, 16, 16], dabs: ['#d9b9a0', '#c49a86', '#e2c4a8', '#b98d7e', '#d6ae96'] },
-  paving:    { base: [188, 128, 98], var: [24, 18, 16], dabs: ['#c98c68', '#b27258', '#d79e78', '#a86650', '#c7826a', '#e0aa82'] },
-  plaza:     { base: [214, 186, 150], var: [16, 14, 14], dabs: ['#e3c7a0', '#cfae8c', '#d8b494', '#c69c86', '#ead2ae'] },
-  parking:   { base: [96, 92, 112],  var: [14, 12, 16], dabs: ['#6e6a86', '#5f5c78', '#7e7690'] },
-  grass:     { base: [82, 128, 70],  var: [26, 30, 20], dabs: ['#5f9a4a', '#7cae52', '#4a7f45', '#93b85a', '#3f6e44', '#a8c060', '#6a9a3a'] },
+  road:      { base: [72, 66, 112],  var: [20, 18, 30], dabs: ['#5a5292', '#6e62a8', '#463f7c', '#8576b4', '#4e5a96', '#9a7fb0', '#3d3870'] },
+  sidewalk:  { base: [222, 176, 150], var: [18, 16, 16], dabs: ['#f0c4a0', '#d09684', '#f6d2ac', '#c4888a', '#e8b490'] },
+  paving:    { base: [200, 120, 88], var: [24, 18, 16], dabs: ['#dc8c60', '#b8624e', '#e8a474', '#a85848', '#d87a62', '#f0b47e'] },
+  plaza:     { base: [230, 190, 146], var: [16, 14, 14], dabs: ['#f4cf98', '#dca880', '#ecb98c', '#d09080', '#fadca8'] },
+  parking:   { base: [88, 80, 120],  var: [14, 12, 16], dabs: ['#6a609a', '#58508a', '#7e70a8'] },
+  grass:     { base: [70, 130, 64],  var: [26, 30, 20], dabs: ['#4f9a44', '#86be4c', '#357a48', '#a8c850', '#2f6648', '#c4d060', '#5aa03a'] },
   promenade: { base: [196, 150, 108], var: [16, 14, 12], dabs: ['#c99a6a', '#b88658', '#d8ac7a', '#a8784e'] },
-  sand:      { base: [232, 196, 140], var: [14, 14, 14], dabs: ['#f0d29a', '#e2ba82', '#f6deac', '#d8ac78', '#eccb92'] },
-  water:     { base: [38, 104, 140], var: [14, 20, 22], dabs: ['#2f7fa6', '#3b92b4', '#22658e', '#4aa3bf', '#1f5a80', '#5fb3c6'] },
+  sand:      { base: [242, 198, 132], var: [14, 14, 14], dabs: ['#fcd896', '#eab474', '#fff0b8', '#dca070', '#f6c888'] },
+  water:     { base: [30, 92, 150],  var: [14, 20, 22], dabs: ['#2a78b0', '#3a96c4', '#1c5890', '#52aed0', '#184a84', '#6cc4d4', '#2d68a8'] },
 };
 const TYPES = Object.keys(PAL);
 

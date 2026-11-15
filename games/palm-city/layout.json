@@ -61,6 +61,11 @@
     { "x": 560, "y": 1350, "r": 60, "color": "#ff7a3c" },
     { "x": 550, "y": 720, "r": 55, "color": "#ffd23f" }
   ],
+  "props": [
+    { "type": "fountain", "x": 1000, "y": 470 },
+    { "type": "lifeguard", "x": 1354, "y": 640 },
+    { "type": "lifeguard", "x": 1350, "y": 1700 }
+  ],
   "pier": { "x": 1380, "y": 1020, "w": 300, "h": 30, "id": "pier" },
   "spawn": { "player": [1240, 1240], "respawn": [600, 1730] }
 }
