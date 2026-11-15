@@ -30,14 +30,17 @@
   <button id="act">IN / OUT</button>
 </div>
 <script type="module">
-import { createSim, createAutopilot, DT, TUNE } from "./engine/sim.js";
-import { adaptLevel } from "./engine/level_vice.js";
-import { createEraAudio } from "./engine/audio.js";
-import { ERAS } from "./eras/index.js";
+import { createSim, createAutopilot, DT, TUNE } from "./engine/sim.js?v=2026-11-15-4";
+import { adaptLevel } from "./engine/level_vice.js?v=2026-11-15-4";
+import { createEraAudio } from "./engine/audio.js?v=2026-11-15-4";
+import { ERAS } from "./eras/index.js?v=2026-11-15-4";
 const $ = id => document.getElementById(id), q = new URLSearchParams(location.search);
 // The canonical level: real Vice Beach, extracted from miami.cmp (level/extract_level.py),
 // adapted to the sim's shape by play/engine/level_vice.js. Coral Strand is NOT used.
-const level = adaptLevel(await (await fetch("../level/canonical/vice_beach.json")).json());
+// The ?v= stamps (build 2026-11-15-4, kept in sync across this file, eras/index.js and
+// eras/e1.js) exist because an in-app browser served Cherie a stale cached module graph
+// on Nov 15, 2026 — a fresh HTML load must pull fresh modules, every time the tag moves.
+const level = adaptLevel(await (await fetch("../level/canonical/vice_beach.json?v=2026-11-15-4")).json());
 const audio = createEraAudio();
 const stage = $("stage");
 let sim, auto, demo = q.has("demo"), view = null, era = null;
