@@ -1,6 +1,11 @@
 // Era 1 — GTA 1 (1997). Canvas2D, straight-down top-down, real decoded Vice City art.
-// Tiles are the native 64x64 GTA 1 lids from assets/e1/tiles.png (16 px per metre, so a tile is
-// 64 screen px), vehicles/peds/Link/HUD all come from assets/e1/ via manifest.json — nothing is
+// Tiles are the native 64x64 GTA 1 lids from assets/e1/tiles.png, baked at the native
+// 16 px per metre and PRESENTED at 21 px per metre (~84 px per tile — The Original's
+// framing) with smoothing on the ground layer: The Original presents this same art
+// filtered in WebGL, and nearest-neighbour at 64 px/tile turns the paving tiles' fine
+// grout grid into a hard checkerboard and the road tiles' contour shading into harsh
+// stripes. Sprites stay crisp (smoothing off), like The Original's sprite texture.
+// Vehicles/peds/Link/HUD all come from assets/e1/ via manifest.json — nothing is
 // redrawn from imagination. Layout comes only from level.cells (canonical vice_beach.json via
 // play/engine/level_vice.js); this file never hard-codes a street.
 //
@@ -12,7 +17,10 @@
 //
 // Until the asset pack loads (or if it fails), a flat zone-colour fallback keeps the page
 // playable — see ARCHITECTURE.md ("a renderer draws its own placeholder rather than failing").
-const PPM = 16, TILE = 64;                       // px per metre, px per tile at native scale
+const PPM = 21, TILE = 64;                       // screen px per metre; px per tile in the baked ground
+const GPX = TILE / 4, S = PPM / GPX;             // baked-ground px per metre (16); native->screen scale for sprites
+const CHARH = 41;                                // character figure height on screen, px (The Original's ped scale at this framing)
+const KPED = CHARH / 15, KLINK = CHARH / 16;     // frame scales: a ped figure fills 15 of its 24px frame; Link's fills 16 of 20
 const ASSET_BASE = "../../assets/e1/";
 const PLAN = typeof location !== "undefined" && new URLSearchParams(location.search).has("plan");
 const SHADOW_LIDS = new Set([97, 100, 127, 128, 129]);   // flat lids baked under the sprites
@@ -140,6 +148,16 @@ export function create(canvas, level) {
   }
   load();
 
+  // Size the backing store for the device pixel ratio; all drawing below is in CSS px.
+  function fitCanvas() {
+    const cw = canvas.clientWidth || 420, ch = canvas.clientHeight || 860;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const bw = Math.round(cw * dpr), bh = Math.round(ch * dpr);
+    if (canvas.width !== bw || canvas.height !== bh) { canvas.width = bw; canvas.height = bh; }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return [cw, ch];
+  }
+
   // ---- HUD text in the era's own glyph sheet ----
   function drawText(text, x, y, scale, align = "left") {
     const gw = M.hudFont.cellW * scale, gh = M.hudFont.cellH * scale;
@@ -150,21 +168,21 @@ export function create(canvas, level) {
       dx += gw;
     }
   }
-  function drawHUD(sim) {
+  function drawHUD(sim, W, H) {
     const bar = M.hudFont.hudSprites.districtBar;
-    const bx = Math.round((canvas.width - bar.w) / 2);
+    const bx = Math.round((W - bar.w) / 2);
     ctx.drawImage(IMG.hud, bar.x, bar.y, bar.w, bar.h, bx, 6, bar.w, bar.h);
-    drawText("VICE BEACH", canvas.width / 2, 9, 1, "center");
+    drawText("VICE BEACH", W / 2, 9, 1, "center");
     const t = sim.t, ts = `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}.${Math.floor(t * 10 % 10)}`;
-    drawText(ts, canvas.width - 8, 44, 0.75, "right");
-    if (sim.finished) drawText(`THE RUN ${t.toFixed(1)}S`, canvas.width / 2, Math.round(canvas.height * 0.42), 1.5, "center");
+    drawText(ts, W - 8, 44, 0.75, "right");
+    if (sim.finished) drawText(`THE RUN ${t.toFixed(1)}S`, W / 2, Math.round(H * 0.42), 1.5, "center");
   }
 
-  function drawPlan() {
-    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  function drawPlan(W, H) {
+    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
     if (!ready) { ctx.fillStyle = "#888"; ctx.font = "16px monospace"; ctx.fillText("loading...", 16, 32); return; }
-    const s = Math.min(canvas.width / LW, canvas.height / LH), dx = (canvas.width - LW * s) / 2, dy = (canvas.height - LH * s) / 2;
-    ctx.imageSmoothingEnabled = false;
+    const s = Math.min(W / LW, H / LH), dx = (W - LW * s) / 2, dy = (H - LH * s) / 2;
+    ctx.imageSmoothingEnabled = true;
     ctx.drawImage(groundCv, dx, dy, LW * s, LH * s);
     ctx.drawImage(canopyCv, dx, dy, LW * s, LH * s);
   }
@@ -172,30 +190,33 @@ export function create(canvas, level) {
   return {
     name: "GTA 1 (1997)",
     draw(sim) {
-      const cssW = canvas.clientWidth || 420, cssH = canvas.clientHeight || 860;
-      if (canvas.width !== cssW || canvas.height !== cssH) { canvas.width = cssW; canvas.height = cssH; }
-      ctx.imageSmoothingEnabled = false;
-      if (PLAN) { drawPlan(); return; }
+      const [W, H] = fitCanvas();
+      if (PLAN) { drawPlan(W, H); return; }
       const p = sim.player(), lead = sim.mode === "drive" ? sim.car.v * 0.45 : 0;
-      const tx = (p.x + Math.sin(p.h) * lead) * PPM - canvas.width / 2, ty = (p.y - Math.cos(p.h) * lead) * PPM - canvas.height / 2;
+      const tx = (p.x + Math.sin(p.h) * lead) * PPM - W / 2, ty = (p.y - Math.cos(p.h) * lead) * PPM - H / 2;
       cam = cam ? { x: cam.x + (tx - cam.x) * .12, y: cam.y + (ty - cam.y) * .12 } : { x: tx, y: ty };
-      const camX = Math.round(Math.max(0, Math.min(Math.max(0, LW - canvas.width), cam.x)));
-      const camY = Math.round(Math.max(0, Math.min(Math.max(0, LH - canvas.height), cam.y)));
-      ctx.fillStyle = "#000"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      const blit = (img, r, wx, wy) => ctx.drawImage(img, r.x, r.y, r.w, r.h, Math.round(wx * PPM - r.anchorX) - camX, Math.round(wy * PPM - r.anchorY) - camY, r.w, r.h);
+      const camX = Math.round(Math.max(0, Math.min(Math.max(0, LW * S - W), cam.x)));
+      const camY = Math.round(Math.max(0, Math.min(Math.max(0, LH * S - H), cam.y)));
+      ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
+      const blit = (img, r, wx, wy, k = S) => ctx.drawImage(img, r.x, r.y, r.w, r.h, Math.round(wx * PPM - r.anchorX * k) - camX, Math.round(wy * PPM - r.anchorY * k) - camY, r.w * k, r.h * k);
       if (!ready) {
-        // fallback canvas is 4 px per metre; the world is drawn at PPM px per metre
-        ctx.drawImage(fb, camX / 4, camY / 4, canvas.width / 4, canvas.height / 4, 0, 0, canvas.width, canvas.height);
+        // fallback canvas is 4 px per metre; the camera is in screen px (PPM per metre)
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(fb, camX / PPM * 4, camY / PPM * 4, W / PPM * 4, H / PPM * 4, 0, 0, W, H);
         ctx.fillStyle = "#18b8a8"; ctx.fillRect(Math.round(sim.car.x * PPM) - camX - 20, Math.round(sim.car.y * PPM) - camY - 28, 40, 56);
         if (sim.mode === "foot") { ctx.fillStyle = "#10ad42"; ctx.fillRect(Math.round(sim.hero.x * PPM) - camX - 8, Math.round(sim.hero.y * PPM) - camY - 8, 16, 16); }
         return;
       }
-      ctx.drawImage(groundCv, camX, camY, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+      // ground + canopy are drawn filtered (smoothing on): the same art The Original
+      // presents through WebGL filtering. Sprites below stay nearest-neighbour crisp.
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(groundCv, camX / S, camY / S, W / S, H / S, 0, 0, W, H);
       const f = level.route.finish;                                       // blinking finish marker
-      if ((sim.tick >> 4) & 1) { ctx.fillStyle = "#f8f840"; ctx.fillRect(Math.round(f.x * level.tile_m * PPM) - 4 - camX, Math.round(f.y * level.tile_m * PPM) - 4 - camY, 8, 8); }
+      if ((sim.tick >> 4) & 1) { ctx.fillStyle = "#f8f840"; const fs = Math.max(6, Math.round(8 * S)); ctx.fillRect(Math.round(f.x * level.tile_m * PPM) - fs / 2 - camX, Math.round(f.y * level.tile_m * PPM) - fs / 2 - camY, fs, fs); }
+      ctx.imageSmoothingEnabled = false;
       for (const c of parked) {
-        if (c.frames) { const fr = c.frames[c.k]; ctx.drawImage(IMG.sprites, fr.x, fr.y, fr.w, fr.h, Math.round(c.x * PPM - fr.anchorX) - camX, Math.round(c.y * PPM - fr.anchorY) - camY, fr.w, fr.h); }
-        else { const im = c.baked[c.k]; ctx.drawImage(im, Math.round(c.x * PPM) - camX - im.width / 2, Math.round(c.y * PPM) - camY - im.height / 2); }
+        if (c.frames) { const fr = c.frames[c.k]; ctx.drawImage(IMG.sprites, fr.x, fr.y, fr.w, fr.h, Math.round(c.x * PPM - fr.anchorX * S) - camX, Math.round(c.y * PPM - fr.anchorY * S) - camY, fr.w * S, fr.h * S); }
+        else { const im = c.baked[c.k]; ctx.drawImage(im, Math.round(c.x * PPM) - camX - im.width * S / 2, Math.round(c.y * PPM) - camY - im.height * S / 2, im.width * S, im.height * S); }
       }
       // dressing peds (visual only; positions are a pure function of sim.tick, so era switches stay deterministic)
       const variants = Object.values(M.peds.variants);
@@ -204,19 +225,20 @@ export function create(canvas, level) {
         const wx = pd.x + (pd.vert ? 0 : along - L / 2), wy = pd.y + (pd.vert ? along - L / 2 : 0);
         const dir = pd.vert ? (fwd ? "down" : "up") : (fwd ? "right" : "left");
         const fr = variants[pd.vi % variants.length].directions[dir][Math.floor(dist / 0.8) % 4];
-        blit(IMG.peds, fr, wx, wy);
+        blit(IMG.peds, fr, wx, wy, KPED);
       }
       // the player's car: sport_red pre-rotated strip, k=0 is north, clockwise
       const strip = M.sprites.rotatedCarStrips.sport_red, fr = strip.frames[headIdx(sim.car.h, 32)];
-      ctx.drawImage(IMG.sprites, fr.x, fr.y, fr.w, fr.h, Math.round(sim.car.x * PPM - fr.anchorX) - camX, Math.round(sim.car.y * PPM - fr.anchorY) - camY, fr.w, fr.h);
+      ctx.drawImage(IMG.sprites, fr.x, fr.y, fr.w, fr.h, Math.round(sim.car.x * PPM - fr.anchorX * S) - camX, Math.round(sim.car.y * PPM - fr.anchorY * S) - camY, fr.w * S, fr.h * S);
       // Link (Link's Awakening): direction by dominant axis, walk frame from ground covered (sim phase)
       if (sim.mode === "foot") {
         const h = sim.hero.h, dir = Math.abs(Math.sin(h)) > Math.abs(Math.cos(h)) ? (Math.sin(h) > 0 ? "right" : "left") : (Math.cos(h) > 0 ? "up" : "down");
         const fr2 = M.link.directions[dir][sim.hero.speed > .05 ? Math.floor(sim.hero.phase * 4) % 4 : 0];
-        blit(IMG.link, fr2, sim.hero.x, sim.hero.y);
+        blit(IMG.link, fr2, sim.hero.x, sim.hero.y, KLINK);
       }
-      ctx.drawImage(canopyCv, camX, camY, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
-      drawHUD(sim);
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(canopyCv, camX / S, camY / S, W / S, H / S, 0, 0, W, H);
+      drawHUD(sim, W, H);
     },
     dispose() {},
   };
