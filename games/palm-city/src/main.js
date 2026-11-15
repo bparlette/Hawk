@@ -88,6 +88,24 @@ function timeOfDay() {
   return Math.min(0.97, 0.18 + simTime / 200);  // ~3 minutes from golden hour into blue dusk, then holds
 }
 
+// paint at most one ground chunk per frame, ahead of the camera, so driving never hitches
+function prefetch() {
+  const m = 320, hw = VIEW_W / 2 / cam.zoom + m, hh = view.h / 2 / cam.zoom + m;
+  const c0 = Math.max(0, Math.floor((cam.x - hw) / CHUNK)), c1 = Math.min(ground.cols - 1, Math.floor((cam.x + hw) / CHUNK));
+  const r0 = Math.max(0, Math.floor((cam.y - hh) / CHUNK)), r1 = Math.min(ground.rows - 1, Math.floor((cam.y + hh) / CHUNK));
+  for (let cy = r0; cy <= r1; cy++) for (let cx = c0; cx <= c1; cx++) {
+    if (!ground.has(cx, cy)) { ground.get(cx, cy); return; }
+  }
+}
+
+// notch-safe HUD offset, in view units
+const safeEl = document.getElementById('safe');
+function safeTop() {
+  const px = safeEl ? safeEl.getBoundingClientRect().height : 0;
+  const r = canvas.getBoundingClientRect();
+  return Math.max(0, px - r.top) * view.h / r.height;
+}
+
 const STEP = 1 / 60;
 let acc = 0, last = performance.now(), titleT = 3.2;
 function frame(now) {
@@ -123,8 +141,9 @@ function frame(now) {
   const t = timeOfDay();
   sim.marker = sim.player.mode === 'foot' ? sim.player.ped : null;
   renderer.draw(sim, cam, t, simTime);
-  drawHud(ctx, VIEW_W, view.h, DPR, sim, input, t, simTime, { title: titleT, demo: DEMO, hintStick: !DEMO && simTime < 8 });
+  drawHud(ctx, VIEW_W, view.h, DPR, sim, input, t, simTime, { title: titleT, demo: DEMO, hintStick: !DEMO && simTime < 8, safeTop: safeTop() });
   audio.update(sim, cam, world);
+  prefetch();
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

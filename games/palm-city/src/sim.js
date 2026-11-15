@@ -36,7 +36,7 @@ export class Sim {
     ];
     for (const [x, y, h, model] of parked) this.addCar(x, y, h, model, null, { parked: true });
     for (let i = 0; i < 10; i++) this.spawnTraffic(true);
-    for (let i = 0; i < 22; i++) this.spawnPed(true);
+    for (let i = 0; i < 30; i++) this.spawnPed(true);
   }
 
   // ------------------------------------------------------------------ factories
@@ -148,7 +148,7 @@ export class Sim {
     if (traffic < 10 && this.rnd() < dt * 2) this.spawnTraffic(false);
     this.peds = this.peds.filter(p => p === P.ped || p.mode === 'cop' || Math.hypot(p.x - f.x, p.y - f.y) < 1000);
     const walkers = this.peds.filter(p => p.mode !== 'cop' && p !== P.ped).length;
-    if (walkers < 22 && this.rnd() < dt * 3) this.spawnPed(false);
+    if (walkers < 30 && this.rnd() < dt * 3) this.spawnPed(false);
 
     this.stepWanted(dt);
   }

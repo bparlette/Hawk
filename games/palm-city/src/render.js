@@ -225,6 +225,9 @@ export class Renderer {
       if (p.down) {
         g.save(); g.translate(p.x, p.y); g.rotate(p.spin || 0); g.scale(1, 0.75);
         this.drawCell(g, m.color, idx, m.cols, rows, 0, 0); g.restore();
+      } else if (p.outfit === 'player') {  // the hero is drawn a touch larger so you never lose them
+        g.save(); g.translate(p.x, p.y); g.scale(1.2, 1.2);
+        this.drawCell(g, m.color, idx, m.cols, rows, 0, 0); g.restore();
       } else this.drawCell(g, m.color, idx, m.cols, rows, p.x, p.y);
     }
     for (const c of S.cars) {
