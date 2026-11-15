@@ -19,6 +19,20 @@
 // area), so on iPhones its 2D context failed, bake() threw, and the game silently stayed
 // on the flat fallback forever (Nov 15, 2026 — see STATUS.md).
 //
+// Build 2026-11-15-4 — the phone-truth build. The bake fix above was serve-verified,
+// yet Cherie's iPhone STILL showed the fallback (Nov 15, 18:13 ET), with two live
+// suspects: (A) the in-app browser serving the OLD module graph from cache — the
+// imports carried no version stamp — or (B) a second load-path failure the canvas-cap
+// simulation does not model. So now: every module import in the play chain carries
+// ?v=<BUILD>; load() records the actual error (stage + message + top stack frame) in
+// canvas.dataset.e1err, and the fallback frame RENDERS the build tag + error on
+// screen. A phone screenshot then discriminates all three outcomes: no box at all =
+// cached pre-diagnostic code; box with an error = that error is the real throw;
+// textured game = fixed. Each asset also loads independently (canvas.dataset.e1fail
+// lists failures); only the tile sheet gates the textured path — a missing
+// sprite/ped/link/HUD sheet degrades just that layer instead of stranding the whole
+// renderer on the fallback.
+//
 // Until the asset pack loads (or if it fails), a flat zone-colour fallback keeps the page
 // playable — see ARCHITECTURE.md ("a renderer draws its own placeholder rather than failing").
 const PPM = 21, TILE = 64;                       // screen px per metre; px per tile in the baked ground
@@ -27,17 +41,25 @@ const TS = TILE * S;                             // one tile on screen: 84 px
 const CHARH = 41;                                // character figure height on screen, px (The Original's ped scale at this framing)
 const KPED = CHARH / 15, KLINK = CHARH / 16;     // frame scales: a ped figure fills 15 of its 24px frame; Link's fills 16 of 20
 const ASSET_BASE = "../../assets/e1/";
+const BUILD = "2026-11-15-4";   // version stamp: keep in sync with play/index.html + play/eras/index.js (?v= on every import/fetch)
 const PLAN = typeof location !== "undefined" && new URLSearchParams(location.search).has("plan");
 const SHADOW_LIDS = new Set([97, 100, 127, 128, 129]);   // flat lids baked under the sprites
 const PALM_LIDS = new Set([21, 126]);                    // flat lids baked into the overhead layer
 const ZONE_PAL = { r: "#526b63", s: "#c6bd8c", l: "#7c7c88", g: "#425a00", d: "#f0d8a8", p: "#29a59c", m: "#de949c", b: "#efa542", o: "#39dede", "~": "#39dede", c: "#88889a", B: "#638c94" };
 const mk = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
-const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+const loadImg = (src, ms = 25000) => new Promise((res, rej) => {
+  const i = new Image(), t = setTimeout(() => rej(new Error("timeout loading " + src)), ms);
+  i.onload = () => { clearTimeout(t); res(i); };
+  i.onerror = () => { clearTimeout(t); rej(new Error("load error " + src)); };
+  i.src = src;
+});
 const headIdx = (h, n) => ((Math.round(h / (2 * Math.PI) * n) % n) + n) % n;
 
 // nearest-neighbour rotation strip for a sprite that has no pre-baked one (no blur, ever)
 function rotations(src, n, S) {
-  const w = src.width, h = src.height, sd = src.getContext("2d").getImageData(0, 0, w, h).data, out = [];
+  const w = src.width, h = src.height, sg = src.getContext("2d");
+  if (!sg) return Array.from({ length: n }, () => mk(S, S));   // context refused: blank frames, never a throw
+  const sd = sg.getImageData(0, 0, w, h).data, out = [];
   for (let k = 0; k < n; k++) {
     const a = k / n * 2 * Math.PI, cs = Math.cos(a), sn = Math.sin(a), c = mk(S, S), cx = c.getContext("2d"), im = cx.createImageData(S, S);
     for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
@@ -51,10 +73,11 @@ function rotations(src, n, S) {
   }
   return out;
 }
-function crop(img, r) { const c = mk(r.w, r.h); c.getContext("2d").drawImage(img, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h); return c; }
+function crop(img, r) { const c = mk(r.w, r.h), x = c.getContext("2d"); if (x) x.drawImage(img, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h); return c; }
 
 export function create(canvas, level) {
   const ctx = canvas.getContext("2d");
+  canvas.dataset.e1build = BUILD;   // stamped synchronously: a screenshot proves which build ran
   const LW = level.w * TILE, LH = level.h * TILE;
   let ready = false, M = null, IMG = {}, under = null, decals = [], parked = [], pedDefs = [];
   let cam = null;
@@ -98,14 +121,29 @@ export function create(canvas, level) {
     }
     tileRot.set(key, c); return c;
   }
+  const failedAssets = [];
+  async function loadAsset(name, file) {
+    try { IMG[name] = await loadImg(ASSET_BASE + file + "?v=" + BUILD); }
+    catch (e) { IMG[name] = null; failedAssets.push(name); }
+  }
   async function load() {
+    let stage = "manifest";
     try {
-      M = await (await fetch(ASSET_BASE + "manifest.json")).json();
+      M = await (await fetch(ASSET_BASE + "manifest.json?v=" + BUILD)).json();
+      stage = "images";
       const F = M.files;
-      [IMG.tiles, IMG.sprites, IMG.peds, IMG.link, IMG.hud] = await Promise.all(
-        [F.tiles, F.sprites, F.peds, F.link, F.hudFont].map(f => loadImg(ASSET_BASE + f)));
+      await Promise.all([loadAsset("tiles", F.tiles), loadAsset("sprites", F.sprites),
+        loadAsset("peds", F.peds), loadAsset("link", F.link), loadAsset("hud", F.hudFont)]);
+      if (failedAssets.length) canvas.dataset.e1fail = failedAssets.join(",");
+      if (!IMG.tiles) throw new Error("tiles sheet failed to load");
+      stage = "prepare";
       prepare(); ready = true; canvas.dataset.e1 = "ready";
-    } catch (e) { canvas.dataset.e1 = "fallback"; }
+    } catch (e) {
+      canvas.dataset.e1 = "fallback";
+      const msg = e && e.message ? e.message : String(e);
+      const top = e && e.stack ? (e.stack.split("\n")[1] || "").trim() : "";
+      canvas.dataset.e1err = (stage + ": " + msg + (top ? " @ " + top : "")).slice(0, 300);
+    }
   }
   function prepare() {
     const cells = level.cells, H = level.h, W = level.w, flat = M.tiles.flatTransparentMap;
@@ -133,12 +171,12 @@ export function create(canvas, level) {
     const byModel = {}, stripByIdx = {};
     for (const c of M.sprites.carModels) byModel[c.model] = c.spriteIndex;
     for (const [name, st] of Object.entries(M.sprites.rotatedCarStrips)) stripByIdx[st.absIndex] = st;
-    parked = M.viceBeachPlacements.cars.map(c => {
+    parked = IMG.sprites ? M.viceBeachPlacements.cars.map(c => {
       const idx = byModel[c.type], k = headIdx(c.rotDeg * Math.PI / 180, 32);
       if (stripByIdx[idx]) { const st = stripByIdx[idx]; return { frames: st.frames, x: c.localX * level.tile_m, y: c.localY * level.tile_m, k }; }
       const it = M.sprites.items[idx], src = crop(IMG.sprites, it);
       return { baked: rotations(src, 32, 96), x: c.localX * level.tile_m, y: c.localY * level.tile_m, k };
-    });
+    }) : [];
   }
 
   // ---- per-frame ground: only the visible tiles are drawn, straight from the tile
@@ -163,7 +201,7 @@ export function create(canvas, level) {
         if (!PALM_LIDS.has(lid)) ctx.drawImage(tileCanvas(f.transparentSlot, rot), dx, dy, TS, TS);
       } else ctx.drawImage(tileCanvas(lidSlot(lid), rot), dx, dy, TS, TS);
     }
-    for (const d of decals) {
+    if (IMG.sprites) for (const d of decals) {
       const dx = Math.round(d.bx * S) - camX, dy = Math.round(d.by * S) - camY;
       if (dx + d.it.w * S <= 0 || dy + d.it.h * S <= 0 || dx >= W || dy >= H) continue;
       ctx.drawImage(IMG.sprites, d.it.x, d.it.y, d.it.w, d.it.h, dx, dy, d.it.w * S, d.it.h * S);
@@ -200,6 +238,22 @@ export function create(canvas, level) {
       dx += gw;
     }
   }
+  // ---- on-screen diagnostics (fallback path only): the build tag + the real load
+  // error, printed on the frame itself. A phone screenshot discriminates: no box at
+  // all = cached pre-diagnostic code; box with an error = that error is the throw;
+  // textured game = the load path worked.
+  function drawDiag(W, H) {
+    const err = canvas.dataset.e1err || "", fail = canvas.dataset.e1fail || "";
+    const lines = [`e1 build ${BUILD} — ${err ? "FALLBACK" : "loading"}`];
+    if (fail) lines.push("assets failed: " + fail);
+    if (err) for (let i = 0; i < err.length && lines.length < 5; i += 44) lines.push(err.slice(i, i + 44));
+    ctx.font = "11px ui-monospace,Menlo,monospace"; ctx.textBaseline = "top"; ctx.imageSmoothingEnabled = true;
+    const lw = Math.min(W - 16, 10 + Math.max(...lines.map(s => ctx.measureText(s).width)));
+    const lh = lines.length * 14 + 8, ly = H - lh - 10;
+    ctx.fillStyle = "rgba(0,0,0,.8)"; ctx.fillRect(8, ly, lw, lh);
+    ctx.fillStyle = "#ffd75e";
+    lines.forEach((s, i) => ctx.fillText(s, 13, ly + 4 + i * 14));
+  }
   function drawHUD(sim, W, H) {
     const bar = M.hudFont.hudSprites.districtBar;
     const bx = Math.round((W - bar.w) / 2);
@@ -212,7 +266,7 @@ export function create(canvas, level) {
 
   function drawPlan(W, H) {
     ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
-    if (!ready) { ctx.fillStyle = "#888"; ctx.font = "16px monospace"; ctx.fillText("loading...", 16, 32); return; }
+    if (!ready) { ctx.fillStyle = "#888"; ctx.font = "16px monospace"; ctx.fillText("loading... e1 build " + BUILD, 16, 32); return; }
     const s = Math.min(W / LW, H / LH), ox = (W - LW * s) / 2, oy = (H - LH * s) / 2, td = TILE * s;
     const cells = level.cells, flat = M.tiles.flatTransparentMap;
     ctx.imageSmoothingEnabled = true;
@@ -224,7 +278,7 @@ export function create(canvas, level) {
         if (!PALM_LIDS.has(lid)) ctx.drawImage(tileCanvas(f.transparentSlot, rot), dx, dy, td, td);
       } else ctx.drawImage(tileCanvas(lidSlot(lid), rot), dx, dy, td, td);
     }
-    for (const d of decals)
+    if (IMG.sprites) for (const d of decals)
       ctx.drawImage(IMG.sprites, d.it.x, d.it.y, d.it.w, d.it.h, ox + d.bx * s, oy + d.by * s, d.it.w * s, d.it.h * s);
     for (let ty = 0; ty < level.h; ty++) for (let tx = 0; tx < level.w; tx++) {
       const lid = cells[ty][tx][3], f = flat[lid];
@@ -250,6 +304,7 @@ export function create(canvas, level) {
         ctx.drawImage(fb, camX / PPM * 4, camY / PPM * 4, W / PPM * 4, H / PPM * 4, 0, 0, W, H);
         ctx.fillStyle = "#18b8a8"; ctx.fillRect(Math.round(sim.car.x * PPM) - camX - 20, Math.round(sim.car.y * PPM) - camY - 28, 40, 56);
         if (sim.mode === "foot") { ctx.fillStyle = "#10ad42"; ctx.fillRect(Math.round(sim.hero.x * PPM) - camX - 8, Math.round(sim.hero.y * PPM) - camY - 8, 16, 16); }
+        drawDiag(W, H);
         return;
       }
       // ground + canopy are drawn filtered (smoothing on): the same art The Original
@@ -259,13 +314,13 @@ export function create(canvas, level) {
       const f = level.route.finish;                                       // blinking finish marker
       if ((sim.tick >> 4) & 1) { ctx.fillStyle = "#f8f840"; const fs = Math.max(6, Math.round(8 * S)); ctx.fillRect(Math.round(f.x * level.tile_m * PPM) - fs / 2 - camX, Math.round(f.y * level.tile_m * PPM) - fs / 2 - camY, fs, fs); }
       ctx.imageSmoothingEnabled = false;
-      for (const c of parked) {
+      if (IMG.sprites) for (const c of parked) {
         if (c.frames) { const fr = c.frames[c.k]; ctx.drawImage(IMG.sprites, fr.x, fr.y, fr.w, fr.h, Math.round(c.x * PPM - fr.anchorX * S) - camX, Math.round(c.y * PPM - fr.anchorY * S) - camY, fr.w * S, fr.h * S); }
         else { const im = c.baked[c.k]; ctx.drawImage(im, Math.round(c.x * PPM) - camX - im.width * S / 2, Math.round(c.y * PPM) - camY - im.height * S / 2, im.width * S, im.height * S); }
       }
       // dressing peds (visual only; positions are a pure function of sim.tick, so era switches stay deterministic)
       const variants = Object.values(M.peds.variants);
-      for (const pd of pedDefs) {
+      if (IMG.peds) for (const pd of pedDefs) {
         const v = 1.15, L = pd.rangeM, dist = sim.tick / 60 * v + pd.off, u = dist % (2 * L), along = u < L ? u : 2 * L - u, fwd = u < L;
         const wx = pd.x + (pd.vert ? 0 : along - L / 2), wy = pd.y + (pd.vert ? along - L / 2 : 0);
         const dir = pd.vert ? (fwd ? "down" : "up") : (fwd ? "right" : "left");
@@ -273,17 +328,19 @@ export function create(canvas, level) {
         blit(IMG.peds, fr, wx, wy, KPED);
       }
       // the player's car: sport_red pre-rotated strip, k=0 is north, clockwise
-      const strip = M.sprites.rotatedCarStrips.sport_red, fr = strip.frames[headIdx(sim.car.h, 32)];
-      ctx.drawImage(IMG.sprites, fr.x, fr.y, fr.w, fr.h, Math.round(sim.car.x * PPM - fr.anchorX * S) - camX, Math.round(sim.car.y * PPM - fr.anchorY * S) - camY, fr.w * S, fr.h * S);
+      if (IMG.sprites) {
+        const strip = M.sprites.rotatedCarStrips.sport_red, fr = strip.frames[headIdx(sim.car.h, 32)];
+        ctx.drawImage(IMG.sprites, fr.x, fr.y, fr.w, fr.h, Math.round(sim.car.x * PPM - fr.anchorX * S) - camX, Math.round(sim.car.y * PPM - fr.anchorY * S) - camY, fr.w * S, fr.h * S);
+      }
       // Link (Link's Awakening): direction by dominant axis, walk frame from ground covered (sim phase)
-      if (sim.mode === "foot") {
+      if (sim.mode === "foot" && IMG.link) {
         const h = sim.hero.h, dir = Math.abs(Math.sin(h)) > Math.abs(Math.cos(h)) ? (Math.sin(h) > 0 ? "right" : "left") : (Math.cos(h) > 0 ? "up" : "down");
         const fr2 = M.link.directions[dir][sim.hero.speed > .05 ? Math.floor(sim.hero.phase * 4) % 4 : 0];
         blit(IMG.link, fr2, sim.hero.x, sim.hero.y, KLINK);
       }
       ctx.imageSmoothingEnabled = true;
       drawCanopy(camX, camY, W, H);
-      drawHUD(sim, W, H);
+      if (IMG.hud) drawHUD(sim, W, H);
     },
     dispose() {},
   };
