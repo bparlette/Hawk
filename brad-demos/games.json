@@ -3146,6 +3146,22 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Kickflip Vice",
    "url": "../games/kickflip-vice/"
+  },
+  {
+   "category": "Classic Homebrew",
+   "desc": "The original 1997 game, faithful and untouched — all six cities, real data, original missions",
+   "id": "gta-original",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "The Original — GTA 1997",
+   "url": "../games/gta-original/"
+  },
+  {
+   "category": "Originals",
+   "desc": "Our enhanced GTA — Vice/Liberty/satellite Miami with Original, HD-remake and Drawn vehicle modes",
+   "id": "neon-vice",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Neon Vice (Enhanced)",
+   "url": "../games/neon-vice/"
   }
  ]
 }

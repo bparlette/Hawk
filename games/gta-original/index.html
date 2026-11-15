@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>GRAND THEFT AUTO — THE ORIGINAL (1997) · all six original cities</title>
+<style>
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0b0e1a;font-family:ui-monospace,Menlo,Consolas,monospace;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:none}
+  #game{position:fixed;inset:0}
+  canvas.webgl{position:absolute;inset:0;width:100%;height:100%;display:block}
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:1200;font-family:ui-monospace,Menlo,Consolas,monospace}
+  #topbar{position:absolute;top:calc(6px + env(safe-area-inset-top));left:8px;right:8px;display:flex;justify-content:space-between;align-items:flex-start}
+  #cashbox{background:rgba(5,10,8,.72);border:2px solid #2f7d4f;border-radius:8px;padding:4px 10px;color:#7dff9a;font-weight:700;font-size:22px;letter-spacing:1px;text-shadow:0 2px 0 #04150a}
+  #cashbox small{display:block;font-size:10px;color:#b8ffd0;letter-spacing:2px}
+  #wantedbox{background:rgba(8,8,16,.72);border:2px solid #3a3f66;border-radius:8px;padding:4px 8px;text-align:center;min-width:64px}
+  #wantedbox small{display:block;font-size:9px;color:#aab;letter-spacing:2px}
+  #copheads{display:flex;gap:2px;justify-content:center;min-height:26px}
+  #copheads img{width:24px;height:26px;image-rendering:pixelated}
+  #copheads img.off{opacity:.18;filter:grayscale(1)}
+  #missionbox{position:absolute;top:calc(86px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);max-width:92vw;background:rgba(10,8,4,.78);border:2px solid #c9a227;border-radius:8px;color:#ffe98a;padding:6px 12px;font-size:14px;text-align:center;display:none}
+  #missionbox b{color:#fff}
+  #missionbox .timer{color:#ff9a5a;font-weight:700}
+  #toast{position:absolute;top:38%;left:50%;transform:translateX(-50%);color:#fff;font-size:30px;font-weight:800;letter-spacing:2px;text-shadow:0 3px 0 #000,0 0 18px rgba(255,60,60,.7);opacity:0;transition:opacity .25s;text-align:center;white-space:nowrap}
+  #bustwrap{position:absolute;bottom:calc(118px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:180px;display:none}
+  #bustlabel{text-align:center;color:#ff5a5a;font-size:12px;letter-spacing:3px;font-weight:700;text-shadow:0 2px 0 #000}
+  #bustbar{height:10px;border:2px solid #ff5a5a;border-radius:5px;background:rgba(0,0,0,.6);overflow:hidden}
+  #bustfill{height:100%;width:0%;background:#ff5a5a}
+  #minimap{position:absolute;right:8px;bottom:calc(108px + env(safe-area-inset-bottom));width:104px;height:104px;border:2px solid #3a3f66;border-radius:8px;background:#0a0f1e;opacity:.92}
+  #speedo{position:absolute;left:10px;bottom:calc(112px + env(safe-area-inset-bottom));color:#cfe6ff;font-size:13px;text-shadow:0 2px 0 #000;letter-spacing:1px}
+  /* ---------- screens (body level, above the touch overlay) ---------- */
+  .screen{position:fixed;inset:0;z-index:3000;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 35%,rgba(20,16,48,.88),rgba(4,4,10,.96));color:#fff;text-align:center;padding:20px}
+  .screen h1{font-size:52px;margin:0;letter-spacing:3px;background:linear-gradient(180deg,#7df9ff 15%,#2ea6ff 45%,#ff4fc3 80%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 0 rgba(0,0,0,.55))}
+  .screen h2{font-size:34px;margin:0;letter-spacing:4px;color:#ff5a5a;text-shadow:0 4px 0 #000}
+  .screen p{color:#c9d4ff;font-size:14px;line-height:1.55;max-width:340px}
+  .screen .fine{color:#778;font-size:11px;max-width:330px}
+  .bigbtn{pointer-events:auto;margin-top:18px;background:linear-gradient(180deg,#ffd94f,#f39c12);border:3px solid #7a4d00;border-radius:12px;color:#231600;font-family:inherit;font-size:24px;font-weight:800;letter-spacing:2px;padding:14px 44px;box-shadow:0 6px 0 #7a4d00;cursor:pointer}
+  .bigbtn:active{transform:translateY(4px);box-shadow:0 2px 0 #7a4d00}
+  .bigbtn:disabled{filter:grayscale(.7);opacity:.55;cursor:wait}
+  #cityrow{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;justify-content:center;max-width:96vw}
+  .citycard{pointer-events:auto;width:118px;background:rgba(10,14,30,.85);border:3px solid #3a3f66;border-radius:10px;padding:6px;cursor:pointer;color:#dfe8ff;font-family:inherit;text-align:center}
+  .citycard img{width:100%;height:74px;object-fit:cover;border-radius:5px;image-rendering:pixelated;display:block}
+  .citycard b{display:block;font-size:13px;margin-top:5px;letter-spacing:.5px}
+  .citycard span{display:block;font-size:9.5px;color:#93a5d8;line-height:1.35;margin-top:2px}
+  .citycard.sel{border-color:#ffd94f;box-shadow:0 0 14px rgba(255,217,79,.45)}
+  #citybtn{position:absolute;top:calc(64px + env(safe-area-inset-top));left:8px;pointer-events:auto;background:rgba(8,8,16,.72);border:2px solid #3a3f66;border-radius:8px;color:#cfe0ff;font-family:inherit;font-size:11px;padding:4px 9px;cursor:pointer;letter-spacing:1px}
+  #loadmsg{color:#9fb4ff;font-size:13px;margin-top:10px;min-height:18px}
+  .hidden{display:none!important}
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<div id="game"></div>
+
+<div id="hud">
+  <div id="topbar">
+    <div id="cashbox"><small>SCORE</small>$<span id="cash">0</span></div>
+    <div id="wantedbox"><small>WANTED</small><div id="copheads"></div></div>
+  </div>
+  <button id="citybtn">🏙 CITY</button>
+  <div id="missionbox"></div>
+  <div id="toast"></div>
+  <div id="bustwrap"><div id="bustlabel">BUSTED?</div><div id="bustbar"><div id="bustfill"></div></div></div>
+  <canvas id="minimap" width="208" height="208"></canvas>
+  <div id="speedo"></div>
+</div>
+
+<div class="screen" id="startscreen">
+  <h1>GRAND THEFT AUTO</h1>
+  <p><b>THE ORIGINAL</b> — the real <b>1997 Grand Theft Auto</b> and its London expansions, untouched: original maps, sprites, phone missions and car handling, parsed live from the original data files. <b>Nothing swapped. Nothing enhanced.</b> Pick a city:</p>
+  <div id="cityrow">
+    <button class="citycard sel" data-city="liberty"><img src="thumbs/liberty.png" alt="Liberty City map"><b>LIBERTY CITY</b><span>Original 1997 · NYC.CMP + style001 · the bank-job phone chain</span></button>
+    <button class="citycard" data-city="vice"><img src="thumbs/vice.png" alt="Vice City map"><b>VICE CITY</b><span>Original 1997 · miami.cmp + style003 · “Vice is Painless” chapter</span></button>
+    <button class="citycard" data-city="sanandreas"><img src="thumbs/sanandreas.png" alt="San Andreas map"><b>SAN ANDREAS</b><span>Original 1997 · sanb.cmp + style002 · steal-and-deliver phone job</span></button>
+    <button class="citycard" data-city="london69"><img src="thumbs/london69.png" alt="London 1969 map"><b>LONDON 1969</b><span>Original expansion · uk.cmp · “Easy London” chapter · bobby cops</span></button>
+    <button class="citycard" data-city="london61"><img src="thumbs/london61.png" alt="London 1961 map"><b>LONDON 1961</b><span>Original expansion · uke.cmp · the revised London map</span></button>
+    <button class="citycard" data-city="manchester"><img src="thumbs/manchester.png" alt="Manchester map"><b>MANCHESTER</b><span>Original 1961 deathmatch map · FREE-ROAM ONLY, no missions</span></button>
+  </div>
+  <button class="bigbtn" id="playbtn" disabled>▶ PLAY</button>
+  <div id="loadmsg">loading Liberty City…</div>
+  <p class="fine">Walk: joystick / WASD · A or E: enter &amp; exit car · B or Shift: sprint · Space: handbrake<br>Follow the ringing phone in each city. Liberty City's bank job pays $50,000 · Vice City $35,000 · San Andreas $25,000.</p>
+</div>
+
+<div class="screen hidden" id="bustedscreen">
+  <h2>BUSTED!</h2>
+  <p id="bustedmsg">The cops got you.</p>
+  <button class="bigbtn" id="respawnbtn">RESPAWN</button>
+</div>
+
+<script type="importmap">{ "imports": {
+  "three": "./vendor/three.module.js",
+  "three/addons/": "./vendor/addons/"
+} }</script>
+<script type="module">
+import * as THREE from 'three';
+import { TouchController } from './vendor/gptouch.js';
+
+/* =====================================================================
+   GRAND THEFT AUTO — THE ORIGINAL. A web engine for the REAL 1997 GTA cities.
+   Parses the original data files at load (formats per DMA Design's
+   CityScape Data Structure doc, cds.doc v12.10). No Rockstar asset is
+   modified: tiles/sprites are decoded byte-for-byte from the files
+   sourced from archive.org (demo item GrandTheftAutoDemo; full-game
+   item grand-theft-auto-1997-dma-design — its nyc.cmp/style001.g24 are
+   sha256-identical to the demo's).
+   Cities: Vice City (original, miami.cmp + style003.g24, DEFAULT),
+   Liberty City (original demo, NYC.CMP + STYLE001.G24), and a fan-made
+   satellite-rebuild Miami (MIA.CMP, style001 graphics, free-roam only).
+   ===================================================================== */
+
+// ---------------- city definitions ----------------
+const CITIES = {
+  liberty: { name: 'Liberty City', cmp: 'data/liberty/NYC.CMP', g24: 'data/liberty/STYLE001.G24',
+    mission: { url: 'data/mission-full.ini', section: '[1]', startPc: 180, phoneId: 72, doorId: 254,
+               pedAnyCar: false, parkNeedsPed: false, skipRanges: [] } },
+  vice: { name: 'Vice City', cmp: 'data/vice/miami.cmp', g24: 'data/vice/style003.g24',
+    mission: { url: 'data/mission-full.ini', section: '[202]', startPc: 300, phoneId: 90, doorId: 178,
+               pedAnyCar: true, parkNeedsPed: true, skipRanges: [[350, 386]] } },
+  sanandreas: { name: 'San Andreas', cmp: 'data/sanandreas/sanb.cmp', g24: 'data/sanandreas/style002.g24',
+    mission: { url: 'data/mission-full.ini', section: '[102]', startPc: 141, phoneId: 44, doorId: 117,
+               pedAnyCar: false, parkNeedsPed: false, skipRanges: [] } },
+  london69: { name: 'London 1969', cmp: 'data/london69/uk.cmp', g24: 'data/london69/Style001.g24',
+    mission: { url: 'data/london69/missuk.ini', section: '[2]', startPc: 2000, phoneId: 10, doorId: 122,
+               pedAnyCar: false, parkNeedsPed: false, skipRanges: [] } },
+  london61: { name: 'London 1961', cmp: 'data/london61/uke.cmp', g24: 'data/london61/Sty001.g24',
+    mission: { url: 'data/london61/missuke.ini', section: '[1]', startPc: 3000, phoneId: 18, doorId: 0,
+               pedAnyCar: false, parkNeedsPed: false, skipRanges: [] } },
+  manchester: { name: 'Manchester', cmp: 'data/manchester/MC.CMP', g24: 'data/manchester/Sty001.g24',
+    mission: { url: 'data/london61/missuke.ini', section: '[1001]', startPc: null, phoneId: 0, doorId: 0,
+               pedAnyCar: false, parkNeedsPed: false, skipRanges: [] } },
+};
+let CITY = CITIES.liberty, CITY_KEY = 'liberty';
+let PLAYER_ID = 294; // the chapter's PLAYER placement id (per city, set at load)
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const dist2 = (ax, az, bx, bz) => { const dx = ax - bx, dz = az - bz; return dx * dx + dz * dz; };
+
+// ---------------- data loading ----------------
+async function fetchBuf(url) { const r = await fetch(url); if (!r.ok) throw new Error(url + ' ' + r.status); return r.arrayBuffer(); }
+
+function parseG24(buf) {
+  const b = new Uint8Array(buf), dv = new DataView(buf);
+  const u32 = o => dv.getUint32(o, true), u16 = o => dv.getUint16(o, true), i16 = o => dv.getInt16(o, true);
+  const F = []; for (let i = 0; i < 16; i++) F.push(u32(i * 4));
+  const [, sideS, lidS, auxS, animS, clutS, tileClutS, , , , palIdxS, objInfoS, carS, sprInfoS, sprGfxS] = F;
+  const sideN = sideS / 4096, lidN = lidS / 4096, auxN = auxS / 4096, totalTiles = sideN + lidN + auxN;
+  const trail = ((4 - (totalTiles % 4)) % 4) * 4096;
+  let off = 64; const tileRawOff = off; off += sideS + lidS + auxS + trail;
+  const animOff = off; off += animS;
+  const clutOff = off, pagedClut = Math.ceil(clutS / 65536) * 65536; off += pagedClut;
+  const palIdxOff = off; off += palIdxS;
+  const objInfoOff = off; off += objInfoS;
+  const carOff = off; off += carS;
+  const sprInfoOff = off; off += sprInfoS;
+  const sprGfxOff = off; off += sprGfxS;
+  const sprNumOff = off;
+  const palIndex = []; for (let i = 0; i < palIdxS / 2; i++) palIndex.push(u16(palIdxOff + i * 2)); // palIdxOff may be odd: no typed-array view
+  const clut = b.subarray(clutOff, clutOff + pagedClut);
+  const clutRGB = (ci, px) => { const o = 65536 * Math.floor(ci / 64) + 4 * (ci % 64) + px * 256; return [clut[o + 2], clut[o + 1], clut[o]]; };
+  // tiles -> atlas canvas (32 cols); plus a "flat" variant where palette index 0 is
+  // transparent (the original engine draws flat blocks — fences, signs — transparently)
+  const tCan = document.createElement('canvas'); tCan.width = 2048; tCan.height = 832;
+  const tg = tCan.getContext('2d');
+  const fCan = document.createElement('canvas'); fCan.width = 2048; fCan.height = 832;
+  const fg = fCan.getContext('2d');
+  const tileImg = tg.createImageData(64, 64), flatImg = fg.createImageData(64, 64);
+  for (let s = 0; s <= totalTiles; s++) {
+    const grp = Math.floor(s / 4), within = s % 4, base = tileRawOff + grp * 16384 + within * 64;
+    const ci = palIndex[s * 4] || 0;
+    for (let r = 0; r < 64; r++) for (let x = 0; x < 64; x++) {
+      const px = b[base + r * 256 + x], o = (r * 64 + x) * 4;
+      const [rr, gg, bb] = clutRGB(ci, px);
+      tileImg.data[o] = rr; tileImg.data[o + 1] = gg; tileImg.data[o + 2] = bb; tileImg.data[o + 3] = 255;
+      flatImg.data[o] = rr; flatImg.data[o + 1] = gg; flatImg.data[o + 2] = bb; flatImg.data[o + 3] = px === 0 ? 0 : 255;
+    }
+    tg.putImageData(tileImg, (s % 32) * 64, Math.floor(s / 32) * 64);
+    fg.putImageData(flatImg, (s % 32) * 64, Math.floor(s / 32) * 64);
+  }
+  // sprite infos
+  const sprites = [];
+  { let p = sprInfoOff; const end = sprInfoOff + sprInfoS;
+    while (p < end) {
+      const w = b[p], h = b[p + 1], dc = b[p + 2], size = u16(p + 4), clutI = u16(p + 6), xo = b[p + 8], yo = b[p + 9], page = u16(p + 10);
+      p += 12; const deltas = [];
+      for (let d = 0; d < dc; d++) { deltas.push({ size: u16(p), ptr: u32(p + 2) }); p += 6; }
+      sprites.push({ w, h, dc, size, clut: clutI, xo, yo, page, deltas });
+    } }
+  const snNames = ['ARROW','DIGITS','BOAT','BOX','BUS','CAR','OBJECT','PED','SPEEDO','TANK','TRAFFIC_LIGHTS','TRAIN','TRDOORS','BIKE','TRAM','WBUS','WCAR','EX','TUMCAR','TUMTRUCK','FERRY'];
+  const starts = {}; { let acc = 0; snNames.forEach((n, i) => { starts[n] = acc; acc += u16(sprNumOff + i * 2); }); }
+  // sprites -> atlas canvas (shelf pack, 2048 wide)
+  const sCan = document.createElement('canvas'); sCan.width = 2048; sCan.height = 2048;
+  const sg = sCan.getContext('2d');
+  let ax = 0, ay = 0, rowH = 0;
+  for (const s of sprites) {
+    if (ax + s.w > 2048) { ax = 0; ay += rowH; rowH = 0; }
+    s.ax = ax; s.ay = ay; ax += s.w; rowH = Math.max(rowH, s.h);
+    const pageBase = sprGfxOff + s.page * 65536, ci = palIndex[s.clut + Math.floor(tileClutS / 1024)] || 0;
+    const img = sg.createImageData(s.w, s.h);
+    for (let r = 0; r < s.h; r++) for (let x = 0; x < s.w; x++) {
+      const px = b[pageBase + (s.yo + r) * 256 + s.xo + x], o = (r * s.w + x) * 4;
+      if (px === 0) { img.data[o + 3] = 0; continue; }
+      const [rr, gg, bb] = clutRGB(ci, px);
+      img.data[o] = rr; img.data[o + 1] = gg; img.data[o + 2] = bb; img.data[o + 3] = 255;
+    }
+    sg.putImageData(img, s.ax, s.ay);
+  }
+  // car info (fixed 174 + 8/door)
+  const cars = [];
+  { let p = carOff; const end = carOff + carS;
+    while (p < end) {
+      const fx = f => dv.getInt32(p + f, true) / 65536;
+      const car = { w: i16(p), h: i16(p + 2), d: i16(p + 4), spr: i16(p + 6), weight: i16(p + 8),
+        maxSpeed: i16(p + 10), minSpeed: i16(p + 12), accel: i16(p + 14), braking: i16(p + 16),
+        grip: i16(p + 18), handling: i16(p + 20), vtype: b[p + 106], model: b[p + 107], turning: b[p + 108],
+        value: u16(p + 110), cx: dv.getInt8(p + 118), cy: dv.getInt8(p + 119), mass: fx(124), thrust: fx(128) };
+      const nd = i16(p + 172); car.doors = [];
+      for (let d = 0; d < nd; d++) { const q = p + 174 + d * 8; car.doors.push({ rpx: i16(q), rpy: i16(q + 2), object: i16(q + 4), delta: i16(q + 6) }); }
+      cars.push(car); p += 174 + nd * 8;
+    } }
+  const carByModel = {}; cars.forEach((c, i) => { if (carByModel[c.model] === undefined) carByModel[c.model] = i; });
+  // object info (14 + 2/into)
+  const objInfos = [];
+  { let p = objInfoOff; const end = objInfoOff + objInfoS;
+    while (p < end) {
+      const ni = b[p + 13];
+      objInfos.push({ w: u16(p), h: u16(p + 2), d: u16(p + 4), spr: u16(p + 6), status: dv.getInt8(p + 12), numInto: ni });
+      p += 14 + ni * 2;
+    } }
+  return { sideN, lidN, auxN, totalTiles, tileCanvas: tCan, flatCanvas: fCan, spriteCanvas: sCan, sprites, starts, cars, carByModel, objInfos };
+}
+
+function parseCMP(buf) {
+  const dv = new DataView(buf), b = new Uint8Array(buf);
+  const u32 = o => dv.getUint32(o, true), u16 = o => dv.getUint16(o, true);
+  const routeSize = u32(8), objSize = u32(12), colSize = u32(16), blockSize = u32(20);
+  let co = 28; const baseOff = co; co += 262144; const colOff = co; co += colSize; const blockOff = co; co += blockSize; const objOff = co;
+  const blocks = [];
+  for (let i = 0; i < blockSize / 8; i++) { const o = blockOff + i * 8, tm = u16(o);
+    blocks.push({ type: (tm >> 4) & 7, slope: (tm >> 8) & 63, flat: (tm >> 7) & 1, lidrot: (tm >> 14) & 3, dir: tm & 15, ext: b[o + 2], left: b[o + 3], right: b[o + 4], top: b[o + 5], bottom: b[o + 6], lid: b[o + 7] }); }
+  const ptrSet = new Set(); for (let i = 0; i < 65536; i++) ptrSet.add(u32(baseOff + i * 4));
+  const uniq = [...ptrSet].sort((a, c) => a - c);
+  const colEnd = p => { for (const q of uniq) if (q > p) return q; return colSize; };
+  const columns = new Array(65536);
+  for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) {
+    const p = u32(baseOff + (y * 256 + x) * 4), n = (colEnd(p) - p - 2) / 2, bl = [];
+    for (let i = 0; i < n; i++) bl.push(blocks[u16(colOff + p + 2 + i * 2)]);
+    columns[y * 256 + x] = { height: u16(colOff + p), blocks: bl };
+  }
+  const objs = [], carsPlaced = [];
+  for (let o = objOff; o + 14 <= objOff + objSize; o += 14) {
+    const e = { x: u16(o), y: u16(o + 2), z: u16(o + 4), type: b[o + 6], remap: b[o + 7], rot: u16(o + 8) };
+    (e.remap >= 128 ? carsPlaced : objs).push(e);
+  }
+  return { blocks, columns, objs, carsPlaced };
+}
+
+function parseMission(text) {
+  const placements = {}, commands = {};
+  for (const line of text.split(/\r?\n/)) {
+    let m = line.match(/^(\d+)\s+(?:1\s+)?\((-?\d+),\s*(-?\d+),\s*(-?\d+)\)\s+([A-Z_]+)\s*(.*)$/);
+    if (m) { placements[+m[1]] = { x: +m[2], y: +m[3], z: +m[4], kind: m[5], args: m[6].trim().split(/\s+/).filter(s => s !== '').map(Number) }; continue; }
+    m = line.match(/^(\d+)\s+([A-Z_]+)\s+(-?[\d\s-]*)$/);
+    if (m && !line.includes('(')) { const a = m[3].trim().split(/\s+/).filter(s => s !== '').map(Number); commands[+m[1]] = { op: m[2], a }; }
+  }
+  return { placements, commands };
+}
+
+// ---------------- world model ----------------
+const BLOCK = 4, LVL = 2.4;                    // 1 map block = 4 world units; 1 level = 2.4 units
+const bx2wx = bx => (bx - 128) * BLOCK, bz2wz = by => (by - 128) * BLOCK;
+const wx2bx = wx => Math.floor(wx / BLOCK) + 128, wz2by = wz => Math.floor(wz / BLOCK) + 128;
+let G24 = null, CMP = null, MIS = null;
+const SURF = new Array(65536);                 // per-column gameplay surface
+function buildSurfaces() {
+  for (let by = 0; by < 256; by++) for (let bx = 0; bx < 256; bx++) {
+    const col = CMP.columns[by * 256 + bx];
+    let s = null;
+    for (let k = 0; k < col.blocks.length; k++) {
+      const graphic = col.blocks[k], carrier = k > 0 ? col.blocks[k - 1] : graphic;
+      if (graphic.lid && carrier.type >= 1 && carrier.type <= 5) {
+        const z = col.height + k;
+        s = { y: (4 - z) * LVL, type: carrier.type, dir: carrier.dir, slope: carrier.slope, z };
+        break;
+      }
+    }
+    if (!s) { // no typed surface: fall back to first lid from top, else sunken air
+      for (let k = 0; k < col.blocks.length; k++) if (col.blocks[k].lid) { const z = col.height + k; s = { y: (4 - z) * LVL, type: 4, dir: 0, slope: 0, z }; break; }
+      if (!s) s = { y: -LVL, type: 0, dir: 0, slope: 0, z: 5 };
+    }
+    s.solid = s.type === 5; s.water = s.type === 1;
+    SURF[by * 256 + bx] = s;
+  }
+}
+const surfAt = (bx, by) => (bx < 0 || by < 0 || bx > 255 || by > 255) ? { y: -LVL, type: 1, dir: 0, slope: 0, solid: false, water: true } : SURF[by * 256 + bx];
+function heightAt(wx, wz) { // bilinear over column surfaces
+  const fx = wx / BLOCK + 127.5, fz = wz / BLOCK + 127.5;
+  const x0 = Math.floor(fx), z0 = Math.floor(fz), tx = fx - x0, tz = fz - z0;
+  const h00 = surfAt(x0, z0).y, h10 = surfAt(x0 + 1, z0).y, h01 = surfAt(x0, z0 + 1).y, h11 = surfAt(x0 + 1, z0 + 1).y;
+  return lerp(lerp(h00, h10, tx), lerp(h01, h11, tx), tz);
+}
+function collideCircle(p, r) {
+  const bx = wx2bx(p.x), by = wz2by(p.z);
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+    const cx = bx + dx, cy = by + dy, s = surfAt(cx, cy);
+    if (!s.solid && !s.water) continue;
+    const x0 = bx2wx(cx), z0 = bz2wz(cy), x1 = x0 + BLOCK, z1 = z0 + BLOCK;
+    const nx = clamp(p.x, x0, x1), nz = clamp(p.z, z0, z1);
+    let ddx = p.x - nx, ddz = p.z - nz; const d2 = ddx * ddx + ddz * ddz;
+    if (d2 < r * r) {
+      if (d2 < 1e-6) { // inside the block: push out along smallest penetration
+        const pl = p.x - x0, pr = x1 - p.x, pt = p.z - z0, pb = z1 - p.z, m = Math.min(pl, pr, pt, pb);
+        if (m === pl) p.x = x0 - r; else if (m === pr) p.x = x1 + r; else if (m === pt) p.z = z0 - r; else p.z = z1 + r;
+      } else { const d = Math.sqrt(d2); p.x = nx + ddx / d * r; p.z = nz + ddz / d * r; }
+      return true;
+    }
+  }
+  return false;
+}
+
+// ---------------- three setup ----------------
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.domElement.className = 'webgl';
+$('game').appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1a2a4a);
+scene.fog = new THREE.Fog(0x1a2a4a, 150, 240);
+const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 400);
+function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+
+let tileTex = null, sprTex = null;
+// ONE shared atlas texture for every sprite; per-sprite UVs live in the geometry
+// (a texture per sprite would re-upload the whole 2048x2048 atlas per mesh).
+function sprPlaneGeo(absIdx, wUnits) {
+  const s = G24.sprites[absIdx];
+  const geo = new THREE.PlaneGeometry(wUnits, wUnits * s.h / s.w);
+  const u0 = s.ax / 2048, u1 = (s.ax + s.w) / 2048, v1 = 1 - s.ay / 2048, v0 = 1 - (s.ay + s.h) / 2048;
+  const uv = geo.attributes.uv;
+  uv.setXY(0, u0, v1); uv.setXY(1, u1, v1); uv.setXY(2, u0, v0); uv.setXY(3, u1, v0);
+  return geo;
+}
+function flatSprite(absIdx, wUnits) {
+  const s = G24.sprites[absIdx]; if (!s) return null;
+  const m = new THREE.Mesh(sprPlaneGeo(absIdx, wUnits),
+    new THREE.MeshBasicMaterial({ map: sprTex, transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }));
+  m.rotation.order = 'YXZ'; m.rotation.x = -Math.PI / 2;
+  return m;
+}
+function setMeshSprite(mesh, absIdx, wUnits) {
+  const old = mesh.geometry; mesh.geometry = sprPlaneGeo(absIdx, wUnits); old.dispose();
+}
+
+// slope lid corner lifts: returns [NW, NE, SW, SE] extra heights
+function slopeDY(slope) {
+  const Z = [0, 0, 0, 0]; if (!slope) return Z;
+  let n = 0, s = 0, w = 0, e = 0; // edge lifts: north(-z), south(+z), west(-x), east(+x)
+  if (slope === 1) n = 1.2; else if (slope === 2) { n = 2.4; s = 1.2; }
+  else if (slope === 3) s = 1.2; else if (slope === 4) { s = 2.4; n = 1.2; }
+  else if (slope === 5) w = 1.2; else if (slope === 6) { w = 2.4; e = 1.2; }
+  else if (slope === 7) e = 1.2; else if (slope === 8) { e = 2.4; w = 1.2; }
+  else if (slope >= 9 && slope <= 16) { const f = (slope - 8) / 8; n = f * 2.4; s = (f - 0.125) * 2.4; }
+  else if (slope >= 17 && slope <= 24) { const f = (slope - 16) / 8; s = f * 2.4; n = (f - 0.125) * 2.4; }
+  else if (slope >= 25 && slope <= 32) { const f = (slope - 24) / 8; w = f * 2.4; e = (f - 0.125) * 2.4; }
+  else if (slope >= 33 && slope <= 40) { const f = (slope - 32) / 8; e = f * 2.4; w = (f - 0.125) * 2.4; }
+  else if (slope === 41) n = 2.4; else if (slope === 42) s = 2.4; else if (slope === 43) w = 2.4; else if (slope === 44) e = 2.4;
+  return [Math.max(n, w), Math.max(n, e), Math.max(s, w), Math.max(s, e)];
+}
+
+// windowed city geometry (merged, one draw call)
+let cityMesh = null, cityFlatMesh = null, cityCenter = { bx: -999, by: -999 };
+const WIN = 40; // blocks each way from center (81x81)
+let flatTex = null;
+function tileUV(storage, rot, flipU) {
+  const u0 = (storage % 32) / 32, v0 = 1 - (Math.floor(storage / 32) + 1) * 64 / 832;
+  const du = 64 / 2048, dv = 64 / 832;
+  let uv = [[u0, v0 + dv], [u0 + du, v0 + dv], [u0 + du, v0], [u0, v0]]; // NW NE SE SW (v up)
+  for (let i = 0; i < (rot & 3); i++) uv = [uv[3], uv[0], uv[1], uv[2]];
+  if (flipU) uv = [uv[1], uv[0], uv[3], uv[2]];
+  return uv;
+}
+function buildCity(cxBx, cyBy) {
+  const P = { pos: [], uvA: [], idx: [], vc: 0 }, F = { pos: [], uvA: [], idx: [], vc: 0 };
+  const quad = (S, corners, uvs) => { for (let i = 0; i < 4; i++) { S.pos.push(corners[i][0], corners[i][1], corners[i][2]); S.uvA.push(uvs[i][0], uvs[i][1]); } S.idx.push(S.vc, S.vc + 1, S.vc + 2, S.vc, S.vc + 2, S.vc + 3); S.vc += 4; };
+  for (let by = cyBy - WIN; by <= cyBy + WIN; by++) for (let bx = cxBx - WIN; bx <= cxBx + WIN; bx++) {
+    if (bx < 0 || by < 0 || bx > 255 || by > 255) continue;
+    const col = CMP.columns[by * 256 + bx], x0 = bx2wx(bx), z0 = bz2wz(by), x1 = x0 + BLOCK, z1 = z0 + BLOCK;
+    const nSurf = [surfAt(bx, by - 1), surfAt(bx, by + 1), surfAt(bx - 1, by), surfAt(bx + 1, by)]; // N S W E surfaces
+    for (let k = 0; k < col.blocks.length; k++) {
+      const blk = col.blocks[k], z = col.height + k, yT = (4 - z) * LVL, yB = yT - LVL;
+      const S = blk.flat ? F : P;
+      if (blk.lid) {
+        const carrier = k > 0 ? col.blocks[k - 1] : blk;
+        const dy = slopeDY(carrier.slope);
+        const uv = tileUV(G24.sideN + blk.lid, blk.lidrot, false);
+        quad(S, [[x0, yT + dy[0], z0], [x1, yT + dy[1], z0], [x1, yT + dy[3], z1], [x0, yT + dy[2], z1]], uv);
+      }
+      // side faces: [tile, neighbor surf, corners, baseFlipU, dataFlipBit]
+      const faces = [
+        [blk.top, nSurf[0], [[x0, yT, z0], [x1, yT, z0], [x1, yB, z0], [x0, yB, z0]], 1, 32],
+        [blk.bottom, nSurf[1], [[x1, yT, z1], [x0, yT, z1], [x0, yB, z1], [x1, yB, z1]], 0, 32],
+        [blk.left, nSurf[2], [[x0, yT, z1], [x0, yT, z0], [x0, yB, z0], [x0, yB, z1]], 1, 64],
+        [blk.right, nSurf[3], [[x1, yT, z0], [x1, yT, z1], [x1, yB, z1], [x1, yB, z0]], 1, 64],
+      ];
+      for (let fi = 0; fi < 4; fi++) {
+        const [tile, ns, corners, baseFlip, flipBit] = faces[fi];
+        if (!tile) continue;
+        if (blk.flat && fi !== 1 && fi !== 2) continue; // flats draw once (south+west faces) — no mirrored ghost of the far face
+        const nz = ns ? ns.z : 99;
+        if (z >= nz) continue; // neighbor's surface is at/above this level: face is buried
+        const uv = tileUV(tile, 0, baseFlip ^ ((blk.ext & flipBit) ? 1 : 0));
+        quad(S, corners, uv);
+      }
+    }
+  }
+  const mkMesh = (S, mat) => {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(S.pos, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(S.uvA, 2));
+    geo.setIndex(S.idx);
+    const mesh = new THREE.Mesh(geo, mat); mesh.matrixAutoUpdate = false; return mesh;
+  };
+  const mesh = mkMesh(P, new THREE.MeshBasicMaterial({ map: tileTex, side: THREE.DoubleSide }));
+  if (cityMesh) { scene.remove(cityMesh); cityMesh.geometry.dispose(); cityMesh.material.dispose(); }
+  cityMesh = mesh; scene.add(mesh);
+  const fmesh = mkMesh(F, new THREE.MeshBasicMaterial({ map: flatTex, transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }));
+  if (cityFlatMesh) { scene.remove(cityFlatMesh); cityFlatMesh.geometry.dispose(); cityFlatMesh.material.dispose(); }
+  cityFlatMesh = fmesh; scene.add(fmesh);
+  cityCenter = { bx: cxBx, by: cyBy };
+}
+// map objects (trees, lights, boxes...) as real sprites, windowed, MERGED to one draw call
+let objMesh = null;
+function buildObjects(cxBx, cyBy) {
+  const pos = [], uvA = [], idx = []; let vc = 0;
+  for (const o of CMP.objs) {
+    const bx = Math.floor(o.x / 64), by = Math.floor(o.y / 64);
+    if (Math.abs(bx - cxBx) > WIN || Math.abs(by - cyBy) > WIN) continue;
+    const info = G24.objInfos[o.type]; if (!info) continue;
+    const abs = G24.starts.OBJECT + info.spr;
+    const s = G24.sprites[abs]; if (!s) continue;
+    const wU = Math.max(0.8, Math.max(info.w, s.w) / 64 * BLOCK * 0.9), hU = wU * s.h / s.w;
+    const wx = bx2wx(0) + o.x / 64 * BLOCK, wz = bz2wz(0) + o.y / 64 * BLOCK, wy = surfAt(bx, by).y + 0.06;
+    const rot = -(o.rot / 1024) * Math.PI * 2, cos = Math.cos(rot), sin = Math.sin(rot);
+    // plane corners (local: x right, texture-up = -z after flat rotation), yawed by rot
+    const corners = [[-wU / 2, -hU / 2], [wU / 2, -hU / 2], [wU / 2, hU / 2], [-wU / 2, hU / 2]]; // TL TR BR BL in texture space
+    const u0 = s.ax / 2048, u1 = (s.ax + s.w) / 2048, v1 = 1 - s.ay / 2048, v0 = 1 - (s.ay + s.h) / 2048;
+    const uvs = [[u0, v1], [u1, v1], [u1, v0], [u0, v0]];
+    for (let i = 0; i < 4; i++) {
+      const [lx, lz] = corners[i];
+      pos.push(wx + lx * cos - lz * sin, wy, wz + lx * sin + lz * cos);
+      uvA.push(uvs[i][0], uvs[i][1]);
+    }
+    idx.push(vc, vc + 2, vc + 1, vc, vc + 3, vc + 2); vc += 4;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvA, 2));
+  geo.setIndex(idx);
+  const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: sprTex, transparent: true, alphaTest: 0.5, side: THREE.DoubleSide }));
+  mesh.matrixAutoUpdate = false;
+  if (objMesh) { scene.remove(objMesh); objMesh.geometry.dispose(); objMesh.material.dispose(); }
+  objMesh = mesh; scene.add(mesh);
+}
+// objective marker (ring + beam) — UI chrome over real locations
+const marker = new THREE.Group();
+{ const ring = new THREE.Mesh(new THREE.TorusGeometry(2.6, 0.22, 8, 28), new THREE.MeshBasicMaterial({ color: 0x39ff6a }));
+  ring.rotation.x = Math.PI / 2; marker.add(ring);
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.9, 26, 10, 1, true), new THREE.MeshBasicMaterial({ color: 0x39ff6a, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false }));
+  beam.position.y = 13; marker.add(beam);
+  marker.visible = false; scene.add(marker); }
+
+// ---------------- audio (synth, iOS rules) ----------------
+const AU = { ctx: null, eng: null, engGain: null, sirenGain: null,
+  init() { if (this.ctx) return; try {
+      if (navigator.audioSession) navigator.audioSession.type = 'playback';
+      const C = new (window.AudioContext || window.webkitAudioContext)(); this.ctx = C;
+      const eg = C.createGain(); eg.gain.value = 0; eg.connect(C.destination);
+      const o1 = C.createOscillator(), o2 = C.createOscillator(), f = C.createBiquadFilter();
+      o1.type = 'sawtooth'; o2.type = 'square'; f.type = 'lowpass'; f.frequency.value = 700;
+      const og = C.createGain(); og.gain.value = 0.5; o1.connect(f); o2.connect(f); f.connect(og); og.connect(eg);
+      o1.start(); o2.start(); this.eng = { o1, o2, f }; this.engGain = eg;
+      const sg = C.createGain(); sg.gain.value = 0; sg.connect(C.destination);
+      const so = C.createOscillator(); so.type = 'triangle'; so.frequency.value = 800; so.connect(sg); so.start();
+      this.sirenOsc = so; this.sirenGain = sg;
+    } catch (e) { /* no audio */ } },
+  resume() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
+  engine(rpm, load) { if (!this.ctx || !this.eng) return; const t = this.ctx.currentTime;
+    const fr = 50 + rpm * 165; this.eng.o1.frequency.setTargetAtTime(fr, t, 0.05); this.eng.o2.frequency.setTargetAtTime(fr * 0.5 + 2, t, 0.05);
+    this.eng.f.frequency.setTargetAtTime(400 + load * 1400, t, 0.08); this.engGain.gain.setTargetAtTime(load > 0.02 ? 0.05 + load * 0.05 : 0.012, t, 0.09); },
+  siren(dist) { if (!this.ctx) return; const t = this.ctx.currentTime;
+    this.sirenOsc.frequency.setTargetAtTime((t % 0.85) < 0.425 ? 690 : 950, t, 0.02);
+    this.sirenGain.gain.setTargetAtTime(clamp(0.075 * (1 - dist / 85), 0, 0.075), t, 0.1); },
+  blip(fr, dur, vol, type) { if (!this.ctx) return; const C = this.ctx, t = C.currentTime;
+    const o = C.createOscillator(), g = C.createGain(); o.type = type || 'square'; o.frequency.value = fr;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur); o.connect(g); g.connect(C.destination); o.start(t); o.stop(t + dur); },
+  noise(dur, vol, fr) { if (!this.ctx) return; const C = this.ctx, t = C.currentTime;
+    const len = Math.floor(C.sampleRate * dur), buf = C.createBuffer(1, len, C.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const src = C.createBufferSource(); src.buffer = buf; const f = C.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = fr;
+    const g = C.createGain(); g.gain.value = vol; src.connect(f); f.connect(g); g.connect(C.destination); src.start(t); },
+  crash(v) { this.noise(0.22, clamp(v, 0.05, 0.3), 900); this.blip(70, 0.2, 0.12, 'sine'); },
+  door() { this.blip(190, 0.07, 0.1, 'square'); setTimeout(() => this.blip(140, 0.08, 0.1, 'square'), 70); },
+  cash() { this.blip(880, 0.09, 0.12); setTimeout(() => this.blip(1320, 0.14, 0.12), 80); },
+  phone() { this.blip(1046, 0.12, 0.07, 'sine'); setTimeout(() => this.blip(1046, 0.12, 0.07, 'sine'), 160); },
+  bust() { this.blip(392, 0.16, 0.14, 'square'); setTimeout(() => this.blip(311, 0.16, 0.14, 'square'), 150); setTimeout(() => this.blip(233, 0.3, 0.14, 'square'), 300); },
+};
+addEventListener('pointerdown', () => { AU.init(); AU.resume(); });
+addEventListener('keydown', () => { AU.init(); AU.resume(); });
+
+// ---------------- input (keyboard + gptouch, merged) ----------------
+const keys = {};
+addEventListener('keydown', e => { keys[e.code] = true; if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault(); });
+addEventListener('keyup', e => { keys[e.code] = false; });
+const tc = new TouchController({ buttons: [
+  { id: 'a', label: '🚗', x: -64, y: -96, r: 34 },
+  { id: 'b', label: '⚡', x: -124, y: -56, r: 28 },
+]});
+if (tc._els && tc._els.overlay) tc._els.overlay.style.display = 'none';
+let aEdge = false, prevA = false;
+function readInput() {
+  const s = tc.getInput ? tc.getInput() : { x: 0, y: 0, buttons: {} };
+  const ix = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0) + (s.x || 0);
+  const iy = (keys.KeyS || keys.ArrowDown ? 1 : 0) - (keys.KeyW || keys.ArrowUp ? 1 : 0) + (s.y || 0);
+  const aNow = !!(s.buttons && s.buttons.a) || !!keys.KeyE || !!keys.Enter;
+  aEdge = aNow && !prevA; prevA = aNow;
+  return { x: clamp(ix, -1, 1), y: clamp(iy, -1, 1), sprint: !!(s.buttons && s.buttons.b) || !!keys.ShiftLeft || !!keys.ShiftRight,
+           brake: !!keys.Space, a: aNow };
+}
+
+// ---------------- entities ----------------
+const cars = [], peds = [];
+const COP_CAR_IDX = 4; // car_info #4: fastest in the file (maxSpeed 50), sprite = squad car
+function carSpriteAbs(carIdx) {
+  const c = G24.cars[carIdx];
+  const cat = c.vtype === 0 ? 'BUS' : c.vtype === 3 ? 'BIKE' : c.vtype === 8 ? 'TRAIN' : 'CAR';
+  return G24.starts[cat] + c.spr;
+}
+function makeCar(carIdx, x, z, heading, opts = {}) {
+  const info = G24.cars[carIdx], abs = carSpriteAbs(carIdx), s = G24.sprites[abs];
+  const mesh = flatSprite(abs, s.w / 16);
+  mesh.position.set(x, heightAt(x, z) + 0.07, z);
+  mesh.rotation.y = heading + Math.PI; // sprites are stored nose-down
+  scene.add(mesh);
+  const car = { carIdx, info, mesh, x, z, heading, speed: 0, hp: 100, parked: !!opts.parked, cop: !!opts.cop,
+    traffic: !!opts.traffic, mission: !!opts.mission, missionId: opts.missionId || 0, dead: false,
+    targetBx: 0, targetBy: 0, laneT: 0, smokeT: 0, stuckT: 0, lastX: x, lastZ: z, doorSide: 1 };
+  cars.push(car); return car;
+}
+function removeCar(car) { scene.remove(car.mesh); car.dead = true; const i = cars.indexOf(car); if (i >= 0) cars.splice(i, 1); }
+// real handling, scaled from car_info descriptors
+function carPerf(info) {
+  return { topF: 5 + info.maxSpeed * 0.46, topR: 3 + Math.abs(info.minSpeed) * 0.55,
+    acc: 3.5 + info.accel * 0.55, brake: 6 + info.braking * 0.65,
+    steer: (0.5 + info.handling * 0.055) * (info.turning / 100), grip: 0.80 + info.grip * 0.016 };
+}
+// ped walk frames: offsets within the PED sprite table, identical layout in
+// style001 (base 645) and style003 (base 660) — verified on both sheets.
+let PEDF = { down: [687, 688], up: [696, 697], right: [701, 702], left: [716, 717], fallen: 685 };
+function pedFrames() { const b = G24.starts.PED; return { down: [b + 42, b + 43], up: [b + 51, b + 52], right: [b + 56, b + 57], left: [b + 71, b + 72], fallen: b + 40 }; }
+function makePed(x, z, opts = {}) {
+  const mesh = flatSprite(PEDF.down[0], 1.05);
+  mesh.position.set(x, heightAt(x, z) + 0.06, z);
+  scene.add(mesh);
+  const ped = { mesh, x, z, heading: Math.random() * 6.28, speed: 0, state: opts.state || 'walk',
+    walkBx: 0, walkBy: 0, phase: Math.random() * 6, dead: false, mission: !!opts.mission, missionId: opts.missionId || 0,
+    inCar: null, immune: !!opts.immune, dirKey: 'down', frame: -1 };
+  peds.push(ped); return ped;
+}
+function removePed(ped) { scene.remove(ped.mesh); ped.dead = true; const i = peds.indexOf(ped); if (i >= 0) peds.splice(i, 1); }
+function setPedFrame(ped, key, moving) {
+  const fr = !moving ? PEDF[key][0] : PEDF[key][Math.floor(ped.phase * 2.4) % 2];
+  if (fr === ped.frame) return; ped.frame = fr;
+  setMeshSprite(ped.mesh, fr, 1.05);
+}
+function pedDirKey(heading) { // heading: 0 = north(-z), CCW positive via atan2 convention below
+  const dx = Math.sin(heading), dz = -Math.cos(heading);
+  if (Math.abs(dx) > Math.abs(dz)) return dx > 0 ? 'right' : 'left';
+  return dz > 0 ? 'down' : 'up';
+}
+function scarePeds(x, z, r) { for (const p of peds) { if (p.state === 'walk' && dist2(p.x, p.z, x, z) < r * r) { p.state = 'flee'; p.fleeT = 1.6; p.heading = Math.atan2(p.x - x, -(p.z - z)); } } }
+
+// traffic: follow the map's own lane direction bits (type-2 carrier blocks)
+const DIRV = [{ dx: 0, dz: -1, bit: 1 }, { dx: 0, dz: 1, bit: 2 }, { dx: -1, dz: 0, bit: 4 }, { dx: 1, dz: 0, bit: 8 }];
+function dirIndexOf(heading) { const dx = Math.sin(heading), dz = -Math.cos(heading); let bi = 0, bd = -2;
+  DIRV.forEach((d, i) => { const dot = dx * d.dx + dz * d.dz; if (dot > bd) { bd = dot; bi = i; } }); return bi; }
+function trafficStep(car, dt) {
+  const bx = wx2bx(car.x), by = wz2by(car.z);
+  if (!car.targetSet || (Math.abs(car.x - car.tx) < 1.6 && Math.abs(car.z - car.tz) < 1.6)) {
+    const s = surfAt(bx, by);
+    let exits = DIRV.filter(d => s.dir & d.bit);
+    const cur = dirIndexOf(car.heading);
+    if (!exits.length) exits = [DIRV[cur]]; // unmarked block: keep going
+    let choices = exits.filter(d => DIRV.indexOf(d) !== (cur ^ 1) || exits.length === 1);
+    if (!choices.length) choices = exits;
+    const straight = choices.find(d => DIRV.indexOf(d) === cur);
+    const pick = (straight && Math.random() < 0.65) ? straight : choices[Math.floor(Math.random() * choices.length)];
+    const di = DIRV.indexOf(pick);
+    const nb = { bx: bx + pick.dx, by: by + pick.dz };
+    // lane offset: right-hand side of travel direction
+    const rx = -pick.dz, rz = pick.dx;
+    car.tx = bx2wx(nb.bx) + 2 + rx * 1.0; car.tz = bz2wz(nb.by) + 2 + rz * 1.0;
+    car.targetSet = true; car.targetDir = di;
+  }
+  const dx = car.tx - car.x, dz = car.tz - car.z;
+  const want = Math.atan2(dx, -dz);
+  let dh = want - car.heading; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI;
+  car.heading += clamp(dh, -2.4 * dt, 2.4 * dt);
+  // brake for the car ahead
+  let target = 8.5;
+  for (const o of cars) { if (o === car || o.dead) continue;
+    const ox = o.x - car.x, oz = o.z - car.z, ahead = ox * Math.sin(car.heading) - oz * Math.cos(car.heading);
+    const lat = Math.abs(ox * Math.cos(car.heading) + oz * Math.sin(car.heading));
+    if (ahead > 0 && ahead < 9 && lat < 1.8) target = Math.min(target, Math.max(0, (ahead - 4) * 1.4)); }
+  car.speed = lerp(car.speed, target, clamp(dt * 1.6, 0, 1));
+  car.x += Math.sin(car.heading) * car.speed * dt;
+  car.z += -Math.cos(car.heading) * car.speed * dt;
+  const s2 = surfAt(wx2bx(car.x), wz2by(car.z));
+  if (s2.solid || s2.water) { car.x -= Math.sin(car.heading) * car.speed * dt; car.z -= -Math.cos(car.heading) * car.speed * dt; car.speed *= 0.4; car.targetSet = false; }
+}
+function drivePhysics(car, dt, input) {
+  const P = carPerf(car.info), fw = Math.sin(car.heading), fz = -Math.cos(car.heading);
+  const spd = car.speed;
+  if (input) {
+    if (input.y < -0.05) { // throttle (input.y negative = up/forward)
+      car.speed += P.acc * -input.y * dt * (car.speed < 0 ? 2.2 : 1);
+    } else if (input.y > 0.05) {
+      if (car.speed > 0.6) car.speed -= P.brake * input.y * dt; else car.speed -= P.acc * 0.7 * input.y * dt;
+    } else { car.speed -= car.speed * 0.35 * dt; }
+    if (input.brake) car.speed -= car.speed * 2.6 * dt;
+    const sf = clamp(Math.abs(car.speed) / 6, 0, 1) * (1 - clamp(Math.abs(car.speed) / (P.topF * 2.6), 0, 0.55));
+    car.heading += input.x * P.steer * 2.1 * sf * dt * (car.speed < -0.1 ? -1 : 1);
+  }
+  car.speed = clamp(car.speed, -P.topR, P.topF);
+  if (!input) car.speed -= car.speed * 0.5 * dt;
+  const vx = fw * car.speed, vz = fz * car.speed;
+  car.x += vx * dt; car.z += vz * dt;
+  if (collideCircle(car, 1.15)) {
+    if (Math.abs(car.speed) > 4) { AU.crash(0.1 + Math.abs(car.speed) * 0.008); damageCar(car, Math.abs(car.speed) * 1.1, true); shake = Math.min(0.5, Math.abs(car.speed) * 0.02); }
+    car.speed *= -0.25;
+  }
+  return spd;
+}
+function damageCar(car, dmg, byPlayer) { car.hp -= dmg; if (car.hp < 45 && Math.random() < 0.3) { /* smoke handled in loop */ } }
+
+// ---------------- game state ----------------
+let shake = 0;
+const S = { mode: 'menu', cash: 0, wanted: 0, lastCrime: -99, bust: 0, busted: false, time: 0, crimeCheck: 0 };
+const player = { ped: null, car: null, jackT: 0, jackCar: null, x: 0, z: 0, heading: 0 };
+let SPAWN = { bx: 105, by: 119 }; // per city, set at load (the chapter's PLAYER placement)
+function commitCrime(kind, pts) {
+  const now = S.time, cd = { jack: 1.2, ped: 0.4, crash: 1.6, hitcar: 1.2 }[kind] || 1;
+  if (now - (commitCrime['t_' + kind] || -99) < cd) return;
+  commitCrime['t_' + kind] = now;
+  S.wanted = clamp(S.wanted + pts, 0, 5); S.lastCrime = now;
+}
+function toast(msg, ms) { const t = $('toast'); t.textContent = msg; t.style.opacity = 1; clearTimeout(toast.tm); toast.tm = setTimeout(() => t.style.opacity = 0, ms || 2100); }
+
+// ---------------- mission interpreter (per-city chapter subset; see CITIES) ----------------
+const MT = { pc: 0, wait: 0, active: false, done: false, rearm: 0, arrowPos: null, arrowEnt: null, ringing: false, ringT: 0,
+  missionCar: null, missionPed: null, dropPoint: null, stageText: '', briefs: [], started: false, armed: {} };
+const cmdIds = () => Object.keys(MIS.commands).map(Number).sort((a, b) => a - b);
+function cmdNext(id) { const ids = cmdIds(); for (const i of ids) if (i > id) return i; return -1; }
+function mPlacePos(id) {
+  const p = MIS.placements[id]; if (!p) return null;
+  let bx = p.x, by = p.y;
+  if (p.x > 255 || p.y > 255) { bx = p.x / 64; by = p.y / 64; } // world-unit coords (1/64 block)
+  return { x: bx2wx(Math.floor(bx)) + (bx % 1) * BLOCK + 2, z: bz2wz(Math.floor(by)) + (by % 1) * BLOCK + 2, bx, by };
+}
+function missionEnt(id) {
+  if (MT.missionCar && MT.missionCar.missionId === id) return MT.missionCar;
+  if (MT.missionPed && MT.missionPed.missionId === id) return MT.missionPed;
+  return null;
+}
+function mAward(score, label) { if (score) { S.cash += score; AU.cash(); toast('+$' + score.toLocaleString() + (label ? ' — ' + label : ''), 2400); updateHUD(); } }
+function mGoto(cmd, target) { MT.pc = target > 0 ? target : cmdNext(cmd.id); MT.wait = 0; }
+const BRIEF_OPS = ['MESSAGE_BRIEF','MOBILE_BRIEF','SPEECH_BRIEF','P_BRIEF','BRIEF','CANCEL_BRIEFING'];
+function mStep(dt) {
+  if (!MT.active || MT.done) return;
+  let guard = 0;
+  while (guard++ < 10) {
+    // city-configured skip ranges: interleaved side-proc blocks in the retail
+    // file that a linear interpreter must not traverse (see REPORT.md)
+    const skip = (CITY.mission.skipRanges || []).find(([a, b]) => MT.pc >= a && MT.pc <= b);
+    if (skip) { MT.pc = cmdNext(skip[1]); MT.wait = 0; continue; }
+    // armed TRIGGER placements (ENABLE): stepping into one jumps to its target line
+    let trigJump = false;
+    for (const tid in (MT.armed || {})) {
+      const tp = mPlacePos(+tid);
+      if (tp && Math.hypot(player.x - tp.x, player.z - tp.z) < 9) {
+        delete MT.armed[tid]; MT.pc = (MIS.placements[tid].args || [0])[0] || MT.pc; MT.wait = 0; trigJump = true; break;
+      }
+    }
+    if (trigJump) continue;
+    const raw = MIS.commands[MT.pc];
+    if (!raw) { MT.done = true; MT.rearm = 25; MT.stageText = ''; return; }
+    const cmd = { id: MT.pc, op: raw.op, a: raw.a };
+    const [a1, succ, fail, timer, score] = [raw.a[0] || 0, raw.a[1] || 0, raw.a[2] || 0, raw.a[3] || 0, raw.a[4] || 0];
+    switch (cmd.op) {
+      case 'SURVIVE': {
+        if (MT.wait === 0) MT.wait = Math.max(0.1, (timer || 10) / 10);
+        MT.wait -= dt; if (MT.wait > 0) return;
+        MT.wait = 0; mAward(score); mGoto(cmd, succ); break; }
+      case 'ANSWER': {
+        const pos = mPlacePos(a1);
+        if (!MT.ringing) { MT.ringing = true; MT.ringT = 0; MT.arrowPos = pos; MT.arrowEnt = null; MT.stageText = '📞 ANSWER THE PHONE'; }
+        MT.ringT += dt; if (MT.ringT > 1.15) { MT.ringT = 0; AU.phone(); }
+        const d = Math.hypot(player.x - pos.x, player.z - pos.z);
+        if (!player.car && d < 3.6) { MT.ringing = false; MT.arrowPos = null; mAward(score, 'PHONE ANSWERED'); mGoto(cmd, succ); }
+        return; }
+      case 'ARROW': MT.arrowPos = mPlacePos(a1); MT.arrowEnt = null; mGoto(cmd, succ); break;
+      case 'ARROWCAR': case 'ARROWPED': MT.arrowEnt = missionEnt(a1); MT.arrowPos = null; mGoto(cmd, succ); break;
+      case 'ARROW_OFF': MT.arrowPos = null; MT.arrowEnt = null; mGoto(cmd, succ); break;
+      case 'STEAL': {
+        MT.stageText = '🚗 STEAL THE CAR';
+        if (player.car && player.car.missionId === a1) { mAward(score, 'CAR STOLEN'); mGoto(cmd, succ); break; }
+        return; }
+      case 'PED_ON': {
+        const p = MIS.placements[a1], pos = mPlacePos(a1);
+        if (pos && !missionEnt(a1)) { MT.missionPed = makePed(pos.x, pos.z, { mission: true, missionId: a1, state: 'stand', immune: true }); }
+        mGoto(cmd, succ); break; }
+      case 'PARKED_ON': case 'CAR_ON': {
+        const p = MIS.placements[a1], pos = mPlacePos(a1);
+        if (pos && !missionEnt(a1)) {
+          const carIdx = G24.carByModel[p.args[0]] !== undefined ? G24.carByModel[p.args[0]] : 0;
+          MT.missionCar = makeCar(carIdx, pos.x, pos.z, 0, { parked: true, mission: true, missionId: a1 });
+        }
+        mGoto(cmd, succ); break; }
+      case 'IS_PED_IN_CAR': {
+        if (a1 === PLAYER_ID) { MT.stageText = '🚗 GET IN THE CAR'; if (player.car) { mGoto(cmd, succ); break; } return; }
+        const ped = missionEnt(a1);
+        MT.stageText = '🧍 PICK UP THE MAN';
+        if (ped && ped.inCar) { mAward(score); mGoto(cmd, succ); break; }
+        return; }
+      case 'CHECK_CAR': {
+        if (player.car && player.car.missionId === a1) { mAward(score); mGoto(cmd, succ); }
+        else if (fail > 0) { MT.pc = fail; MT.wait = 0; } // scolding/wait block; its flow returns via fall-through
+        else return;
+        break; }
+      case 'PED_BACK': { const dp = mPlacePos(raw.a[3]); if (dp) MT.dropPoint = dp; mGoto(cmd, succ); break; }
+      case 'ENABLE': { const pl = MIS.placements[a1]; if (pl && pl.kind === 'TRIGGER') { MT.armed = MT.armed || {}; MT.armed[a1] = true; } mGoto(cmd, succ); break; }
+      case 'DISABLE': { if (MT.armed) delete MT.armed[a1]; mGoto(cmd, succ); break; }
+      case 'DROP_ON': { const dp = mPlacePos(a1); if (dp) { MT.dropPoint = dp; MT.arrowPos = dp; MT.arrowEnt = null; } mGoto(cmd, succ); break; }
+      case 'GOTO_DROPOFF': {
+        const dp = MT.dropPoint || mPlacePos(a1);
+        MT.stageText = '📦 MAKE THE DROP';
+        if (dp && Math.hypot(player.x - dp.x, player.z - dp.z) < 10) { mAward(score, 'DROP-OFF'); MT.dropPoint = null; mGoto(cmd, succ); break; }
+        return; }
+      case 'GOTO': {
+        const gp = mPlacePos(a1);
+        if (!gp || Math.hypot(player.x - gp.x, player.z - gp.z) < 12) { mGoto(cmd, succ); break; }
+        MT.stageText = '🎯 GO TO THE MARKER'; return; }
+      case 'PARK': {
+        const pos = mPlacePos(a1);
+        if (CITY.mission.parkNeedsPed && MT.missionPed && !MT.missionPed.inCar) { MT.stageText = '🧍 PICK UP THE MAN FIRST'; return; }
+        MT.stageText = '🅿️ PARK AT THE MARKED DOOR';
+        if (player.car && Math.abs(player.car.speed) < 1.6 && pos && Math.hypot(player.x - pos.x, player.z - pos.z) < 6.5) { mAward(score, 'JOB DONE'); mGoto(cmd, succ); break; }
+        return; }
+      case 'BANK_ROBBERY': S.wanted = Math.max(S.wanted, 3); S.lastCrime = S.time; toast('🏦 BANK ROBBERY!', 2400); mGoto(cmd, succ); break;
+      case 'BANK_ALARM_ON': S.wanted = Math.max(S.wanted, 2); S.lastCrime = S.time; mGoto(cmd, succ); break;
+      case 'DROP_WANTED_LEVEL': S.wanted = 0; mGoto(cmd, succ); break;
+      case 'MISSION_END': if (score) mAward(score, 'MISSION COMPLETE'); MT.done = true; MT.rearm = 25; MT.stageText = ''; MT.arrowPos = null; MT.arrowEnt = null; toast('🎉 MISSION COMPLETE!', 3200); return;
+      case 'P_BRIEF_TIMED': mAward(score); MT.briefs.push('pager'); mGoto(cmd, succ); break;
+      default: {
+        if (BRIEF_OPS.includes(cmd.op)) { MT.briefs.push(raw.a[4] || raw.a[0] || 0); mGoto(cmd, succ); break; }
+        mGoto(cmd, succ); break; } // KICKSTART/KILL_SIDE_PROC/ENABLE/DISABLE/DOOR_*/POWERUP_ON/etc: pass (see REPORT)
+    }
+  }
+}
+// mission ped pickup: walks to the player's car and gets in
+function missionPedUpdate(dt) {
+  const ped = MT.missionPed; if (!ped || ped.dead || ped.inCar) return;
+  if (player.car && (player.car.missionId || (CITY.mission && CITY.mission.pedAnyCar)) && Math.abs(player.car.speed) < 1.2) {
+    const d = Math.hypot(ped.x - player.x, ped.z - player.z);
+    if (d < 5) {
+      ped.heading = Math.atan2(player.x - ped.x, -(player.z - ped.z));
+      ped.x += Math.sin(ped.heading) * 3.4 * dt; ped.z += -Math.cos(ped.heading) * 3.4 * dt;
+      ped.phase += dt * 2.2; setPedFrame(ped, pedDirKey(ped.heading), true);
+      if (d < 1.6) { ped.inCar = player.car; ped.mesh.visible = false; }
+      return;
+    }
+  }
+  setPedFrame(ped, 'down', false);
+}
+
+// ---------------- cops & wanted ----------------
+const copSpawns = [[-70, -70], [70, -70], [-70, 70], [70, 70], [0, -85], [0, 85], [-85, 0], [85, 0]];
+function nearestRoadPos(x, z) {
+  for (let r = 0; r < 14; r++) for (let a = 0; a < 8; a++) {
+    const bx = wx2bx(x) + Math.round(Math.cos(a / 8 * 6.283) * r), by = wz2by(z) + Math.round(Math.sin(a / 8 * 6.283) * r);
+    if (surfAt(bx, by).type === 2) return { x: bx2wx(bx) + 2, z: bz2wz(by) + 2 };
+  }
+  return { x, z };
+}
+function manageCops(dt) {
+  const want = S.busted ? 0 : clamp(S.wanted, 0, 4);
+  const cops = cars.filter(c => c.cop && !c.dead);
+  if (cops.length < want) {
+    const sp = copSpawns[Math.floor(Math.random() * copSpawns.length)];
+    const px = player.x + sp[0], pz = player.z + sp[1];
+    if (dist2(px, pz, player.x, player.z) > 40 * 40) {
+      const rp = nearestRoadPos(px, pz);
+      const c = makeCar(COP_CAR_IDX, rp.x, rp.z, Math.random() * 6.28, { cop: true });
+      c.speed = 6;
+    }
+  }
+  for (const c of cars.filter(c => c.cop && !c.dead)) {
+    if (dist2(c.x, c.z, player.x, player.z) > 115 * 115) { removeCar(c); continue; }
+    const txp = player.x + (player.car ? Math.sin(player.car.heading) * player.car.speed * 0.5 : 0);
+    const tzp = player.z + (player.car ? -Math.cos(player.car.heading) * player.car.speed * 0.5 : 0);
+    const wantH = Math.atan2(txp - c.x, -(tzp - c.z));
+    let dh = wantH - c.heading; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI;
+    c.heading += clamp(dh, -2.6 * dt, 2.6 * dt);
+    const pSpeed = player.car ? Math.abs(player.car.speed) : 0;
+    const sp = clamp(9 + pSpeed * 0.94, 9, carPerf(c.info).topF + 2);
+    // stuck? reverse out
+    if (Math.hypot(c.x - c.lastX, c.z - c.lastZ) < 0.25 && sp > 3) { c.stuckT += dt; } else c.stuckT = 0;
+    c.lastX = c.x; c.lastZ = c.z;
+    const dir = c.stuckT > 0.7 ? -1 : 1;
+    if (c.stuckT > 1.3) c.stuckT = 0;
+    c.speed = lerp(c.speed, sp * dir, clamp(dt * 2.2, 0, 1));
+    c.x += Math.sin(c.heading) * c.speed * dt; c.z += -Math.cos(c.heading) * c.speed * dt;
+    if (collideCircle(c, 1.15)) { c.speed *= -0.3; }
+    if (player.car && dist2(c.x, c.z, player.x, player.z) < 3 * 3 && Math.abs(c.speed) > 6) { damageCar(player.car, 3.5, false); shake = Math.max(shake, 0.22); AU.crash(0.14); c.speed *= 0.55; }
+  }
+  // wanted decay
+  S.crimeCheck += dt;
+  if (S.crimeCheck > 2) { S.crimeCheck = 0;
+    if (S.wanted > 0 && S.time - S.lastCrime > 13 && !cars.some(c => c.cop && !c.dead && dist2(c.x, c.z, player.x, player.z) < 30 * 30)) S.wanted--; }
+}
+function doBust() {
+  S.busted = true; S.bust = 0; AU.bust();
+  const fine = Math.min(S.cash, Math.floor(60 + S.cash * 0.08));
+  S.cash -= fine;
+  $('bustedmsg').textContent = `The cops got you. Fine: $${fine.toLocaleString()}. You wake up outside the precinct…`;
+  $('bustedscreen').classList.remove('hidden');
+  if (tc._els && tc._els.overlay) tc._els.overlay.style.display = 'none';
+}
+function doRespawn() {
+  for (const c of cars.filter(c => c.cop)) removeCar(c);
+  if (player.car) { player.car.parked = true; player.car.traffic = false; player.car = null; }
+  player.ped.mesh.visible = true;
+  player.x = bx2wx(SPAWN.bx) + 2; player.z = bz2wz(SPAWN.by) + 2; player.heading = 0;
+  S.wanted = 0; S.busted = false; S.bust = 0;
+  $('bustedscreen').classList.add('hidden');
+  if (tc._els && tc._els.overlay) tc._els.overlay.style.display = '';
+  updateHUD();
+}
+
+// ---------------- spawning (traffic + parked + peds) ----------------
+let spawnT = 0;
+function spawner(dt) {
+  spawnT -= dt; if (spawnT > 0) return; spawnT = 0.7;
+  const traffic = cars.filter(c => c.traffic && !c.dead);
+  if (traffic.length < 8) {
+    const a = Math.random() * 6.283, d = 26 + Math.random() * 26;
+    const rp = nearestRoadPos(player.x + Math.cos(a) * d, player.z + Math.sin(a) * d);
+    if (dist2(rp.x, rp.z, player.x, player.z) > 20 * 20) {
+      const pool = G24.cars.map((c, i) => i).filter(i => G24.cars[i].vtype === 4);
+      const ci = pool[Math.floor(Math.random() * pool.length)];
+      const c = makeCar(ci, rp.x, rp.z, 0, { traffic: true });
+      const s = surfAt(wx2bx(rp.x), wz2by(rp.z));
+      const exits = DIRV.filter(dd => s.dir & dd.bit);
+      const pick = exits.length ? exits[Math.floor(Math.random() * exits.length)] : DIRV[0];
+      c.heading = Math.atan2(pick.dx, -pick.dz);
+    }
+  }
+  // real parked cars from NYC.CMP object_pos
+  const parked = cars.filter(c => c.fromMap && !c.dead);
+  if (parked.length < 24) {
+    for (const pc of CMP.carsPlaced) {
+      const wx = bx2wx(0) + pc.x / 64 * BLOCK, wz = bz2wz(0) + pc.y / 64 * BLOCK;
+      if (dist2(wx, wz, player.x, player.z) < 60 * 60 && !cars.some(c => c.fromMap === pc)) {
+        const ci = G24.carByModel[pc.type]; if (ci === undefined) continue;
+        const c = makeCar(ci, wx, wz, (pc.rot / 1024) * Math.PI * 2, { parked: true });
+        c.fromMap = pc; break;
+      }
+    }
+  }
+  for (const c of cars.filter(c => (c.traffic || c.fromMap) && !c.dead)) {
+    if (dist2(c.x, c.z, player.x, player.z) > 85 * 85 && c !== player.car) removeCar(c);
+  }
+  const walkers = peds.filter(p => !p.mission && !p.dead);
+  if (walkers.length < 15) {
+    for (let tries = 0; tries < 6; tries++) {
+      const bx = wx2bx(player.x) + Math.floor(Math.random() * 25) - 12, by = wz2by(player.z) + Math.floor(Math.random() * 25) - 12;
+      if (surfAt(bx, by).type === 3) { makePed(bx2wx(bx) + 2, bz2wz(by) + 2, {}); break; }
+    }
+  }
+  for (const p of peds.filter(p => !p.mission && !p.dead)) if (dist2(p.x, p.z, player.x, player.z) > 80 * 80) removePed(p);
+}
+
+// ---------------- HUD / minimap ----------------
+let copHeadURL = '';
+function updateHUD() {
+  $('cash').textContent = S.cash.toLocaleString();
+  const ch = $('copheads'); ch.innerHTML = '';
+  for (let i = 0; i < 5; i++) { const img = document.createElement('img'); img.src = copHeadURL; if (i >= S.wanted) img.className = 'off'; ch.appendChild(img); }
+  const mb = $('missionbox');
+  if (MT.active && !MT.done && MT.stageText) { mb.style.display = 'block'; mb.innerHTML = `<b>${MT.stageText}</b>`; }
+  else mb.style.display = 'none';
+}
+let mmBase = null;
+function buildMinimapBase() {
+  mmBase = document.createElement('canvas'); mmBase.width = 256; mmBase.height = 256;
+  const g = mmBase.getContext('2d');
+  const img = g.createImageData(256, 256);
+  // average color per tile from the tile canvas
+  const tg = G24.tileCanvas.getContext('2d');
+  const all = tg.getImageData(0, 0, 2048, 832).data;
+  const avg = [];
+  for (let s = 0; s <= G24.totalTiles; s++) {
+    const ox = (s % 32) * 64, oy = Math.floor(s / 32) * 64; let r = 0, gg = 0, b = 0, n = 0;
+    for (let y = 0; y < 64; y += 8) for (let x = 0; x < 64; x += 8) { const o = ((oy + y) * 2048 + ox + x) * 4; r += all[o]; gg += all[o + 1]; b += all[o + 2]; n++; }
+    avg.push([r / n, gg / n, b / n]);
+  }
+  for (let by = 0; by < 256; by++) for (let bx = 0; bx < 256; bx++) {
+    const col = CMP.columns[by * 256 + bx]; let c = [10, 16, 40];
+    for (const blk of col.blocks) if (blk.lid) { c = avg[G24.sideN + blk.lid] || c; break; }
+    const o = (by * 256 + bx) * 4; img.data[o] = c[0]; img.data[o + 1] = c[1]; img.data[o + 2] = c[2]; img.data[o + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+}
+function drawMinimap() {
+  const cv = $('minimap'), g = cv.getContext('2d');
+  g.imageSmoothingEnabled = false;
+  g.fillStyle = '#0a0f1e'; g.fillRect(0, 0, 208, 208);
+  const pb = { x: wx2bx(player.x), y: wz2by(player.z) }, R = 34;
+  g.drawImage(mmBase, pb.x - R, pb.y - R, R * 2, R * 2, 0, 0, 208, 208);
+  const dot = (wx, wz, col, r) => { const mx = 104 + (wx - player.x) / BLOCK / R * 104, my = 104 + (wz - player.z) / BLOCK / R * 104; if (mx < 0 || my < 0 || mx > 208 || my > 208) return; g.fillStyle = col; g.beginPath(); g.arc(mx, my, r, 0, 7); g.fill(); };
+  if (MT.arrowPos) dot(MT.arrowPos.x, MT.arrowPos.z, '#39ff6a', 5);
+  if (MT.arrowEnt) dot(MT.arrowEnt.x, MT.arrowEnt.z, '#39ff6a', 5);
+  for (const c of cars) { if (c.dead) continue; if (c.cop) dot(c.x, c.z, (S.time * 3) % 1 < 0.5 ? '#ff4040' : '#4080ff', 3.4); }
+  g.save(); g.translate(104, 104); g.rotate(player.car ? player.car.heading : player.heading);
+  g.fillStyle = '#fff'; g.beginPath(); g.moveTo(0, -7); g.lineTo(4.6, 5); g.lineTo(-4.6, 5); g.closePath(); g.fill(); g.restore();
+}
+
+// ---------------- player ----------------
+function nearestCar(x, z, maxD) {
+  let best = null, bd = maxD * maxD;
+  for (const c of cars) { if (c.dead) continue; const d = dist2(c.x, c.z, x, z); if (d < bd) { bd = d; best = c; } }
+  return best;
+}
+function enterCar(car) {
+  player.car = car; car.parked = false;
+  player.ped.mesh.visible = false;
+  AU.door();
+  if (car.traffic) { car.traffic = false; const dp = makePed(car.x + 1.5, car.z, {}); dp.state = 'flee'; dp.fleeT = 2.2; dp.heading = Math.random() * 6.28; }
+  if (car.cop) commitCrime('jack', 2);
+  else if (!car.mission) {
+    const witnessed = peds.some(p => !p.dead && p.state !== 'down' && dist2(p.x, p.z, car.x, car.z) < 17 * 17) || cars.some(c => c !== car && c.traffic && dist2(c.x, c.z, car.x, car.z) < 20 * 20);
+    if (witnessed) commitCrime('jack', 1);
+  }
+  scarePeds(car.x, car.z, 6);
+}
+function exitCar() {
+  const car = player.car; if (!car) return;
+  const rx = Math.cos(car.heading), rz = Math.sin(car.heading);
+  player.ped.x = car.x + rx * 2.0; player.ped.z = car.z + rz * 2.0;
+  player.ped.mesh.visible = true;
+  car.parked = true; player.car = null; AU.door();
+}
+function playerUpdate(dt, input) {
+  const ped = player.ped;
+  if (player.jackT > 0 && player.jackCar) {
+    player.jackT -= dt;
+    const c = player.jackCar, rx = Math.cos(c.heading), rz = Math.sin(c.heading);
+    const tx = c.x + rx * 2.0, tz = c.z + rz * 2.0;
+    ped.x = lerp(ped.x, tx, clamp(dt * 10, 0, 1)); ped.z = lerp(ped.z, tz, clamp(dt * 10, 0, 1));
+    if (player.jackT <= 0) { enterCar(c); player.jackCar = null; }
+    player.x = ped.x; player.z = ped.z; return;
+  }
+  if (player.car) {
+    const car = player.car;
+    drivePhysics(car, dt, input);
+    player.x = car.x; player.z = car.z; player.heading = car.heading;
+    AU.engine(clamp(Math.abs(car.speed) / carPerf(car.info).topF, 0, 1), Math.abs(input.y) > 0.05 || Math.abs(car.speed) > 2 ? 0.8 : 0.25);
+    if (aEdge && Math.abs(car.speed) < 7) exitCar();
+    return;
+  }
+  AU.engine(0, 0);
+  const mag = Math.hypot(input.x, input.y);
+  if (mag > 0.12) {
+    const sp = input.sprint ? 6.4 : 3.6;
+    const dx = input.x / Math.max(1, mag), dz = input.y / Math.max(1, mag);
+    player.heading = Math.atan2(dx, -dz);
+    ped.x += dx * sp * dt; ped.z += dz * sp * dt;
+    collideCircle(ped, 0.55);
+    ped.phase += dt * (input.sprint ? 3.4 : 2.4);
+    setPedFrame(ped, pedDirKey(player.heading), true);
+  } else setPedFrame(ped, pedDirKey(player.heading), false);
+  player.x = ped.x; player.z = ped.z;
+  if (aEdge) {
+    const car = nearestCar(ped.x, ped.z, 3.6);
+    if (car && Math.abs(car.speed) < 6) { player.jackCar = car; player.jackT = 0.38; }
+  }
+}
+function carCarCollisions(dt) {
+  for (let i = 0; i < cars.length; i++) for (let j = i + 1; j < cars.length; j++) {
+    const a = cars[i], b = cars[j]; if (a.dead || b.dead) continue;
+    const dx = b.x - a.x, dz = b.z - a.z, d2 = dx * dx + dz * dz;
+    if (d2 > 4.4 * 4.4 || d2 < 0.001) continue;
+    const d = Math.sqrt(d2), min = 2.1, push = (min - d) / 2; if (push <= 0) continue;
+    const nx = dx / d, nz = dz / d, aMove = a.parked ? 0.15 : 1, bMove = b.parked ? 0.15 : 1;
+    a.x -= nx * push * aMove; a.z -= nz * push * aMove; b.x += nx * push * bMove; b.z += nz * push * bMove;
+    const rel = Math.abs(a.speed - b.speed);
+    if (rel > 3.5) {
+      damageCar(a, rel * 0.8, player.car === b); damageCar(b, rel * 0.8, player.car === a);
+      if (player.car === a || player.car === b) { commitCrime('hitcar', 1); shake = Math.max(shake, 0.18); }
+      if (S.time - (carCarCollisions.lt || -9) > 0.15) { carCarCollisions.lt = S.time; AU.crash(0.08 + rel * 0.008); }
+      a.speed *= 0.6; b.speed *= 0.6;
+    }
+  }
+}
+function pedUpdate(dt) {
+  for (const p of [...peds]) {
+    if (p.dead || p === player.ped || p.mission) continue;
+    if (p.inCar) { p.mesh.visible = false; continue; }
+    if (p.state === 'down') { p.downT = (p.downT || 0) + dt; if (p.downT > 5) removePed(p); continue; }
+    if (p.state === 'flee') {
+      p.fleeT -= dt; if (p.fleeT <= 0) p.state = 'walk';
+      p.x += Math.sin(p.heading) * 5.2 * dt; p.z += -Math.cos(p.heading) * 5.2 * dt;
+      collideCircle(p, 0.5); p.phase += dt * 3.4; setPedFrame(p, pedDirKey(p.heading), true);
+      continue;
+    }
+    // walk: hop between pavement block centers
+    if (!p.targetSet || Math.hypot(p.tx - p.x, p.tz - p.z) < 0.8) {
+      const bx = wx2bx(p.x), by = wz2by(p.z);
+      const opts = [[0, -1], [0, 1], [-1, 0], [1, 0]].filter(([dx, dy]) => surfAt(bx + dx, by + dy).type === 3);
+      if (opts.length) { const [dx, dy] = opts[Math.floor(Math.random() * opts.length)]; p.tx = bx2wx(bx + dx) + 2 + (Math.random() - 0.5); p.tz = bz2wz(by + dy) + 2 + (Math.random() - 0.5); p.targetSet = true; }
+      else { p.tx = p.x + (Math.random() - 0.5) * 3; p.tz = p.z + (Math.random() - 0.5) * 3; p.targetSet = true; }
+    }
+    p.heading = Math.atan2(p.tx - p.x, -(p.tz - p.z));
+    p.x += Math.sin(p.heading) * 1.6 * dt; p.z += -Math.cos(p.heading) * 1.6 * dt;
+    collideCircle(p, 0.5); p.phase += dt * 2.2; setPedFrame(p, pedDirKey(p.heading), true);
+  }
+  // run-overs
+  for (const c of cars) {
+    if (c.dead || Math.abs(c.speed) < 4) continue;
+    for (const p of peds) {
+      if (p.dead || p.mission || p === player.ped || p.state === 'down' || p.inCar) continue;
+      if (dist2(p.x, p.z, c.x, c.z) < 2.0 * 2.0) {
+        p.state = 'down'; p.downT = 0; p.frame = -1;
+        setMeshSprite(p.mesh, PEDF.fallen, 1.05); p.frame = PEDF.fallen;
+        AU.noise(0.12, 0.16, 500);
+        if (c === player.car) { commitCrime('ped', 2); shake = Math.max(shake, 0.2); }
+        scarePeds(p.x, p.z, 10);
+      }
+    }
+  }
+}
+function syncMeshes() {
+  for (const c of cars) { if (c.dead) continue; c.mesh.position.set(c.x, heightAt(c.x, c.z) + 0.07, c.z); c.mesh.rotation.y = c.heading + Math.PI; }
+  for (const p of peds) { if (p.dead) continue; p.mesh.position.set(p.x, heightAt(p.x, p.z) + 0.06, p.z); }
+  if (player.ped) player.ped.mesh.position.set(player.ped.x, heightAt(player.ped.x, player.ped.z) + 0.06, player.ped.z);
+}
+
+// ---------------- camera & loop ----------------
+const camTarget = new THREE.Vector3();
+let lastHUD = '', frame = 0;
+function loop(now) {
+  requestAnimationFrame(loop);
+  const dt = Math.min(0.05, (now - (loop.last || now)) / 1000 || 0.016); loop.last = now;
+  frame++;
+  if (S.mode === 'play' && !S.busted) {
+    S.time += dt;
+    const input = readInput();
+    playerUpdate(dt, input);
+    for (const c of cars.filter(c => c.traffic && !c.dead)) trafficStep(c, dt);
+    carCarCollisions(dt);
+    pedUpdate(dt);
+    missionPedUpdate(dt);
+    manageCops(dt);
+    spawner(dt);
+    mStep(dt);
+    if (MT.done && MT.rearm > 0) { MT.rearm -= dt; if (MT.rearm <= 0 && CITY.mission) { MT.done = false; MT.active = true; MT.pc = CITY.mission.startPc; MT.wait = 0; MT.missionCar = null; MT.missionPed = null; MT.armed = {}; MT.dropPoint = mPlacePos(CITY.mission.doorId); } }
+    // bust meter
+    const pSpeed = player.car ? Math.abs(player.car.speed) : 0;
+    const copNear = cars.some(c => c.cop && !c.dead && dist2(c.x, c.z, player.x, player.z) < 7.5 * 7.5);
+    if (copNear && pSpeed < 2.4 && S.wanted > 0) S.bust += dt / 2.0; else S.bust = Math.max(0, S.bust - dt * 0.55);
+    $('bustwrap').style.display = S.bust > 0.03 ? 'block' : 'none';
+    $('bustfill').style.width = (S.bust * 100).toFixed(0) + '%';
+    if (S.bust >= 1) doBust();
+    // siren
+    let nd = 999; for (const c of cars) if (c.cop && !c.dead) nd = Math.min(nd, Math.hypot(c.x - player.x, c.z - player.z));
+    AU.siren(nd);
+    // marker
+    const mp = MT.arrowEnt && !MT.arrowEnt.dead ? MT.arrowEnt : MT.arrowPos;
+    if (mp) { marker.visible = true; marker.position.set(mp.x, heightAt(mp.x, mp.z) + 0.3 + Math.sin(S.time * 3) * 0.25, mp.z); marker.rotation.y = S.time * 1.4; }
+    else marker.visible = false;
+    // city window follows
+    const pb = { bx: wx2bx(player.x), by: wz2by(player.z) };
+    if (Math.abs(pb.bx - cityCenter.bx) > 3 || Math.abs(pb.by - cityCenter.by) > 3) { buildCity(pb.bx, pb.by); buildObjects(pb.bx, pb.by); }
+    // HUD refresh on change
+    const hudKey = S.cash + '|' + S.wanted + '|' + MT.stageText + '|' + MT.done;
+    if (hudKey !== lastHUD) { lastHUD = hudKey; updateHUD(); }
+    if (frame % 2 === 0) drawMinimap();
+    $('speedo').textContent = player.car ? Math.round(Math.abs(player.car.speed) * 3.2) + ' MPH' : '';
+  }
+  syncMeshes();
+  // camera
+  let tx, tz, ty, back;
+  if (S.mode === 'menu') {
+    const cx = bx2wx(SPAWN.bx) + 2, cz = bz2wz(SPAWN.by) + 2, a = now * 0.00004;
+    tx = cx + Math.cos(a) * 26; tz = cz + Math.sin(a) * 26; ty = 30; back = 0;
+    camTarget.set(cx, 0, cz);
+    camera.position.set(tx, ty, tz + 14);
+  } else {
+    const spd = player.car ? Math.abs(player.car.speed) : 0;
+    const H = 33 + spd * 0.55, B = 18 + spd * 0.4;
+    shake = Math.max(0, shake - dt * 1.4);
+    const sx = (Math.random() - 0.5) * shake, sz = (Math.random() - 0.5) * shake;
+    camTarget.set(player.x + sx, heightAt(player.x, player.z), player.z + sz);
+    camera.position.set(player.x + sx, heightAt(player.x, player.z) + H, player.z + B + sz);
+  }
+  camera.lookAt(camTarget);
+  renderer.render(scene, camera);
+}
+
+// ---------------- city loading ----------------
+let cityLoaded = false, loopStarted = false;
+function sliceSection(text, section) {
+  if (!section) return text;
+  const lines = text.split(/\r?\n/);
+  const start = lines.findIndex(l => l.trim() === section);
+  if (start < 0) throw new Error('mission section ' + section + ' not found');
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i++) if (/^\[\d+\]$/.test(lines[i].trim())) { end = i; break; }
+  return lines.slice(start, end).join('\n');
+}
+async function loadCity(key) {
+  CITY_KEY = key; CITY = CITIES[key]; cityLoaded = false;
+  $('playbtn').disabled = true;
+  $('loadmsg').textContent = 'loading ' + CITY.name + '…';
+  document.querySelectorAll('.citycard').forEach(c => c.classList.toggle('sel', c.dataset.city === key));
+  try {
+    // teardown previous city
+    for (const c of [...cars]) removeCar(c);
+    for (const p of [...peds]) removePed(p);
+    player.ped = null; player.car = null; player.jackCar = null; player.jackT = 0;
+    Object.assign(S, { cash: 0, wanted: 0, lastCrime: -99, bust: 0, busted: false, time: 0, crimeCheck: 0 });
+    Object.assign(MT, { pc: 0, wait: 0, active: false, done: false, rearm: 0, arrowPos: null, arrowEnt: null, ringing: false, ringT: 0, missionCar: null, missionPed: null, dropPoint: null, stageText: '', briefs: [] });
+    for (const t of [tileTex, sprTex, flatTex]) if (t) t.dispose();
+    cityCenter = { bx: -999, by: -999 };
+    const [g24, cmp, misText] = await Promise.all([
+      fetchBuf(CITY.g24), fetchBuf(CITY.cmp),
+      CITY.mission ? fetch(CITY.mission.url).then(r => r.text()) : Promise.resolve(null)]);
+    G24 = parseG24(g24); CMP = parseCMP(cmp);
+    MIS = misText ? parseMission(sliceSection(misText, CITY.mission.section)) : null;
+    PEDF = pedFrames();
+    buildSurfaces();
+    tileTex = new THREE.CanvasTexture(G24.tileCanvas);
+    tileTex.magFilter = THREE.NearestFilter; tileTex.minFilter = THREE.LinearMipmapLinearFilter; tileTex.generateMipmaps = true; tileTex.colorSpace = THREE.SRGBColorSpace;
+    tileTex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+    sprTex = new THREE.CanvasTexture(G24.spriteCanvas);
+    sprTex.magFilter = THREE.NearestFilter; sprTex.minFilter = THREE.NearestFilter; sprTex.generateMipmaps = false; sprTex.colorSpace = THREE.SRGBColorSpace;
+    flatTex = new THREE.CanvasTexture(G24.flatCanvas);
+    flatTex.magFilter = THREE.NearestFilter; flatTex.minFilter = THREE.LinearMipmapLinearFilter; flatTex.generateMipmaps = true; flatTex.colorSpace = THREE.SRGBColorSpace;
+    flatTex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+    // cop-head HUD icon from the real sprite sheet (sprite 38 in both styles — verified)
+    { const s = G24.sprites[38], cv = document.createElement('canvas'); cv.width = s.w; cv.height = s.h;
+      cv.getContext('2d').drawImage(G24.spriteCanvas, s.ax, s.ay, s.w, s.h, 0, 0, s.w, s.h); copHeadURL = cv.toDataURL(); }
+    // spawn + start car: from the chapter's own PLAYER placement (its args[0]
+    // names the PARKED start car — the same pattern in both chapters)
+    if (MIS) {
+      const pEntry = Object.entries(MIS.placements).find(([, p]) => p.kind === 'PLAYER');
+      if (pEntry) {
+        PLAYER_ID = +pEntry[0];
+        const pp = pEntry[1];
+        SPAWN = { bx: pp.x > 255 ? Math.floor(pp.x / 64) : pp.x, by: pp.y > 255 ? Math.floor(pp.y / 64) : pp.y };
+        const sc = MIS.placements[pp.args[0]], sp = sc ? mPlacePos(pp.args[0]) : null;
+        const ci = sc && sc.kind === 'PARKED' ? G24.carByModel[sc.args[0]] : undefined;
+        if (ci !== undefined && sp) makeCar(ci, sp.x, sp.z, Math.PI, { parked: true });
+      }
+      MT.dropPoint = mPlacePos(CITY.mission.doorId);
+    } else {
+      SPAWN = { ...CITY.spawn };
+      const ci = G24.cars.findIndex(c => c.vtype === 4);
+      if (ci >= 0) makeCar(ci, bx2wx(SPAWN.bx + 1) + 2, bz2wz(SPAWN.by) + 2, Math.PI, { parked: true });
+    }
+    player.ped = makePed(bx2wx(SPAWN.bx) + 2, bz2wz(SPAWN.by) + 2, { state: 'stand' });
+    player.ped.immune = true;
+    player.x = player.ped.x; player.z = player.ped.z; player.heading = 0;
+    buildCity(SPAWN.bx, SPAWN.by); buildObjects(SPAWN.bx, SPAWN.by);
+    buildMinimapBase();
+    updateHUD();
+    cityLoaded = true;
+    $('playbtn').disabled = false;
+    $('loadmsg').textContent = 'ready — ' + CITY.name + ' loaded (' + G24.cars.length + ' car types, ' + CMP.objs.length + ' map objects)' + (CITY.mission ? '' : ' · free-roam only: no missions in this city');
+    if (!loopStarted) { loopStarted = true; requestAnimationFrame(loop); }
+  } catch (e) { $('loadmsg').textContent = 'LOAD ERROR: ' + e.message; console.error(e); }
+}
+$('playbtn').addEventListener('click', () => {
+  if (!cityLoaded) return;
+  AU.init(); AU.resume();
+  $('startscreen').classList.add('hidden');
+  if (tc._els && tc._els.overlay) tc._els.overlay.style.display = '';
+  S.mode = 'play';
+  if (CITY.mission && CITY.mission.startPc != null) { MT.active = true; MT.pc = CITY.mission.startPc; MT.wait = 0; MT.done = false; MT.ringing = false; MT.missionCar = null; MT.missionPed = null; MT.armed = {}; }
+  else MT.active = false;
+});
+$('respawnbtn').addEventListener('click', doRespawn);
+$('citybtn').addEventListener('click', () => {
+  if (S.mode !== 'play') return;
+  S.mode = 'menu'; S.busted = false; S.bust = 0;
+  $('bustedscreen').classList.add('hidden');
+  $('startscreen').classList.remove('hidden');
+  if (tc._els && tc._els.overlay) tc._els.overlay.style.display = 'none';
+});
+document.querySelectorAll('.citycard').forEach(c => c.addEventListener('click', () => { if (c.dataset.city !== CITY_KEY || !cityLoaded) loadCity(c.dataset.city); }));
+loadCity('liberty');
+
+// test hooks
+window.__NV = { S, player, MT, get cars() { return cars; }, get peds() { return peds; },
+  teleport(wx, wz) { if (player.car) { player.car.x = wx; player.car.z = wz; } player.ped.x = wx; player.ped.z = wz; player.x = wx; player.z = wz; },
+  teleportBlock(bx, by) { this.teleport(bx2wx(bx) + 2, bz2wz(by) + 2); },
+  setWanted(n) { S.wanted = n; S.lastCrime = S.time; },
+  giveCash(n) { S.cash += n; updateHUD(); },
+  answerPhone() { const pos = MT.arrowPos || (CITY.mission ? mPlacePos(CITY.mission.phoneId) : null); if (pos) this.teleport(pos.x + 1.5, pos.z); },
+  loadCity: key => loadCity(key), cityLoaded: () => cityLoaded, get city() { return CITY_KEY; },
+  expose() { return { city: CITY_KEY, cash: S.cash, wanted: S.wanted, inCar: !!player.car, carIdx: player.car ? player.car.carIdx : -1,
+    px: player.x, pz: player.z, speed: player.car ? player.car.speed : 0, bust: S.bust, busted: S.busted,
+    missionPc: MT.pc, missionOp: MIS && MIS.commands[MT.pc] ? MIS.commands[MT.pc].op : 'none', stage: MT.stageText,
+    ringing: MT.ringing, missionDone: MT.done, cops: cars.filter(c => c.cop && !c.dead).length,
+    carsN: cars.length, pedsN: peds.length, t: S.time }; },
+};
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
