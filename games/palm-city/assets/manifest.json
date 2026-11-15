@@ -1,4 +1,351 @@
 {
+ "buildings": {
+  "apartments": {
+   "color": {
+    "file": "bld_apartments.png",
+    "h": 290.0,
+    "ox": -156.0,
+    "oy": -145.0,
+    "w": 312.0
+   },
+   "night": {
+    "file": "bld_apartments_night.png",
+    "h": 410.0,
+    "ox": -216.0,
+    "oy": -205.0,
+    "w": 432.0
+   },
+   "shadow": {
+    "file": "bld_apartments_sh.png",
+    "h": 378.62,
+    "ox": -151.0,
+    "oy": -238.62,
+    "w": 670.07
+   }
+  },
+  "club": {
+   "color": {
+    "file": "bld_club.png",
+    "h": 210.0,
+    "ox": -156.0,
+    "oy": -105.0,
+    "w": 312.0
+   },
+   "night": {
+    "file": "bld_club_night.png",
+    "h": 330.0,
+    "ox": -216.0,
+    "oy": -165.0,
+    "w": 432.0
+   },
+   "shadow": {
+    "file": "bld_club_sh.png",
+    "h": 243.04,
+    "ox": -151.0,
+    "oy": -143.04,
+    "w": 462.61
+   }
+  },
+  "diner": {
+   "color": {
+    "file": "bld_diner.png",
+    "h": 220.0,
+    "ox": -140.0,
+    "oy": -110.0,
+    "w": 280.0
+   },
+   "night": {
+    "file": "bld_diner_night.png",
+    "h": 340.0,
+    "ox": -200.0,
+    "oy": -170.0,
+    "w": 400.0
+   },
+   "shadow": {
+    "file": "bld_diner_sh.png",
+    "h": 239.59,
+    "ox": -135.0,
+    "oy": -134.59,
+    "w": 380.42
+   }
+  },
+  "garage": {
+   "color": {
+    "file": "bld_garage.png",
+    "h": 210.0,
+    "ox": -216.0,
+    "oy": -105.0,
+    "w": 432.0
+   },
+   "night": {
+    "file": "bld_garage_night.png",
+    "h": 330.0,
+    "ox": -276.0,
+    "oy": -165.0,
+    "w": 552.0
+   },
+   "shadow": {
+    "file": "bld_garage_sh.png",
+    "h": 244.83,
+    "ox": -211.0,
+    "oy": -144.83,
+    "w": 589.3
+   }
+  },
+  "hotel": {
+   "color": {
+    "file": "bld_hotel.png",
+    "h": 310.0,
+    "ox": -140.0,
+    "oy": -155.0,
+    "w": 280.0
+   },
+   "night": {
+    "file": "bld_hotel_night.png",
+    "h": 430.0,
+    "ox": -200.0,
+    "oy": -215.0,
+    "w": 400.0
+   },
+   "shadow": {
+    "file": "bld_hotel_sh.png",
+    "h": 498.14,
+    "ox": -135.0,
+    "oy": -348.14,
+    "w": 1009.48
+   }
+  },
+  "house1": {
+   "color": {
+    "file": "bld_house1.png",
+    "h": 220.0,
+    "ox": -125.0,
+    "oy": -110.0,
+    "w": 250.0
+   },
+   "night": {
+    "file": "bld_house1_night.png",
+    "h": 340.0,
+    "ox": -185.0,
+    "oy": -170.0,
+    "w": 370.0
+   },
+   "shadow": {
+    "file": "bld_house1_sh.png",
+    "h": 245.86,
+    "ox": -120.0,
+    "oy": -140.86,
+    "w": 373.84
+   }
+  },
+  "house2": {
+   "color": {
+    "file": "bld_house2.png",
+    "h": 210.0,
+    "ox": -120.0,
+    "oy": -105.0,
+    "w": 240.0
+   },
+   "night": {
+    "file": "bld_house2_night.png",
+    "h": 330.0,
+    "ox": -180.0,
+    "oy": -165.0,
+    "w": 360.0
+   },
+   "shadow": {
+    "file": "bld_house2_sh.png",
+    "h": 235.86,
+    "ox": -115.0,
+    "oy": -135.86,
+    "w": 363.84
+   }
+  },
+  "house3": {
+   "color": {
+    "file": "bld_house3.png",
+    "h": 225.0,
+    "ox": -125.0,
+    "oy": -112.5,
+    "w": 250.0
+   },
+   "night": {
+    "file": "bld_house3_night.png",
+    "h": 345.0,
+    "ox": -185.0,
+    "oy": -172.5,
+    "w": 370.0
+   },
+   "shadow": {
+    "file": "bld_house3_sh.png",
+    "h": 250.86,
+    "ox": -120.0,
+    "oy": -143.36,
+    "w": 373.84
+   }
+  },
+  "motel": {
+   "color": {
+    "file": "bld_motel.png",
+    "h": 256.0,
+    "ox": -156.0,
+    "oy": -128.0,
+    "w": 312.0
+   },
+   "night": {
+    "file": "bld_motel_night.png",
+    "h": 376.0,
+    "ox": -216.0,
+    "oy": -188.0,
+    "w": 432.0
+   },
+   "shadow": {
+    "file": "bld_motel_sh.png",
+    "h": 280.07,
+    "ox": -151.0,
+    "oy": -157.07,
+    "w": 429.15
+   }
+  },
+  "office": {
+   "color": {
+    "file": "bld_office.png",
+    "h": 310.0,
+    "ox": -156.0,
+    "oy": -155.0,
+    "w": 312.0
+   },
+   "night": {
+    "file": "bld_office_night.png",
+    "h": 430.0,
+    "ox": -216.0,
+    "oy": -215.0,
+    "w": 432.0
+   },
+   "shadow": {
+    "file": "bld_office_sh.png",
+    "h": 444.35,
+    "ox": -151.0,
+    "oy": -294.35,
+    "w": 840.72
+   }
+  },
+  "police": {
+   "color": {
+    "file": "bld_police.png",
+    "h": 256.0,
+    "ox": -165.0,
+    "oy": -128.0,
+    "w": 330.0
+   },
+   "night": {
+    "file": "bld_police_night.png",
+    "h": 376.0,
+    "ox": -225.0,
+    "oy": -188.0,
+    "w": 450.0
+   },
+   "shadow": {
+    "file": "bld_police_sh.png",
+    "h": 317.73,
+    "ox": -160.0,
+    "oy": -194.73,
+    "w": 587.69
+   }
+  },
+  "shops": {
+   "color": {
+    "file": "bld_shops.png",
+    "h": 170.0,
+    "ox": -240.0,
+    "oy": -85.0,
+    "w": 480.0
+   },
+   "night": {
+    "file": "bld_shops_night.png",
+    "h": 290.0,
+    "ox": -300.0,
+    "oy": -145.0,
+    "w": 600.0
+   },
+   "shadow": {
+    "file": "bld_shops_sh.png",
+    "h": 200.35,
+    "ox": -235.0,
+    "oy": -120.35,
+    "w": 620.57
+   }
+  },
+  "villa1": {
+   "color": {
+    "file": "bld_villa1.png",
+    "h": 280.0,
+    "ox": -135.0,
+    "oy": -140.0,
+    "w": 270.0
+   },
+   "night": {
+    "file": "bld_villa1_night.png",
+    "h": 400.0,
+    "ox": -195.0,
+    "oy": -200.0,
+    "w": 390.0
+   },
+   "shadow": {
+    "file": "bld_villa1_sh.png",
+    "h": 314.83,
+    "ox": -130.0,
+    "oy": -179.83,
+    "w": 427.3
+   }
+  },
+  "villa2": {
+   "color": {
+    "file": "bld_villa2.png",
+    "h": 260.0,
+    "ox": -130.0,
+    "oy": -130.0,
+    "w": 260.0
+   },
+   "night": {
+    "file": "bld_villa2_night.png",
+    "h": 380.0,
+    "ox": -190.0,
+    "oy": -190.0,
+    "w": 380.0
+   },
+   "shadow": {
+    "file": "bld_villa2_sh.png",
+    "h": 290.35,
+    "ox": -125.0,
+    "oy": -165.35,
+    "w": 400.57
+   }
+  },
+  "villa3": {
+   "color": {
+    "file": "bld_villa3.png",
+    "h": 290.0,
+    "ox": -135.0,
+    "oy": -145.0,
+    "w": 270.0
+   },
+   "night": {
+    "file": "bld_villa3_night.png",
+    "h": 410.0,
+    "ox": -195.0,
+    "oy": -205.0,
+    "w": 390.0
+   },
+   "shadow": {
+    "file": "bld_villa3_sh.png",
+    "h": 324.83,
+    "ox": -130.0,
+    "oy": -184.83,
+    "w": 427.3
+   }
+  }
+ },
  "cars": {
   "conv_mint": {
    "angles": 32,
@@ -279,6 +626,276 @@
     "w": 96.0
    },
    "width": 20.0
+  }
+ },
+ "peds": {
+  "cop": {
+   "angles": 16,
+   "color": {
+    "file": "ped_cop.png",
+    "h": 28.0,
+    "ox": -14.0,
+    "oy": -14.0,
+    "w": 28.0
+   },
+   "cols": 12,
+   "poses": 3,
+   "shadow": {
+    "file": "ped_cop_sh.png",
+    "h": 80.0,
+    "ox": -14.89,
+    "oy": -46.73,
+    "w": 80.0
+   }
+  },
+  "ped_blue": {
+   "angles": 16,
+   "color": {
+    "file": "ped_ped_blue.png",
+    "h": 28.0,
+    "ox": -14.0,
+    "oy": -14.0,
+    "w": 28.0
+   },
+   "cols": 12,
+   "poses": 3,
+   "shadow": {
+    "file": "ped_ped_blue_sh.png",
+    "h": 80.0,
+    "ox": -14.89,
+    "oy": -46.73,
+    "w": 80.0
+   }
+  },
+  "ped_rose": {
+   "angles": 16,
+   "color": {
+    "file": "ped_ped_rose.png",
+    "h": 28.0,
+    "ox": -14.0,
+    "oy": -14.0,
+    "w": 28.0
+   },
+   "cols": 12,
+   "poses": 3,
+   "shadow": {
+    "file": "ped_ped_rose_sh.png",
+    "h": 80.0,
+    "ox": -14.89,
+    "oy": -46.73,
+    "w": 80.0
+   }
+  },
+  "ped_straw": {
+   "angles": 16,
+   "color": {
+    "file": "ped_ped_straw.png",
+    "h": 28.0,
+    "ox": -14.0,
+    "oy": -14.0,
+    "w": 28.0
+   },
+   "cols": 12,
+   "poses": 3,
+   "shadow": {
+    "file": "ped_ped_straw_sh.png",
+    "h": 80.0,
+    "ox": -14.89,
+    "oy": -46.73,
+    "w": 80.0
+   }
+  },
+  "ped_sun": {
+   "angles": 16,
+   "color": {
+    "file": "ped_ped_sun.png",
+    "h": 28.0,
+    "ox": -14.0,
+    "oy": -14.0,
+    "w": 28.0
+   },
+   "cols": 12,
+   "poses": 3,
+   "shadow": {
+    "file": "ped_ped_sun_sh.png",
+    "h": 80.0,
+    "ox": -14.89,
+    "oy": -46.73,
+    "w": 80.0
+   }
+  },
+  "ped_white": {
+   "angles": 16,
+   "color": {
+    "file": "ped_ped_white.png",
+    "h": 28.0,
+    "ox": -14.0,
+    "oy": -14.0,
+    "w": 28.0
+   },
+   "cols": 12,
+   "poses": 3,
+   "shadow": {
+    "file": "ped_ped_white_sh.png",
+    "h": 80.0,
+    "ox": -14.89,
+    "oy": -46.73,
+    "w": 80.0
+   }
+  },
+  "player": {
+   "angles": 16,
+   "color": {
+    "file": "ped_player.png",
+    "h": 28.0,
+    "ox": -14.0,
+    "oy": -14.0,
+    "w": 28.0
+   },
+   "cols": 12,
+   "poses": 3,
+   "shadow": {
+    "file": "ped_player_sh.png",
+    "h": 80.0,
+    "ox": -14.89,
+    "oy": -46.73,
+    "w": 80.0
+   }
+  }
+ },
+ "props": {
+  "fountain": {
+   "color": {
+    "file": "fountain.png",
+    "h": 72.0,
+    "ox": -36.0,
+    "oy": -36.0,
+    "w": 72.0
+   },
+   "night": {
+    "file": "fountain_night.png",
+    "h": 180,
+    "ox": -90.0,
+    "oy": -90.0,
+    "w": 180
+   },
+   "shadow": {
+    "file": "fountain_sh.png",
+    "h": 115.45,
+    "ox": -51.0,
+    "oy": -64.45,
+    "w": 152.19
+   }
+  },
+  "lamp": {
+   "color": {
+    "file": "lamp.png",
+    "h": 16.0,
+    "ox": -22.0,
+    "oy": -8.0,
+    "w": 44.0
+   },
+   "night": {
+    "file": "lamp_night.png",
+    "h": 200,
+    "ox": -100.0,
+    "oy": -100.0,
+    "w": 200
+   },
+   "shadow": {
+    "file": "lamp_sh.png",
+    "h": 73.79,
+    "ox": -37.0,
+    "oy": -50.79,
+    "w": 177.73
+   }
+  },
+  "lifeguard": {
+   "color": {
+    "file": "lifeguard.png",
+    "h": 72.0,
+    "ox": -24.0,
+    "oy": -36.0,
+    "w": 48.0
+   },
+   "shadow": {
+    "file": "lifeguard_sh.png",
+    "h": 122.17,
+    "ox": -39.0,
+    "oy": -71.17,
+    "w": 153.29
+   }
+  },
+  "palm0": {
+   "color": {
+    "file": "palm0.png",
+    "h": 92.0,
+    "ox": -46.0,
+    "oy": -46.0,
+    "w": 92.0
+   },
+   "shadow": {
+    "file": "palm0_sh.png",
+    "h": 163.69,
+    "ox": -61.0,
+    "oy": -102.69,
+    "w": 277.59
+   }
+  },
+  "palm1": {
+   "color": {
+    "file": "palm1.png",
+    "h": 92.0,
+    "ox": -46.0,
+    "oy": -46.0,
+    "w": 92.0
+   },
+   "shadow": {
+    "file": "palm1_sh.png",
+    "h": 170.42,
+    "ox": -61.0,
+    "oy": -109.42,
+    "w": 302.69
+   }
+  },
+  "palm2": {
+   "color": {
+    "file": "palm2.png",
+    "h": 92.0,
+    "ox": -46.0,
+    "oy": -46.0,
+    "w": 92.0
+   },
+   "shadow": {
+    "file": "palm2_sh.png",
+    "h": 156.97,
+    "ox": -61.0,
+    "oy": -95.97,
+    "w": 252.5
+   }
+  },
+  "pier": {
+   "color": {
+    "file": "pier.png",
+    "h": 120.0,
+    "ox": -155.0,
+    "oy": -60.0,
+    "w": 310.0
+   },
+   "night": {
+    "file": "pier_night.png",
+    "h": 190.0,
+    "ox": -190.0,
+    "oy": -95.0,
+    "w": 380.0
+   },
+   "shadow": {
+    "file": "pier_sh.png",
+    "h": 201.55,
+    "ox": -170.0,
+    "oy": -126.55,
+    "w": 532.4
+   }
   }
  }
 }

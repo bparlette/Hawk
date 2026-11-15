@@ -740,7 +740,7 @@ BLD_PPM = 20
 BLD_SH_PPM = 8
 BLD_NIGHT_PPM = 8
 NEON = {'SOLANA': '#ff4fa8', 'TACOS': '#ff8a3c', 'DINER': '#3fe0ff', 'MOTEL': '#ff3f6a', 'NOVA': '#b45cff'}
-WARM_WINDOW = (1.0, 0.72, 0.38)
+WARM_WINDOW = (1.0, 0.6, 0.26)
 
 
 def hip_roof(cx, cy, W, D, z, rise, material, overhang=0.4):
@@ -785,7 +785,7 @@ def tile_mat(name, color):
 
 def facade_windows(W, D, floors, rnd, lit=0.75, shop=False, floor_h=3.2):
     """Emissive window panes on all four walls of a WxD box (lower floors only: they light the street)."""
-    win = mat('window', srgb('#3a3a52'), rough=0.2, emit=WARM_WINDOW, night=4.0, day=0.0, noise=0)
+    win = mat('window', srgb('#3a3a52'), rough=0.2, emit=WARM_WINDOW, night=2.6, day=0.0, noise=0)
     quads = []
     eps = 0.03
     for f in range(min(floors, 4)):
@@ -860,7 +860,7 @@ def water_tank(x, y, z, wood, dark):
     track(c)
 
 
-def skylights(cx, cy, W, D, z, nx, ny, rnd, glow=1.2):
+def skylights(cx, cy, W, D, z, nx, ny, rnd, glow=0.35):
     glass = mat('skylight', srgb('#9fb6d8'), rough=0.08, spec=1.0, emit=(1.0, 0.8, 0.5), night=glow, day=0.0, noise=0)
     frame_m = mat('skyframe', srgb('#d8d0c4'), rough=0.6, noise=0)
     for i in range(nx):
@@ -978,7 +978,7 @@ def build_building(b):
         flat_block(0, 0, W, D, H, wall, gravel('#cfc2b4'), mat('par', srgb('#fbe8d2'), rough=0.6))
         # rooftop pool deck on the south half
         deck = mat('deck', srgb('#b8865a'), rough=0.7, noise=0.25, noise_scale=10)
-        water = mat('pool', srgb('#3fc6d8'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=1.2, day=0.0, noise=0.1, noise_scale=3)
+        water = mat('pool', srgb('#3fc6d8'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=0.5, day=0.0, noise=0.1, noise_scale=3)
         cube((0, -D / 4, H + 0.1), (W - 2.0, D / 2 - 1.5, 0.12), deck)
         cube((-W / 6, -D / 4, H + 0.17), (W / 2.2, D / 4, 0.06), water)
         for i in range(5):
@@ -1060,7 +1060,7 @@ def build_building(b):
         flat_block(-W / 2 + 4.5, 0, 9.0, D, H, wall, roof_m, par)
         flat_block(4.5, D / 2 - 4.0, W - 9.0, 8.0, H, wall, roof_m, par)
         court = mat('court', srgb('#e9d9bf'), rough=0.8, noise=0.15, noise_scale=8)
-        water = mat('pool', srgb('#43c8dc'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=1.2, day=0.0, noise=0.1, noise_scale=3)
+        water = mat('pool', srgb('#43c8dc'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=0.5, day=0.0, noise=0.1, noise_scale=3)
         cube((4.5, -4.0, 0.06), (W - 9.4, D - 8.4, 0.1), court)
         cube((4.5, -4.5, 0.13), (W - 15, D - 15, 0.06), water, bevel=0.6)
         for i in range(4):
@@ -1078,7 +1078,7 @@ def build_building(b):
     elif style == 'office':
         wall = mat('wall', srgb('#c9cdd8'), rough=0.5)
         flat_block(0, 0, W, D, H, wall, gravel('#9ea0a8'), mat('par', srgb('#e8e6ea'), rough=0.5), par_h=1.0, par_w=0.5)
-        glassroof = mat('atrium', srgb('#7fa6c8'), rough=0.06, spec=1.0, emit=(1.0, 0.78, 0.5), night=1.4, day=0.0, noise=0)
+        glassroof = mat('atrium', srgb('#7fa6c8'), rough=0.06, spec=1.0, emit=(1.0, 0.62, 0.3), night=0.45, day=0.0, noise=0)
         cube((-W / 5, -D / 5, H + 1.0), (W / 2.6, D / 2.6, 2.0), wall)
         cube((-W / 5, -D / 5, H + 2.1), (W / 2.6 - 0.3, D / 2.6 - 0.3, 0.5), glassroof, taper=(0.4, 1.0))
         cube((W / 4, D / 4, H + 2.0), (W / 3, D / 3, 4.0), wall, bevel=0.1)
@@ -1086,7 +1086,7 @@ def build_building(b):
         for i in range(2):
             for j in range(2):
                 ac_unit(W / 4 - 1.2 + i * 2.4, D / 4 - 1 + j * 2, H + 4.1, metal, dark)
-        skylights(W / 4, -D / 4, W / 3, D / 3, H, 3, 3, rnd, glow=1.0)
+        skylights(W / 4, -D / 4, W / 3, D / 3, H, 3, 3, rnd, glow=0.3)
         heli = mat('helipad', srgb('#3a3c46'), rough=0.8, noise=0.05)
         cyl((-W / 4, D / 4, H + 0.12), 3.2, 0.1, heli, verts=40)
         text_obj('H', (-W / 4, D / 4, H + 0.2), 3.0, mat('hpaint', srgb('#f2e6c8'), rough=0.7, noise=0), extrude=0.01)
@@ -1128,7 +1128,7 @@ def build_building(b):
         wall = mat('wall', srgb('#c98b6b'), rough=0.8)
         cube((0, 0, H / 2), (W, D, H), wall)
         roofm = mat('saw', srgb('#bcb4ac'), rough=0.5, metal=0.4, noise=0.12, noise_scale=8)
-        glass = mat('sawglass', srgb('#8fb0cc'), rough=0.1, spec=1.0, emit=(1.0, 0.8, 0.55), night=1.0, day=0.0, noise=0)
+        glass = mat('sawglass', srgb('#8fb0cc'), rough=0.1, spec=1.0, emit=(1.0, 0.62, 0.3), night=0.3, day=0.0, noise=0)
         n = int(W / 4.0)
         for i in range(n):
             x0 = -W / 2 + i * W / n
@@ -1161,7 +1161,7 @@ def build_building(b):
             hip_roof(wx, wy, wing_w, wing_d, H - 2, min(wing_w, wing_d) * 0.32, tiles)
         # yard: pool, deck, hedge, lounge
         deck = mat('deck', srgb('#c89a6a'), rough=0.7, noise=0.25, noise_scale=12)
-        water = mat('pool', srgb('#3fc6d8'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=1.2, day=0.0, noise=0.1, noise_scale=3)
+        water = mat('pool', srgb('#3fc6d8'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=0.5, day=0.0, noise=0.1, noise_scale=3)
         pw, pd = W * 0.42, D * 0.22
         px_, py_ = W / 2 - pw / 2 - 1.2, -D / 2 + pd / 2 + 1.5
         cube((px_, py_, 0.05), (pw + 2.2, pd + 2.2, 0.1), deck)
@@ -1226,7 +1226,7 @@ def build_lamp():
     head = mat('lamphead', srgb('#fff0c8'), rough=0.3, emit=(1.0, 0.78, 0.45), night=30, day=0.2, noise=0)
     cube((1.35, 0, 5.85), (0.6, 0.32, 0.14), pole, bevel=0.04)
     cube((1.35, 0, 5.77), (0.5, 0.24, 0.04), head)
-    point_light((1.35, 0, 5.4), 900, (1.0, 0.74, 0.42), radius=0.3)
+    point_light((1.35, 0, 5.4), 650, (1.0, 0.6, 0.28), radius=0.3)
     return 1.35, 0.0, 6.2  # light centre offset (m) + height
 
 

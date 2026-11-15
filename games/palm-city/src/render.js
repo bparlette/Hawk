@@ -19,8 +19,8 @@ const KEYS = [
   { t: 0.00, mul: [255, 238, 214], warm: 0.55, glow: 0.42, shadow: 0.92 },
   { t: 0.40, mul: [250, 214, 196], warm: 0.50, glow: 0.34, shadow: 0.86 },
   { t: 0.65, mul: [200, 160, 196], warm: 0.30, glow: 0.18, shadow: 0.62 },
-  { t: 0.85, mul: [128, 118, 186], warm: 0.12, glow: 0.06, shadow: 0.36 },
-  { t: 1.00, mul: [88, 92, 170],   warm: 0.04, glow: 0.00, shadow: 0.24 },
+  { t: 0.85, mul: [112, 106, 182], warm: 0.12, glow: 0.06, shadow: 0.36 },
+  { t: 1.00, mul: [74, 80, 162],   warm: 0.04, glow: 0.00, shadow: 0.24 },
 ];
 export function grade(t) {
   let i = 0;
@@ -51,6 +51,26 @@ export class Renderer {
     this.statics = this.buildStatics();
     this.glints = this.buildGlints();
     this.waterPath = this.buildWaterPath();
+    this.grain = this.buildGrain();
+  }
+
+  // A 256px tile of loose brush marks, laid over the whole frame in world space with soft-light,
+  // so roofs, cars and ground share one painted surface. Low alpha + soft-light keeps it from
+  // reading as a tile.
+  buildGrain() {
+    const c = layer(256, 256), g = c.getContext('2d'), r = mulberry32(5);
+    g.fillStyle = 'rgb(128,128,128)';
+    g.fillRect(0, 0, 256, 256);
+    g.lineCap = 'round';
+    for (let i = 0; i < 900; i++) {
+      const x = r() * 256, y = r() * 256, a = r() * Math.PI, L = 4 + r() * 10, v = r() < 0.5 ? 70 + r() * 40 : 170 + r() * 50;
+      g.strokeStyle = `rgba(${v},${v},${v},${0.25 + r() * 0.35})`;
+      g.lineWidth = 1.5 + r() * 2.5;
+      for (const ox of [-256, 0, 256]) for (const oy of [-256, 0, 256]) {
+        g.beginPath(); g.moveTo(x + ox - Math.cos(a) * L, y + oy - Math.sin(a) * L); g.lineTo(x + ox + Math.cos(a) * L, y + oy + Math.sin(a) * L); g.stroke();
+      }
+    }
+    return this.ctx.createPattern(c, 'repeat');
   }
 
   resize(vw, vh, dpr) {
@@ -218,6 +238,14 @@ export class Renderer {
       if (inView(s.bb)) this.drawEntry(g, s.e.color, s.x, s.y);
     }
 
+    // painted surface grain (world-anchored)
+    g.globalCompositeOperation = 'soft-light';
+    g.globalAlpha = 0.22;
+    g.fillStyle = this.grain;
+    g.fillRect(vx0, vy0, vx1 - vx0, vy1 - vy0);
+    g.globalAlpha = 1;
+    g.globalCompositeOperation = 'source-over';
+
     // ---------------- 4. grade
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.globalCompositeOperation = 'multiply';
@@ -259,7 +287,7 @@ export class Renderer {
       const m = this.M.cars[c.model];
       const a = c.kind === 'police' ? Math.max(0.5, G.heads) : G.heads;
       if (a > 0.02) {
-        lg.globalAlpha = a * (c.parked ? 0.0 : 1);
+        lg.globalAlpha = a * (c.parked ? 0.0 : 0.75);
         if (lg.globalAlpha > 0) {
           lg.save(); lg.translate(c.x, c.y); lg.rotate(c.h + Math.PI / 2);
           lg.drawImage(m.light.img, m.light.ox, m.light.oy, m.light.w, m.light.h);
@@ -281,9 +309,9 @@ export class Renderer {
     bb.globalCompositeOperation = 'copy';
     bb.drawImage(this.bloomA, 0, 0, this.bloomB.width, this.bloomB.height);
     g.imageSmoothingEnabled = true;
-    g.globalAlpha = 0.4;
+    g.globalAlpha = 0.3;
     g.drawImage(this.bloomA, 0, 0, this.bloomA.width, this.bloomA.height, 0, 0, this.lightCv.width, this.lightCv.height);
-    g.globalAlpha = 0.55;
+    g.globalAlpha = 0.45;
     g.drawImage(this.bloomB, 0, 0, this.bloomB.width, this.bloomB.height, 0, 0, this.lightCv.width, this.lightCv.height);
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
@@ -303,16 +331,26 @@ export class Renderer {
     // sky reflection drifts from gold to rose to violet as the sun goes
     g.save();
     g.clip(this.waterPath);
-    const sky = t < 0.5 ? `rgba(255,190,120,${0.18 - t * 0.1})` : `rgba(190,110,200,${0.08 + (t - 0.5) * 0.3})`;
+    // sky reflection: a gradient across the water that drifts gold -> rose -> violet as the sun goes;
+    // brighter offshore (open sky), deeper near the shore (land shadow)
+    const sx = W.shoreX((vy0 + vy1) / 2);
+    const sky = g.createLinearGradient(sx, 0, sx + 380, 0);
+    const c1 = t < 0.5 ? [255, 176, 110] : t < 0.8 ? [236, 120, 170] : [140, 110, 210];
+    const c2 = t < 0.5 ? [120, 210, 230] : t < 0.8 ? [255, 170, 150] : [90, 130, 220];
+    sky.addColorStop(0, `rgba(30,70,120,0.25)`);
+    sky.addColorStop(0.35, `rgba(${c1[0]},${c1[1]},${c1[2]},0.30)`);
+    sky.addColorStop(1, `rgba(${c2[0]},${c2[1]},${c2[2]},0.42)`);
+    g.globalCompositeOperation = 'soft-light';
     g.fillStyle = sky;
     g.fillRect(vx0, vy0, vx1 - vx0, vy1 - vy0);
+    g.globalCompositeOperation = 'source-over';
     // slow swell bands
     g.lineCap = 'round';
     for (let y = Math.floor(vy0 / 22) * 22; y < vy1; y += 22) {
       const x0 = Math.max(vx0, W.shoreX(y));
       const off = Math.sin(time * 0.6 + y * 0.05) * 18;
-      g.strokeStyle = 'rgba(200,235,240,0.10)';
-      g.lineWidth = 3;
+      g.strokeStyle = 'rgba(210,240,250,0.16)';
+      g.lineWidth = 3.5;
       g.beginPath();
       for (let x = x0; x < vx1 + 30; x += 30) {
         const yy = y + Math.sin(x * 0.03 + time * 0.9) * 3 + off * 0.1;
