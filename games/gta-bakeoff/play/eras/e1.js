@@ -1,10 +1,10 @@
 // Era 1 — GTA 1 (1997). Canvas2D, straight-down top-down, real decoded Vice City art.
-// Tiles are the native 64x64 GTA 1 lids from assets/e1/tiles.png, baked at the native
-// 16 px per metre and PRESENTED at 21 px per metre (~84 px per tile — The Original's
-// framing) with smoothing on the ground layer: The Original presents this same art
-// filtered in WebGL, and nearest-neighbour at 64 px/tile turns the paving tiles' fine
-// grout grid into a hard checkerboard and the road tiles' contour shading into harsh
-// stripes. Sprites stay crisp (smoothing off), like The Original's sprite texture.
+// Tiles are the native 64x64 GTA 1 lids from assets/e1/tiles.png, drawn per frame at
+// 21 px per metre (~84 px per tile — The Original's framing) with smoothing on the
+// ground layer: The Original presents this same art filtered in WebGL, and
+// nearest-neighbour at 64 px/tile turns the paving tiles' fine grout grid into a hard
+// checkerboard and the road tiles' contour shading into harsh stripes. Sprites stay
+// crisp (smoothing off), like The Original's sprite texture.
 // Vehicles/peds/Link/HUD all come from assets/e1/ via manifest.json — nothing is
 // redrawn from imagination. Layout comes only from level.cells (canonical vice_beach.json via
 // play/engine/level_vice.js); this file never hard-codes a street.
@@ -12,13 +12,18 @@
 // Flat overlay lids (palms, bridge decks, building shadows — manifest tiles.flatTransparentMap)
 // layer over an inferred ground tile: the canonical extraction keeps only the surface lid, so
 // the ground under a flat overlay is taken from the nearest non-flat cell (multi-source BFS,
-// deterministic). Shadows and bridge decks bake into the ground; palm canopies bake into a
-// separate overhead layer drawn after the sprites, like the real game.
+// deterministic). Shadows and bridge decks layer into the ground pass; palm canopies draw
+// in a separate overhead pass after the sprites, like the real game. The ground is drawn
+// tile-by-tile for the visible region only: the original full-level bake canvas was
+// 4096x5056 px (~20.7M px), over iOS Safari's canvas caps (4096 px/dimension, ~16.7M px
+// area), so on iPhones its 2D context failed, bake() threw, and the game silently stayed
+// on the flat fallback forever (Nov 15, 2026 — see STATUS.md).
 //
 // Until the asset pack loads (or if it fails), a flat zone-colour fallback keeps the page
 // playable — see ARCHITECTURE.md ("a renderer draws its own placeholder rather than failing").
 const PPM = 21, TILE = 64;                       // screen px per metre; px per tile in the baked ground
-const GPX = TILE / 4, S = PPM / GPX;             // baked-ground px per metre (16); native->screen scale for sprites
+const GPX = TILE / 4, S = PPM / GPX;             // source-art px per metre (16); native->screen scale
+const TS = TILE * S;                             // one tile on screen: 84 px
 const CHARH = 41;                                // character figure height on screen, px (The Original's ped scale at this framing)
 const KPED = CHARH / 15, KLINK = CHARH / 16;     // frame scales: a ped figure fills 15 of its 24px frame; Link's fills 16 of 20
 const ASSET_BASE = "../../assets/e1/";
@@ -51,7 +56,7 @@ function crop(img, r) { const c = mk(r.w, r.h); c.getContext("2d").drawImage(img
 export function create(canvas, level) {
   const ctx = canvas.getContext("2d");
   const LW = level.w * TILE, LH = level.h * TILE;
-  let ready = false, M = null, IMG = {}, groundCv = null, canopyCv = null, parked = [], pedDefs = [];
+  let ready = false, M = null, IMG = {}, under = null, decals = [], parked = [], pedDefs = [];
   let cam = null;
 
   // ---- fallback ground (zone colours at 16 px/cell), baked synchronously ----
@@ -79,7 +84,7 @@ export function create(canvas, level) {
   }
   buildPeds();
 
-  // ---- asset loading + baking ----
+  // ---- asset loading + preparation (no offscreen level bake — see header) ----
   const tileRot = new Map();
   function tileCanvas(slot, rot) {
     const key = slot * 4 + rot;
@@ -99,14 +104,14 @@ export function create(canvas, level) {
       const F = M.files;
       [IMG.tiles, IMG.sprites, IMG.peds, IMG.link, IMG.hud] = await Promise.all(
         [F.tiles, F.sprites, F.peds, F.link, F.hudFont].map(f => loadImg(ASSET_BASE + f)));
-      bake(); ready = true; canvas.dataset.e1 = "ready";
+      prepare(); ready = true; canvas.dataset.e1 = "ready";
     } catch (e) { canvas.dataset.e1 = "fallback"; }
   }
-  function bake() {
+  function prepare() {
     const cells = level.cells, H = level.h, W = level.w, flat = M.tiles.flatTransparentMap;
     const isFlat = (tx, ty) => !!flat[cells[ty][tx][3]];
     // multi-source BFS: nearest non-flat cell's lid = the ground under a flat overlay
-    const under = new Int32Array(W * H).fill(-1), q = [];
+    under = new Int32Array(W * H).fill(-1); const q = [];
     for (let ty = 0; ty < H; ty++) for (let tx = 0; tx < W; tx++) if (!isFlat(tx, ty)) { under[ty * W + tx] = cells[ty][tx][3]; q.push(tx, ty); }
     for (let i = 0; i < q.length; i += 2) {
       const tx = q[i], ty = q[i + 1];
@@ -116,24 +121,13 @@ export function create(canvas, level) {
         under[ny * W + nx] = under[ty * W + tx]; q.push(nx, ny);
       }
     }
-    groundCv = mk(LW, LH); canopyCv = mk(LW, LH);
-    const gx = groundCv.getContext("2d"), cx2 = canopyCv.getContext("2d");
-    const lidSlot = lid => M.tiles.lids[lid].slot;
-    for (let ty = 0; ty < H; ty++) for (let tx = 0; tx < W; tx++) {
-      const lid = cells[ty][tx][3], rot = cells[ty][tx][4], px = tx * TILE, py = ty * TILE, f = flat[lid];
-      if (!lid) { gx.fillStyle = "#f0f"; gx.fillRect(px, py, TILE, TILE); continue; }
-      if (f) {
-        gx.drawImage(tileCanvas(lidSlot(under[ty * W + tx]), 0), px, py);
-        const over = tileCanvas(f.transparentSlot, rot);
-        if (PALM_LIDS.has(lid)) cx2.drawImage(over, px, py);
-        else gx.drawImage(over, px, py);
-      } else gx.drawImage(tileCanvas(lidSlot(lid), rot), px, py);
-    }
-    // ground decals: the one placement type whose sprite resolves to a real OBJECT sprite
+    // ground decals: the one placement type whose sprite resolves to a real OBJECT sprite.
+    // Positions stay in source-art px; the ground pass blits the visible ones per frame.
+    decals = [];
     for (const o of M.viceBeachPlacements.objects) {
       if (o.type !== 66) continue;
       const it = M.sprites.items[M.viceBeachPlacements.objectInfos[66].spr];
-      gx.drawImage(IMG.sprites, it.x, it.y, it.w, it.h, o.localX * TILE - it.anchorX, o.localY * TILE - it.anchorY, it.w, it.h);
+      decals.push({ it, bx: o.localX * TILE - it.anchorX, by: o.localY * TILE - it.anchorY });
     }
     // parked cars from the real placements: model -> sprite -> pre-rotated strip (or bake our own)
     const byModel = {}, stripByIdx = {};
@@ -145,6 +139,44 @@ export function create(canvas, level) {
       const it = M.sprites.items[idx], src = crop(IMG.sprites, it);
       return { baked: rotations(src, 32, 96), x: c.localX * level.tile_m, y: c.localY * level.tile_m, k };
     });
+  }
+
+  // ---- per-frame ground: only the visible tiles are drawn, straight from the tile
+  // sheet (about 6x12 tiles). No full-level offscreen canvas exists anywhere, so no
+  // canvas in this renderer exceeds 2048 px in a dimension or ~1.5M px in area.
+  const lidSlot = lid => M.tiles.lids[lid].slot;
+  function visibleTiles(camX, camY, W, H) {
+    return [
+      Math.max(0, Math.floor(camX / TS)), Math.min(level.w - 1, Math.floor((camX + W - 1) / TS)),
+      Math.max(0, Math.floor(camY / TS)), Math.min(level.h - 1, Math.floor((camY + H - 1) / TS)),
+    ];
+  }
+  function drawGround(camX, camY, W, H) {
+    const cells = level.cells, flat = M.tiles.flatTransparentMap;
+    const [tx0, tx1, ty0, ty1] = visibleTiles(camX, camY, W, H);
+    for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
+      const lid = cells[ty][tx][3], rot = cells[ty][tx][4], f = flat[lid];
+      const dx = Math.round(tx * TS) - camX, dy = Math.round(ty * TS) - camY;
+      if (!lid) { ctx.fillStyle = "#f0f"; ctx.fillRect(dx, dy, TS, TS); continue; }
+      if (f) {
+        ctx.drawImage(tileCanvas(lidSlot(under[ty * level.w + tx]), 0), dx, dy, TS, TS);
+        if (!PALM_LIDS.has(lid)) ctx.drawImage(tileCanvas(f.transparentSlot, rot), dx, dy, TS, TS);
+      } else ctx.drawImage(tileCanvas(lidSlot(lid), rot), dx, dy, TS, TS);
+    }
+    for (const d of decals) {
+      const dx = Math.round(d.bx * S) - camX, dy = Math.round(d.by * S) - camY;
+      if (dx + d.it.w * S <= 0 || dy + d.it.h * S <= 0 || dx >= W || dy >= H) continue;
+      ctx.drawImage(IMG.sprites, d.it.x, d.it.y, d.it.w, d.it.h, dx, dy, d.it.w * S, d.it.h * S);
+    }
+  }
+  function drawCanopy(camX, camY, W, H) {
+    const cells = level.cells, flat = M.tiles.flatTransparentMap;
+    const [tx0, tx1, ty0, ty1] = visibleTiles(camX, camY, W, H);
+    for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
+      const lid = cells[ty][tx][3], f = flat[lid];
+      if (f && PALM_LIDS.has(lid))
+        ctx.drawImage(tileCanvas(f.transparentSlot, cells[ty][tx][4]), Math.round(tx * TS) - camX, Math.round(ty * TS) - camY, TS, TS);
+    }
   }
   load();
 
@@ -181,10 +213,23 @@ export function create(canvas, level) {
   function drawPlan(W, H) {
     ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
     if (!ready) { ctx.fillStyle = "#888"; ctx.font = "16px monospace"; ctx.fillText("loading...", 16, 32); return; }
-    const s = Math.min(W / LW, H / LH), dx = (W - LW * s) / 2, dy = (H - LH * s) / 2;
+    const s = Math.min(W / LW, H / LH), ox = (W - LW * s) / 2, oy = (H - LH * s) / 2, td = TILE * s;
+    const cells = level.cells, flat = M.tiles.flatTransparentMap;
     ctx.imageSmoothingEnabled = true;
-    ctx.drawImage(groundCv, dx, dy, LW * s, LH * s);
-    ctx.drawImage(canopyCv, dx, dy, LW * s, LH * s);
+    for (let ty = 0; ty < level.h; ty++) for (let tx = 0; tx < level.w; tx++) {
+      const lid = cells[ty][tx][3], rot = cells[ty][tx][4], f = flat[lid], dx = ox + tx * td, dy = oy + ty * td;
+      if (!lid) { ctx.fillStyle = "#f0f"; ctx.fillRect(dx, dy, td, td); continue; }
+      if (f) {
+        ctx.drawImage(tileCanvas(lidSlot(under[ty * level.w + tx]), 0), dx, dy, td, td);
+        if (!PALM_LIDS.has(lid)) ctx.drawImage(tileCanvas(f.transparentSlot, rot), dx, dy, td, td);
+      } else ctx.drawImage(tileCanvas(lidSlot(lid), rot), dx, dy, td, td);
+    }
+    for (const d of decals)
+      ctx.drawImage(IMG.sprites, d.it.x, d.it.y, d.it.w, d.it.h, ox + d.bx * s, oy + d.by * s, d.it.w * s, d.it.h * s);
+    for (let ty = 0; ty < level.h; ty++) for (let tx = 0; tx < level.w; tx++) {
+      const lid = cells[ty][tx][3], f = flat[lid];
+      if (f && PALM_LIDS.has(lid)) ctx.drawImage(tileCanvas(f.transparentSlot, cells[ty][tx][4]), ox + tx * td, oy + ty * td, td, td);
+    }
   }
 
   return {
@@ -210,7 +255,7 @@ export function create(canvas, level) {
       // ground + canopy are drawn filtered (smoothing on): the same art The Original
       // presents through WebGL filtering. Sprites below stay nearest-neighbour crisp.
       ctx.imageSmoothingEnabled = true;
-      ctx.drawImage(groundCv, camX / S, camY / S, W / S, H / S, 0, 0, W, H);
+      drawGround(camX, camY, W, H);
       const f = level.route.finish;                                       // blinking finish marker
       if ((sim.tick >> 4) & 1) { ctx.fillStyle = "#f8f840"; const fs = Math.max(6, Math.round(8 * S)); ctx.fillRect(Math.round(f.x * level.tile_m * PPM) - fs / 2 - camX, Math.round(f.y * level.tile_m * PPM) - fs / 2 - camY, fs, fs); }
       ctx.imageSmoothingEnabled = false;
@@ -237,7 +282,7 @@ export function create(canvas, level) {
         blit(IMG.link, fr2, sim.hero.x, sim.hero.y, KLINK);
       }
       ctx.imageSmoothingEnabled = true;
-      ctx.drawImage(canopyCv, camX / S, camY / S, W / S, H / S, 0, 0, W, H);
+      drawCanopy(camX, camY, W, H);
       drawHUD(sim, W, H);
     },
     dispose() {},
