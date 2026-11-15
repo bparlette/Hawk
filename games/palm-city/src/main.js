@@ -57,6 +57,7 @@ const ground = new GroundPainter(world);
 const M = await loadAssets(p => loading(p * 0.8));
 renderer = new Renderer(ctx, world, ground, M);
 renderer.resize(VIEW_W, view.h, DPR);
+if (Q.has('prof')) { renderer.prof = {}; window.__prof = renderer.prof; }
 
 const input = new Input(canvas, view);
 const audio = new Audio();
