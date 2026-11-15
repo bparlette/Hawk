@@ -1,0 +1,223 @@
+// Era 1 — GTA 1 (1997). Canvas2D, straight-down top-down, real decoded Vice City art.
+// Tiles are the native 64x64 GTA 1 lids from assets/e1/tiles.png (16 px per metre, so a tile is
+// 64 screen px), vehicles/peds/Link/HUD all come from assets/e1/ via manifest.json — nothing is
+// redrawn from imagination. Layout comes only from level.cells (canonical vice_beach.json via
+// play/engine/level_vice.js); this file never hard-codes a street.
+//
+// Flat overlay lids (palms, bridge decks, building shadows — manifest tiles.flatTransparentMap)
+// layer over an inferred ground tile: the canonical extraction keeps only the surface lid, so
+// the ground under a flat overlay is taken from the nearest non-flat cell (multi-source BFS,
+// deterministic). Shadows and bridge decks bake into the ground; palm canopies bake into a
+// separate overhead layer drawn after the sprites, like the real game.
+//
+// Until the asset pack loads (or if it fails), a flat zone-colour fallback keeps the page
+// playable — see ARCHITECTURE.md ("a renderer draws its own placeholder rather than failing").
+const PPM = 16, TILE = 64;                       // px per metre, px per tile at native scale
+const ASSET_BASE = "../../assets/e1/";
+const PLAN = typeof location !== "undefined" && new URLSearchParams(location.search).has("plan");
+const SHADOW_LIDS = new Set([97, 100, 127, 128, 129]);   // flat lids baked under the sprites
+const PALM_LIDS = new Set([21, 126]);                    // flat lids baked into the overhead layer
+const ZONE_PAL = { r: "#526b63", s: "#c6bd8c", l: "#7c7c88", g: "#425a00", d: "#f0d8a8", p: "#29a59c", m: "#de949c", b: "#efa542", o: "#39dede", "~": "#39dede", c: "#88889a", B: "#638c94" };
+const mk = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
+const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+const headIdx = (h, n) => ((Math.round(h / (2 * Math.PI) * n) % n) + n) % n;
+
+// nearest-neighbour rotation strip for a sprite that has no pre-baked one (no blur, ever)
+function rotations(src, n, S) {
+  const w = src.width, h = src.height, sd = src.getContext("2d").getImageData(0, 0, w, h).data, out = [];
+  for (let k = 0; k < n; k++) {
+    const a = k / n * 2 * Math.PI, cs = Math.cos(a), sn = Math.sin(a), c = mk(S, S), cx = c.getContext("2d"), im = cx.createImageData(S, S);
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+      const dx = x - S / 2 + .5, dy = y - S / 2 + .5;
+      const u = Math.floor(dx * cs + dy * sn + w / 2), v = Math.floor(-dx * sn + dy * cs + h / 2);
+      if (u < 0 || v < 0 || u >= w || v >= h) continue;
+      const s = (v * w + u) * 4, d = (y * S + x) * 4;
+      im.data[d] = sd[s]; im.data[d + 1] = sd[s + 1]; im.data[d + 2] = sd[s + 2]; im.data[d + 3] = sd[s + 3];
+    }
+    cx.putImageData(im, 0, 0); out.push(c);
+  }
+  return out;
+}
+function crop(img, r) { const c = mk(r.w, r.h); c.getContext("2d").drawImage(img, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h); return c; }
+
+export function create(canvas, level) {
+  const ctx = canvas.getContext("2d");
+  const LW = level.w * TILE, LH = level.h * TILE;
+  let ready = false, M = null, IMG = {}, groundCv = null, canopyCv = null, parked = [], pedDefs = [];
+  let cam = null;
+
+  // ---- fallback ground (zone colours at 16 px/cell), baked synchronously ----
+  const fb = mk(level.w * 16, level.h * 16), fx = fb.getContext("2d");
+  for (let ty = 0; ty < level.h; ty++) for (let tx = 0; tx < level.w; tx++) { fx.fillStyle = ZONE_PAL[level.ground[ty][tx]] || "#f0f"; fx.fillRect(tx * 16, ty * 16, 16, 16); }
+
+  // ---- dressing peds: deterministic patrols on promenade / sidewalk cells ----
+  const WALK_OK = new Set(["m", "s", "b", "g"]);
+  function buildPeds() {
+    const bases = [];
+    for (let ty = 2; ty < level.h - 2 && bases.length < 16; ty += 3)
+      for (let tx = 0; tx < level.w; tx++) {
+        const z = level.ground[ty][tx];
+        if ((z === "m" || (z === "s" && tx > 30)) && (tx * 7 + ty * 13) % 5 === 0) bases.push({ tx, ty, vert: z === "m" });
+      }
+    pedDefs = bases.map((b, i) => {
+      let range = 0;
+      const step = b.vert ? [0, 1] : [1, 0];
+      for (let d = 1; d <= 3; d++) {
+        const a = level.ground[b.ty + step[1] * d]?.[b.tx + step[0] * d], c = level.ground[b.ty - step[1] * d]?.[b.tx - step[0] * d];
+        if (WALK_OK.has(a) && WALK_OK.has(c)) range = d; else break;
+      }
+      return { x: (b.tx + .5) * level.tile_m, y: (b.ty + .5) * level.tile_m, vert: b.vert, rangeM: range * level.tile_m, off: i * 3.7, vi: i };
+    }).filter(p => p.rangeM > 0);
+  }
+  buildPeds();
+
+  // ---- asset loading + baking ----
+  const tileRot = new Map();
+  function tileCanvas(slot, rot) {
+    const key = slot * 4 + rot;
+    if (tileRot.has(key)) return tileRot.get(key);
+    const sx = (slot % M.tiles.cols) * TILE, sy = Math.floor(slot / M.tiles.cols) * TILE;
+    let c = crop(IMG.tiles, { x: sx, y: sy, w: TILE, h: TILE });
+    if (rot) {
+      const r = mk(TILE, TILE), x = r.getContext("2d");
+      x.translate(TILE / 2, TILE / 2); x.rotate(rot * Math.PI / 2); x.imageSmoothingEnabled = false;
+      x.drawImage(c, -TILE / 2, -TILE / 2); c = r;
+    }
+    tileRot.set(key, c); return c;
+  }
+  async function load() {
+    try {
+      M = await (await fetch(ASSET_BASE + "manifest.json")).json();
+      const F = M.files;
+      [IMG.tiles, IMG.sprites, IMG.peds, IMG.link, IMG.hud] = await Promise.all(
+        [F.tiles, F.sprites, F.peds, F.link, F.hudFont].map(f => loadImg(ASSET_BASE + f)));
+      bake(); ready = true; canvas.dataset.e1 = "ready";
+    } catch (e) { canvas.dataset.e1 = "fallback"; }
+  }
+  function bake() {
+    const cells = level.cells, H = level.h, W = level.w, flat = M.tiles.flatTransparentMap;
+    const isFlat = (tx, ty) => !!flat[cells[ty][tx][3]];
+    // multi-source BFS: nearest non-flat cell's lid = the ground under a flat overlay
+    const under = new Int32Array(W * H).fill(-1), q = [];
+    for (let ty = 0; ty < H; ty++) for (let tx = 0; tx < W; tx++) if (!isFlat(tx, ty)) { under[ty * W + tx] = cells[ty][tx][3]; q.push(tx, ty); }
+    for (let i = 0; i < q.length; i += 2) {
+      const tx = q[i], ty = q[i + 1];
+      for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
+        const nx = tx + dx, ny = ty + dy;
+        if (nx < 0 || ny < 0 || nx >= W || ny >= H || under[ny * W + nx] >= 0) continue;
+        under[ny * W + nx] = under[ty * W + tx]; q.push(nx, ny);
+      }
+    }
+    groundCv = mk(LW, LH); canopyCv = mk(LW, LH);
+    const gx = groundCv.getContext("2d"), cx2 = canopyCv.getContext("2d");
+    const lidSlot = lid => M.tiles.lids[lid].slot;
+    for (let ty = 0; ty < H; ty++) for (let tx = 0; tx < W; tx++) {
+      const lid = cells[ty][tx][3], rot = cells[ty][tx][4], px = tx * TILE, py = ty * TILE, f = flat[lid];
+      if (!lid) { gx.fillStyle = "#f0f"; gx.fillRect(px, py, TILE, TILE); continue; }
+      if (f) {
+        gx.drawImage(tileCanvas(lidSlot(under[ty * W + tx]), 0), px, py);
+        const over = tileCanvas(f.transparentSlot, rot);
+        if (PALM_LIDS.has(lid)) cx2.drawImage(over, px, py);
+        else gx.drawImage(over, px, py);
+      } else gx.drawImage(tileCanvas(lidSlot(lid), rot), px, py);
+    }
+    // ground decals: the one placement type whose sprite resolves to a real OBJECT sprite
+    for (const o of M.viceBeachPlacements.objects) {
+      if (o.type !== 66) continue;
+      const it = M.sprites.items[M.viceBeachPlacements.objectInfos[66].spr];
+      gx.drawImage(IMG.sprites, it.x, it.y, it.w, it.h, o.localX * TILE - it.anchorX, o.localY * TILE - it.anchorY, it.w, it.h);
+    }
+    // parked cars from the real placements: model -> sprite -> pre-rotated strip (or bake our own)
+    const byModel = {}, stripByIdx = {};
+    for (const c of M.sprites.carModels) byModel[c.model] = c.spriteIndex;
+    for (const [name, st] of Object.entries(M.sprites.rotatedCarStrips)) stripByIdx[st.absIndex] = st;
+    parked = M.viceBeachPlacements.cars.map(c => {
+      const idx = byModel[c.type], k = headIdx(c.rotDeg * Math.PI / 180, 32);
+      if (stripByIdx[idx]) { const st = stripByIdx[idx]; return { frames: st.frames, x: c.localX * level.tile_m, y: c.localY * level.tile_m, k }; }
+      const it = M.sprites.items[idx], src = crop(IMG.sprites, it);
+      return { baked: rotations(src, 32, 96), x: c.localX * level.tile_m, y: c.localY * level.tile_m, k };
+    });
+  }
+  load();
+
+  // ---- HUD text in the era's own glyph sheet ----
+  function drawText(text, x, y, scale, align = "left") {
+    const gw = M.hudFont.cellW * scale, gh = M.hudFont.cellH * scale;
+    let dx = align === "center" ? x - text.length * gw / 2 : align === "right" ? x - text.length * gw : x;
+    for (const ch of text) {
+      const g = M.hudFont.glyphs[ch];
+      if (g) ctx.drawImage(IMG.hud, g.x, g.y, g.w, g.h, Math.round(dx), Math.round(y), gw, gh);
+      dx += gw;
+    }
+  }
+  function drawHUD(sim) {
+    const bar = M.hudFont.hudSprites.districtBar;
+    const bx = Math.round((canvas.width - bar.w) / 2);
+    ctx.drawImage(IMG.hud, bar.x, bar.y, bar.w, bar.h, bx, 6, bar.w, bar.h);
+    drawText("VICE BEACH", canvas.width / 2, 9, 1, "center");
+    const t = sim.t, ts = `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}.${Math.floor(t * 10 % 10)}`;
+    drawText(ts, canvas.width - 8, 44, 0.75, "right");
+    if (sim.finished) drawText(`THE RUN ${t.toFixed(1)}S`, canvas.width / 2, Math.round(canvas.height * 0.42), 1.5, "center");
+  }
+
+  function drawPlan() {
+    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (!ready) { ctx.fillStyle = "#888"; ctx.font = "16px monospace"; ctx.fillText("loading...", 16, 32); return; }
+    const s = Math.min(canvas.width / LW, canvas.height / LH), dx = (canvas.width - LW * s) / 2, dy = (canvas.height - LH * s) / 2;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(groundCv, dx, dy, LW * s, LH * s);
+    ctx.drawImage(canopyCv, dx, dy, LW * s, LH * s);
+  }
+
+  return {
+    name: "GTA 1 (1997)",
+    draw(sim) {
+      const cssW = canvas.clientWidth || 420, cssH = canvas.clientHeight || 860;
+      if (canvas.width !== cssW || canvas.height !== cssH) { canvas.width = cssW; canvas.height = cssH; }
+      ctx.imageSmoothingEnabled = false;
+      if (PLAN) { drawPlan(); return; }
+      const p = sim.player(), lead = sim.mode === "drive" ? sim.car.v * 0.45 : 0;
+      const tx = (p.x + Math.sin(p.h) * lead) * PPM - canvas.width / 2, ty = (p.y - Math.cos(p.h) * lead) * PPM - canvas.height / 2;
+      cam = cam ? { x: cam.x + (tx - cam.x) * .12, y: cam.y + (ty - cam.y) * .12 } : { x: tx, y: ty };
+      const camX = Math.round(Math.max(0, Math.min(Math.max(0, LW - canvas.width), cam.x)));
+      const camY = Math.round(Math.max(0, Math.min(Math.max(0, LH - canvas.height), cam.y)));
+      ctx.fillStyle = "#000"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const blit = (img, r, wx, wy) => ctx.drawImage(img, r.x, r.y, r.w, r.h, Math.round(wx * PPM - r.anchorX) - camX, Math.round(wy * PPM - r.anchorY) - camY, r.w, r.h);
+      if (!ready) {
+        // fallback canvas is 4 px per metre; the world is drawn at PPM px per metre
+        ctx.drawImage(fb, camX / 4, camY / 4, canvas.width / 4, canvas.height / 4, 0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#18b8a8"; ctx.fillRect(Math.round(sim.car.x * PPM) - camX - 20, Math.round(sim.car.y * PPM) - camY - 28, 40, 56);
+        if (sim.mode === "foot") { ctx.fillStyle = "#10ad42"; ctx.fillRect(Math.round(sim.hero.x * PPM) - camX - 8, Math.round(sim.hero.y * PPM) - camY - 8, 16, 16); }
+        return;
+      }
+      ctx.drawImage(groundCv, camX, camY, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+      const f = level.route.finish;                                       // blinking finish marker
+      if ((sim.tick >> 4) & 1) { ctx.fillStyle = "#f8f840"; ctx.fillRect(Math.round(f.x * level.tile_m * PPM) - 4 - camX, Math.round(f.y * level.tile_m * PPM) - 4 - camY, 8, 8); }
+      for (const c of parked) {
+        if (c.frames) { const fr = c.frames[c.k]; ctx.drawImage(IMG.sprites, fr.x, fr.y, fr.w, fr.h, Math.round(c.x * PPM - fr.anchorX) - camX, Math.round(c.y * PPM - fr.anchorY) - camY, fr.w, fr.h); }
+        else { const im = c.baked[c.k]; ctx.drawImage(im, Math.round(c.x * PPM) - camX - im.width / 2, Math.round(c.y * PPM) - camY - im.height / 2); }
+      }
+      // dressing peds (visual only; positions are a pure function of sim.tick, so era switches stay deterministic)
+      const variants = Object.values(M.peds.variants);
+      for (const pd of pedDefs) {
+        const v = 1.15, L = pd.rangeM, dist = sim.tick / 60 * v + pd.off, u = dist % (2 * L), along = u < L ? u : 2 * L - u, fwd = u < L;
+        const wx = pd.x + (pd.vert ? 0 : along - L / 2), wy = pd.y + (pd.vert ? along - L / 2 : 0);
+        const dir = pd.vert ? (fwd ? "down" : "up") : (fwd ? "right" : "left");
+        const fr = variants[pd.vi % variants.length].directions[dir][Math.floor(dist / 0.8) % 4];
+        blit(IMG.peds, fr, wx, wy);
+      }
+      // the player's car: sport_red pre-rotated strip, k=0 is north, clockwise
+      const strip = M.sprites.rotatedCarStrips.sport_red, fr = strip.frames[headIdx(sim.car.h, 32)];
+      ctx.drawImage(IMG.sprites, fr.x, fr.y, fr.w, fr.h, Math.round(sim.car.x * PPM - fr.anchorX) - camX, Math.round(sim.car.y * PPM - fr.anchorY) - camY, fr.w, fr.h);
+      // Link (Link's Awakening): direction by dominant axis, walk frame from ground covered (sim phase)
+      if (sim.mode === "foot") {
+        const h = sim.hero.h, dir = Math.abs(Math.sin(h)) > Math.abs(Math.cos(h)) ? (Math.sin(h) > 0 ? "right" : "left") : (Math.cos(h) > 0 ? "up" : "down");
+        const fr2 = M.link.directions[dir][sim.hero.speed > .05 ? Math.floor(sim.hero.phase * 4) % 4 : 0];
+        blit(IMG.link, fr2, sim.hero.x, sim.hero.y);
+      }
+      ctx.drawImage(canopyCv, camX, camY, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+      drawHUD(sim);
+    },
+    dispose() {},
+  };
+}
