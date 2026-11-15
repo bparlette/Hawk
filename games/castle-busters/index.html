@@ -104,16 +104,16 @@ const GROUND_Y = 716;                   // top surface of the ground
 const DECK_H = 24;
 const DECK_TOP = GROUND_Y - 46;         // castle deck top surface y
 const STEP = 1000/60;
-const HILL = { peak:{x:210,y:462}, baseL:{x:148,y:716}, baseR:{x:272,y:716},
-               midL:{x:182,y:545}, midR:{x:238,y:545} };
-/* Hill tuning (restructure verification, Nov 14): the first duel hill peaked
-   at y=486 — level with the Vice muzzle (476) and only 10px above Hyrule's
-   (496) — so near-flat volleys skimmed the crest and still wrecked the far
-   castle (measured: -5° arrows destroyed 17% without ever lobbing). Raising
-   the peak to y=438 overcorrected: at this gravity a ballistic arc that
-   clears it cannot come down on a castle only ~145px away. y=462 is the
-   measured middle: flat fire dies on the upper slope, a real arc clears the
-   crest and detonates down the far slope into the enemy face. */
+const HILL = { peak:{x:210,y:272}, baseL:{x:148,y:716}, baseR:{x:272,y:716},
+               midL:{x:182,y:417}, midR:{x:238,y:417} };
+/* Hill tuning history: the first duel hill peaked at y=486 — level with the
+   Vice muzzle (476) and only 10px above Hyrule's (496) — so near-flat volleys
+   skimmed the crest and still wrecked the far castle. y=462 (254px tall) was
+   the restructure's measured middle. Nov 14 phone feedback (Cherie: "Make
+   the hill taller") raised it ×1.75: peak y=272 (444px tall), mids y=417 —
+   the crest now towers ~200px over both muzzles, so only a genuine lob
+   clears it, and the aim solver + bot-vs-bot matches were re-verified
+   against the new profile (steep high-lobs drop onto the far castle). */
 
 /* ---------------- canvas ---------------- */
 const cv = document.getElementById('cv');
@@ -1229,7 +1229,10 @@ function computeAim(p){
     power=clamp((Math.hypot(sx,sy)-26)/190,0,1);
   }
   angle=clamp(angle,-1.48,-0.08);
-  return {angle, power, tx:p.x};
+  // the whole preview arc must stay on screen — wind the aim down to the
+  // strongest shot whose full arc fits; the fired shot uses these same values
+  const cl=clampAimToScreen(mz, angle, power);
+  return {angle:cl.angle, power:cl.power, tx:p.x};
 }
 cv.addEventListener('pointerdown',e=>{
   audioInit();
@@ -1256,33 +1259,76 @@ document.addEventListener('keydown',e=>{
   const n=parseInt(e.key); if(n>=1&&n<=4){ G.weapon=n-1; updateHUD(true); }
 });
 /* ------- trajectory preview + aim solver (exact, via the clone engine) ------- */
-function simShot(mx,my,angle,power,steps){
+const ARC_MAX_STEPS = 260;   // long enough for the slowest full-power lob to land
+const ARC_MARGIN = 3;        // the aim arc must stay this far inside the screen edges
+function simShot(mx,my,angle,power,steps,bounds){
   if(pvBody){ Composite.remove(pvEngine.world,pvBody); pvBody=null; }
   const b=Bodies.circle(mx,my-4,5,{density:0.0016,friction:0.4,restitution:0.15});
   pvBody=b; Composite.add(pvEngine.world,b);
   const v=aimVelocity(angle,power);
   Body.setVelocity(b,v);
-  const pts=[]; let minD=1e12, minPt=null;
+  const pts=[]; let out=false, still=0;
   for(let i=0;i<steps;i++){
     Engine.update(pvEngine,STEP);
-    pts.push({x:b.position.x,y:b.position.y});
+    const pt={x:b.position.x,y:b.position.y};
+    pts.push(pt);
+    if(bounds && (pt.x<bounds.x0 || pt.x>bounds.x1 || pt.y<bounds.y0 || pt.y>bounds.y1)){ out=true; break; }
     if(b.position.y>GROUND_Y+6) break;
+    // landed/resting (on the hill or the ground): the flight is over
+    if(i>8){ if(b.speed<0.45){ if(++still>=4) break; } else still=0; }
   }
-  return {pts, body:b};
+  return {pts, body:b, out};
+}
+/* Does the FULL arc (launch → apex → landing) stay inside the play area? */
+function arcFitsScreen(mx,my,angle,power){
+  const {out}=simShot(mx,my,angle,power,ARC_MAX_STEPS,
+    {x0:ARC_MARGIN, x1:W-ARC_MARGIN, y0:ARC_MARGIN, y1:H-ARC_MARGIN});
+  return !out;
+}
+/* Clamp an aim so its whole arc stays on screen (Cherie, Nov 14: "Make the
+   aim arch always stay on the screen"). Power is wound down first (binary
+   search for the strongest shot whose arc still fits); only if even a
+   minimum-power shot would leave the screen — a near-vertical lob — is the
+   angle shallowed toward a mid lob. computeAim stores the clamped values in
+   G.aim, and BOTH the preview dots and the fired shot read G.aim, so what
+   the player sees is exactly what flies. */
+function clampAimToScreen(mz, angle, power){
+  if(arcFitsScreen(mz.x,mz.y,angle,power)) return {angle, power};
+  let lo=0, hi=power, best=-1;
+  for(let i=0;i<9;i++){
+    const mid=(lo+hi)/2;
+    if(arcFitsScreen(mz.x,mz.y,angle,mid)){ best=mid; lo=mid; } else hi=mid;
+  }
+  if(best>=0) return {angle, power:best};
+  let a=angle;
+  while(a<-0.55){
+    a=Math.min(-0.55, a+0.05);
+    if(arcFitsScreen(mz.x,mz.y,a,0)) return {angle:a, power:0};
+  }
+  return {angle:a, power:0};
 }
 function previewDots(angle,power){
   const mz=playerCastle().muzzle;
-  const {pts}=simShot(mz.x,mz.y,angle,power,58);
-  return pts.filter((_,i)=>i%2===0);
+  const {pts}=simShot(mz.x,mz.y,angle,power,ARC_MAX_STEPS);
+  if(!pts.length) return pts;
+  const stride=Math.max(1, Math.ceil(pts.length/64));
+  const dots=pts.filter((_,i)=>i%stride===0);
+  if(dots[dots.length-1]!==pts[pts.length-1]) dots.push(pts[pts.length-1]);
+  return dots;
 }
-/* solve an angle+power for a target from a muzzle (AI + bot hooks) */
+/* solve an angle+power for a target from a muzzle (AI + bot hooks).
+   The sim window is 200 steps: over the tall hill the winning shots are
+   steep lobs whose time-of-flight runs well past the old 80-step window —
+   at 80 steps the solver literally could not see them arrive, and picked
+   slope-dying mid shots instead (measured: Vice arc weapons stalled at
+   19% destruction in match 2). Powers are finer-grained for the same reason. */
 function solveAim(mz, tx, ty){
   let best=null, bd=1e12;
   const base = mz.dir>0 ? 0 : Math.PI;
-  for(const power of [0.55,0.7,0.85,1.0]){
+  for(const power of [0.5,0.6,0.7,0.8,0.9,1.0]){
     for(let off=8; off<=84; off+=3.5){
       const a = base + mz.dir*(-off*Math.PI/180);
-      const {pts}=simShot(mz.x,mz.y,a,power,80);
+      const {pts}=simShot(mz.x,mz.y,a,power,200);
       for(const pt of pts){
         const d=dist2(pt.x,pt.y,tx,ty);
         if(d<bd){ bd=d; best={angle:a,power}; }
@@ -1336,6 +1382,15 @@ window.__game = {
     if(w.drop||w.special){ G.aim={tx:clamp(tx,26,394), drop:true}; return; }
     const s=solveAim(playerCastle().muzzle,tx,ty);
     if(s) G.aim={angle:s.angle, power:s.power, tx};
+  },
+  aimState(){   // test hook: current drag aim + its full simulated arc
+    if(!G.aim) return null;
+    const w=curWeapon();
+    if(w.drop||w.special || G.aim.angle===undefined) return {drop:true, tx:G.aim.tx};
+    const mz=playerCastle().muzzle;
+    const {pts}=simShot(mz.x,mz.y,G.aim.angle,G.aim.power,ARC_MAX_STEPS);
+    return { angle:G.aim.angle, power:G.aim.power,
+             pts:pts.map(p=>({x:Math.round(p.x*10)/10, y:Math.round(p.y*10)/10})) };
   },
   expose(side){   // test hook: blast away the cover over a castle's core
     const c=G.CS[side]; if(!c||!c.core) return false;
@@ -1509,37 +1564,50 @@ function drawGround(){
   for(let i=0;i<12;i++){ const x=(hash(i*5.3)*W + G.time*0.01*(1+i%3))%W; ctx.fillRect(x,GROUND_Y+82+hash(i*9.1)*52,8,2); }
   ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.fillRect(-20,GROUND_Y+71,W+40,3);
 }
+/* half-width of the physics hill profile at height y (speckles/flowers) */
+function hillHalfWidth(y){
+  if(y>=HILL.midL.y) return 28 + (y-HILL.midL.y)/(GROUND_Y-HILL.midL.y)*34;
+  return Math.max(0,(y-HILL.peak.y)/(HILL.midL.y-HILL.peak.y)*28);
+}
 function drawHill(){
-  // the giant in the middle — deep red dirt like the reference, grass cap, flowers
+  // the giant in the middle — deep red dirt like the reference, grass cap,
+  // flowers. The outline traces the REAL physics profile (mid points as
+  // quadratic controls, peak as an endpoint): at the old height the looser
+  // curves read fine, but at ×1.75 they pinched into a thin spike far
+  // narrower than the body shots actually hit.
   ctx.beginPath();
   ctx.moveTo(HILL.baseL.x-26,GROUND_Y+2);
-  ctx.quadraticCurveTo(HILL.midL.x-14,HILL.midL.y, HILL.peak.x-16,HILL.peak.y+16);
-  ctx.quadraticCurveTo(HILL.peak.x,HILL.peak.y-8, HILL.peak.x+16,HILL.peak.y+16);
-  ctx.quadraticCurveTo(HILL.midR.x+14,HILL.midR.y, HILL.baseR.x+26,GROUND_Y+2);
+  ctx.quadraticCurveTo(HILL.midL.x,HILL.midL.y, HILL.peak.x,HILL.peak.y);
+  ctx.quadraticCurveTo(HILL.midR.x,HILL.midR.y, HILL.baseR.x+26,GROUND_Y+2);
   ctx.closePath();
   const g=ctx.createLinearGradient(0,HILL.peak.y,0,GROUND_Y);
   g.addColorStop(0,'#a8433a'); g.addColorStop(0.5,'#93362f'); g.addColorStop(1,'#77291f');
   ctx.fillStyle=g; ctx.fill();
-  // shading + speckles
+  // shading + speckles, spread over the full slope
   ctx.fillStyle='rgba(0,0,0,0.13)';
-  for(let i=0;i<22;i++){
-    const x=168+hash(i*6.7)*84, y=520+hash(i*3.3)*180;
+  for(let i=0;i<26;i++){
+    const y=GROUND_Y-8-hash(i*3.3)*(GROUND_Y-HILL.peak.y-24);
+    const x=HILL.peak.x+(hash(i*6.7)*2-1)*hillHalfWidth(y)*0.82;
     ctx.beginPath(); ctx.arc(x,y,2+hash(i)*3,0,7); ctx.fill();
   }
   ctx.fillStyle='rgba(255,255,255,0.10)';
-  for(let i=0;i<10;i++){ const x=180+hash(i*9.4)*60, y=510+hash(i*4.1)*120; ctx.fillRect(x,y,5,2); }
-  // grassy cap along the crest
+  for(let i=0;i<12;i++){
+    const y=GROUND_Y-14-hash(i*4.1)*(GROUND_Y-HILL.peak.y-40);
+    const x=HILL.peak.x+(hash(i*9.4)*2-1)*hillHalfWidth(y)*0.8;
+    ctx.fillRect(x,y,5,2);
+  }
+  // grassy cap along the crest — same profile path
   ctx.strokeStyle='#58a34c'; ctx.lineWidth=5; ctx.lineCap='round';
   ctx.beginPath();
   ctx.moveTo(HILL.baseL.x-20,GROUND_Y-2);
-  ctx.quadraticCurveTo(HILL.midL.x-12,HILL.midL.y, HILL.peak.x-15,HILL.peak.y+15);
-  ctx.quadraticCurveTo(HILL.peak.x,HILL.peak.y-7, HILL.peak.x+15,HILL.peak.y+15);
-  ctx.quadraticCurveTo(HILL.midR.x+12,HILL.midR.y, HILL.baseR.x+20,GROUND_Y-2);
+  ctx.quadraticCurveTo(HILL.midL.x,HILL.midL.y, HILL.peak.x,HILL.peak.y);
+  ctx.quadraticCurveTo(HILL.midR.x,HILL.midR.y, HILL.baseR.x+20,GROUND_Y-2);
   ctx.stroke();
-  // tiny flowers on the slopes
+  // tiny flowers ON the slopes (profile surface, alternating sides)
   for(let i=0;i<12;i++){
-    const t=i/11, side=t<0.5?-1:1, f=Math.abs(t-0.5)*2;
-    const x=HILL.peak.x + side*(18+f*66), y=HILL.peak.y + 26 + f*f*190;
+    const side=i%2?1:-1, f=0.08+ (Math.floor(i/2)/5)*0.87;
+    const y=HILL.peak.y + f*(GROUND_Y-HILL.peak.y);
+    const x=HILL.peak.x + side*(hillHalfWidth(y)+2);
     ctx.fillStyle=['#ffd94d','#ff6b9d','#fff'][i%3];
     ctx.beginPath(); ctx.arc(x,y,2.2,0,7); ctx.fill();
   }
@@ -1995,10 +2063,12 @@ function drawAim(){
   } else {
     if(G.aim.power<=0.06) return;
     const pts=previewDots(G.aim.angle,G.aim.power);
+    const n=pts.length;
     pts.forEach((pt,i)=>{
-      ctx.fillStyle='rgba(40,16,24,'+(0.55-i*0.016)+')';
+      const f=n>1 ? i/(n-1) : 0;
+      ctx.fillStyle='rgba(40,16,24,'+(0.55-0.35*f)+')';
       ctx.beginPath(); ctx.arc(pt.x,pt.y,4.1,0,7); ctx.fill();
-      ctx.fillStyle='rgba(255,255,255,'+(0.95-i*0.03)+')';
+      ctx.fillStyle='rgba(255,255,255,'+(0.95-0.75*f)+')';
       ctx.beginPath(); ctx.arc(pt.x,pt.y,3.2,0,7); ctx.fill();
     });
     // pull-back band
