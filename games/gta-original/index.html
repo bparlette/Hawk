@@ -522,12 +522,16 @@ const tc = new TouchController({ buttons: [
 if (tc._els && tc._els.overlay) tc._els.overlay.style.display = 'none';
 let aEdge = false, prevA = false;
 function readInput() {
-  const s = tc.getInput ? tc.getInput() : { x: 0, y: 0, buttons: {} };
+  const s = tc.getInput ? tc.getInput() : { x: 0, y: 0 };
   const ix = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0) + (s.x || 0);
   const iy = (keys.KeyS || keys.ArrowDown ? 1 : 0) - (keys.KeyW || keys.ArrowUp ? 1 : 0) + (s.y || 0);
-  const aNow = !!(s.buttons && s.buttons.a) || !!keys.KeyE || !!keys.Enter;
+  // gptouch getInput() returns FLAT button fields ({a, aPressed, b, bPressed}) —
+  // there is no s.buttons object; reading one made touch A/B permanently dead.
+  // aPressed is gptouch's latched press edge (consumed by this read): OR-ing it
+  // in means even a tap shorter than one frame still registers exactly once.
+  const aNow = !!s.a || !!s.aPressed || !!keys.KeyE || !!keys.Enter;
   aEdge = aNow && !prevA; prevA = aNow;
-  return { x: clamp(ix, -1, 1), y: clamp(iy, -1, 1), sprint: !!(s.buttons && s.buttons.b) || !!keys.ShiftLeft || !!keys.ShiftRight,
+  return { x: clamp(ix, -1, 1), y: clamp(iy, -1, 1), sprint: !!s.b || !!keys.ShiftLeft || !!keys.ShiftRight,
            brake: !!keys.Space, a: aNow };
 }
 
@@ -559,8 +563,8 @@ function carPerf(info) {
 }
 // ped walk frames: offsets within the PED sprite table, identical layout in
 // style001 (base 645) and style003 (base 660) — verified on both sheets.
-let PEDF = { down: [687, 688], up: [696, 697], right: [701, 702], left: [716, 717], fallen: 685 };
-function pedFrames() { const b = G24.starts.PED; return { down: [b + 42, b + 43], up: [b + 51, b + 52], right: [b + 56, b + 57], left: [b + 71, b + 72], fallen: b + 40 }; }
+let PEDF = { down: [687, 683, 687, 684], up: [688, 689, 688, 690], right: [702, 706, 702, 706], left: [702, 706, 702, 706], fallen: 685 };
+function pedFrames() { const b = G24.starts.PED; return { down: [b + 42, b + 38, b + 42, b + 39], up: [b + 43, b + 44, b + 43, b + 45], right: [b + 57, b + 61, b + 57, b + 61], left: [b + 57, b + 61, b + 57, b + 61], fallen: b + 40 }; }
 function makePed(x, z, opts = {}) {
   const mesh = flatSprite(PEDF.down[0], 1.05);
   mesh.position.set(x, heightAt(x, z) + 0.06, z);
@@ -572,7 +576,9 @@ function makePed(x, z, opts = {}) {
 }
 function removePed(ped) { scene.remove(ped.mesh); ped.dead = true; const i = peds.indexOf(ped); if (i >= 0) peds.splice(i, 1); }
 function setPedFrame(ped, key, moving) {
-  const fr = !moving ? PEDF[key][0] : PEDF[key][Math.floor(ped.phase * 2.4) % 2];
+  const set = PEDF[key];
+  const fr = !moving ? set[0] : set[Math.floor(ped.phase * 2.4) % set.length];
+  ped.mesh.scale.x = key === 'left' ? -1 : 1; // bank has one profile set; west = mirrored east
   if (fr === ped.frame) return; ped.frame = fr;
   setMeshSprite(ped.mesh, fr, 1.05);
 }
