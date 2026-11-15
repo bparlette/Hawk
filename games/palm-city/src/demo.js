@@ -24,7 +24,7 @@ export class DemoPilot {
       return { jx: dx / d, jy: dy / d, jm: 1, action: false, keys: {} };
     }
     if (this.phase === 'drive' && P.mode === 'car') {
-      if (this.t > 22.5) { this.phase = 'stop'; }
+      if (this.t > 20) { this.phase = 'stop'; }
       const c = P.car;
       // drive counter-clockwise: north up the ocean road, west along the top past the hotel...
       const look = 130 + Math.abs(c.v) * 0.25;

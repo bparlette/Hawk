@@ -2,21 +2,21 @@
  "buildings": {
   "apartments": {
    "color": {
-    "file": "bld_apartments.png",
+    "file": "bld_apartments.webp",
     "h": 290.0,
     "ox": -156.0,
     "oy": -145.0,
     "w": 312.0
    },
    "night": {
-    "file": "bld_apartments_night.png",
+    "file": "bld_apartments_night.webp",
     "h": 410.0,
     "ox": -216.0,
     "oy": -205.0,
     "w": 432.0
    },
    "shadow": {
-    "file": "bld_apartments_sh.png",
+    "file": "bld_apartments_sh.webp",
     "h": 378.62,
     "ox": -151.0,
     "oy": -238.62,
@@ -25,21 +25,21 @@
   },
   "club": {
    "color": {
-    "file": "bld_club.png",
+    "file": "bld_club.webp",
     "h": 210.0,
     "ox": -156.0,
     "oy": -105.0,
     "w": 312.0
    },
    "night": {
-    "file": "bld_club_night.png",
+    "file": "bld_club_night.webp",
     "h": 330.0,
     "ox": -216.0,
     "oy": -165.0,
     "w": 432.0
    },
    "shadow": {
-    "file": "bld_club_sh.png",
+    "file": "bld_club_sh.webp",
     "h": 243.04,
     "ox": -151.0,
     "oy": -143.04,
@@ -48,21 +48,21 @@
   },
   "diner": {
    "color": {
-    "file": "bld_diner.png",
+    "file": "bld_diner.webp",
     "h": 220.0,
     "ox": -140.0,
     "oy": -110.0,
     "w": 280.0
    },
    "night": {
-    "file": "bld_diner_night.png",
+    "file": "bld_diner_night.webp",
     "h": 340.0,
     "ox": -200.0,
     "oy": -170.0,
     "w": 400.0
    },
    "shadow": {
-    "file": "bld_diner_sh.png",
+    "file": "bld_diner_sh.webp",
     "h": 239.59,
     "ox": -135.0,
     "oy": -134.59,
@@ -71,21 +71,21 @@
   },
   "garage": {
    "color": {
-    "file": "bld_garage.png",
+    "file": "bld_garage.webp",
     "h": 210.0,
     "ox": -216.0,
     "oy": -105.0,
     "w": 432.0
    },
    "night": {
-    "file": "bld_garage_night.png",
+    "file": "bld_garage_night.webp",
     "h": 330.0,
     "ox": -276.0,
     "oy": -165.0,
     "w": 552.0
    },
    "shadow": {
-    "file": "bld_garage_sh.png",
+    "file": "bld_garage_sh.webp",
     "h": 244.83,
     "ox": -211.0,
     "oy": -144.83,
@@ -94,21 +94,21 @@
   },
   "hotel": {
    "color": {
-    "file": "bld_hotel.png",
+    "file": "bld_hotel.webp",
     "h": 310.0,
     "ox": -140.0,
     "oy": -155.0,
     "w": 280.0
    },
    "night": {
-    "file": "bld_hotel_night.png",
+    "file": "bld_hotel_night.webp",
     "h": 430.0,
     "ox": -200.0,
     "oy": -215.0,
     "w": 400.0
    },
    "shadow": {
-    "file": "bld_hotel_sh.png",
+    "file": "bld_hotel_sh.webp",
     "h": 498.14,
     "ox": -135.0,
     "oy": -348.14,
@@ -117,21 +117,21 @@
   },
   "house1": {
    "color": {
-    "file": "bld_house1.png",
+    "file": "bld_house1.webp",
     "h": 220.0,
     "ox": -125.0,
     "oy": -110.0,
     "w": 250.0
    },
    "night": {
-    "file": "bld_house1_night.png",
+    "file": "bld_house1_night.webp",
     "h": 340.0,
     "ox": -185.0,
     "oy": -170.0,
     "w": 370.0
    },
    "shadow": {
-    "file": "bld_house1_sh.png",
+    "file": "bld_house1_sh.webp",
     "h": 245.86,
     "ox": -120.0,
     "oy": -140.86,
@@ -140,21 +140,21 @@
   },
   "house2": {
    "color": {
-    "file": "bld_house2.png",
+    "file": "bld_house2.webp",
     "h": 210.0,
     "ox": -120.0,
     "oy": -105.0,
     "w": 240.0
    },
    "night": {
-    "file": "bld_house2_night.png",
+    "file": "bld_house2_night.webp",
     "h": 330.0,
     "ox": -180.0,
     "oy": -165.0,
     "w": 360.0
    },
    "shadow": {
-    "file": "bld_house2_sh.png",
+    "file": "bld_house2_sh.webp",
     "h": 235.86,
     "ox": -115.0,
     "oy": -135.86,
@@ -163,21 +163,21 @@
   },
   "house3": {
    "color": {
-    "file": "bld_house3.png",
+    "file": "bld_house3.webp",
     "h": 225.0,
     "ox": -125.0,
     "oy": -112.5,
     "w": 250.0
    },
    "night": {
-    "file": "bld_house3_night.png",
+    "file": "bld_house3_night.webp",
     "h": 345.0,
     "ox": -185.0,
     "oy": -172.5,
     "w": 370.0
    },
    "shadow": {
-    "file": "bld_house3_sh.png",
+    "file": "bld_house3_sh.webp",
     "h": 250.86,
     "ox": -120.0,
     "oy": -143.36,
@@ -186,21 +186,21 @@
   },
   "motel": {
    "color": {
-    "file": "bld_motel.png",
+    "file": "bld_motel.webp",
     "h": 256.0,
     "ox": -156.0,
     "oy": -128.0,
     "w": 312.0
    },
    "night": {
-    "file": "bld_motel_night.png",
+    "file": "bld_motel_night.webp",
     "h": 376.0,
     "ox": -216.0,
     "oy": -188.0,
     "w": 432.0
    },
    "shadow": {
-    "file": "bld_motel_sh.png",
+    "file": "bld_motel_sh.webp",
     "h": 280.07,
     "ox": -151.0,
     "oy": -157.07,
@@ -209,21 +209,21 @@
   },
   "office": {
    "color": {
-    "file": "bld_office.png",
+    "file": "bld_office.webp",
     "h": 310.0,
     "ox": -156.0,
     "oy": -155.0,
     "w": 312.0
    },
    "night": {
-    "file": "bld_office_night.png",
+    "file": "bld_office_night.webp",
     "h": 430.0,
     "ox": -216.0,
     "oy": -215.0,
     "w": 432.0
    },
    "shadow": {
-    "file": "bld_office_sh.png",
+    "file": "bld_office_sh.webp",
     "h": 444.35,
     "ox": -151.0,
     "oy": -294.35,
@@ -232,21 +232,21 @@
   },
   "police": {
    "color": {
-    "file": "bld_police.png",
+    "file": "bld_police.webp",
     "h": 256.0,
     "ox": -165.0,
     "oy": -128.0,
     "w": 330.0
    },
    "night": {
-    "file": "bld_police_night.png",
+    "file": "bld_police_night.webp",
     "h": 376.0,
     "ox": -225.0,
     "oy": -188.0,
     "w": 450.0
    },
    "shadow": {
-    "file": "bld_police_sh.png",
+    "file": "bld_police_sh.webp",
     "h": 317.73,
     "ox": -160.0,
     "oy": -194.73,
@@ -255,21 +255,21 @@
   },
   "shops": {
    "color": {
-    "file": "bld_shops.png",
+    "file": "bld_shops.webp",
     "h": 170.0,
     "ox": -240.0,
     "oy": -85.0,
     "w": 480.0
    },
    "night": {
-    "file": "bld_shops_night.png",
+    "file": "bld_shops_night.webp",
     "h": 290.0,
     "ox": -300.0,
     "oy": -145.0,
     "w": 600.0
    },
    "shadow": {
-    "file": "bld_shops_sh.png",
+    "file": "bld_shops_sh.webp",
     "h": 200.35,
     "ox": -235.0,
     "oy": -120.35,
@@ -278,21 +278,21 @@
   },
   "villa1": {
    "color": {
-    "file": "bld_villa1.png",
+    "file": "bld_villa1.webp",
     "h": 280.0,
     "ox": -135.0,
     "oy": -140.0,
     "w": 270.0
    },
    "night": {
-    "file": "bld_villa1_night.png",
+    "file": "bld_villa1_night.webp",
     "h": 400.0,
     "ox": -195.0,
     "oy": -200.0,
     "w": 390.0
    },
    "shadow": {
-    "file": "bld_villa1_sh.png",
+    "file": "bld_villa1_sh.webp",
     "h": 314.83,
     "ox": -130.0,
     "oy": -179.83,
@@ -301,21 +301,21 @@
   },
   "villa2": {
    "color": {
-    "file": "bld_villa2.png",
+    "file": "bld_villa2.webp",
     "h": 260.0,
     "ox": -130.0,
     "oy": -130.0,
     "w": 260.0
    },
    "night": {
-    "file": "bld_villa2_night.png",
+    "file": "bld_villa2_night.webp",
     "h": 380.0,
     "ox": -190.0,
     "oy": -190.0,
     "w": 380.0
    },
    "shadow": {
-    "file": "bld_villa2_sh.png",
+    "file": "bld_villa2_sh.webp",
     "h": 290.35,
     "ox": -125.0,
     "oy": -165.35,
@@ -324,21 +324,21 @@
   },
   "villa3": {
    "color": {
-    "file": "bld_villa3.png",
+    "file": "bld_villa3.webp",
     "h": 290.0,
     "ox": -135.0,
     "oy": -145.0,
     "w": 270.0
    },
    "night": {
-    "file": "bld_villa3_night.png",
+    "file": "bld_villa3_night.webp",
     "h": 410.0,
     "ox": -195.0,
     "oy": -205.0,
     "w": 390.0
    },
    "shadow": {
-    "file": "bld_villa3_sh.png",
+    "file": "bld_villa3_sh.webp",
     "h": 324.83,
     "ox": -130.0,
     "oy": -184.83,
@@ -350,7 +350,7 @@
   "conv_mint": {
    "angles": 32,
    "color": {
-    "file": "car_conv_mint.png",
+    "file": "car_conv_mint.webp",
     "h": 64.0,
     "ox": -32.0,
     "oy": -32.0,
@@ -360,14 +360,14 @@
    "kind": "convertible",
    "length": 46.0,
    "light": {
-    "file": "car_conv_mint_light.png",
+    "file": "car_conv_mint_light.webp",
     "h": 220.0,
     "ox": -35.0,
     "oy": -160.0,
     "w": 70.0
    },
    "shadow": {
-    "file": "car_conv_mint_sh.png",
+    "file": "car_conv_mint_sh.webp",
     "h": 96.0,
     "ox": -36.41,
     "oy": -51.11,
@@ -378,7 +378,7 @@
   "conv_rose": {
    "angles": 32,
    "color": {
-    "file": "car_conv_rose.png",
+    "file": "car_conv_rose.webp",
     "h": 64.0,
     "ox": -32.0,
     "oy": -32.0,
@@ -388,14 +388,14 @@
    "kind": "convertible",
    "length": 46.0,
    "light": {
-    "file": "car_conv_rose_light.png",
+    "file": "car_conv_rose_light.webp",
     "h": 220.0,
     "ox": -35.0,
     "oy": -160.0,
     "w": 70.0
    },
    "shadow": {
-    "file": "car_conv_rose_sh.png",
+    "file": "car_conv_rose_sh.webp",
     "h": 96.0,
     "ox": -36.41,
     "oy": -51.11,
@@ -406,7 +406,7 @@
   "police": {
    "angles": 32,
    "color": {
-    "file": "car_police.png",
+    "file": "car_police.webp",
     "h": 64.0,
     "ox": -32.0,
     "oy": -32.0,
@@ -416,14 +416,14 @@
    "kind": "police",
    "length": 46.0,
    "light": {
-    "file": "car_police_light.png",
+    "file": "car_police_light.webp",
     "h": 220.0,
     "ox": -35.0,
     "oy": -160.0,
     "w": 70.0
    },
    "shadow": {
-    "file": "car_police_sh.png",
+    "file": "car_police_sh.webp",
     "h": 96.0,
     "ox": -36.41,
     "oy": -51.11,
@@ -434,7 +434,7 @@
   "sedan_coral": {
    "angles": 32,
    "color": {
-    "file": "car_sedan_coral.png",
+    "file": "car_sedan_coral.webp",
     "h": 64.0,
     "ox": -32.0,
     "oy": -32.0,
@@ -444,14 +444,14 @@
    "kind": "sedan",
    "length": 46.0,
    "light": {
-    "file": "car_sedan_coral_light.png",
+    "file": "car_sedan_coral_light.webp",
     "h": 220.0,
     "ox": -35.0,
     "oy": -160.0,
     "w": 70.0
    },
    "shadow": {
-    "file": "car_sedan_coral_sh.png",
+    "file": "car_sedan_coral_sh.webp",
     "h": 96.0,
     "ox": -36.41,
     "oy": -51.11,
@@ -462,7 +462,7 @@
   "sedan_cream": {
    "angles": 32,
    "color": {
-    "file": "car_sedan_cream.png",
+    "file": "car_sedan_cream.webp",
     "h": 64.0,
     "ox": -32.0,
     "oy": -32.0,
@@ -472,14 +472,14 @@
    "kind": "sedan",
    "length": 46.0,
    "light": {
-    "file": "car_sedan_cream_light.png",
+    "file": "car_sedan_cream_light.webp",
     "h": 220.0,
     "ox": -35.0,
     "oy": -160.0,
     "w": 70.0
    },
    "shadow": {
-    "file": "car_sedan_cream_sh.png",
+    "file": "car_sedan_cream_sh.webp",
     "h": 96.0,
     "ox": -36.41,
     "oy": -51.11,
@@ -490,7 +490,7 @@
   "sedan_plum": {
    "angles": 32,
    "color": {
-    "file": "car_sedan_plum.png",
+    "file": "car_sedan_plum.webp",
     "h": 64.0,
     "ox": -32.0,
     "oy": -32.0,
@@ -500,14 +500,14 @@
    "kind": "sedan",
    "length": 46.0,
    "light": {
-    "file": "car_sedan_plum_light.png",
+    "file": "car_sedan_plum_light.webp",
     "h": 220.0,
     "ox": -35.0,
     "oy": -160.0,
     "w": 70.0
    },
    "shadow": {
-    "file": "car_sedan_plum_sh.png",
+    "file": "car_sedan_plum_sh.webp",
     "h": 96.0,
     "ox": -36.41,
     "oy": -51.11,
@@ -518,7 +518,7 @@
   "sedan_teal": {
    "angles": 32,
    "color": {
-    "file": "car_sedan_teal.png",
+    "file": "car_sedan_teal.webp",
     "h": 64.0,
     "ox": -32.0,
     "oy": -32.0,
@@ -528,14 +528,14 @@
    "kind": "sedan",
    "length": 46.0,
    "light": {
-    "file": "car_sedan_teal_light.png",
+    "file": "car_sedan_teal_light.webp",
     "h": 220.0,
     "ox": -35.0,
     "oy": -160.0,
     "w": 70.0
    },
    "shadow": {
-    "file": "car_sedan_teal_sh.png",
+    "file": "car_sedan_teal_sh.webp",
     "h": 96.0,
     "ox": -36.41,
     "oy": -51.11,
@@ -546,7 +546,7 @@
   "taxi": {
    "angles": 32,
    "color": {
-    "file": "car_taxi.png",
+    "file": "car_taxi.webp",
     "h": 64.0,
     "ox": -32.0,
     "oy": -32.0,
@@ -556,14 +556,14 @@
    "kind": "taxi",
    "length": 46.0,
    "light": {
-    "file": "car_taxi_light.png",
+    "file": "car_taxi_light.webp",
     "h": 220.0,
     "ox": -35.0,
     "oy": -160.0,
     "w": 70.0
    },
    "shadow": {
-    "file": "car_taxi_sh.png",
+    "file": "car_taxi_sh.webp",
     "h": 96.0,
     "ox": -36.41,
     "oy": -51.11,
@@ -574,7 +574,7 @@
   "van_sky": {
    "angles": 32,
    "color": {
-    "file": "car_van_sky.png",
+    "file": "car_van_sky.webp",
     "h": 64.0,
     "ox": -32.0,
     "oy": -32.0,
@@ -584,14 +584,14 @@
    "kind": "van",
    "length": 49.0,
    "light": {
-    "file": "car_van_sky_light.png",
+    "file": "car_van_sky_light.webp",
     "h": 220.0,
     "ox": -35.0,
     "oy": -160.0,
     "w": 70.0
    },
    "shadow": {
-    "file": "car_van_sky_sh.png",
+    "file": "car_van_sky_sh.webp",
     "h": 96.0,
     "ox": -36.41,
     "oy": -51.11,
@@ -602,7 +602,7 @@
   "van_sun": {
    "angles": 32,
    "color": {
-    "file": "car_van_sun.png",
+    "file": "car_van_sun.webp",
     "h": 64.0,
     "ox": -32.0,
     "oy": -32.0,
@@ -612,14 +612,14 @@
    "kind": "van",
    "length": 49.0,
    "light": {
-    "file": "car_van_sun_light.png",
+    "file": "car_van_sun_light.webp",
     "h": 220.0,
     "ox": -35.0,
     "oy": -160.0,
     "w": 70.0
    },
    "shadow": {
-    "file": "car_van_sun_sh.png",
+    "file": "car_van_sun_sh.webp",
     "h": 96.0,
     "ox": -36.41,
     "oy": -51.11,
@@ -632,155 +632,155 @@
   "cop": {
    "angles": 16,
    "color": {
-    "file": "ped_cop.png",
-    "h": 28.0,
-    "ox": -14.0,
-    "oy": -14.0,
-    "w": 28.0
+    "file": "ped_cop.webp",
+    "h": 39.0,
+    "ox": -19.5,
+    "oy": -19.5,
+    "w": 39.0
    },
    "cols": 12,
    "poses": 3,
    "shadow": {
-    "file": "ped_cop_sh.png",
-    "h": 80.0,
-    "ox": -14.89,
-    "oy": -46.73,
-    "w": 80.0
+    "file": "ped_cop_sh.webp",
+    "h": 110.0,
+    "ox": -20.23,
+    "oy": -64.32,
+    "w": 110.0
    }
   },
   "ped_blue": {
    "angles": 16,
    "color": {
-    "file": "ped_ped_blue.png",
-    "h": 28.0,
-    "ox": -14.0,
-    "oy": -14.0,
-    "w": 28.0
+    "file": "ped_ped_blue.webp",
+    "h": 39.0,
+    "ox": -19.5,
+    "oy": -19.5,
+    "w": 39.0
    },
    "cols": 12,
    "poses": 3,
    "shadow": {
-    "file": "ped_ped_blue_sh.png",
-    "h": 80.0,
-    "ox": -14.89,
-    "oy": -46.73,
-    "w": 80.0
+    "file": "ped_ped_blue_sh.webp",
+    "h": 110.0,
+    "ox": -20.23,
+    "oy": -64.32,
+    "w": 110.0
    }
   },
   "ped_rose": {
    "angles": 16,
    "color": {
-    "file": "ped_ped_rose.png",
-    "h": 28.0,
-    "ox": -14.0,
-    "oy": -14.0,
-    "w": 28.0
+    "file": "ped_ped_rose.webp",
+    "h": 39.0,
+    "ox": -19.5,
+    "oy": -19.5,
+    "w": 39.0
    },
    "cols": 12,
    "poses": 3,
    "shadow": {
-    "file": "ped_ped_rose_sh.png",
-    "h": 80.0,
-    "ox": -14.89,
-    "oy": -46.73,
-    "w": 80.0
+    "file": "ped_ped_rose_sh.webp",
+    "h": 110.0,
+    "ox": -20.23,
+    "oy": -64.32,
+    "w": 110.0
    }
   },
   "ped_straw": {
    "angles": 16,
    "color": {
-    "file": "ped_ped_straw.png",
-    "h": 28.0,
-    "ox": -14.0,
-    "oy": -14.0,
-    "w": 28.0
+    "file": "ped_ped_straw.webp",
+    "h": 39.0,
+    "ox": -19.5,
+    "oy": -19.5,
+    "w": 39.0
    },
    "cols": 12,
    "poses": 3,
    "shadow": {
-    "file": "ped_ped_straw_sh.png",
-    "h": 80.0,
-    "ox": -14.89,
-    "oy": -46.73,
-    "w": 80.0
+    "file": "ped_ped_straw_sh.webp",
+    "h": 110.0,
+    "ox": -20.23,
+    "oy": -64.32,
+    "w": 110.0
    }
   },
   "ped_sun": {
    "angles": 16,
    "color": {
-    "file": "ped_ped_sun.png",
-    "h": 28.0,
-    "ox": -14.0,
-    "oy": -14.0,
-    "w": 28.0
+    "file": "ped_ped_sun.webp",
+    "h": 39.0,
+    "ox": -19.5,
+    "oy": -19.5,
+    "w": 39.0
    },
    "cols": 12,
    "poses": 3,
    "shadow": {
-    "file": "ped_ped_sun_sh.png",
-    "h": 80.0,
-    "ox": -14.89,
-    "oy": -46.73,
-    "w": 80.0
+    "file": "ped_ped_sun_sh.webp",
+    "h": 110.0,
+    "ox": -20.23,
+    "oy": -64.32,
+    "w": 110.0
    }
   },
   "ped_white": {
    "angles": 16,
    "color": {
-    "file": "ped_ped_white.png",
-    "h": 28.0,
-    "ox": -14.0,
-    "oy": -14.0,
-    "w": 28.0
+    "file": "ped_ped_white.webp",
+    "h": 39.0,
+    "ox": -19.5,
+    "oy": -19.5,
+    "w": 39.0
    },
    "cols": 12,
    "poses": 3,
    "shadow": {
-    "file": "ped_ped_white_sh.png",
-    "h": 80.0,
-    "ox": -14.89,
-    "oy": -46.73,
-    "w": 80.0
+    "file": "ped_ped_white_sh.webp",
+    "h": 110.0,
+    "ox": -20.23,
+    "oy": -64.32,
+    "w": 110.0
    }
   },
   "player": {
    "angles": 16,
    "color": {
-    "file": "ped_player.png",
-    "h": 28.0,
-    "ox": -14.0,
-    "oy": -14.0,
-    "w": 28.0
+    "file": "ped_player.webp",
+    "h": 39.0,
+    "ox": -19.5,
+    "oy": -19.5,
+    "w": 39.0
    },
    "cols": 12,
    "poses": 3,
    "shadow": {
-    "file": "ped_player_sh.png",
-    "h": 80.0,
-    "ox": -14.89,
-    "oy": -46.73,
-    "w": 80.0
+    "file": "ped_player_sh.webp",
+    "h": 110.0,
+    "ox": -20.23,
+    "oy": -64.32,
+    "w": 110.0
    }
   }
  },
  "props": {
   "fountain": {
    "color": {
-    "file": "fountain.png",
+    "file": "fountain.webp",
     "h": 72.0,
     "ox": -36.0,
     "oy": -36.0,
     "w": 72.0
    },
    "night": {
-    "file": "fountain_night.png",
+    "file": "fountain_night.webp",
     "h": 180,
     "ox": -90.0,
     "oy": -90.0,
     "w": 180
    },
    "shadow": {
-    "file": "fountain_sh.png",
+    "file": "fountain_sh.webp",
     "h": 115.45,
     "ox": -51.0,
     "oy": -64.45,
@@ -789,21 +789,21 @@
   },
   "lamp": {
    "color": {
-    "file": "lamp.png",
+    "file": "lamp.webp",
     "h": 16.0,
     "ox": -22.0,
     "oy": -8.0,
     "w": 44.0
    },
    "night": {
-    "file": "lamp_night.png",
+    "file": "lamp_night.webp",
     "h": 200,
     "ox": -100.0,
     "oy": -100.0,
     "w": 200
    },
    "shadow": {
-    "file": "lamp_sh.png",
+    "file": "lamp_sh.webp",
     "h": 73.79,
     "ox": -37.0,
     "oy": -50.79,
@@ -812,14 +812,14 @@
   },
   "lifeguard": {
    "color": {
-    "file": "lifeguard.png",
+    "file": "lifeguard.webp",
     "h": 72.0,
     "ox": -24.0,
     "oy": -36.0,
     "w": 48.0
    },
    "shadow": {
-    "file": "lifeguard_sh.png",
+    "file": "lifeguard_sh.webp",
     "h": 122.17,
     "ox": -39.0,
     "oy": -71.17,
@@ -828,14 +828,14 @@
   },
   "palm0": {
    "color": {
-    "file": "palm0.png",
+    "file": "palm0.webp",
     "h": 92.0,
     "ox": -46.0,
     "oy": -46.0,
     "w": 92.0
    },
    "shadow": {
-    "file": "palm0_sh.png",
+    "file": "palm0_sh.webp",
     "h": 163.69,
     "ox": -61.0,
     "oy": -102.69,
@@ -844,14 +844,14 @@
   },
   "palm1": {
    "color": {
-    "file": "palm1.png",
+    "file": "palm1.webp",
     "h": 92.0,
     "ox": -46.0,
     "oy": -46.0,
     "w": 92.0
    },
    "shadow": {
-    "file": "palm1_sh.png",
+    "file": "palm1_sh.webp",
     "h": 170.42,
     "ox": -61.0,
     "oy": -109.42,
@@ -860,14 +860,14 @@
   },
   "palm2": {
    "color": {
-    "file": "palm2.png",
+    "file": "palm2.webp",
     "h": 92.0,
     "ox": -46.0,
     "oy": -46.0,
     "w": 92.0
    },
    "shadow": {
-    "file": "palm2_sh.png",
+    "file": "palm2_sh.webp",
     "h": 156.97,
     "ox": -61.0,
     "oy": -95.97,
@@ -876,21 +876,21 @@
   },
   "pier": {
    "color": {
-    "file": "pier.png",
+    "file": "pier.webp",
     "h": 120.0,
     "ox": -155.0,
     "oy": -60.0,
     "w": 310.0
    },
    "night": {
-    "file": "pier_night.png",
+    "file": "pier_night.webp",
     "h": 190.0,
     "ox": -190.0,
     "oy": -95.0,
     "w": 380.0
    },
    "shadow": {
-    "file": "pier_sh.png",
+    "file": "pier_sh.webp",
     "h": 201.55,
     "ox": -170.0,
     "oy": -126.55,

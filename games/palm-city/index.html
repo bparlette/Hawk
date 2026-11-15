@@ -17,6 +17,7 @@
 <body>
 <div id="wrap"><canvas id="game"></canvas></div>
 <div id="err"></div>
+<div id="safe" style="position:fixed;top:0;left:0;width:1px;height:env(safe-area-inset-top,0px);pointer-events:none;visibility:hidden"></div>
 <script>
   // No silent fallbacks: any load or runtime failure is shown on screen.
   function showErr(m){const e=document.getElementById('err');e.style.display='block';e.textContent+=m+'\n';}

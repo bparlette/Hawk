@@ -191,12 +191,22 @@ def load_np(path):
 
 
 def save_np(arr, path):
+    """Save HxWx4 (top-down rows). .webp -> lossy WebP with alpha (phones: ~5x smaller than PNG)."""
     h, w = arr.shape[:2]
     im = bpy.data.images.new('out', w, h, alpha=True)
     im.pixels.foreach_set(np.ascontiguousarray(arr[::-1]).astype(np.float32).ravel())
-    im.filepath_raw = path
-    im.file_format = 'PNG'
-    im.save()
+    if path.endswith('.webp'):
+        st = bpy.context.scene.render.image_settings
+        old = (st.file_format, st.color_mode)
+        st.file_format = 'WEBP'
+        st.color_mode = 'RGBA'
+        st.quality = 88
+        im.save_render(path, scene=bpy.context.scene)
+        st.file_format, st.color_mode = old
+    else:
+        im.filepath_raw = path
+        im.file_format = 'PNG'
+        im.save()
     bpy.data.images.remove(im)
 
 
@@ -565,7 +575,7 @@ CAR_SET = [
     ('conv_rose', 'convertible', '#f08aa8'),
     ('van_sky', 'van', '#7fb2de'),
     ('van_sun', 'van', '#f2b134'),
-    ('taxi', 'taxi', '#f7c23c'),
+    ('taxi', 'taxi', '#ffc21a'),
     ('police', 'police', '#1d2233'),
 ]
 
@@ -591,20 +601,20 @@ def bake_cars():
             frame(scx, scy, CAR_SH_FRAME, CAR_SH_FRAME, CAR_SH_PPM)
             render(f'{TMP}/s.png')
             sh.append(shadow_to_alpha(load_np(f'{TMP}/s.png')))
-        save_np(sheet(col, 8), f'{OUT}/car_{name}.png')
-        save_np(sheet(sh, 8), f'{OUT}/car_{name}_sh.png')
+        save_np(sheet(col, 8), f'{OUT}/car_{name}.webp')
+        save_np(sheet(sh, 8), f'{OUT}/car_{name}_sh.webp')
         # light pass: one frame, car facing north, rotated by the game
         root.rotation_euler = (0, 0, 0)
         car_headlight_rig(kind)
         set_pass('night')
         frame(0, 5.0, 7.0, 22.0, 8)
         render(f'{TMP}/n.png')
-        save_np(night_clean(load_np(f'{TMP}/n.png'), 0.06), f'{OUT}/car_{name}_light.png')
+        save_np(night_clean(load_np(f'{TMP}/n.png'), 0.06), f'{OUT}/car_{name}_light.webp')
         MANIFEST['cars'][name] = {
             'kind': kind, 'angles': CAR_ANGLES, 'cols': 8,
-            'color': manifest_entry(f'car_{name}.png', 0, 0, CAR_FRAME, CAR_FRAME),
-            'shadow': manifest_entry(f'car_{name}_sh.png', scx, scy, CAR_SH_FRAME, CAR_SH_FRAME),
-            'light': manifest_entry(f'car_{name}_light.png', 0, 5.0, 7.0, 22.0),
+            'color': manifest_entry(f'car_{name}.webp', 0, 0, CAR_FRAME, CAR_FRAME),
+            'shadow': manifest_entry(f'car_{name}_sh.webp', scx, scy, CAR_SH_FRAME, CAR_SH_FRAME),
+            'light': manifest_entry(f'car_{name}_light.webp', 0, 5.0, 7.0, 22.0),
             'length': (4.9 if kind == 'van' else 4.6) * UPM, 'width': (2.0 if kind == 'van' else 1.9) * UPM,
         }
         save_manifest()
@@ -615,11 +625,11 @@ def bake_cars():
 
 # ============================================================================= PEOPLE
 PED_ANGLES = 16
-PED_SCALE = 1.7   # people are drawn ~1.7x true scale so they read on a phone next to cars
-PED_PPM = 24
-PED_FRAME = 2.8
-PED_SH_PPM = 10
-PED_SH_FRAME = 8.0
+PED_SCALE = 2.4   # people are drawn ~2.4x true scale so they read on a phone next to cars
+PED_PPM = 22
+PED_FRAME = 3.9
+PED_SH_PPM = 9
+PED_SH_FRAME = 11.0
 PED_POSES = [1.0, 0.0, -1.0]  # stride: left foot forward, passing, right foot forward
 
 PED_SET = [
@@ -707,7 +717,7 @@ def bake_peds():
         t0 = time.time()
         root, limbs = build_ped(shirt, pants, skin, hair, headwear, shoes)
         col, sh = [], []
-        scx, scy = SHADOW_DIR.x * 2.6, SHADOW_DIR.y * 2.6
+        scx, scy = SHADOW_DIR.x * 3.6, SHADOW_DIR.y * 3.6
         for k in range(PED_ANGLES):
             th = k * 2 * math.pi / PED_ANGLES
             root.rotation_euler = (0, 0, -th - math.pi / 2)
@@ -722,12 +732,12 @@ def bake_peds():
                 render(f'{TMP}/s.png')
                 sh.append(shadow_to_alpha(load_np(f'{TMP}/s.png')))
         cols = len(PED_POSES) * 4  # 4 angles per row
-        save_np(sheet(col, cols), f'{OUT}/ped_{name}.png')
-        save_np(sheet(sh, cols), f'{OUT}/ped_{name}_sh.png')
+        save_np(sheet(col, cols), f'{OUT}/ped_{name}.webp')
+        save_np(sheet(sh, cols), f'{OUT}/ped_{name}_sh.webp')
         MANIFEST['peds'][name] = {
             'angles': PED_ANGLES, 'poses': len(PED_POSES), 'cols': cols,
-            'color': manifest_entry(f'ped_{name}.png', 0, 0, PED_FRAME, PED_FRAME),
-            'shadow': manifest_entry(f'ped_{name}_sh.png', scx, scy, PED_SH_FRAME, PED_SH_FRAME),
+            'color': manifest_entry(f'ped_{name}.webp', 0, 0, PED_FRAME, PED_FRAME),
+            'shadow': manifest_entry(f'ped_{name}_sh.webp', scx, scy, PED_SH_FRAME, PED_SH_FRAME),
         }
         save_manifest()
         clear_asset()
@@ -861,7 +871,7 @@ def water_tank(x, y, z, wood, dark):
 
 
 def skylights(cx, cy, W, D, z, nx, ny, rnd, glow=0.35):
-    glass = mat('skylight', srgb('#9fb6d8'), rough=0.08, spec=1.0, emit=(1.0, 0.8, 0.5), night=glow, day=0.0, noise=0)
+    glass = mat('skylight', srgb('#3e4c6e'), rough=0.18, spec=0.8, emit=(1.0, 0.8, 0.5), night=glow, day=0.0, noise=0)
     frame_m = mat('skyframe', srgb('#d8d0c4'), rough=0.6, noise=0)
     for i in range(nx):
         for j in range(ny):
@@ -978,7 +988,7 @@ def build_building(b):
         flat_block(0, 0, W, D, H, wall, gravel('#cfc2b4'), mat('par', srgb('#fbe8d2'), rough=0.6))
         # rooftop pool deck on the south half
         deck = mat('deck', srgb('#b8865a'), rough=0.7, noise=0.25, noise_scale=10)
-        water = mat('pool', srgb('#3fc6d8'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=0.5, day=0.0, noise=0.1, noise_scale=3)
+        water = mat('pool', srgb('#2ea2c2'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=0.5, day=0.0, noise=0.3, noise_scale=9)
         cube((0, -D / 4, H + 0.1), (W - 2.0, D / 2 - 1.5, 0.12), deck)
         cube((-W / 6, -D / 4, H + 0.17), (W / 2.2, D / 4, 0.06), water)
         for i in range(5):
@@ -1060,7 +1070,7 @@ def build_building(b):
         flat_block(-W / 2 + 4.5, 0, 9.0, D, H, wall, roof_m, par)
         flat_block(4.5, D / 2 - 4.0, W - 9.0, 8.0, H, wall, roof_m, par)
         court = mat('court', srgb('#e9d9bf'), rough=0.8, noise=0.15, noise_scale=8)
-        water = mat('pool', srgb('#43c8dc'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=0.5, day=0.0, noise=0.1, noise_scale=3)
+        water = mat('pool', srgb('#2ea2c2'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=0.5, day=0.0, noise=0.3, noise_scale=9)
         cube((4.5, -4.0, 0.06), (W - 9.4, D - 8.4, 0.1), court)
         cube((4.5, -4.5, 0.13), (W - 15, D - 15, 0.06), water, bevel=0.6)
         for i in range(4):
@@ -1078,7 +1088,7 @@ def build_building(b):
     elif style == 'office':
         wall = mat('wall', srgb('#c9cdd8'), rough=0.5)
         flat_block(0, 0, W, D, H, wall, gravel('#9ea0a8'), mat('par', srgb('#e8e6ea'), rough=0.5), par_h=1.0, par_w=0.5)
-        glassroof = mat('atrium', srgb('#7fa6c8'), rough=0.06, spec=1.0, emit=(1.0, 0.62, 0.3), night=0.45, day=0.0, noise=0)
+        glassroof = mat('atrium', srgb('#3a4a6c'), rough=0.18, spec=0.8, emit=(1.0, 0.62, 0.3), night=0.45, day=0.0, noise=0)
         cube((-W / 5, -D / 5, H + 1.0), (W / 2.6, D / 2.6, 2.0), wall)
         cube((-W / 5, -D / 5, H + 2.1), (W / 2.6 - 0.3, D / 2.6 - 0.3, 0.5), glassroof, taper=(0.4, 1.0))
         cube((W / 4, D / 4, H + 2.0), (W / 3, D / 3, 4.0), wall, bevel=0.1)
@@ -1128,7 +1138,7 @@ def build_building(b):
         wall = mat('wall', srgb('#c98b6b'), rough=0.8)
         cube((0, 0, H / 2), (W, D, H), wall)
         roofm = mat('saw', srgb('#bcb4ac'), rough=0.5, metal=0.4, noise=0.12, noise_scale=8)
-        glass = mat('sawglass', srgb('#8fb0cc'), rough=0.1, spec=1.0, emit=(1.0, 0.62, 0.3), night=0.3, day=0.0, noise=0)
+        glass = mat('sawglass', srgb('#3e4c6e'), rough=0.18, spec=0.8, emit=(1.0, 0.62, 0.3), night=0.3, day=0.0, noise=0)
         n = int(W / 4.0)
         for i in range(n):
             x0 = -W / 2 + i * W / n
@@ -1161,7 +1171,7 @@ def build_building(b):
             hip_roof(wx, wy, wing_w, wing_d, H - 2, min(wing_w, wing_d) * 0.32, tiles)
         # yard: pool, deck, hedge, lounge
         deck = mat('deck', srgb('#c89a6a'), rough=0.7, noise=0.25, noise_scale=12)
-        water = mat('pool', srgb('#3fc6d8'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=0.5, day=0.0, noise=0.1, noise_scale=3)
+        water = mat('pool', srgb('#2ea2c2'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=0.5, day=0.0, noise=0.3, noise_scale=9)
         pw, pd = W * 0.42, D * 0.22
         px_, py_ = W / 2 - pw / 2 - 1.2, -D / 2 + pd / 2 + 1.5
         cube((px_, py_, 0.05), (pw + 2.2, pd + 2.2, 0.1), deck)
@@ -1196,21 +1206,21 @@ def bake_buildings():
         set_pass('color')
         frame(0, 0, W + 2 * m, D + 2 * m, BLD_PPM)
         render(f'{TMP}/c.png')
-        save_np(ink(kuwahara(load_np(f'{TMP}/c.png'), 2)), f'{OUT}/bld_{b["id"]}.png')
+        save_np(ink(kuwahara(load_np(f'{TMP}/c.png'), 2)), f'{OUT}/bld_{b["id"]}.webp')
         set_pass('shadow')
         scx, scy, sw, shh = shadow_frame_for(-W / 2 - 1, -D / 2 - 1, W / 2 + 1, D / 2 + 1, top)
         frame(scx, scy, sw, shh, BLD_SH_PPM)
         render(f'{TMP}/s.png')
-        save_np(shadow_to_alpha(load_np(f'{TMP}/s.png')), f'{OUT}/bld_{b["id"]}_sh.png')
+        save_np(shadow_to_alpha(load_np(f'{TMP}/s.png')), f'{OUT}/bld_{b["id"]}_sh.webp')
         set_pass('night')
         nm = 9.0
         frame(0, 0, W + 2 * nm, D + 2 * nm, BLD_NIGHT_PPM)
         render(f'{TMP}/n.png')
-        save_np(night_clean(load_np(f'{TMP}/n.png')), f'{OUT}/bld_{b["id"]}_night.png')
+        save_np(night_clean(load_np(f'{TMP}/n.png')), f'{OUT}/bld_{b["id"]}_night.webp')
         MANIFEST['buildings'][b['id']] = {
-            'color': manifest_entry(f'bld_{b["id"]}.png', 0, 0, W + 2 * m, D + 2 * m),
-            'shadow': manifest_entry(f'bld_{b["id"]}_sh.png', scx, scy, sw, shh),
-            'night': manifest_entry(f'bld_{b["id"]}_night.png', 0, 0, W + 2 * nm, D + 2 * nm),
+            'color': manifest_entry(f'bld_{b["id"]}.webp', 0, 0, W + 2 * m, D + 2 * m),
+            'shadow': manifest_entry(f'bld_{b["id"]}_sh.webp', scx, scy, sw, shh),
+            'night': manifest_entry(f'bld_{b["id"]}_night.webp', 0, 0, W + 2 * nm, D + 2 * nm),
         }
         save_manifest()
         clear_asset()
@@ -1299,21 +1309,21 @@ def bake_static(name, builder, half, top, ppm=BLD_PPM, night=True, night_half=No
     set_pass('color')
     frame(0, 0, hx * 2, hy * 2, ppm)
     render(f'{TMP}/c.png')
-    save_np(ink(kuwahara(load_np(f'{TMP}/c.png'), kuw)), f'{OUT}/{name}.png')
-    entry = {'color': manifest_entry(f'{name}.png', 0, 0, hx * 2, hy * 2)}
+    save_np(ink(kuwahara(load_np(f'{TMP}/c.png'), kuw)), f'{OUT}/{name}.webp')
+    entry = {'color': manifest_entry(f'{name}.webp', 0, 0, hx * 2, hy * 2)}
     set_pass('shadow')
     scx, scy, sw, shh = shadow_frame_for(-hx, -hy, hx, hy, top)
     frame(scx, scy, sw, shh, BLD_SH_PPM)
     render(f'{TMP}/s.png')
-    save_np(shadow_to_alpha(load_np(f'{TMP}/s.png')), f'{OUT}/{name}_sh.png')
-    entry['shadow'] = manifest_entry(f'{name}_sh.png', scx, scy, sw, shh)
+    save_np(shadow_to_alpha(load_np(f'{TMP}/s.png')), f'{OUT}/{name}_sh.webp')
+    entry['shadow'] = manifest_entry(f'{name}_sh.webp', scx, scy, sw, shh)
     if night:
         nx, ny = night_half if night_half else (hx + 8, hy + 8)
         set_pass('night')
         frame(0, 0, nx * 2, ny * 2, BLD_NIGHT_PPM)
         render(f'{TMP}/n.png')
-        save_np(night_clean(load_np(f'{TMP}/n.png')), f'{OUT}/{name}_night.png')
-        entry['night'] = manifest_entry(f'{name}_night.png', 0, 0, nx * 2, ny * 2)
+        save_np(night_clean(load_np(f'{TMP}/n.png')), f'{OUT}/{name}_night.webp')
+        entry['night'] = manifest_entry(f'{name}_night.webp', 0, 0, nx * 2, ny * 2)
     return entry
 
 

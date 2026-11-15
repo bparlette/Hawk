@@ -30,7 +30,7 @@ export class GroundPainter {
     this.world = world;
     this.cache = new Map(); // key -> canvas
     this.order = [];
-    this.max = 40;
+    this.max = 48;
     this.cols = Math.ceil(world.L.world.w / CHUNK);
     this.rows = Math.ceil(world.L.world.h / CHUNK);
   }
@@ -199,6 +199,32 @@ export class GroundPainter {
         g.restore();
       }
     });
+
+    // Sidewalk joints: loose painted lines across the walk every ~14 units.
+    const sw = W.L.roads.sidewalk;
+    edgeWalk((x, y, ux, uy, s) => {
+      if (Math.round(s) % 14 > 2) return;
+      for (const side of [-1, 1]) {
+        const nx = -uy * side, ny = ux * side;
+        const ax = x + nx * (hr + 2), ay = y + ny * (hr + 2);
+        if (W.surfaceAt(ax + nx * 6, ay + ny * 6) !== 'sidewalk') continue;
+        g.globalAlpha = 0.16;
+        g.strokeStyle = '#6a3c48';
+        g.lineWidth = 0.7;
+        g.beginPath(); g.moveTo(ax, ay); g.lineTo(ax + nx * (sw - 3) + (rnd() - 0.5), ay + ny * (sw - 3)); g.stroke();
+      }
+    });
+
+    // Parking stalls: painted lines in parking rects.
+    for (const q of W.L.ground) {
+      if (q.type !== 'parking' || !inChunk(q.x + q.w / 2, q.y + q.h / 2, Math.max(q.w, q.h))) continue;
+      g.strokeStyle = '#f2e2c0';
+      g.lineWidth = 1.4;
+      for (let x = q.x + 4; x < q.x + q.w; x += 28) {
+        g.globalAlpha = 0.45 + rnd() * 0.2;
+        g.beginPath(); g.moveTo(x, q.y + 2); g.lineTo(x + (rnd() - 0.5), q.y + Math.min(q.h - 2, 46)); g.stroke();
+      }
+    }
 
     // Crosswalk stripes where streets meet the loop.
     const L = W.L.roads;
