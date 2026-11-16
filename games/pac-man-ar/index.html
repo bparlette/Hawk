@@ -34,19 +34,20 @@
            text-shadow:0 2px 8px #000; }
   #title .ghosts { margin-top:8px; font-size:12px; line-height:1.9; letter-spacing:.12em;
            color:#fff; text-shadow:0 2px 6px #000; }
-  #bottom { padding:6px 14px calc(10px + env(safe-area-inset-bottom)); display:flex;
-            align-items:center; gap:10px; }
+  #bottom { padding:6px 10px calc(10px + env(safe-area-inset-bottom)); display:flex;
+            align-items:center; gap:6px; }
   #lives { display:flex; gap:5px; flex:1; align-items:center; min-height:22px; }
-  .life { width:20px; height:20px; border-radius:50%;
+  .life { width:18px; height:18px; border-radius:50%;
           background:conic-gradient(from -30deg, transparent 0deg 70deg, #ffe600 70deg 360deg); }
-  #fruitlab { font-size:11px; letter-spacing:.14em; color:#ffb8ae; text-shadow:0 1px 6px #000;
-              min-width:74px; text-align:right; }
+  #fruitlab { font-size:10px; letter-spacing:.1em; color:#ffb8ae; text-shadow:0 1px 6px #000;
+              min-width:58px; text-align:right; }
   button { z-index:1200; position:relative; font-family:inherit; font-weight:800; letter-spacing:.1em;
            border:2px solid #ffe600; background:rgba(20,20,50,.82); color:#ffe600;
-           border-radius:12px; padding:11px 16px; font-size:15px; cursor:pointer;
+           border-radius:12px; padding:10px 11px; font-size:14px; cursor:pointer;
            box-shadow:0 4px 16px rgba(0,0,0,.5); }
   button:active { transform:scale(.96); background:rgba(60,50,0,.9); }
   #btnCam { border-color:#7fd4ff; color:#7fd4ff; padding:11px 12px; }
+  .sbtn { border-color:#7fd4ff; color:#7fd4ff; padding:10px 8px; font-size:11px; white-space:nowrap; }
   #joy { position:fixed; width:110px; height:110px; border-radius:50%; z-index:1100;
          border:2px solid rgba(255,255,255,.45); background:rgba(255,255,255,.08);
          display:none; pointer-events:none; transform:translate(-50%,-50%); }
@@ -86,6 +87,8 @@ canvas{touch-action:none}
     <div id="lives"></div>
     <div id="fruitlab"></div>
     <button id="btnCam" title="Retry camera">&#128247;</button>
+    <button id="btnView" class="sbtn" title="Toggle 3D floor / flat view">VIEW: 3D</button>
+    <button id="btnTilt" class="sbtn" title="Enable gyro tilt parallax">TILT</button>
     <button id="btnMain">&#9654; START</button>
   </div>
 </div>
@@ -615,7 +618,7 @@ function drawText(text, tx, ty, color, size) {
   ctx.fillText(text, tx * T, ty * T);
   ctx.shadowBlur = 0;
 }
-function draw(now) {
+function drawFlat(now) {
   ctx.clearRect(0, 0, cv.width, cv.height);
   ctx.fillStyle = 'rgba(3,3,16,0.30)';
   ctx.fillRect(0, 0, cv.width, cv.height);
@@ -673,6 +676,327 @@ function draw(now) {
   if (G.state === 'gameover') drawText('GAME  OVER', 14, 17.62, '#ff3b30', 20);
   if (G.state === 'paused') drawText('PAUSED', 14, 17.62, '#7fd4ff', 20);
 }
+
+/* ---------------- 3D floor view (v2) ----------------
+   Same game, same state — only the renderer changes. The maze is a
+   raised board lying on a ground plane: a pinhole camera sits behind
+   the near edge, above the plane, looking across it. World coords:
+   X = tile x - 14 (board centre 0), Z = tile y (0 = far edge),
+   h = height above the board in tile units. Painter's algorithm:
+   slab, floor pellets, then rows far -> near (walls, orbs, fruit,
+   standing characters), text last. */
+var VIEW = '3d';
+var CAM = { back: 16, h: 29, f: 360, horizon: 6, cx: cv.width / 2 };
+var WALL_H = 0.85;
+var camXCur = 0, camHCur = CAM.h, horizonCur = CAM.horizon;
+var tilt = { listening: false, on: false, tx: 0, ty: 0, x: 0, y: 0 };
+
+function proj(X, Z, h) {
+  var d = (C.ROWS + CAM.back) - Z;
+  var s = CAM.f / d;
+  return { x: CAM.cx + (X - camXCur) * s, y: horizonCur + (camHCur - (h || 0)) * s, s: s, d: d };
+}
+function squashAt(d) { return camHCur / Math.sqrt(camHCur * camHCur + d * d); }
+function quadP(p1, p2, p3, p4, fill) {
+  ctx.fillStyle = fill;
+  ctx.beginPath();
+  ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.lineTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y);
+  ctx.closePath(); ctx.fill();
+}
+var WALL_ROWS = [];
+(function () {
+  var x, y;
+  for (y = 0; y < C.ROWS; y++) {
+    var row = [];
+    for (x = 0; x < C.COLS; x++) if (C.isWall(x, y)) row.push(x);
+    WALL_ROWS.push(row);
+  }
+})();
+
+function drawShadow3D(X, Z, rw) {
+  var p = proj(X, Z, 0);
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.beginPath();
+  ctx.ellipse(p.x, p.y, rw * p.s, Math.max(1, rw * p.s * squashAt(p.d)), 0, 0, 7);
+  ctx.fill();
+}
+function drawGhost3D(g, now) {
+  drawShadow3D(g.x - 14, g.y, 0.55);
+  var base = proj(g.x - 14, g.y, 0);
+  var r = T * 0.74 * (base.s / T);
+  var x = base.x, y = base.y - r * 0.92;
+  var eyesOnly = g.state === 'eyes' || g.state === 'entering';
+  var fright = !eyesOnly && G.frightT > 0;
+  var flash = fright && G.frightT < 1.8 && Math.floor(now * 5) % 2 === 0;
+  if (!eyesOnly) {
+    ctx.fillStyle = fright ? (flash ? '#f2f4ff' : '#2430e8') : g.color;
+    ctx.beginPath();
+    ctx.moveTo(x - r, y + r * 0.92);
+    ctx.lineTo(x - r, y - r * 0.12);
+    ctx.arc(x, y - r * 0.12, r, Math.PI, 0);
+    ctx.lineTo(x + r, y + r * 0.92);
+    var feet = 8, fw = (2 * r) / feet, i;
+    for (i = 1; i <= feet; i++) {
+      var px = x + r - i * fw;
+      var py = y + r * 0.92 - ((i % 2 === (Math.floor(now * 9 + g.bobOff * 2) % 2)) ? r * 0.3 : 0);
+      ctx.lineTo(px, py);
+    }
+    ctx.closePath(); ctx.fill();
+  }
+  var d = C.DIRS[g.dir] || C.DIRS.left;
+  if (fright) {
+    var fc = flash ? '#ff3b30' : '#ffb8ae';
+    ctx.fillStyle = fc;
+    [-0.34, 0.34].forEach(function (o) {
+      ctx.beginPath(); ctx.arc(x + o * r, y - r * 0.16, r * 0.15, 0, 7); ctx.fill();
+    });
+    ctx.strokeStyle = fc; ctx.lineWidth = Math.max(1, r * 0.08); ctx.beginPath();
+    var mx = x - r * 0.52, my = y + r * 0.34, s2;
+    ctx.moveTo(mx, my);
+    for (s2 = 1; s2 <= 6; s2++) ctx.lineTo(mx + s2 * (r * 1.04 / 6), my + (s2 % 2 ? -r * 0.13 : r * 0.05));
+    ctx.stroke();
+  } else {
+    [-0.36, 0.36].forEach(function (o) {
+      var ex = x + o * r + d.x * r * 0.13, ey = y - r * 0.24 + d.y * r * 0.13;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.ellipse(ex, ey, r * 0.21, r * 0.27, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = '#2430ff';
+      ctx.beginPath(); ctx.arc(ex + d.x * r * 0.15, ey + d.y * r * 0.15, r * 0.135, 0, 7); ctx.fill();
+    });
+  }
+}
+function drawPac3D(now) {
+  drawShadow3D(pac.x - 14, pac.y, 0.55);
+  var base = proj(pac.x - 14, pac.y, 0);
+  var r = T * 0.8 * (base.s / T);
+  var cx = base.x, cy = base.y - r * 0.92;
+  var bobY = pac.moving ? Math.abs(Math.sin(pac.phase)) * r * 0.08 : 0;
+  if (G.state === 'dying') {
+    if (G.deathT <= 0.6) {
+      drawPacShape(cx, cy, r, pac.dir, 0.12 * Math.PI);
+    } else if (G.deathT <= 2.3) {
+      var a = Math.PI * Math.min(1, (G.deathT - 0.6) / 1.5);
+      if (a < Math.PI * 0.995) {
+        ctx.fillStyle = '#ffe600';
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, -Math.PI / 2 + a, -Math.PI / 2 - a + Math.PI * 2);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+  } else {
+    var mouth = (0.05 + Math.abs(Math.sin(pac.phase)) * 0.25) * Math.PI;
+    drawPacShape(cx, cy - bobY, r, pac.dir, pac.moving ? mouth : 0.14 * Math.PI);
+  }
+}
+function drawTextScreen(text, x, y, color, size) {
+  ctx.fillStyle = color;
+  ctx.font = '900 ' + size + 'px "Trebuchet MS", Verdana, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.shadowColor = '#000'; ctx.shadowBlur = 6;
+  ctx.fillText(text, x, y);
+  ctx.shadowBlur = 0;
+}
+function drawWallLayer(flash) {
+  var topCol = flash ? '#43439a' : '#0a0a44';
+  var southCol = flash ? '#3a3a86' : '#1e1e7a';
+  var sideCol = flash ? '#282862' : '#13135c';
+  var edgeCol = flash ? '#ffffff' : '#3a4bff';
+  var r, i, tx;
+  for (r = 0; r < C.ROWS; r++) {
+    var rowTiles = WALL_ROWS[r], segs = [];
+    for (i = 0; i < rowTiles.length; i++) {
+      tx = rowTiles[i];
+      var X0 = tx - 14, X1 = tx - 13, Z0 = r, Z1 = r + 1;
+      var cNW = proj(X0, Z0, WALL_H), cNE = proj(X1, Z0, WALL_H),
+          cSE = proj(X1, Z1, WALL_H), cSW = proj(X0, Z1, WALL_H);
+      if (!C.isWall(tx - 1, r) && camXCur < X0)
+        quadP(proj(X0, Z0, WALL_H), proj(X0, Z1, WALL_H), proj(X0, Z1, 0), proj(X0, Z0, 0), sideCol);
+      if (!C.isWall(tx + 1, r) && camXCur > X1)
+        quadP(proj(X1, Z0, 0), proj(X1, Z1, 0), proj(X1, Z1, WALL_H), proj(X1, Z0, WALL_H), sideCol);
+      if (!C.isWall(tx, r + 1))
+        quadP(cSW, cSE, proj(X1, Z1, 0), proj(X0, Z1, 0), southCol);
+      quadP(cNW, cNE, cSE, cSW, topCol);
+      if (!C.isWall(tx, r - 1)) segs.push([cNW, cNE]);
+      if (!C.isWall(tx, r + 1)) segs.push([cSW, cSE]);
+      if (!C.isWall(tx - 1, r)) segs.push([cNW, cSW]);
+      if (!C.isWall(tx + 1, r)) segs.push([cNE, cSE]);
+    }
+    if (segs.length) {
+      var mid = proj(0, r + 0.5, 0);
+      ctx.strokeStyle = edgeCol;
+      ctx.lineWidth = Math.max(0.7, Math.min(2.4, mid.s * 0.085));
+      ctx.beginPath();
+      for (i = 0; i < segs.length; i++) { ctx.moveTo(segs[i][0].x, segs[i][0].y); ctx.lineTo(segs[i][1].x, segs[i][1].y); }
+      ctx.stroke();
+    }
+    if (r === 12) { /* ghost-house door bar */
+      quadP(proj(-1, 12.45, 0.34), proj(1, 12.45, 0.34), proj(1, 12.45, 0.02), proj(-1, 12.45, 0.02), '#ffb8de');
+    }
+  }
+}
+/* The wall layer only changes when the (quantised) camera or the
+   level-clear flash changes — cache it offscreen so a still board
+   costs one drawImage per frame. */
+var mazeLayer = { key: '', cv: null, builds: 0 };
+function drawWallsCached(flash) {
+  var key = (flash ? 'F' : 'N') + '|' + Math.round(camXCur * 20) + '|' +
+            Math.round(camHCur * 20) + '|' + Math.round(horizonCur * 4);
+  if (mazeLayer.key !== key) {
+    if (!mazeLayer.cv) {
+      mazeLayer.cv = document.createElement('canvas');
+      mazeLayer.cv.width = cv.width; mazeLayer.cv.height = cv.height;
+    }
+    var main = ctx;
+    ctx = mazeLayer.cv.getContext('2d');
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    drawWallLayer(flash);
+    mazeLayer.builds++;
+    ctx = main;
+    mazeLayer.key = key;
+  }
+  ctx.drawImage(mazeLayer.cv, 0, 0);
+}
+function draw3D(now) {
+  /* smooth gyro parallax toward its target */
+  tilt.x += (tilt.tx - tilt.x) * 0.05;
+  tilt.y += (tilt.ty - tilt.y) * 0.05;
+  camXCur = tilt.x;
+  camHCur = CAM.h + tilt.y * 2.5;
+  horizonCur = CAM.horizon + tilt.y * 14;
+
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  var flash = G.state === 'clear' && Math.floor(G.flashT / 0.22) % 2 === 1;
+  var southCol = flash ? '#34347a' : '#141452';
+  var sideCol = flash ? '#282862' : '#0d0d40';
+
+  /* soft shadow blob grounding the board on the "floor" */
+  var i, ex;
+  for (i = 0; i < 3; i++) {
+    ex = 0.8 + i * 0.6;
+    quadP(proj(-14.7 - ex, -0.7 - ex, 0), proj(14.7 + ex, -0.7 - ex, 0),
+          proj(14.7 + ex, 31.7 + ex, 0), proj(-14.7 - ex, 31.7 + ex, 0),
+          'rgba(0,0,0,0.10)');
+  }
+  /* slab sides (thickness), then the slab top the maze sits on */
+  quadP(proj(-14.7, -0.7, 0), proj(-14.7, -0.7, -0.55), proj(-14.7, 31.7, -0.55), proj(-14.7, 31.7, 0), sideCol);
+  quadP(proj(14.7, -0.7, -0.55), proj(14.7, -0.7, 0), proj(14.7, 31.7, 0), proj(14.7, 31.7, -0.55), sideCol);
+  quadP(proj(-14.7, 31.7, 0), proj(14.7, 31.7, 0), proj(14.7, 31.7, -0.55), proj(-14.7, 31.7, -0.55), southCol);
+  quadP(proj(-14.7, -0.7, 0), proj(14.7, -0.7, 0), proj(14.7, 31.7, 0), proj(-14.7, 31.7, 0),
+        flash ? '#2a2a66' : 'rgba(5,5,32,0.96)');
+
+  /* floor pellets (flat discs on the board surface) — drawn before
+     the walls so nearer wall faces correctly occlude dots behind them */
+  var key, parts, tx, ty, p, rx;
+  ctx.fillStyle = '#ffcf9e';
+  ctx.beginPath();
+  for (key in G.pellets.dots) {
+    parts = key.split(','); tx = +parts[0]; ty = +parts[1];
+    p = proj(tx - 13.5, ty + 0.5, 0);
+    rx = 0.13 * p.s;
+    ctx.moveTo(p.x + rx, p.y);
+    ctx.ellipse(p.x, p.y, rx, Math.max(0.6, rx * squashAt(p.d)), 0, 0, 7);
+  }
+  ctx.fill();
+  /* bucket the power orbs by row so nearer rows draw over farther ones */
+  var orbRows = {};
+  for (key in G.pellets.powers) {
+    parts = key.split(','); ty = +parts[1];
+    (orbRows[ty] = orbRows[ty] || []).push(+parts[0]);
+  }
+
+  drawWallsCached(flash);
+
+  var dying = G.state === 'dying';
+  var hideActors = G.state === 'clear';
+  var hideGhosts = hideActors || (dying && G.deathT > 0.6);
+
+  /* rows far -> near: orbs, fruit, standing characters */
+  var r;
+  for (r = 0; r < C.ROWS; r++) {
+    if (orbRows[r]) {
+      for (i = 0; i < orbRows[r].length; i++) {
+        tx = orbRows[r][i];
+        p = proj(tx - 13.5, r + 0.5, 0.38);
+        rx = 0.36 * p.s * (0.84 + 0.16 * Math.sin(now * 6));
+        ctx.save();
+        ctx.shadowColor = '#ffd9c9'; ctx.shadowBlur = 12;
+        ctx.fillStyle = '#ffd9c9';
+        ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(1.2, rx), 0, 7); ctx.fill();
+        ctx.restore();
+      }
+    }
+    if (!hideActors) {
+      var actors = [];
+      if (!hideGhosts) ghosts.forEach(function (g) { if (Math.floor(g.y) === r) actors.push({ g: g }); });
+      if (G.state !== 'gameover' && Math.floor(pac.y) === r) actors.push({ pac: true });
+      actors.sort(function (a, b) {
+        var ay = a.g ? a.g.y : pac.y, by = b.g ? b.g.y : pac.y;
+        return ay - by;
+      });
+      actors.forEach(function (a) { if (a.g) drawGhost3D(a.g, now); else drawPac3D(now); });
+      if (r === 17 && G.fruitT > 0) {
+        drawShadow3D(FRUIT_POS.x - 14, FRUIT_POS.y, 0.5);
+        var fb = proj(FRUIT_POS.x - 14, FRUIT_POS.y, 0);
+        ctx.save();
+        ctx.translate(fb.x, fb.y - 0.55 * fb.s);
+        ctx.scale(fb.s / T, fb.s / T);
+        drawFruitShape(C.fruitForLevel(G.level).name, 0, 0);
+        ctx.restore();
+      }
+    }
+  }
+  G.popups.forEach(function (pp) {
+    var pt = proj(pp.x - 14, pp.y, 0.8 + (0.9 - pp.t) * 0.7);
+    ctx.globalAlpha = Math.min(1, pp.t / 0.4);
+    drawTextScreen(pp.text, pt.x, pt.y, pp.color, Math.max(9, Math.min(28, 15 * pt.s / T)));
+    ctx.globalAlpha = 1;
+  });
+  var tp = proj(0, 17.62, 0.3);
+  if (G.state === 'ready') drawTextScreen('READY!', tp.x, tp.y, '#ffe600', 27);
+  if (G.state === 'gameover') drawTextScreen('GAME  OVER', tp.x, tp.y, '#ff3b30', 27);
+  if (G.state === 'paused') drawTextScreen('PAUSED', tp.x, tp.y, '#7fd4ff', 27);
+}
+function draw(now) {
+  if (VIEW === '3d') draw3D(now); else drawFlat(now);
+}
+
+/* ---------------- view + tilt controls ---------------- */
+var btnView = document.getElementById('btnView'), btnTilt = document.getElementById('btnTilt');
+function setView(v) {
+  VIEW = v;
+  btnView.innerHTML = v === '3d' ? 'VIEW: 3D' : 'VIEW: FLAT';
+}
+btnView.addEventListener('click', function () {
+  Snd.resume();
+  setView(VIEW === '3d' ? 'flat' : '3d');
+});
+function onOrient(e) {
+  if (e.gamma == null || e.beta == null) return;
+  tilt.on = true;
+  var gx = Math.max(-1, Math.min(1, e.gamma / 28));
+  var by = Math.max(-1, Math.min(1, (e.beta - 42) / 28));
+  tilt.tx = gx * 2.4;
+  tilt.ty = by;
+}
+btnTilt.addEventListener('click', function () {
+  Snd.resume();
+  if (tilt.listening) return;
+  function enable() {
+    window.addEventListener('deviceorientation', onOrient);
+    tilt.listening = true;
+    btnTilt.innerHTML = 'TILT ON';
+  }
+  if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission().then(function (st) {
+      if (st === 'granted') enable(); else btnTilt.innerHTML = 'TILT N/A';
+    }).catch(function () { btnTilt.innerHTML = 'TILT N/A'; });
+  } else if (window.DeviceOrientationEvent) {
+    enable();
+  } else {
+    btnTilt.innerHTML = 'TILT N/A';
+  }
+});
 
 /* ---------------- main loop ---------------- */
 var lastTs = 0;
@@ -791,7 +1115,14 @@ window.__pac = {
         return { name: g.name, state: g.state, x: Math.round(g.x * 10) / 10, y: Math.round(g.y * 10) / 10 };
       })
     };
-  }
+  },
+  view: function () { return VIEW; },
+  setView: setView,
+  tilt: function () {
+    return { listening: tilt.listening, on: tilt.on, x: Math.round(tilt.x * 100) / 100, tx: tilt.tx };
+  },
+  setTilt: function (x, y) { tilt.tx = x; tilt.ty = y; },
+  layerBuilds: function () { return mazeLayer.builds; }
 };
 })();
 </script>
