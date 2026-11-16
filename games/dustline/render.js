@@ -13,6 +13,12 @@
 // hillshaded from a fixed NW sun. The road is graded to a smoothed height
 // profile along the centreline, so the course reads CARVED through the dunes
 // with cut banks, instead of lying flat on top of them.
+// v4 ROUND 4: the procedural field alone read as SOFT SCULPTED MASSES, so the
+// big features are now HAND-AUTHORED to echo the reference's composition — a
+// dominant dune ridge chained along the top with a long shadow face, the NE
+// mud bowl raised into a dark earthwork, the hairpin bowl and the rib mound
+// scaled up into true earthworks — with harder hillshade, elevation-tied
+// colour (dark red-brown lows, pale crests) and a sparkling river.
 'use strict';
 
 const LOOK_CONF = {
@@ -60,23 +66,45 @@ function gauss2(x, y, cx, cy, r) { const dx = (x - cx) / r, dy = (y - cy) / r; r
 // the river channel carved down. Authored features sit where the reference
 // puts them: dark NE dune, pale banked bowl in the hairpin, mound mid-east.
 function terrainHeight(x, y) {
-  let h = 1.85 * vnoise(x * 0.028 + 13.7, y * 0.028 + 7.1)
+  // v4: the noise is demoted to TEXTURE — the landforms below are authored.
+  // On the far-bank strip (y < ~12) the fine octave is damped hard: his top
+  // dune is ONE smooth face, and speckle there reads as noise, not landform.
+  const stripW = 1 - sstep(8, 14, y);
+  let h = 1.55 * vnoise(x * 0.028 + 13.7, y * 0.028 + 7.1)
         + 0.6 * vnoise(x * 0.075 + 3.1, y * 0.075 + 9.4)
-        + 0.18 * vnoise(x * 0.22 + 8.8, y * 0.22 + 2.2);
-  h -= 1.32; // recenter (mean of the three octaves)
-  h += 1.45 * gauss2(x, y, 90, 6, 17);   // NE dune mass
+        + 0.18 * vnoise(x * 0.22 + 8.8, y * 0.22 + 2.2) * (1 - 0.7 * stripW);
+  h -= 1.17; // recenter (mean of the three octaves)
+  // the dune FACE: one clean planar fall from the top edge down to the
+  // river, so the hillshade lights it as a single sculpted slope with a
+  // bright crest roll at the top instead of a chain of bumps
+  h += 1.15 * (1 - sstep(1.5, 12.5, y)) * sstep(14, 30, x);
+  // THE TOP RIDGE: a chain of masses along the far bank — one dominant dune
+  // wall across the top of the scene, its long south face falling to the
+  // river in shadow (sun is NW, so the track-facing slope is the dark one).
+  h += 1.30 * gauss2(x, y, 36, 3, 14);
+  h += 1.60 * gauss2(x, y, 56, 2, 16);
+  h += 1.85 * gauss2(x, y, 76, 3, 17);
+  h += 1.80 * gauss2(x, y, 90, 6, 17);   // NE dune mass (ridge's east anchor)
+  h += 1.35 * gauss2(x, y, 102, 12, 12);
+  // NE EARTHWORK: the mud bowl inside the east hairpin raised into a dark
+  // churned mass — the reference's dominant top-right landform.
+  h += 1.55 * gauss2(x, y, 87, 25, 10.5);
   h += 1.00 * gauss2(x, y, 4, 12, 13);   // NW rise
   h += 0.85 * gauss2(x, y, 58, 71, 15);  // S rise
-  h += 0.75 * gauss2(x, y, 97, 65, 12);  // SE rise
+  h += 0.95 * gauss2(x, y, 97, 65, 12);  // SE rise
+  h += 1.05 * gauss2(x, y, 14, 67, 12);  // SW rise (his dark bottom-left)
+  h += 0.80 * gauss2(x, y, 48, 58, 12);  // mid-south infield rise
   h += 0.65 * gauss2(x, y, 3, 44, 10);   // W rise
-  // banked sand bowl: a dome with a dished top inside the hairpin island
-  const bq = Math.hypot((x - 28) / 8.5, (y - 47) / 7.5);
-  h += 1.30 * Math.exp(-bq * bq * 1.1) - 0.45 * Math.exp(-bq * bq * 5.0);
-  // corrugated mound under the rib section (x 56..70, axis y 38.2)
-  const mProfile = Math.exp(-Math.pow((y - 38.2) / 3.1, 2));
+  // banked sand bowl: a MAJOR earthwork now — tall rim, deep dish, inside
+  // the hairpin island; its SE inner face pools shadow (see drawBowlShade)
+  const bq = Math.hypot((x - 28) / 9.5, (y - 47) / 8.3);
+  h += 1.95 * Math.exp(-bq * bq * 1.1) - 0.80 * Math.exp(-bq * bq * 4.2);
+  // corrugated mound under the rib section (x 56..70, axis y 38.2): scaled
+  // up into a true earthwork the road climbs over, ribs cut deeper
+  const mProfile = Math.exp(-Math.pow((y - 38.2) / 3.5, 2));
   const mTaper = sstep(55.2, 58.6, x) * (1 - sstep(67.8, 71.2, x));
-  h += 1.50 * mProfile * mTaper;
-  h += 0.17 * Math.sin((x - 56) / 0.85 * Math.PI) * mProfile * mTaper;
+  h += 2.15 * mProfile * mTaper;
+  h += 0.27 * Math.sin((x - 56) / 0.85 * Math.PI) * mProfile * mTaper;
   // river channel carved down (banks slope into it)
   const dRiv = Math.abs(y - riverCenterY(x));
   h -= 1.2 * (1 - sstep(4.2, 7.6, dRiv));
@@ -215,7 +243,10 @@ const RELIEF = (() => {
       H[i] = hS[FIELD.sIdx[i]] * (1 - w) + ht * w;
     }
   }
-  const SUNX = -0.60, SUNY = -0.46, SUNZ = 0.80, K = 3.4;
+  // v4: shade HARDER — the reference's swings are carved, not gentle, so the
+  // relief gain and the clamp range both open up; shadow faces go genuinely
+  // dark, crest faces genuinely bright.
+  const SUNX = -0.60, SUNY = -0.46, SUNZ = 0.80, K = 4.3;
   const HS = new Float32Array(n).fill(1);
   for (let gy = 0; gy < gh; gy++) {
     for (let gx = 0; gx < gw; gx++) {
@@ -224,10 +255,15 @@ const RELIEF = (() => {
       const yu = H[Math.max(0, gy - 1) * gw + gx], yd = H[Math.min(gh - 1, gy + 1) * gw + gx];
       const ddx = (xr - xl) / (2 * cell), ddy = (yd - yu) / (2 * cell);
       const dot = (-ddx * SUNX - ddy * SUNY) * K + SUNZ;
-      HS[i] = Math.max(0.60, Math.min(1.42, 1 + (dot - SUNZ)));
+      HS[i] = Math.max(0.50, Math.min(1.55, 1 + (dot - SUNZ)));
     }
   }
-  return { H, HS };
+  // normalized height 0..1 over the whole field — drives elevation colour
+  let hMin = 1e9, hMax = -1e9;
+  for (let i = 0; i < n; i++) { if (H[i] < hMin) hMin = H[i]; if (H[i] > hMax) hMax = H[i]; }
+  const HN = new Float32Array(n);
+  for (let i = 0; i < n; i++) HN[i] = (H[i] - hMin) / Math.max(0.001, hMax - hMin);
+  return { H, HS, HN };
 })();
 
 function fieldIdx(x, y) {
@@ -331,6 +367,16 @@ function surfaceLayer(look) {
           // current streaks: noise stretched along the flow (x) direction
           const streak = vnoise(gx * 0.10 + 4.4, gy * 0.62 + 1.9);
           col = shadeCol(col, 1 + (streak - 0.5) * 0.17);
+          // v4 SPARKLE: his water glitters — fine light flecks scattered
+          // across the whole surface plus brighter flow-stretched glints,
+          // so the river has internal life, not just edge foam
+          const glint = vnoise(gx * 0.33 + 9.1, gy * 1.35 + 3.3);
+          if (glint > 0.76) col = mixHex(col, pal.shore, Math.min(0.55, (glint - 0.76) * 1.6));
+          const sp = hash2(gx * 5 + 91, gy * 5 + 47);
+          if (sp > (look === 'B' ? 0.935 : 0.905)) col = mixHex(col, '#e8f6ff', look === 'B' ? 0.45 : 0.60);
+        } else {
+          // v4: the waterline itself goes near-white — a bright shallow lip
+          col = mixHex(col, '#eaf7ff', (1 - dep / shoreT) * 0.45);
         }
       } else if (d < hw + 1.3) {
         // ----- ROAD corridor (surface flavour still shows through) -----
@@ -385,12 +431,25 @@ function surfaceLayer(look) {
         }
       }
       if (s !== SURF.WATER) {
+        // v4 ELEVATION COLOUR: height reads in colour as well as shading —
+        // lows fall toward dark red-brown, crests toward pale straw. Open
+        // ground takes it full; the graded road takes only a whisper, so
+        // the course still reads as one surface climbing the landforms.
+        const hn = RELIEF.HN[i];
+        const tintW = d < hw + 1.3 ? 0.30 : 1;
+        if (hn < 0.34) col = mixHex(col, '#47220e', (0.34 - hn) * 1.15 * tintW);
+        else if (hn > 0.70 && s !== SURF.MUD) col = mixHex(col, '#ecd49e', (hn - 0.70) * 1.30 * tintW);
+        // his high ground in the NE is churned MUD — dark at every height.
+        // Exempt from the pale-crest tint (above) and shaded down as scrub.
+        if (s === SURF.MUD && d >= hw + 1.3) col = shadeCol(col, 0.86);
         // hillshade: graded roads take it weakly, open terrain takes it full;
         // sand keeps it almost anywhere (the bowl's banking IS its shading)
         let wgt = d < hw ? 0.30 : d < hw + 1.3 ? 0.30 + 0.70 * ((d - hw) / 1.3) : 1;
         if (s === SURF.SAND) wgt = Math.max(wgt, 0.85);
         if (s === SURF.RIBS) wgt = Math.max(wgt, 0.55);
-        let f = 1 + (RELIEF.HS[i] - 1) * wgt;
+        // B's smoothed upscale blurs the relief back out — push its shade
+        // swing wider so the landforms survive the painted medium
+        let f = 1 + (RELIEF.HS[i] - 1) * wgt * (look === 'B' ? 1.35 : 1);
         // scrub sits a touch darker than v2 so the road pops against it
         if (d >= hw + 1.3 && (s === SURF.DIRT || s === SURF.RIBS)) f *= 0.93;
         if (f !== 1) col = shadeCol(col, f);
@@ -422,12 +481,17 @@ function duneShade(g, W, H) {
 // hillshade does the per-cell work; these broad washes sell the banking at
 // whole-track scale in every look.
 function drawBowlShade(g, ppm) {
-  let gr = g.createRadialGradient(31.5 * ppm, 50 * ppm, 1, 31.5 * ppm, 50 * ppm, 8.8 * ppm);
-  gr.addColorStop(0, 'rgba(46,24,8,0.20)'); gr.addColorStop(1, 'rgba(46,24,8,0)');
+  // v4: the bowl is a major earthwork now — the washes deepen with it
+  let gr = g.createRadialGradient(31.5 * ppm, 50 * ppm, 1, 31.5 * ppm, 50 * ppm, 9.6 * ppm);
+  gr.addColorStop(0, 'rgba(46,24,8,0.27)'); gr.addColorStop(1, 'rgba(46,24,8,0)');
   g.fillStyle = gr; g.fillRect(19 * ppm, 38 * ppm, 21 * ppm, 19 * ppm);
-  gr = g.createRadialGradient(24.5 * ppm, 43.5 * ppm, 1, 24.5 * ppm, 43.5 * ppm, 7.8 * ppm);
-  gr.addColorStop(0, 'rgba(255,238,196,0.17)'); gr.addColorStop(1, 'rgba(255,238,196,0)');
+  gr = g.createRadialGradient(24.5 * ppm, 43.5 * ppm, 1, 24.5 * ppm, 43.5 * ppm, 8.4 * ppm);
+  gr.addColorStop(0, 'rgba(255,238,196,0.21)'); gr.addColorStop(1, 'rgba(255,238,196,0)');
   g.fillStyle = gr; g.fillRect(15 * ppm, 35 * ppm, 21 * ppm, 19 * ppm);
+  // deep dish: the dished centre sits in its own soft shadow
+  gr = g.createRadialGradient(28 * ppm, 47.5 * ppm, 0.5, 28 * ppm, 47.5 * ppm, 4.6 * ppm);
+  gr.addColorStop(0, 'rgba(46,24,8,0.13)'); gr.addColorStop(1, 'rgba(46,24,8,0)');
+  g.fillStyle = gr; g.fillRect(22 * ppm, 41 * ppm, 13 * ppm, 13 * ppm);
 }
 
 // Static wear: twin wheel lines that darken where the corner bites (curvature),
@@ -471,10 +535,11 @@ function drawWearArcs(g, ppm, look) {
 // adds the crisp corrugation on top.
 function drawRibs(g, ppm, look) {
   const { grid, gw, gh, cell } = TRACK.surf;
-  // cast shadow (sun from NW -> shadow falls SE of the mound)
-  g.fillStyle = 'rgba(24,12,4,0.13)';
-  g.beginPath(); g.ellipse(64.8 * ppm, 40.9 * ppm, 9.8 * ppm, 4.6 * ppm, 0, 0, 7); g.fill();
-  g.fillStyle = 'rgba(24,12,4,0.22)';
+  // cast shadow (sun from NW -> shadow falls SE of the mound); v4: the
+  // mound is taller, so the shadow it throws is longer and deeper
+  g.fillStyle = 'rgba(24,12,4,0.17)';
+  g.beginPath(); g.ellipse(65.2 * ppm, 41.3 * ppm, 10.4 * ppm, 5.0 * ppm, 0, 0, 7); g.fill();
+  g.fillStyle = 'rgba(24,12,4,0.30)';
   g.beginPath(); g.ellipse(64.8 * ppm, 40.5 * ppm, 8.6 * ppm, 3.7 * ppm, 0, 0, 7); g.fill();
   for (let gy = 0; gy < gh; gy++) {
     for (let gx = 0; gx < gw; gx++) {
@@ -483,7 +548,7 @@ function drawRibs(g, ppm, look) {
       const xc = x + cell / 2, yc = y + cell / 2;
       const env = sstep(56, 58.6, xc) * (1 - sstep(67.6, 70.2, xc)); // ramp envelope
       const ph = Math.floor(x / 0.85) % 2;
-      g.fillStyle = ph ? `rgba(255,240,200,${(0.06 + 0.19 * env).toFixed(3)})` : `rgba(30,16,6,${(0.08 + 0.24 * env).toFixed(3)})`;
+      g.fillStyle = ph ? `rgba(255,240,200,${(0.07 + 0.24 * env).toFixed(3)})` : `rgba(30,16,6,${(0.09 + 0.30 * env).toFixed(3)})`;
       g.fillRect(x * ppm, y * ppm, cell * ppm + 0.6, cell * ppm + 0.6);
       // mound cross-shading: lit north face, shaded south face
       if (yc < 37.3) { g.fillStyle = 'rgba(255,240,200,0.10)'; g.fillRect(x * ppm, y * ppm, cell * ppm + 0.6, cell * ppm + 0.6); }
