@@ -19,6 +19,13 @@
 // mud bowl raised into a dark earthwork, the hairpin bowl and the rib mound
 // scaled up into true earthworks — with harder hillshade, elevation-tied
 // colour (dark red-brown lows, pale crests) and a sparkling river.
+// v5 ROUND 5: HAND-PAINTED GROUND TEXTURE. The shapes were right but the
+// surfaces still carried per-cell procedural grain; the reference is painted
+// SMOOTH. For looks A and B the surface layer now mixes its colours from
+// smooth fields only — broad tonal regions, contour banding off the
+// heightfield, directional streaks on the flats — with every hash-pick and
+// speckle removed; the hillshade still multiplies over the top. The water
+// sits deeper and more saturated, toward his royal blue. C keeps its crunch.
 'use strict';
 
 const LOOK_CONF = {
@@ -30,9 +37,9 @@ const LOOK_CONF = {
 const PALETTES = {
   A: {
     dirt: ['#a05c26', '#8f4f1e', '#b26a30', '#7e451a'], sand: ['#e0bd76', '#d9b96e'], mud: ['#5e3c1e', '#533417', '#6d4a26'],
-    gravel: ['#8a7d6a', '#7f7260'], rock: ['#6e685f', '#625c53'], water: ['#2456d8', '#173a9e'],
+    gravel: ['#8a7d6a', '#7f7260'], rock: ['#6e685f', '#625c53'], water: ['#1d47c6', '#122e86'],
     road: ['#bb9050', '#ae8445', '#c69e5c'], roadDark: '#6e4c22', shoulder: '#a87c40',
-    shore: '#69b7e8', tapeRed: '#d42a1e', tapeWhite: '#ece7da', dark: '#2a1a0e'
+    shore: '#5fabe6', tapeRed: '#d42a1e', tapeWhite: '#ece7da', dark: '#2a1a0e'
   },
   C: {
     dirt: ['#8a5a2e', '#7c4f27', '#96652f', '#6e4522'], sand: ['#d8ba7c', '#cdb071'], mud: ['#5f3f20', '#54371b', '#71502c'],
@@ -42,9 +49,9 @@ const PALETTES = {
   },
   B: {
     dirt: ['#bb8a54', '#b3814b', '#c2915c', '#a3743f'], sand: ['#ecd096', '#e6c78a'], mud: ['#6e4a28', '#654324', '#7d5730'],
-    gravel: ['#9a8a72', '#91805f'], rock: ['#7d7468', '#726a5e'], water: ['#2f6fd0', '#2a66c2'],
+    gravel: ['#9a8a72', '#91805f'], rock: ['#7d7468', '#726a5e'], water: ['#2060c4', '#17479c'],
     road: ['#dcbc7d', '#c9a55f', '#e6c98b'], roadDark: '#8a6132', shoulder: '#bd9c5e',
-    shore: '#8ec9ec', tapeRed: '#c8402a', tapeWhite: '#f3e6c8', dark: '#3a2318'
+    shore: '#74b7e6', tapeRed: '#c8402a', tapeWhite: '#f3e6c8', dark: '#3a2318'
   }
 };
 const SURF_KEYS = ['dirt', 'sand', 'mud', 'gravel', 'rock', 'water', 'dirt']; // index by SURF (ribs -> dirt base)
@@ -125,6 +132,14 @@ function shadeCol(col, f) {
   const [r, g, b] = toRGB(col);
   const cl = v => Math.max(0, Math.min(255, Math.round(v * f)));
   return `rgb(${cl(r)},${cl(g)},${cl(b)})`;
+}
+// v5: continuous mix across a luminance-ordered colour ramp (dark -> light) —
+// the painted ground's basic move: a smooth field in, a smooth colour out.
+function rampMix(ramp, v) {
+  const n = ramp.length - 1;
+  const f = clamp01(v) * n;
+  const i = Math.min(n - 1, Math.floor(f));
+  return mixHex(ramp[i], ramp[i + 1], f - i);
 }
 
 // ---------- shared scene fields (built once, used by every look) ----------
@@ -337,11 +352,17 @@ const SCENERY = (() => {
 // 1 px per grid cell. This is where the ROAD lives: pale worn dirt with twin
 // wheel bands + corner wear inside the corridor; textured scrub outside it;
 // banked river with shallows; patch edges broken up with dirt speckle.
+// v5: for A and B every colour below is mixed from smooth fields (vn1/vn2/
+// jit/tone) — the hash picks and speckles survive only in C's crunch path.
 const BAYER = [0, 2, 3, 1];
 function surfaceLayer(look) {
   const pal = PALETTES[look];
   const { grid, gw, gh } = TRACK.surf;
   const c = mkCanvas(gw, gh), g = c.getContext('2d');
+  const sm = look !== 'C'; // v5 painted-smooth path (A and B)
+  const dirtRamp = [pal.dirt[3], pal.dirt[1], pal.dirt[0], pal.dirt[2]]; // dark -> light
+  const roadRamp = [pal.road[1], pal.road[0], pal.road[2]];
+  const mudRamp = [pal.mud[1], pal.mud[0], pal.mud[2]];
   for (let gy = 0; gy < gh; gy++) {
     for (let gx = 0; gx < gw; gx++) {
       const i = gy * gw + gx;
@@ -352,18 +373,26 @@ function surfaceLayer(look) {
                    + 0.20 * Math.sin(gx * 0.13 + 5.2) * Math.sin(gy * 0.11 + 0.6); // 0..1 terrain tone
       const d = FIELD.dist[i], hw = FIELD.halfW[i];
       const wearN = clamp01(FIELD.wear[i] * 2.4);
+      // v5 smooth fields: broad painted tone (~11 m blobs), medium variation
+      // (~3 m), and a smooth boundary wobble to replace per-cell hash jitter
+      const vn1 = vnoise(gx * 0.045 + 31.7, gy * 0.045 + 11.3);
+      const vn2 = vnoise(gx * 0.15 + 3.9, gy * 0.15 + 27.2);
+      const jit = vnoise(gx * 0.30 + 51.2, gy * 0.30 + 17.8);
+      const tone = clamp01(0.52 * ln + 0.62 * vn1 - 0.07);
       let col;
       if (s === SURF.WATER) {
-        const dep = FIELD.wdepth[i] + (h2 - 0.5) * 1.1; // jittered depth breaks the bank line
+        const dep = FIELD.wdepth[i] + ((sm ? jit : h2) - 0.5) * 1.1; // wobbled depth breaks the bank line (v5: smooth wobble for A/B)
         const shoreT = look === 'B' ? 0.6 : 1.1, deepT = look === 'B' ? 2.8 : 4.2; // B's blur spreads pale shore — keep its river blue
         if (dep < shoreT) col = pal.shore;
         else if (dep > deepT) col = pal.water[1];
         else if (look === 'A') col = pal.water[(BAYER[(gx & 1) + (gy & 1) * 2] + (h < 0.5 ? 0 : 1)) % 2 === 0 ? 0 : 1];
+        else if (look === 'B') col = mixHex(pal.water[0], pal.water[1], clamp01((dep - shoreT) / (deepT - shoreT))); // v5: painted depth gradient, no hash pick
         else col = pal.water[h < 0.6 ? 0 : 1];
         if (dep >= shoreT) {
           // deep channel: the middle of the river runs darker than the edges
+          // (v5: A/B sit deeper still — his blue is saturated royal, not sky)
           const depF = clamp01((dep - 0.6) / 4.6);
-          col = mixHex(col, shadeCol(pal.water[1], 0.64), depF * 0.65);
+          col = mixHex(col, shadeCol(pal.water[1], 0.60), depF * (sm ? 0.74 : 0.65));
           // current streaks: noise stretched along the flow (x) direction
           const streak = vnoise(gx * 0.10 + 4.4, gy * 0.62 + 1.9);
           col = shadeCol(col, 1 + (streak - 0.5) * 0.17);
@@ -380,52 +409,76 @@ function surfaceLayer(look) {
         }
       } else if (d < hw + 1.3) {
         // ----- ROAD corridor (surface flavour still shows through) -----
-        const edgeJitter = (h2 - 0.5) * 0.8;
+        const edgeJitter = ((sm ? jit : h2) - 0.5) * 0.8;
         const t = clamp01((d + edgeJitter) / hw); // 0 centre -> 1 edge
-        let base = pal.road[ln > 0.66 ? 2 : ln > 0.36 ? 0 : 1];
-        if (s === SURF.SAND) base = pal.sand[0];
-        else if (s === SURF.MUD) base = mixHex(pal.road[1], pal.mud[0], 0.45);
-        else if (s === SURF.GRAVEL) base = mixHex(pal.road[1], pal.gravel[0], 0.4);
+        let base;
+        if (sm) {
+          // v5: the road body is a smooth ramp mix riding the mid-light of
+          // its palette, so the course reads as one painted surface
+          base = rampMix(roadRamp, clamp01(0.30 + tone * 0.55));
+          if (s === SURF.SAND) base = mixHex(pal.sand[0], pal.sand[1], vn2);
+          else if (s === SURF.MUD) base = mixHex(base, pal.mud[0], 0.45);
+          else if (s === SURF.GRAVEL) base = mixHex(base, pal.gravel[0], 0.4);
+        } else {
+          base = pal.road[ln > 0.66 ? 2 : ln > 0.36 ? 0 : 1];
+          if (s === SURF.SAND) base = pal.sand[0];
+          else if (s === SURF.MUD) base = mixHex(pal.road[1], pal.mud[0], 0.45);
+          else if (s === SURF.GRAVEL) base = mixHex(pal.road[1], pal.gravel[0], 0.4);
+        }
         // worn centre + twin wheel bands: a brightness multiplier, so dark
         // flavour surfaces (mud, gravel) keep their hue instead of crushing
         const centre = Math.pow(1 - t, 1.6) * (0.26 + 0.48 * wearN);
         const band = Math.exp(-Math.pow((Math.abs(FIELD.lat[i]) - 0.95) / 0.42, 2)) * (0.13 + 0.30 * wearN);
         let dk = Math.min(0.72, centre + band);
-        if (h < 0.10) dk += 0.08; // grit speckle
+        if (!sm && h < 0.10) dk += 0.08; // grit speckle — C's crunch only (v5)
         col = dk > 0.02 ? shadeCol(base, 1 - dk * 0.40) : base;
         // dusty shoulder blend into scrub at the very edge
         if (d > hw) {
           const f = clamp01((d - hw) / 1.3);
-          const scrub = pal.dirt[ln > 0.62 ? 2 : ln > 0.38 ? 0 : 1];
+          const scrub = sm ? rampMix(dirtRamp, tone) : pal.dirt[ln > 0.62 ? 2 : ln > 0.38 ? 0 : 1];
           col = mixHex(f < 0.5 ? pal.shoulder : col, scrub, f * f);
-          if (h < f * 0.5) col = scrub;
+          if (!sm && h < f * 0.5) col = scrub;
         }
       } else {
         // ----- off-track scrub / features -----
         // sandy bank rim hugging the river
-        const bank = FIELD.wd[i] + (h2 - 0.5) * 1.3;
+        const bank = FIELD.wd[i] + ((sm ? jit : h2) - 0.5) * 1.3;
         if (s === SURF.DIRT && bank < 2.6) {
           col = mixHex(pal.sand[1], pal.dirt[0], clamp01((bank - 0.4) / 2.2));
         } else if (s === SURF.DIRT || s === SURF.RIBS) {
-          if (look === 'A') {
-            const v = ln * 2.6 + (h - 0.5) * 0.35 + BAYER[(gx & 1) + (gy & 1) * 2] * 0.28;
-            col = pal.dirt[Math.max(0, Math.min(3, Math.floor(v)))];
+          if (sm) {
+            // v5 PAINTED DIRT: broad tonal regions off the smooth fields,
+            // a whisper of contour banding off the heightfield (painted
+            // contour strokes on the slopes), and long directional streaks
+            // where the ground is flat. No per-cell picks anywhere.
+            const hn = RELIEF.HN[i];
+            const flat = 1 - Math.min(1, Math.abs(RELIEF.HS[i] - 1) * 2.4);
+            const streak = (vnoise(gx * 0.07 + 91.3, gy * 0.30 + 47.7) - 0.5) * 0.13 * flat;
+            const bandT = Math.sin(hn * 26 + tone * 5) * 0.045;
+            col = rampMix(dirtRamp, clamp01(tone + streak + bandT));
+            if (look === 'A') { // ordered-dither kiss on transitions, Amiga-style
+              col = shadeCol(col, 1 + (BAYER[(gx & 1) + (gy & 1) * 2] - 1.5) * 0.018);
+            }
           } else {
             col = pal.dirt[ln > 0.68 ? 2 : ln > 0.42 ? 0 : ln > 0.2 ? 1 : 3];
             if (h < 0.16) col = pal.dirt[1];
           }
-          if (h < 0.045) col = pal.dirt[3]; // scrub shadow speckle
+          if (!sm && h < 0.045) col = pal.dirt[3]; // scrub shadow speckle — C only (v5)
         } else if (s === SURF.GRAVEL) {
-          col = h < 0.42 ? pal.dirt[1] : pal.gravel[Math.floor(h * pal.gravel.length) % pal.gravel.length];
+          col = sm ? mixHex(mixHex(pal.gravel[0], pal.gravel[1], vn1), pal.dirt[1], vn2 * 0.35)
+                   : (h < 0.42 ? pal.dirt[1] : pal.gravel[Math.floor(h * pal.gravel.length) % pal.gravel.length]);
         } else if (s === SURF.MUD) {
-          col = h < 0.2 ? pal.mud[2] : pal.mud[Math.floor(h * 2) % 2];
-          if (h > 0.93) col = pal.mud[1]; // wet sheen flecks
+          if (sm) col = rampMix(mudRamp, clamp01(tone * 0.75 + vn2 * 0.20)); // painted smooth, kept dark
+          else {
+            col = h < 0.2 ? pal.mud[2] : pal.mud[Math.floor(h * 2) % 2];
+            if (h > 0.93) col = pal.mud[1]; // wet sheen flecks
+          }
         } else {
           const arr = pal[SURF_KEYS[s]];
-          col = arr[Math.floor(h * arr.length)];
+          col = sm ? mixHex(arr[0], arr[arr.length - 1], vn1) : arr[Math.floor(h * arr.length)];
         }
-        // break hard patch outlines with dirt speckle at borders
-        if (s === SURF.SAND || s === SURF.MUD || s === SURF.ROCK) {
+        // break hard patch outlines with dirt speckle at borders — C only (v5)
+        if (!sm && (s === SURF.SAND || s === SURF.MUD || s === SURF.ROCK)) {
           const nb = [grid[i - 1], grid[i + 1], grid[i - gw], grid[i + gw]];
           if (nb.some(v => v !== s) && h < 0.30) col = pal.dirt[1];
         }
@@ -820,7 +873,7 @@ function buildBackground(look) {
     drawWearArcs(g, ppm, look);
     drawRibs(g, ppm, look);
     drawScenery(g, ppm, look, pal);
-    const dots = look === 'A' ? 1500 : 2400;
+    const dots = look === 'A' ? 800 : 2400; // v5: A's ground speckle thinned + softened — sparse pebbles, not grain
     for (let i = 0; i < dots; i++) {
       const x = rng() * W, y = rng() * H;
       const s = TRACK.surfaceAt(x / ppm, y / ppm);
@@ -830,7 +883,7 @@ function buildBackground(look) {
         const nearRoad = FIELD.dist[fi] < FIELD.halfW[fi] + 2.5;
         if (rng() < (nearRoad ? 0.8 : 0.4)) { g.fillStyle = 'rgba(220,240,255,0.5)'; g.fillRect(x, y, ppm * (nearRoad ? 0.45 : 0.32), 1.4); }
       } else {
-        g.fillStyle = rng() < 0.5 ? 'rgba(30,18,8,0.20)' : 'rgba(255,240,210,0.13)';
+        g.fillStyle = rng() < 0.5 ? (look === 'A' ? 'rgba(30,18,8,0.13)' : 'rgba(30,18,8,0.20)') : (look === 'A' ? 'rgba(255,240,210,0.08)' : 'rgba(255,240,210,0.13)');
         const sz = look === 'A' ? 2 : 2.6;
         g.fillRect(x, y, sz, sz);
       }
