@@ -280,11 +280,44 @@ def shadow_to_alpha(img, full=0.6):
     return out
 
 
-def ink(img, line=0.55, inner=0.35):
+def oriented_stroke_pass(img, rad=3, strength=0.32, sat_boost=1.14):
+    """Structure-tensor tangent brush stroke pass: smears oil dabs along contour tangents + impasto relief."""
+    out = img.copy()
+    a = out[..., 3]
+    rgb = out[..., :3]
+    lum = rgb.mean(axis=2)
+    sm = box_mean(lum, 1)
+    gx = np.roll(sm, -1, 1) - np.roll(sm, 1, 1)
+    gy = np.roll(sm, -1, 0) - np.roll(sm, 1, 0)
+    mag = np.sqrt(gx * gx + gy * gy) + 1e-5
+    tx = -gy / mag
+    ty = gx / mag
+
+    H, W = lum.shape
+    yy, xx = np.mgrid[0:H, 0:W]
+    acc = np.zeros_like(rgb)
+    wsum = np.zeros((H, W, 1), dtype=np.float32)
+    for s in range(-rad, rad + 1):
+        sx = np.clip(np.round(xx + tx * s).astype(np.int32), 0, W - 1)
+        sy = np.clip(np.round(yy + ty * s).astype(np.int32), 0, H - 1)
+        wt = (1.0 - abs(s) / (rad + 1.5)) * (a[sy, sx] > 0.1)[..., None]
+        acc += rgb[sy, sx] * wt
+        wsum += wt
+    smeared = np.where(wsum > 1e-4, acc / np.maximum(wsum, 1e-4), rgb)
+    nx_hi = np.clip(np.round(xx + gx / mag).astype(np.int32), 0, W - 1)
+    ny_hi = np.clip(np.round(yy + gy / mag).astype(np.int32), 0, H - 1)
+    ridge = (lum - lum[ny_hi, nx_hi])[..., None] * 0.45
+    blended = np.clip(rgb * (1.0 - strength) + smeared * strength + ridge, 0.0, 1.0)
+    l_new = blended.mean(axis=2, keepdims=True)
+    blended = np.clip(l_new + (blended - l_new) * sat_boost, 0.0, 1.0)
+    out[..., :3] = np.where((a > 0.02)[..., None], blended, rgb)
+    return out
+
+
+def ink(img, line=0.72, inner=0.35):
     """Storybook finish: a soft dark-plum outline around the silhouette plus watercolour-style
     edge darkening on internal value changes."""
     a = img[..., 3]
-    # silhouette outline: dilated alpha minus alpha
     dil = a.copy()
     for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1)):
         dil = np.maximum(dil, np.roll(np.roll(a, dy, 0), dx, 1))
@@ -292,16 +325,19 @@ def ink(img, line=0.55, inner=0.35):
     lum = (img[..., :3] * a[..., None]).mean(axis=2)
     gy = np.abs(np.roll(lum, 1, 0) - np.roll(lum, -1, 0))
     gx = np.abs(np.roll(lum, 1, 1) - np.roll(lum, -1, 1))
-    edge = np.clip((gx + gy) * 2.2, 0, 1) * inner
+    edge = np.clip((gx + gy) * 2.5, 0, 1) * inner
     out = img.copy()
-    plum = np.array([0.16, 0.08, 0.2])
+    plum = np.array([0.13, 0.06, 0.18], dtype=np.float32)
     out[..., :3] = out[..., :3] * (1 - edge[..., None]) + plum * edge[..., None]
-    # composite the outline under/around the sprite
     na = a + rim * (1 - a)
     w = np.where(na > 1e-4, rim * (1 - a) / np.maximum(na, 1e-4), 0)
     out[..., :3] = out[..., :3] * (1 - w[..., None]) + plum * w[..., None]
     out[..., 3] = na
     return out
+
+
+def paint_finish(img, kuw_r=3, stroke_r=3, stroke_s=0.32, line=0.72, inner=0.36):
+    return ink(oriented_stroke_pass(kuwahara(img, kuw_r), rad=stroke_r, strength=stroke_s), line=line, inner=inner)
 
 
 # ----------------------------------------------------------------------------- materials
@@ -751,8 +787,8 @@ def bake_peds():
 BLD_PPM = 20
 BLD_SH_PPM = 8
 BLD_NIGHT_PPM = 8
-NEON = {'SOLANA': '#ff4fa8', 'TACOS': '#ff8a3c', 'DINER': '#3fe0ff', 'MOTEL': '#ff3f6a', 'NOVA': '#b45cff'}
-WARM_WINDOW = (1.0, 0.6, 0.26)
+NEON = {'SOLANA': '#ff4fa8', 'TACOS': '#ff8a3c', 'DINER': '#3fe0ff', 'MOTEL': '#ff3f6a', 'NOVA': '#ff48d8'}
+WARM_WINDOW = (1.0, 0.72, 0.28)
 
 
 def hip_roof(cx, cy, W, D, z, rise, material, overhang=0.4):
@@ -778,26 +814,26 @@ def hip_roof(cx, cy, W, D, z, rise, material, overhang=0.4):
 
 def tile_mat(name, color):
     """Terracotta tiles: wave-texture courses modulating a painterly base."""
-    m = mat(name, srgb(color), rough=0.75, noise=0.14, noise_scale=4)
+    m = mat(name, srgb(color), rough=0.72, noise=0.16, noise_scale=5)
     nt = m.node_tree
     bsdf = nt.nodes['Principled BSDF']
     ramp = [n for n in nt.nodes if n.type == 'VALTORGB'][0]
     wave = nt.nodes.new('ShaderNodeTexWave')
-    wave.inputs['Scale'].default_value = 1.6
-    wave.inputs['Distortion'].default_value = 1.5
+    wave.inputs['Scale'].default_value = 1.8
+    wave.inputs['Distortion'].default_value = 1.2
     mix = nt.nodes.new('ShaderNodeMix')
     mix.data_type = 'RGBA'
     mix.blend_type = 'MULTIPLY'
-    mix.inputs['Factor'].default_value = 0.35
+    mix.inputs['Factor'].default_value = 0.42
     nt.links.new(ramp.outputs['Color'], mix.inputs['A'])
     nt.links.new(wave.outputs['Color'], mix.inputs['B'])
     nt.links.new(mix.outputs['Result'], bsdf.inputs['Base Color'])
     return m
 
 
-def facade_windows(W, D, floors, rnd, lit=0.75, shop=False, floor_h=3.2):
+def facade_windows(W, D, floors, rnd, lit=0.8, shop=False, floor_h=3.2):
     """Emissive window panes on all four walls of a WxD box (lower floors only: they light the street)."""
-    win = mat('window', srgb('#3a3a52'), rough=0.2, emit=WARM_WINDOW, night=2.6, day=0.0, noise=0)
+    win = mat('window', srgb('#3a3a52'), rough=0.2, emit=WARM_WINDOW, night=3.2, day=0.0, noise=0)
     quads = []
     eps = 0.03
     for f in range(min(floors, 4)):
@@ -827,23 +863,23 @@ def facade_windows(W, D, floors, rnd, lit=0.75, shop=False, floor_h=3.2):
         quads_mesh('windows', quads, win)
 
 
-PASTEL = ['#f4e6c8', '#bfe6d2', '#f6c6cf', '#f8cfa8', '#d8d0f0', '#c8e4ec']  # cream, mint, pink, peach, lilac, sky
+PASTEL = ['#e0825c', '#58b4a0', '#d96e8c', '#e8a258', '#685ca6', '#3c629c']  # coral, teal, rose, apricot, plum, cobalt
 
 
 def painted_roof(color, seed):
     """Roof surface that reads as paint, not a slab: brushed streaks (stretched wave), large water
     stains (low-freq noise multiply) and fine grit."""
-    m = mat('roofp', srgb(color), rough=0.9, noise=0.22, noise_scale=7)
+    m = mat('roofp', srgb(color), rough=0.88, noise=0.25, noise_scale=7)
     nt = m.node_tree
     bsdf = nt.nodes['Principled BSDF']
     ramp = [n for n in nt.nodes if n.type == 'VALTORGB'][0]
     tc = nt.nodes.new('ShaderNodeTexCoord')
     mp = nt.nodes.new('ShaderNodeMapping')
-    mp.inputs['Scale'].default_value = (0.35, 4.0, 1.0)
-    mp.inputs['Rotation'].default_value = (0, 0, (seed % 7) * 0.4)
+    mp.inputs['Scale'].default_value = (0.35, 4.2, 1.0)
+    mp.inputs['Rotation'].default_value = (0, 0, (seed % 7) * 0.45)
     nt.links.new(tc.outputs['Object'], mp.inputs['Vector'])
     streak = nt.nodes.new('ShaderNodeTexNoise')
-    streak.inputs['Scale'].default_value = 3.0
+    streak.inputs['Scale'].default_value = 3.2
     streak.inputs['Detail'].default_value = 8.0
     nt.links.new(mp.outputs['Vector'], streak.inputs['Vector'])
     stain = nt.nodes.new('ShaderNodeTexNoise')
@@ -852,12 +888,12 @@ def painted_roof(color, seed):
     stain.inputs['W'].default_value = seed
     sr = nt.nodes.new('ShaderNodeValToRGB')
     sr.color_ramp.elements[0].position = 0.45
-    sr.color_ramp.elements[0].color = (0.8, 0.76, 0.8, 1)
-    sr.color_ramp.elements[1].position = 0.62
+    sr.color_ramp.elements[0].color = (0.76, 0.72, 0.78, 1)
+    sr.color_ramp.elements[1].position = 0.65
     sr.color_ramp.elements[1].color = (1, 1, 1, 1)
     nt.links.new(stain.outputs['Fac'], sr.inputs['Fac'])
     m1 = nt.nodes.new('ShaderNodeMix'); m1.data_type = 'RGBA'; m1.blend_type = 'OVERLAY'
-    m1.inputs['Factor'].default_value = 0.3
+    m1.inputs['Factor'].default_value = 0.35
     nt.links.new(ramp.outputs['Color'], m1.inputs['A'])
     nt.links.new(streak.outputs['Color'], m1.inputs['B'])
     m2 = nt.nodes.new('ShaderNodeMix'); m2.data_type = 'RGBA'; m2.blend_type = 'MULTIPLY'
@@ -868,25 +904,27 @@ def painted_roof(color, seed):
     return m
 
 
-def flat_block(cx, cy, W, D, H, wall, roof, parapet, par_h=0.9, par_w=0.45):
-    seed = int(W * 37 + D * 11 + H)
-    rnd = random.Random(seed)
-    pastel = PASTEL[seed % len(PASTEL)]
+def flat_block(cx, cy, W, D, H, wall, roof_col=None, par_col=None, par_h=0.95, par_w=0.48, seed=None, clutter=True):
+    s = seed if seed is not None else int(W * 37 + D * 11 + H)
+    rnd = random.Random(s)
+    if roof_col is None:
+        roof_col = PASTEL[s % len(PASTEL)]
+    if par_col is None:
+        par_col = roof_col
     cube((cx, cy, H / 2), (W, D, H), wall)
-    # pastel deco: parapets take the block's pastel; the roof is a dusty tint of it, painted
-    pm = mat('par', srgb(pastel), rough=0.6, noise=0.12, noise_scale=9)
-    cap = mat('cap', tuple(min(1, c * 1.15 + 0.05) for c in srgb(pastel)), rough=0.5, noise=0.06)
-    rc = '#%02x%02x%02x' % tuple(int(int(pastel[i:i + 2], 16) * 0.93) for i in (1, 3, 5))
-    cube((cx, cy, H + 0.02), (W - 0.1, D - 0.1, 0.06), painted_roof(rc, seed))
-    roof_clutter(cx, cy, W - 1, D - 1, H, rnd, n=int(W * D / 30) + 3)
-    grime = mat('grime', srgb('#8a7478'), rough=1.0, noise=0.3, noise_scale=14)
-    for i in range(int(W * D / 160) + 1):  # worn stains, drain streaks
-        x = cx + rnd.uniform(-W / 2 + 1, W / 2 - 1); y = cy + rnd.uniform(-D / 2 + 1, D / 2 - 1)
-        cyl((x, y, H + 0.065), rnd.uniform(0.4, 1.6), 0.01, grime, verts=14).scale = (1, rnd.uniform(0.4, 1), 1)
+    pm = mat('par', srgb(par_col), rough=0.6, noise=0.14, noise_scale=8)
+    cap = mat('cap', tuple(min(1, c * 1.25 + 0.06) for c in srgb(par_col)), rough=0.5, noise=0.06)
+    cube((cx, cy, H + 0.02), (W - 0.1, D - 0.1, 0.06), painted_roof(roof_col, s))
+    if clutter:
+        roof_clutter(cx, cy, W - 1, D - 1, H, rnd, n=int(W * D / 35) + 3)
+        grime = mat('grime', srgb('#6d5864'), rough=1.0, noise=0.3, noise_scale=14)
+        for i in range(int(W * D / 180) + 1):
+            x = cx + rnd.uniform(-W / 2 + 1, W / 2 - 1); y = cy + rnd.uniform(-D / 2 + 1, D / 2 - 1)
+            cyl((x, y, H + 0.065), rnd.uniform(0.4, 1.5), 0.01, grime, verts=14).scale = (1, rnd.uniform(0.4, 1), 1)
     for (px, py, sx, sy) in [(cx, cy + D / 2 - par_w / 2, W, par_w), (cx, cy - D / 2 + par_w / 2, W, par_w),
                              (cx + W / 2 - par_w / 2, cy, par_w, D), (cx - W / 2 + par_w / 2, cy, par_w, D)]:
         cube((px, py, H + par_h / 2), (sx, sy, par_h), pm, bevel=0.05)
-        cube((px, py, H + par_h + 0.04), (sx + 0.12, sy + 0.12, 0.08), cap, bevel=0.03)  # coping lip
+        cube((px, py, H + par_h + 0.04), (sx + 0.12, sy + 0.12, 0.08), cap, bevel=0.03)
 
 
 def roof_clutter(cx, cy, W, D, z, rnd, n=10):
@@ -925,9 +963,9 @@ def water_tank(x, y, z, wood, dark):
     track(c)
 
 
-def skylights(cx, cy, W, D, z, nx, ny, rnd, glow=0.35):
-    glass = mat('skylight', srgb('#3e4c6e'), rough=0.18, spec=0.8, emit=(1.0, 0.8, 0.5), night=glow, day=0.0, noise=0)
-    frame_m = mat('skyframe', srgb('#d8d0c4'), rough=0.6, noise=0)
+def skylights(cx, cy, W, D, z, nx, ny, rnd, glow=0.92):
+    glass = mat('skylight', srgb('#465a84'), rough=0.16, spec=0.85, emit=(1.0, 0.44, 0.03), night=glow, day=0.0, noise=0)
+    frame_m = mat('skyframe', srgb('#d4c8b4'), rough=0.55, noise=0)
     for i in range(nx):
         for j in range(ny):
             x = cx - W / 2 + (i + 0.5) * W / nx
@@ -936,14 +974,69 @@ def skylights(cx, cy, W, D, z, nx, ny, rnd, glow=0.35):
             cube((x, y, z + 0.52), (W / nx * 0.8, D / ny * 0.8, 0.06), glass, taper=(0.9, 0.9))
 
 
-def neon_sign(text, x, y, z, size, rot=0.0, plate=True):
-    col = srgb(NEON.get(text, '#ff4fa8'))
-    tube = mat('neon_' + text, tuple(min(1, c * 1.2 + 0.25) for c in col), rough=0.3, emit=col, night=16.0, day=1.2, noise=0)
+def cafe_umbrella(x, y, z, col, pole_m):
+    cyl((x, y, z + 1.1), 0.05, 2.2, pole_m, verts=8)
+    bpy.ops.mesh.primitive_cone_add(radius1=1.45, radius2=0.06, depth=0.52, vertices=8, location=(x, y, z + 2.35))
+    u = bpy.context.active_object
+    u.data.materials.append(mat('umb', srgb(col), rough=0.65, noise=0.08))
+    track(u)
+
+
+def patio_set(x, y, z, wood, chair_col, table_r=0.75):
+    cyl((x, y, z + 0.45), 0.08, 0.9, wood, verts=8)
+    cyl((x, y, z + 0.92), table_r, 0.08, wood, verts=16)
+    cm = mat('chair', srgb(chair_col), rough=0.7, noise=0.05)
+    for k in range(4):
+        ang = k * math.pi / 2 + 0.35
+        cube((x + math.cos(ang) * (table_r + 0.38), y + math.sin(ang) * (table_r + 0.38), z + 0.45),
+             (0.46, 0.46, 0.45), cm, bevel=0.04)
+
+
+def garden_bed(cx, cy, w, d, z, rnd, night_lit=False):
+    soil = mat('soil', srgb('#5a3d28'), rough=1.0, noise=0.2, noise_scale=18)
+    border = mat('bedborder', srgb('#9e5a38'), rough=0.7, noise=0.1)
+    bush_a = mat('bA', srgb('#2e6f30'), rough=0.8, noise=0.25, noise_scale=10)
+    bush_b = mat('bB', srgb('#5ea442'), rough=0.8, noise=0.25, noise_scale=10)
+    fl_cols = ['#ff6b94', '#ffd24e', '#fff6dc', '#e882f2']
+    fls = [mat('fl', srgb(c), rough=0.6, noise=0) for c in fl_cols]
+    cube((cx, cy, z + 0.25), (w, d, 0.5), border, bevel=0.05)
+    cube((cx, cy, z + 0.48), (w - 0.3, d - 0.3, 0.1), soil)
+    count = max(4, int(w * d / 1.6))
+    for i in range(count):
+        bx = cx + rnd.uniform(-w / 2 + 0.45, w / 2 - 0.45)
+        by = cy + rnd.uniform(-d / 2 + 0.45, d / 2 - 0.45)
+        sphere((bx, by, z + 0.72), rnd.uniform(0.38, 0.65), bush_a if i % 2 else bush_b, scale=(1.0, 1.0, 0.72), segs=10)
+        if rnd.random() < 0.55:
+            sphere((bx + rnd.uniform(-0.2, 0.2), by + rnd.uniform(-0.2, 0.2), z + 1.05), 0.16, fls[i % len(fls)], segs=6)
+    if night_lit:
+        point_light((cx, cy, z + 2.4), 180, (1.0, 0.74, 0.32), radius=0.4)
+
+
+def clothesline(p0, p1, z, rnd):
+    wire = mat('wire', srgb('#2a2232'), rough=0.6, noise=0)
+    cols = ['#f6efe2', '#e24c3b', '#387cc4', '#f4c644', '#3aa888', '#e86898']
+    dx, dy = p1[0] - p0[0], p1[1] - p0[1]
+    L = math.hypot(dx, dy)
+    ang = math.atan2(dy, dx)
+    cube(((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2, z), (L, 0.04, 0.04), wire, rot=(0, 0, ang))
+    n = max(4, int(L / 1.1))
+    for i in range(n):
+        t = (i + 0.5) / n
+        sag = math.sin(t * math.pi) * 0.25
+        lx = p0[0] + dx * t
+        ly = p0[1] + dy * t
+        cm = mat('cloth', srgb(cols[(i + int(rnd.random() * 6)) % len(cols)]), rough=0.75, noise=0.05)
+        cube((lx, ly, z - 0.25 - sag), (0.62, 0.14, 0.62), cm, bevel=0.03, rot=(0.18, 0, ang + rnd.uniform(-0.15, 0.15)))
+
+
+def neon_sign(text, x, y, z, size, rot=0.0, plate=True, strength=15.0):
+    col = srgb(NEON.get(text, '#ff48d8'))
+    tube = mat('neon_' + text, tuple(min(1, c * 1.25 + 0.25) for c in col), rough=0.3, emit=col, night=strength, day=1.3, noise=0)
     if plate:
-        back = mat('signback', srgb('#2a2236'), rough=0.6, noise=0.05)
+        back = mat('signback', srgb('#261d34'), rough=0.6, noise=0.05)
         w = size * len(text) * 0.62 + 0.8
         cube((x, y, z - 0.08), (w, size * 1.15, 0.12), back, bevel=0.06, rot=(0, 0, rot))
-    text_obj(text, (x, y, z), size, tube, rot_z=rot, extrude=0.05)
+    text_obj(text, (x, y, z), size, tube, rot_z=rot, extrude=0.055)
 
 
 def awning(x, y, z, w, depth, colors, facing):
@@ -971,23 +1064,23 @@ def string_lights(points, z, rnd):
             sphere((x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, z - math.sin(t * math.pi) * 0.4), 0.09, bulb, segs=8)
 
 
-def palm_crown(x, y, z, rnd, radius=3.0, fronds=11):
-    leaf = mat('frond', srgb('#4f8a3c'), rough=0.7, noise=0.25, noise_scale=8)
-    leaf2 = mat('frond2', srgb('#7aa646'), rough=0.7, noise=0.25, noise_scale=8)
+def palm_crown(x, y, z, rnd, radius=3.0, fronds=12):
+    leaf = mat('frond', srgb('#32762e'), rough=0.68, noise=0.25, noise_scale=8)
+    leaf2 = mat('frond2', srgb('#6ea83e'), rough=0.68, noise=0.25, noise_scale=8)
     for f in range(fronds):
-        ang = f / fronds * math.pi * 2 + rnd.uniform(-0.2, 0.2)
-        L = radius * rnd.uniform(0.85, 1.1)
+        ang = f / fronds * math.pi * 2 + rnd.uniform(-0.18, 0.18)
+        L = radius * rnd.uniform(0.85, 1.12)
         verts, faces = [], []
         n = 14
         for i in range(n + 1):
             t = i / n
             d = L * t
-            h = z + 0.6 * t - 1.7 * t * t  # droop
-            hw = 0.55 * math.sin(math.pi * min(1, t * 1.15)) ** 0.6 + 0.02
-            serr = 0.22 if i % 2 else -0.05
+            h = z + 0.65 * t - 1.75 * t * t  # droop
+            hw = 0.58 * math.sin(math.pi * min(1, t * 1.15)) ** 0.6 + 0.02
+            serr = 0.24 if i % 2 else -0.05
             cx_, cy_ = x + math.cos(ang) * d, y + math.sin(ang) * d
             px, py = -math.sin(ang), math.cos(ang)
-            fw = (hw + serr * hw) 
+            fw = (hw + serr * hw)
             back = -0.12 if i % 2 else 0
             verts.append((cx_ + px * fw + math.cos(ang) * back, cy_ + py * fw + math.sin(ang) * back, h - 0.15 * hw))
             verts.append((cx_, cy_, h + 0.08))
@@ -1008,8 +1101,8 @@ def palm_crown(x, y, z, rnd, radius=3.0, fronds=11):
         sphere((x + math.cos(a) * 0.25, y + math.sin(a) * 0.25, z - 0.2), 0.16, nut, segs=8)
 
 
-def palm_tree(x, y, rnd, height=None, lean_m=1.2):
-    trunk = mat('trunk', srgb('#8a6a4a'), rough=0.9, noise=0.2, noise_scale=20)
+def palm_tree(x, y, rnd, height=None, lean_m=1.1, radius=3.0):
+    trunk = mat('trunk', srgb('#8a6242'), rough=0.9, noise=0.2, noise_scale=20)
     H = height or rnd.uniform(7.0, 10.0)
     lean = rnd.uniform(0, math.pi * 2)
     lx, ly = math.cos(lean), math.sin(lean)
@@ -1024,7 +1117,7 @@ def palm_tree(x, y, rnd, height=None, lean_m=1.2):
         c = cyl((mx, my, mz), 0.24 - 0.08 * t, dv.length + 0.05, trunk, verts=10)
         c.rotation_euler = dv.to_track_quat('Z', 'Y').to_euler()
         px, py, pz = nx_, ny_, nz
-    palm_crown(px, py, H, rnd)
+    palm_crown(px, py, H, rnd, radius=radius)
     return H
 
 
@@ -1033,188 +1126,215 @@ def build_building(b):
     W, D, H = b['w'] / UPM, b['d'] / UPM, b['h']
     style = b['style']
     feat_h = 0.6
-    dark = mat('dark', srgb('#2e2a36'), rough=0.6, noise=0.05)
-    metal = mat('metal', srgb('#c8c4c0'), rough=0.4, metal=0.6, noise=0.08, noise_scale=10)
-    wood = mat('wood', srgb('#9a6a44'), rough=0.8, noise=0.25, noise_scale=14)
-    gravel = lambda c: mat('roof', srgb(c), rough=0.95, noise=0.18, noise_scale=26)
+    dark = mat('dark', srgb('#262230'), rough=0.6, noise=0.05)
+    metal = mat('metal', srgb('#cfd0d8'), rough=0.38, metal=0.65, noise=0.08, noise_scale=10)
+    wood = mat('wood', srgb('#9e6036'), rough=0.78, noise=0.22, noise_scale=12)
     floors = max(1, int(H / 3.2))
+
     if style == 'hotel':
-        wall = mat('wall', srgb('#f2d6b8'), rough=0.7)
-        flat_block(0, 0, W, D, H, wall, gravel('#cfc2b4'), mat('par', srgb('#fbe8d2'), rough=0.6))
-        # rooftop pool deck on the south half
-        deck = mat('deck', srgb('#b8865a'), rough=0.7, noise=0.25, noise_scale=10)
-        water = mat('pool', srgb('#2ea2c2'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=0.5, day=0.0, noise=0.3, noise_scale=9)
-        cube((0, -D / 4, H + 0.1), (W - 2.0, D / 2 - 1.5, 0.12), deck)
-        cube((-W / 6, -D / 4, H + 0.17), (W / 2.2, D / 4, 0.06), water)
+        wall = mat('wall', srgb('#e8b896'), rough=0.7)
+        flat_block(0, 0, W, D, H, wall, '#cf7a62', '#e4906e', par_h=0.95, par_w=0.48, seed=b['seed'])
+        deck = mat('deck', srgb('#a6683c'), rough=0.72, noise=0.24, noise_scale=10)
+        water = mat('pool', srgb('#26acc8'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=0.75, day=0.0, noise=0.3, noise_scale=9)
+        cube((0, -D / 4, H + 0.1), (W - 2.0, D / 2 - 1.5, 0.14), deck, bevel=0.04)
+        cube((-W / 6, -D / 4, H + 0.18), (W / 2.2, D / 4, 0.06), water, bevel=0.4)
         for i in range(5):
             cube((W / 4, -D / 2 + 2.2 + i * 1.6, H + 0.4), (1.6, 0.7, 0.25), mat('lounger', srgb('#f6efe2'), rough=0.6, noise=0), bevel=0.08)
-        for i, c in enumerate(['#ff6f61', '#ffd166', '#4ecdc4']):
-            ux, uy = -W / 2 + 2.5 + i * 3.2, -D / 2 + 2.0
-            cyl((ux, uy, H + 1.2), 0.04, 2.2, dark)
-            bpy.ops.mesh.primitive_cone_add(radius1=1.3, radius2=0.05, depth=0.5, vertices=8, location=(ux, uy, H + 2.4))
-            u = bpy.context.active_object
-            u.data.materials.append(mat('umb', srgb(c), rough=0.7, noise=0.05))
-            track(u)
-        # mechanical penthouse + tanks on the north half
+        for i, c in enumerate(['#ff6f61', '#ffd166', '#3fe0ff']):
+            cafe_umbrella(-W / 2 + 2.5 + i * 3.2, -D / 2 + 2.0, H + 0.14, c, dark)
+        garden_bed(W / 2 - 2.2, -D / 4, 1.8, D / 2 - 2.8, H + 0.14, rnd, night_lit=True)
         cube((W / 5, D / 4, H + 1.5), (W / 2.4, D / 3.2, 3.0), wall, bevel=0.1)
-        cube((W / 5, D / 4, H + 3.05), (W / 2.4 - 0.4, D / 3.2 - 0.4, 0.1), gravel('#bfb2a4'))
+        cube((W / 5, D / 4, H + 3.05), (W / 2.4 - 0.4, D / 3.2 - 0.4, 0.1), painted_roof('#b46a58', b['seed'] + 3))
+        skylights(W / 5, D / 4 - D / 14, W / 3.4, 2.2, H + 3.1, 3, 1, rnd, glow=0.92)
         water_tank(-W / 4, D / 4, H, wood, dark)
         for i in range(3):
-            ac_unit(W / 5 - 2 + i * 2, D / 4, H + 3.1, metal, dark)
-        string_lights([(-W / 2 + 1, -1.0), (W / 2 - 1, -1.0)], H + 2.2, rnd)
-        neon_sign(b.get('sign', 'SOLANA'), 0, D / 2 - 1.2, H + 0.75, 1.8)
-        facade_windows(W, D, floors, rnd, lit=0.8, shop=True)
+            ac_unit(W / 5 - 2 + i * 2, D / 4 + 1.5, H + 3.1, metal, dark)
+        point_light((0, -D / 4, H + 3.0), 220, (1.0, 0.72, 0.32), radius=0.6)
+        neon_sign(b.get('sign', 'SOLANA'), 0, D / 2 - 1.2, H + 0.8, 1.9, strength=15.0)
+        facade_windows(W, D, floors, rnd, lit=0.82, shop=True)
         feat_h = 4.2
+
     elif style == 'shops':
         n = 4
-        cols = ['#e8a87c', '#f4d58d', '#9cc9b4', '#e98fa0']
-        roofs = ['#b9a48e', '#c9b89c', '#a7a0a4', '#c4a690']
+        cols = ['#d87450', '#4ea898', '#c85a78', '#e09848']
+        roofs = ['#b85e42', '#3d867a', '#a84a66', '#bd7a38']
         aw = [('#e94f37', '#f6f0e0'), ('#2a9d8f', '#f6f0e0'), ('#f4a259', '#5b3758'), ('#3d5a80', '#f6f0e0')]
         for i in range(n):
             sw = W / n
             x = -W / 2 + sw * (i + 0.5)
             hh = H + rnd.uniform(-1.0, 1.5)
-            flat_block(x, 0, sw - 0.15, D, hh, mat('wall', srgb(cols[i]), rough=0.7), gravel(roofs[i]), mat('par', srgb(cols[i]), rough=0.6), par_h=0.8)
-            ac_unit(x + rnd.uniform(-1.5, 1.5), rnd.uniform(-1.5, 1.5), hh, metal, dark)
-            if rnd.random() < 0.6:
-                skylights(x, -D / 4, sw * 0.5, 1.4, hh, 2, 1, rnd)
+            flat_block(x, 0, sw - 0.15, D, hh, mat('wall', srgb(cols[i]), rough=0.7), roofs[i], cols[i], par_h=0.85, par_w=0.45, seed=b['seed'] + i)
+            ac_unit(x + rnd.uniform(-1.3, 1.3), D / 4, hh, metal, dark)
+            skylights(x, -D / 5, sw * 0.55, 1.6, hh, 2, 1, rnd, glow=0.92)
+            if i % 2 == 1:
+                patio_set(x, 0.4, hh, wood, '#c9885c', table_r=0.58)
+            else:
+                garden_bed(x, D / 3, sw * 0.55, 1.4, hh, rnd, night_lit=(i == 0))
             awning(x, D / 2, 3.2, sw - 1.0, 1.8, [mat('aw', srgb(aw[i][0]), rough=0.7, noise=0.1), mat('aw2', srgb(aw[i][1]), rough=0.7, noise=0.1)], 'n')
-        neon_sign(b.get('sign', 'TACOS'), -W / 2 + W / 8, D / 2 - 1.6, H + 1.0, 1.3)
+        neon_sign(b.get('sign', 'TACOS'), -W / 2 + W / 8, D / 2 - 1.6, H + 1.1, 1.35, strength=15.0)
         facade_windows(W, D, 2, rnd, lit=0.9, shop=True)
-        feat_h = 2.0
+        feat_h = 2.4
+
     elif style == 'diner':
         chrome = mat('chrome', srgb('#e6e2dc'), rough=0.25, metal=0.8, noise=0.04)
-        wall = mat('wall', srgb('#f4efe6'), rough=0.5)
-        flat_block(0, 0, W, D, H, wall, mat('roof', srgb('#d8d2ca'), rough=0.4, metal=0.3, noise=0.1, noise_scale=6), chrome, par_h=0.4)
-        for i in range(int(W / 1.2)):  # corrugated stripes
+        wall = mat('wall', srgb('#f2ece2'), rough=0.5)
+        flat_block(0, 0, W, D, H, wall, '#b4b2c2', '#e6e2dc', par_h=0.45, par_w=0.42, seed=b['seed'], clutter=False)
+        for i in range(int(W / 1.2)):
             cube((-W / 2 + 0.6 + i * 1.2, 0, H + 0.12), (0.12, D - 0.8, 0.12), chrome)
         stripe = mat('stripe', srgb('#e63e5c'), rough=0.4, noise=0)
         cube((0, D / 2 - 0.7, H + 0.3), (W - 0.8, 0.6, 0.12), stripe)
         cube((0, -D / 2 + 0.7, H + 0.3), (W - 0.8, 0.6, 0.12), stripe)
-        neon_sign(b.get('sign', 'DINER'), 0, -D / 2 + 2.6, H + 0.6, 2.2)
+        skylights(-W * 0.18, -D * 0.12, W * 0.44, D * 0.34, H, 3, 1, rnd, glow=0.92)
+        neon_sign(b.get('sign', 'DINER'), 0, -D / 2 + 2.6, H + 0.6, 2.2, strength=15.0)
         for i in range(3):
             ac_unit(-W / 3 + i * W / 3, D / 5, H, metal, dark)
+        cafe_umbrella(W * 0.34, -D * 0.16, H, '#3fe0ff', dark)
+        for sx in (-W * 0.28, 0.0, W * 0.28):
+            point_light((sx, -D / 2 - 1.2, 3.6), 210, srgb('#3fe0ff'), radius=0.45)
         facade_windows(W, D, 1, rnd, lit=1.0, shop=True)
-        string_lights([(-W / 2 - 1.5, -D / 2 - 1.5), (W / 2 + 1.5, -D / 2 - 1.5)], 3.5, rnd)
+        feat_h = 2.6
+
     elif style == 'apartment':
-        wall = mat('wall', srgb('#d9a07c'), rough=0.7)
-        flat_block(0, 0, W, D, H, wall, gravel('#b8a898'), mat('par', srgb('#eec4a2'), rough=0.6))
-        soil = mat('soil', srgb('#6a4a32'), rough=1.0, noise=0.2, noise_scale=20)
-        bush = mat('bush', srgb('#4f8a3c'), rough=0.8, noise=0.3, noise_scale=10)
-        bush2 = mat('bush2', srgb('#7aa646'), rough=0.8, noise=0.3, noise_scale=10)
-        flower = mat('flower', srgb('#f28fb0'), rough=0.7, noise=0.1)
-        for i in range(4):
-            px_ = -W / 2 + 2.2 + i * (W - 4.4) / 3
-            cube((px_, -D / 4, H + 0.35), (2.6, D / 2 - 3, 0.7), soil, bevel=0.05)
-            for j in range(5):
-                sphere((px_ + rnd.uniform(-0.8, 0.8), -D / 4 + rnd.uniform(-D / 4 + 2, D / 4 - 2), H + 0.9), rnd.uniform(0.5, 0.9), bush if j % 2 else bush2, scale=(1, 1, 0.7), segs=10)
-            sphere((px_ + 0.5, -D / 4, H + 1.4), 0.3, flower, segs=8)
-        string_lights([(-W / 2 + 1, -2), (W / 2 - 1, -D / 2 + 1)], H + 2.6, rnd)
-        string_lights([(-W / 2 + 1, -D / 2 + 1), (W / 2 - 1, -2)], H + 2.6, rnd)
-        water_tank(W / 4, D / 4, H, wood, dark)
-        water_tank(-W / 4, D / 4 + 0.5, H, wood, dark)
-        cube((0, D / 3, H + 1.3), (3.0, 2.5, 2.6), wall, bevel=0.1)
-        ac_unit(W / 2 - 2, D / 2 - 2, H, metal, dark)
-        facade_windows(W, D, floors, rnd, lit=0.7)
-        feat_h = 4.0
+        wall = mat('wall', srgb('#d47e56'), rough=0.7)
+        flat_block(0, 0, W, D, H, wall, '#b66848', '#e6a878', par_h=0.9, par_w=0.45, seed=b['seed'])
+        tiles = tile_mat('tiles_apt', '#c45032')
+        hip_roof(-W / 4, 0, W / 2 - 0.8, D - 1.6, H + 0.2, 2.2, tiles, overhang=0.35)
+        deck = mat('deck_apt', srgb('#a66236'), rough=0.75, noise=0.2, noise_scale=10)
+        cube((W / 4, 0, H + 0.1), (W / 2 - 1.4, D - 2.0, 0.16), deck)
+        garden_bed(W / 4, D / 2 - 2.0, W / 2 - 2.2, 2.0, H + 0.18, rnd, night_lit=True)
+        garden_bed(W / 4, -D / 2 + 2.0, W / 2 - 2.2, 2.0, H + 0.18, rnd)
+        clothesline((1.2, D / 4), (W / 2 - 1.6, D / 4 - 0.8), H + 1.5, rnd)
+        clothesline((1.5, -D / 4 + 0.5), (W / 2 - 1.4, -D / 4 - 0.5), H + 1.5, rnd)
+        palm_crown(W / 2 - 2.2, -2.0, H + 2.0, rnd, radius=2.1, fronds=10)
+        facade_windows(W, D, floors, rnd, lit=0.75)
+        feat_h = 3.2
+
     elif style == 'motel':
-        wall = mat('wall', srgb('#9fd8cf'), rough=0.7)
-        roof_m = gravel('#e8d8c0')
-        par = mat('par', srgb('#f6efe2'), rough=0.6)
-        # L-shape: west wing + north wing, pool court in the south-east
-        flat_block(-W / 2 + 4.5, 0, 9.0, D, H, wall, roof_m, par)
-        flat_block(4.5, D / 2 - 4.0, W - 9.0, 8.0, H, wall, roof_m, par)
-        court = mat('court', srgb('#e9d9bf'), rough=0.8, noise=0.15, noise_scale=8)
-        water = mat('pool', srgb('#2ea2c2'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=0.5, day=0.0, noise=0.3, noise_scale=9)
+        wall = mat('wall', srgb('#44b8a8'), rough=0.68)
+        flat_block(-W / 2 + 4.5, 0, 9.0, D, H, wall, '#e6b88a', '#f8e6c8', seed=b['seed'])
+        flat_block(4.5, D / 2 - 4.0, W - 9.0, 8.0, H, wall, '#e6b88a', '#f8e6c8', seed=b['seed'] + 1)
+        court = mat('court', srgb('#e4c898'), rough=0.8, noise=0.15, noise_scale=8)
+        water = mat('pool', srgb('#26acc8'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=0.8, day=0.0, noise=0.3, noise_scale=9)
         cube((4.5, -4.0, 0.06), (W - 9.4, D - 8.4, 0.1), court)
         cube((4.5, -4.5, 0.13), (W - 15, D - 15, 0.06), water, bevel=0.6)
-        for i in range(4):
-            cube((W / 2 - 2.0, -D / 2 + 2 + i * 1.6, 0.4), (1.6, 0.7, 0.25), mat('lounger', srgb('#ffd166'), rough=0.6, noise=0), bevel=0.08)
-        # walkway canopy along the wings
-        canopy = mat('canopy', srgb('#f08a7e'), rough=0.6, noise=0.08)
+        canopy = mat('canopy', srgb('#e86c5a'), rough=0.6, noise=0.08)
         cube((-W / 2 + 9.6, 0, 3.2), (1.6, D - 0.4, 0.12), canopy)
         cube((4.5, D / 2 - 8.6, 3.2), (W - 9.4, 1.6, 0.12), canopy)
-        for i in range(6):
-            ac_unit(-W / 2 + 4.5, -D / 2 + 2 + i * (D - 4) / 5, H, metal, dark)
+        cafe_umbrella(W / 2 - 2.5, -2.0, 0.2, '#ffd166', dark)
         neon_sign(b.get('sign', 'MOTEL'), W / 2 - 5, -D / 2 + 1.2, 6.5, 1.6)
         cyl((W / 2 - 5, -D / 2 + 1.2, 3.2), 0.12, 6.4, dark)
         facade_windows(W, D, 1, rnd, lit=0.8)
-        string_lights([(-W / 2 + 10, -D / 2 + 1), (W / 2 - 1, -D / 2 + 1)], 3.0, rnd)
+        feat_h = 4.0
+
     elif style == 'office':
-        wall = mat('wall', srgb('#c9cdd8'), rough=0.5)
-        flat_block(0, 0, W, D, H, wall, gravel('#9ea0a8'), mat('par', srgb('#e8e6ea'), rough=0.5), par_h=1.0, par_w=0.5)
-        glassroof = mat('atrium', srgb('#3a4a6c'), rough=0.18, spec=0.8, emit=(1.0, 0.62, 0.3), night=0.45, day=0.0, noise=0)
-        cube((-W / 5, -D / 5, H + 1.0), (W / 2.6, D / 2.6, 2.0), wall)
-        cube((-W / 5, -D / 5, H + 2.1), (W / 2.6 - 0.3, D / 2.6 - 0.3, 0.5), glassroof, taper=(0.4, 1.0))
-        cube((W / 4, D / 4, H + 2.0), (W / 3, D / 3, 4.0), wall, bevel=0.1)
-        cube((W / 4, D / 4, H + 4.05), (W / 3 - 0.5, D / 3 - 0.5, 0.1), gravel('#8e9098'))
+        wall = mat('wall', srgb('#6a769c'), rough=0.55)
+        flat_block(0, 0, W, D, H, wall, '#38528a', '#98a6cc', par_h=0.9, par_w=0.45, seed=b['seed'])
+        heli = mat('helipad', srgb('#262e42'), rough=0.8, noise=0.05)
+        cyl((-W / 4, D / 4, H + 0.12), 3.4, 0.1, heli, verts=40)
+        h_ring = mat('hring', srgb('#d4dce8'), rough=0.6, noise=0)
+        cyl((-W / 4, D / 4, H + 0.13), 3.15, 0.08, h_ring, verts=40)
+        cyl((-W / 4, D / 4, H + 0.14), 2.9, 0.08, heli, verts=40)
+        text_obj('H', (-W / 4, D / 4, H + 0.22), 3.2, mat('hpaint', srgb('#eef2f8'), rough=0.7, noise=0), extrude=0.01)
+
+        deck = mat('deck', srgb('#ab683a'), rough=0.7, noise=0.22, noise_scale=12)
+        cube((W / 4, D / 4, H + 0.12), (W / 2 - 1.6, D / 2 - 1.8, 0.2), deck, bevel=0.04)
+        tiles = tile_mat('tiles_off', '#c65634')
+        hip_roof(-W * 0.06, D / 4, 4.2, D / 2 - 2.4, H + 1.4, 1.4, tiles, overhang=0.35)
+        cube((-W * 0.06, D / 4, H + 0.7), (3.8, D / 2 - 2.6, 1.4), mat('wter', srgb('#e8c49c'), rough=0.7))
+        garden_bed(W / 4, D / 2 - 1.6, W / 2 - 3.0, 2.0, H + 0.2, rnd, night_lit=True)
+        garden_bed(W / 2 - 1.8, D / 4, 2.0, D / 2 - 3.6, H + 0.2, rnd)
+        clothesline((W / 4 - 2.4, D / 4 + 1.0), (W / 4 + 2.8, D / 4 + 0.5), H + 1.45, rnd)
+        clothesline((W / 4 - 2.2, D / 4 - 1.3), (W / 4 + 2.5, D / 4 - 1.6), H + 1.45, rnd)
+        palm_crown(W / 2 - 2.3, D / 4 - 2.4, H + 2.2, rnd, radius=2.3, fronds=11)
+
+        pave = mat('pave', srgb('#dcc6a6'), rough=0.75, noise=0.15, noise_scale=8)
+        cube((W / 4, -D / 4, H + 0.1), (W / 2 - 1.4, D / 2 - 1.6, 0.16), pave, bevel=0.04)
+        skylights(W / 4 + 0.5, -D / 4 + 1.4, W / 3.1, D / 3.4, H + 0.16, 3, 3, rnd, glow=0.92)
+        cafe_umbrella(W / 4 + 2.4, -D / 4 - 2.6, H + 0.16, '#e89668', dark)
+        cafe_umbrella(W / 4 - 2.2, -D / 4 - 2.2, H + 0.16, '#f4cf6a', dark)
+        patio_set(W / 4 + 0.2, -D / 4 - 3.0, H + 0.16, wood, '#c28050', table_r=0.7)
         for i in range(2):
-            for j in range(2):
-                ac_unit(W / 4 - 1.2 + i * 2.4, D / 4 - 1 + j * 2, H + 4.1, metal, dark)
-        skylights(W / 4, -D / 4, W / 3, D / 3, H, 3, 3, rnd, glow=0.3)
-        heli = mat('helipad', srgb('#3a3c46'), rough=0.8, noise=0.05)
-        cyl((-W / 4, D / 4, H + 0.12), 3.2, 0.1, heli, verts=40)
-        text_obj('H', (-W / 4, D / 4, H + 0.2), 3.0, mat('hpaint', srgb('#f2e6c8'), rough=0.7, noise=0), extrude=0.01)
+            ac_unit(W / 2 - 3.2 - i * 2.2, -D / 2 + 1.8, H + 0.16, metal, dark)
+
+        glassroof = mat('atrium', srgb('#465a84'), rough=0.16, spec=0.85, emit=(1.0, 0.42, 0.03), night=0.95, day=0.0, noise=0)
+        cube((-W / 4, -D / 4, H + 0.8), (W / 2.8, D / 2.8, 1.5), wall)
+        cube((-W / 4, -D / 4, H + 1.6), (W / 2.8 - 0.3, D / 2.8 - 0.3, 0.45), glassroof, taper=(0.45, 1.0))
+        garden_bed(-W / 2 + 2.1, -D / 4, 2.0, D / 2 - 3.6, H, rnd, night_lit=True)
         facade_windows(W, D, floors, rnd, lit=0.85)
-        feat_h = 4.2
+        feat_h = 4.5
+
     elif style == 'club':
-        wall = mat('wall', srgb('#3b2f52'), rough=0.6)
-        flat_block(0, 0, W, D, H, wall, gravel('#4a405e'), mat('par', srgb('#5d4f78'), rough=0.5))
-        edge = mat('edgeglow', srgb('#ff5cd6'), rough=0.3, emit=(1.0, 0.3, 0.85), night=14.0, day=0.6, noise=0)
-        for (px, py, sx, sy) in [(0, D / 2 - 0.1, W, 0.15), (0, -D / 2 + 0.1, W, 0.15), (W / 2 - 0.1, 0, 0.15, D), (-W / 2 + 0.1, 0, 0.15, D)]:
-            cube((px, py, H + 0.68), (sx, sy, 0.12), edge)
-        neon_sign(b.get('sign', 'NOVA'), 0, 0, H + 0.5, 4.0, plate=False)
+        wall = mat('wall', srgb('#663c6a'), rough=0.65)
+        flat_block(0, 0, W, D, H, wall, '#aa5c62', '#6a3c60', par_h=0.75, par_w=0.48, seed=b['seed'])
+        tiles = tile_mat('tiles_club', '#c85838')
+        for py, sx, sy in [(D / 2 - 0.25, W + 0.4, 0.8), (-D / 2 + 0.25, W + 0.4, 0.8)]:
+            cube((0, py, H + 0.9), (sx, sy, 0.22), tiles, bevel=0.05)
+        for px, sx, sy in [(W / 2 - 0.25, 0.8, D + 0.4), (-W / 2 + 0.25, 0.8, D + 0.4)]:
+            cube((px, 0, H + 0.9), (sx, sy, 0.22), tiles, bevel=0.05)
+        neon_sign(b.get('sign', 'NOVA'), 0, 0, H + 0.45, 4.1, plate=False, strength=14.0)
         for i in range(4):
-            ac_unit(-W / 2 + 2 + i * 1.8, D / 2 - 2, H, metal, dark)
-        cube((W / 2 - 3, -D / 2 + 3, H + 1.2), (3, 3, 2.4), wall)
-        facade_windows(W, D, 1, rnd, lit=0.6, shop=True)
-        string_lights([(-W / 2 - 1.2, -D / 2 - 1.2), (W / 2 + 1.2, -D / 2 - 1.2)], 3.2, rnd)
+            ac_unit(-W / 2 + 2.2 + i * 2.0, D / 2 - 2.0, H, metal, dark)
+        for lx, ly in [(-W / 2 + 3.4, 0.0), (W / 2 - 3.6, 0.0), (-W / 2 + 4.8, -D / 2 + 3.2), (W / 2 - 4.8, D / 2 - 3.2)]:
+            patio_set(lx, ly, H, wood, '#c9885c', table_r=0.8)
+        for gx, gy in [(0.0, D / 2 - 2.0), (-0.8, -D / 2 + 2.2), (W / 2 - 2.4, -D / 2 + 2.5)]:
+            garden_bed(gx, gy, 3.2, 2.0, H, rnd)
+            palm_crown(gx, gy, H + 1.8, rnd, radius=1.9, fronds=9)
+        for sx, hex_c in [(-W * 0.24, '#ff48d8'), (0.0, '#ffbf58'), (W * 0.24, '#3fe0ff')]:
+            ec = srgb(hex_c)
+            bar_m = mat('marquee', ec, rough=0.3, emit=ec, night=6.0, day=0.2, noise=0)
+            cube((sx, -D / 2 - 0.12, 3.4), (3.8, 0.28, 0.22), bar_m)
+            point_light((sx, -D / 2 - 1.2, 3.6), 240, ec, radius=0.4)
+        for sx in (-W * 0.32, W * 0.32):
+            point_light((sx, D / 2 + 1.0, H * 0.7), 160, (1.0, 0.68, 0.28), radius=0.5)
+        facade_windows(W, D, 1, rnd, lit=0.7, shop=True)
+        feat_h = 2.6
+
     elif style == 'police':
-        wall = mat('wall', srgb('#d8dde6'), rough=0.6)
-        flat_block(0, 0, W, D, H, wall, gravel('#a8adb8'), mat('par', srgb('#3c4e78'), rough=0.5), par_h=0.8)
-        heli = mat('helipad', srgb('#2e3442'), rough=0.8, noise=0.05)
+        wall = mat('wall', srgb('#c6ccd8'), rough=0.6)
+        flat_block(0, 0, W, D, H, wall, '#5e6c88', '#304c8c', par_h=0.85, par_w=0.48, seed=b['seed'])
+        heli = mat('helipad', srgb('#262e42'), rough=0.8, noise=0.05)
         cyl((W / 5, 0, H + 0.12), 4.0, 0.1, heli, verts=40)
         ring = mat('hring', srgb('#f2c14e'), rough=0.6, noise=0)
         cyl((W / 5, 0, H + 0.13), 3.6, 0.1, ring, verts=40)
         cyl((W / 5, 0, H + 0.14), 3.3, 0.1, heli, verts=40)
         text_obj('H', (W / 5, 0, H + 0.2), 3.6, mat('hpaint', srgb('#f2e6c8'), rough=0.7, noise=0), extrude=0.01)
+        skylights(-W * 0.12, D * 0.28, 3.2, 2.2, H, 2, 1, rnd, glow=0.92)
         for i in range(4):
             ac_unit(-W / 3, -D / 3 + i * 2.2, H, metal, dark)
         mast = mat('mast', srgb('#d0d0d0'), rough=0.4, metal=0.8, noise=0)
         cyl((-W / 2 + 2, D / 2 - 2, H + 3), 0.1, 6, mast)
         blue = mat('beacon', srgb('#2a5aff'), rough=0.3, emit=(0.2, 0.4, 1.0), night=20, day=1.0, noise=0)
         sphere((-W / 2 + 2, D / 2 - 2, H + 6.1), 0.25, blue)
-        sign = mat('signblue', srgb('#2a4aa8'), rough=0.5, noise=0)
+        sign = mat('signblue', srgb('#22429a'), rough=0.5, noise=0)
         cube((0, -D / 2 - 0.6, 3.6), (8, 1.2, 0.15), sign)
         text_obj('POLICE', (0, -D / 2 - 0.6, 3.72), 0.8, mat('ptxt', srgb('#ffffff'), rough=0.6, emit=(0.9, 0.95, 1.0), night=8, day=0.3, noise=0), extrude=0.01)
         facade_windows(W, D, floors, rnd, lit=0.85, shop=True)
         feat_h = 6.0
+
     elif style == 'warehouse':
-        wall = mat('wall', srgb('#c98b6b'), rough=0.8)
-        cube((0, 0, H / 2), (W, D, H), wall)
-        roofm = mat('saw', srgb('#bcb4ac'), rough=0.5, metal=0.4, noise=0.12, noise_scale=8)
-        glass = mat('sawglass', srgb('#3e4c6e'), rough=0.18, spec=0.8, emit=(1.0, 0.62, 0.3), night=0.3, day=0.0, noise=0)
-        n = int(W / 4.0)
-        for i in range(n):
-            x0 = -W / 2 + i * W / n
-            x1 = x0 + W / n
-            verts = [(x0, -D / 2, H), (x1, -D / 2, H), (x1, D / 2, H), (x0, D / 2, H), (x0, -D / 2, H + 2.0), (x0, D / 2, H + 2.0)]
-            me = bpy.data.meshes.new('saw')
-            me.from_pydata(verts, [], [(0, 1, 2, 3), (1, 4, 5, 2), (0, 4, 1), (3, 2, 5)])
-            o = bpy.data.objects.new('saw', me)
-            bpy.context.scene.collection.objects.link(o)
-            o.data.materials.append(roofm)
-            track(o)
-            gq = [(x0 + 0.05, -D / 2 + 0.3, H + 0.2), (x0 + 0.05, D / 2 - 0.3, H + 0.2), (x0 + 0.05, D / 2 - 0.3, H + 1.85), (x0 + 0.05, -D / 2 + 0.3, H + 1.85)]
-            quads_mesh('sawg', [gq], glass)
-        doors = mat('door', srgb('#e8d6b0'), rough=0.6, noise=0.05)
-        for i in range(3):
-            cube((-W / 3 + i * W / 3, -D / 2 - 0.05, 2.0), (4.0, 0.1, 4.0), doors)
-        facade_windows(W, D, 1, rnd, lit=0.5)
+        wall = mat('wall', srgb('#364c7c'), rough=0.65)
+        flat_block(0, 0, W, D, H, wall, '#56648a', '#24a898', par_h=0.75, par_w=0.45, seed=b['seed'])
+        m_teal = mat('str_teal', srgb('#169e86'), rough=0.6, noise=0.1, noise_scale=8)
+        m_blue = mat('str_blue', srgb('#1e3d94'), rough=0.6, noise=0.1, noise_scale=8)
+        stripe_n = int(W / 1.85)
+        sw = W / stripe_n
+        for i in range(stripe_n):
+            sx = -W / 2 + (i + 0.5) * sw
+            m_use = m_teal if i % 2 == 0 else m_blue
+            cube((sx, 0, H + 0.25), (sw - 0.04, D - 1.1, 0.16), m_use, bevel=0.03)
+        t_deck = mat('tdeck', srgb('#cbb89e'), rough=0.75, noise=0.18, noise_scale=10)
+        cube((W / 2 - 4.8, 0, H + 0.38), (8.2, D - 1.6, 0.12), t_deck, bevel=0.04)
+        for dx_ in (-2.2, 1.8):
+            ac_unit(W / 2 - 4.8 + dx_, -1.2, H + 0.44, metal, dark)
+            ac_unit(W / 2 - 4.8 + dx_, 2.0, H + 0.44, metal, dark)
+        cube((W / 2 - 4.8, 0.4, H + 0.85), (4.6, 0.32, 0.28), metal)
+        cube((W / 2 - 4.8, 2.0, H + 0.85), (4.6, 0.32, 0.28), metal)
+        facade_windows(W, D, 1, rnd, lit=0.6)
         feat_h = 2.0
+
     elif style in ('house', 'villa'):
-        wall = mat('wall', srgb(rnd.choice(['#f4e3c8', '#f2c6b0', '#d8e8d0', '#f6d8a8'])), rough=0.7)
-        tiles = tile_mat('tiles', rnd.choice(['#c4583a', '#b8603c', '#d07048']))
+        wall = mat('wall', srgb(rnd.choice(['#edd0ad', '#e8a888', '#b8d4c2', '#f0be7a'])), rough=0.7)
+        tiles = tile_mat('tiles', rnd.choice(['#c44e32', '#b85634', '#cc6438']))
         hw, hd = W * 0.62, D * 0.55
         hx, hy = -W / 2 + hw / 2 + 0.5, D / 2 - hd / 2 - 0.5
         cube((hx, hy, H / 2), (hw, hd, H), wall)
@@ -1224,26 +1344,27 @@ def build_building(b):
             wx, wy = hx + hw / 2 + wing_w / 2 - 0.5, hy + hd / 2 - wing_d / 2
             cube((wx, wy, (H - 2) / 2), (wing_w, wing_d, H - 2), wall)
             hip_roof(wx, wy, wing_w, wing_d, H - 2, min(wing_w, wing_d) * 0.32, tiles)
-        # yard: pool, deck, hedge, lounge
-        deck = mat('deck', srgb('#c89a6a'), rough=0.7, noise=0.25, noise_scale=12)
-        water = mat('pool', srgb('#2ea2c2'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=0.5, day=0.0, noise=0.3, noise_scale=9)
+        deck = mat('deck', srgb('#a86a3e'), rough=0.72, noise=0.25, noise_scale=12)
+        water = mat('pool', srgb('#26acc8'), rough=0.05, spec=1.0, emit=(0.3, 0.85, 1.0), night=0.75, day=0.0, noise=0.3, noise_scale=9)
         pw, pd = W * 0.42, D * 0.22
         px_, py_ = W / 2 - pw / 2 - 1.2, -D / 2 + pd / 2 + 1.5
         cube((px_, py_, 0.05), (pw + 2.2, pd + 2.2, 0.1), deck)
         cube((px_, py_, 0.11), (pw, pd, 0.06), water, bevel=0.4)
-        hedge = mat('hedge', srgb('#3f7a3a'), rough=0.9, noise=0.3, noise_scale=12)
+        hedge = mat('hedge', srgb('#32762e'), rough=0.85, noise=0.3, noise_scale=12)
         for (ax, ay, sx, sy) in [(0, -D / 2 + 0.4, W, 0.8), (-W / 2 + 0.4, 0, 0.8, D), (W / 2 - 0.4, 0, 0.8, D)]:
             cube((ax, ay, 0.6), (sx, sy, 1.2), hedge, bevel=0.3)
         for i in range(2):
             cube((px_ - pw / 2 + 1 + i * 1.6, py_ + pd / 2 + 1.6, 0.35), (0.7, 1.6, 0.25), mat('lounger', srgb('#f6efe2'), rough=0.6, noise=0), bevel=0.08)
+        garden_bed(hx, -D / 2 + 1.8, hw * 0.55, 1.6, 0.02, rnd, night_lit=True)
         palm_tree(-W / 2 + 2.0, -D / 2 + 2.5, rnd, height=6.5)
         if style == 'villa':
+            cafe_umbrella(px_ - pw / 2 - 0.8, py_, 0.1, '#ffd166', dark)
             palm_tree(W / 2 - 2.0, D / 2 - 2.0, rnd, height=8.0)
         facade_windows(hw, hd, 1, rnd, lit=0.9)
         for o in ASSET_OBJS[-1:]:
             if o.name.startswith('windows'):
                 o.location = (hx, hy, 0)
-        string_lights([(px_ - pw / 2 - 1, py_ - pd / 2 - 1.2), (px_ + pw / 2 + 1, py_ - pd / 2 - 1.2)], 2.4, rnd)
+        point_light((px_, py_ - pd / 2 - 0.8, 2.2), 140, (1.0, 0.72, 0.30), radius=0.45)
         feat_h = 3.0 if style == 'house' else 2.0
     return H + feat_h
 
@@ -1261,7 +1382,7 @@ def bake_buildings():
         set_pass('color')
         frame(0, 0, W + 2 * m, D + 2 * m, BLD_PPM)
         render(f'{TMP}/c.png')
-        save_np(ink(kuwahara(load_np(f'{TMP}/c.png'), 2)), f'{OUT}/bld_{b["id"]}.webp')
+        save_np(paint_finish(load_np(f'{TMP}/c.png'), kuw_r=3, stroke_r=3, stroke_s=0.34, line=0.74, inner=0.38), f'{OUT}/bld_{b["id"]}.webp')
         set_pass('shadow')
         scx, scy, sw, shh = shadow_frame_for(-W / 2 - 1, -D / 2 - 1, W / 2 + 1, D / 2 + 1, top)
         frame(scx, scy, sw, shh, BLD_SH_PPM)
