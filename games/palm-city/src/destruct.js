@@ -24,7 +24,7 @@ export const D = { GLASS: 0, METAL: 1, WOOD: 2, CHIP: 3, LEAF: 4, BARK: 5, DIRT:
 
 export function initDestruct(sim) {
   sim.debris = new Array(DEBRIS_CAP);
-  for (let i = 0; i < DEBRIS_CAP; i++) sim.debris[i] = { on: false, kind: 0, v: 0, x: 0, y: 0, vx: 0, vy: 0, rot: 0, vr: 0, s: 1, c: 0, rest: false };
+  for (let i = 0; i < DEBRIS_CAP; i++) sim.debris[i] = { on: false, kind: 0, v: 0, x: 0, y: 0, vx: 0, vy: 0, rot: 0, vr: 0, s: 1, c: 0, rest: false, born: 0 };
   sim.debrisN = 0;
   sim.smoke = new Array(SMOKE_CAP);
   for (let i = 0; i < SMOKE_CAP; i++) sim.smoke[i] = { on: false, x: 0, y: 0, vx: 0, vy: 0, t: 0, life: 1, s: 1, dark: 0 };
@@ -40,7 +40,7 @@ export function initDestruct(sim) {
 export function spawnDebris(sim, kind, x, y, vx, vy, s, c = 0) {
   const d = sim.debris[sim.debrisN];
   sim.debrisN = (sim.debrisN + 1) % DEBRIS_CAP;
-  d.on = true; d.kind = kind; d.v = (sim.fxr() * 3) | 0; d.x = x; d.y = y; d.vx = vx; d.vy = vy; d.s = s; d.c = c; d.rest = false;
+  d.on = true; d.born = sim.time; d.kind = kind; d.v = (sim.fxr() * 3) | 0; d.x = x; d.y = y; d.vx = vx; d.vy = vy; d.s = s; d.c = c; d.rest = false;
   d.rot = sim.fxr() * TAU; d.vr = (sim.fxr() - 0.5) * 18;
 }
 
@@ -214,6 +214,7 @@ export function punchWorld(sim, p) {
     if (d < bd) { bd = d; best = t; kind = 'thing'; }
   }
   if (!best) return false;
+  sim.player.punchT = Math.min(sim.player.punchT, 0.14);   // the fist lands on it: no lunge through it
   const nx = best.x - p.x, ny = best.y - p.y, l = Math.hypot(nx, ny) || 1;
   p.h = Math.atan2(ny, nx);
   const reach = Math.min(14, Math.max(4, l - (kind === 'car' ? best.wid / 2 : best.r)));
@@ -272,6 +273,7 @@ export function stepDestruct(sim, dt) {
   }
   for (const t of sim.things) if (t.step) t.step(sim, t, dt);
   carsThroughBushes(sim);
+  carsThroughLamps(sim);
 }
 
 // ------------------------------------------------------------------ palms
@@ -405,6 +407,81 @@ function carsThroughBushes(sim) {
       if (Math.abs(u) > c.len / 2 + t.r * 0.5 || Math.abs(v) > c.wid / 2 + t.r * 0.5 || sim.time - t.hitT < 0.5) continue;
       hitThing(sim, t, bushImpact(sp), ca * Math.sign(c.v), sa * Math.sign(c.v), c.driver === 'player' ? 'player' : 'world', sp);
       c.v *= 0.95;
+    }
+  }
+}
+
+// ------------------------------------------------------------------ benches and street props
+// Look spec §4. Benches crack and skew (1), break clean in half (2), collapse into a plank pile that no
+// longer blocks (3). Street lamps skew and flicker (1), bend over (2), snap at the base and fall, light
+// dead (3). Lifeguard towers skew (1), have their roof crushed (2), collapse into planks (3).
+// Benches and towers are solid (sim.obst): a car that breaks one ploughs on, otherwise it stops.
+// Lamps aren't solid; a car clips them.
+const PROP_PTS = { bench: [0, 40, 120, 250], lamp: [0, 50, 120, 250], lifeguard: [0, 80, 200, 500] };
+const PROP_LABEL = { bench: ['', 'CRACKED BENCH', 'BENCH SNAPPED', 'BENCH SMASHED'], lamp: ['', 'LAMP BENT', 'LAMP BENT', 'LAMP DOWN'], lifeguard: ['', 'TOWER CRACKED', 'ROOF CAVED', 'TOWER DOWN'] };
+// how hard a car hit at speed sp breaks each prop (benches go easily, towers are sturdier)
+const PROP_K = { bench: 4, lamp: 3.6, lifeguard: 2.2 };
+export function propImpact(kind, sp) { return sp < 25 ? 0 : sp < 45 ? 0.04 : Math.min(1, impactDamage(sp) * PROP_K[kind]); }
+
+// Called once the sim has built its obstacles (benches' slats, the props).
+export function initProps(sim) {
+  sim.lamps = []; sim.towers = [];
+  for (const b of sim.benches) {
+    const t = { kind: 'bench', b, x: b.x, y: b.y, r: 14, dmg: 0, stage: 0, hitT: -9, punch: 0.2, ax: 0, ay: 1 };
+    b.thing = t; sim.things.push(t);
+    for (const o of sim.obst) if (o.kind === 'bench' && Math.hypot(o.x - b.x, o.y - b.y) < 13) o.thing = t;
+  }
+  sim.W.L.lamps.forEach(([x, y], i) => {
+    const t = { kind: 'lamp', i, x, y, r: 4, dmg: 0, stage: 0, hitT: -9, punch: 0.17, ax: 1, ay: 0 };
+    sim.lamps.push(t); sim.things.push(t);
+  });
+  sim.W.L.props.forEach((p, i) => {
+    if (p.type !== 'lifeguard') return;
+    const t = { kind: 'lifeguard', i, x: p.x, y: p.y, r: 12, dmg: 0, stage: 0, hitT: -9, punch: 0.09, ax: 1, ay: 0 };
+    sim.towers[i] = t; sim.things.push(t);
+    for (const o of sim.obst) if (o.kind === 'lifeguard' && o.x === p.x && o.y === p.y) o.thing = t;
+  });
+}
+
+function propHit(sim, t, before, after, dx, dy, cause) {
+  const l = Math.hypot(dx, dy) || 1;
+  t.ax = dx / l; t.ay = dy / l;
+  const ex = t.x - t.ax * t.r * 0.5, ey = t.y - t.ay * t.r * 0.5;
+  if (t.kind === 'lamp') {
+    if (after > before) burst(sim, D.GLASS, after >= 3 ? 6 : 2, t.x + t.ax * 6, t.y + t.ay * 6, t.ax, t.ay, 70, 0.8);
+    burst(sim, D.METAL, 1, t.x, t.y, t.ax, t.ay, 40, 0.7);
+    sim.ev(after >= 3 ? 'snap' : 'dent', 0.2);
+  } else {
+    burst(sim, D.CHIP, 2 + after, ex, ey, t.ax, t.ay, 70, 1);
+    if (after >= 2 && after > before) burst(sim, D.WOOD, after >= 3 ? 5 : 2, t.x, t.y, t.ax, t.ay, 60, 1);
+    sim.ev(after >= 3 ? 'snap' : 'crack', after);
+  }
+  if (after >= 3 && before < 3 && t.kind !== 'lamp') {    // collapsed: no longer blocks anything
+    sim.obst = sim.obst.filter(o => o.thing !== t);
+    if (t.b) t.b.broken = true;
+  }
+  if (t.b) { t.b.stage = after; t.b.ax = t.ax; t.b.ay = t.ay; }
+  if (after > before) report(sim, t.x, t.y, PROP_PTS[t.kind][after], after >= 3 ? 2 : after >= 2 ? 1 : 0, cause, PROP_LABEL[t.kind][after]);
+}
+registerKind('bench', propHit);
+registerKind('lamp', propHit);
+registerKind('lifeguard', propHit);
+
+// A car clips a street lamp: the lamp takes it (scaled by speed), the car a small dent and a jolt.
+function carsThroughLamps(sim) {
+  for (const c of sim.cars) {
+    const sp = Math.abs(c.v);
+    if (sp < 25) continue;
+    for (const t of sim.lamps) {
+      if (t.stage >= 3 || sim.time - t.hitT < 0.5) continue;
+      const dx = t.x - c.x, dy = t.y - c.y;
+      if (dx * dx + dy * dy > 900) continue;
+      const ca = Math.cos(c.h), sa = Math.sin(c.h), u = dx * ca + dy * sa, v = -dx * sa + dy * ca;
+      if (Math.abs(u) > c.len / 2 || Math.abs(v) > c.wid / 2 - 1) continue;   // the pole inside the body, not a graze
+      const cause = c.driver === 'player' ? 'player' : 'world', dir = Math.sign(c.v) || 1;
+      hitThing(sim, t, propImpact('lamp', sp), ca * dir, sa * dir, cause, sp);
+      hitCar(sim, c, impactDamage(sp) * 0.35, -ca * dir, -sa * dir, cause);
+      c.v *= t.stage >= 3 ? 0.85 : 0.6;
     }
   }
 }

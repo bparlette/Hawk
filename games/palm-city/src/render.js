@@ -121,9 +121,9 @@ export class Renderer {
       out.push({ kind: 'building', x: b.x + b.w / 2, y: b.y + b.d / 2, e, id: b.id });
     }
     L.palms.forEach(([x, y], i) => out.push({ kind: 'palm', x, y, ti: i, sc: this.world.trunks[i].sc, e: M.props['palm' + (i % 3)] }));
-    for (const [x, y] of L.lamps) out.push({ kind: 'lamp', x, y, e: M.props.lamp });
+    L.lamps.forEach(([x, y], i) => out.push({ kind: 'lamp', x, y, li: i, e: M.props.lamp }));
     for (const b of this.world.bushes) out.push({ kind: 'bush', x: b.x, y: b.y, sc: b.sc, bi: b.i, e: M.props['bush' + b.v] });
-    for (const p of L.props) out.push({ kind: p.type, x: p.x, y: p.y, e: M.props[p.type] });
+    L.props.forEach((p, i) => out.push({ kind: p.type, x: p.x, y: p.y, pi: i, e: M.props[p.type] }));
     const P = L.pier;
     out.push({ kind: 'pier', x: P.x + P.w / 2, y: P.y + P.h / 2, e: M.props.pier });
     for (const s of out) {
@@ -175,6 +175,8 @@ export class Renderer {
   // lies on the ground as Gemini's fallen-trunk sprite.
   drawStatic(g, s, f, S) {
     if (s.kind === 'bush' && S.bushes) { this.drawBush(g, s, f, S.bushes[s.bi], S.time); return; }
+    if (s.kind === 'lamp' && S.lamps) { this.drawLamp(g, s, f, S.lamps[s.li]); return; }
+    if (s.kind === 'lifeguard' && S.towers && S.towers[s.pi]) { this.drawTower(g, s, f, S.towers[s.pi]); return; }
     const P = s.kind === 'palm' && S.palms ? S.palms[s.ti] : null;
     if (P && P.fall) {                                 // no tall shadow once it goes; a landed palm is drawn at ground level
       if (f === s.e.color && !P.fall.landed) this.drawFallenPalm(g, s, P);
@@ -249,6 +251,64 @@ export class Renderer {
     g.strokeStyle = '#6c4428'; g.lineWidth = 1.4; g.lineCap = 'round';
     g.beginPath(); g.moveTo(B.x + r * 0.2, B.y); g.lineTo(B.x + r * 0.95, B.y + r * 0.35);
     g.moveTo(B.x - r * 0.3, B.y + r * 0.1); g.lineTo(B.x - r * 0.8, B.y + r * 0.6); g.stroke();
+  }
+
+  // A street lamp's light: dead once it's down, flickering while it's damaged.
+  lampLight(S, i, time) {
+    const T = S && S.lamps && S.lamps[i];
+    if (!T || !T.stage) return 1;
+    if (T.stage >= 3) return 0;
+    const f = Math.sin(time * 23 + i * 7) + Math.sin(time * 9.3 + i);
+    return f > 1.2 ? 0.15 : 0.85;
+  }
+
+  // Street lamp by stage: the head skews away from the hit (1), the pole bends over (2), it snaps at
+  // the base and lies across the ground with its lantern smashed (3).
+  drawLamp(g, s, f, T) {
+    if (!T || !T.stage) { this.drawEntry(g, f, s.x, s.y); return; }
+    const a = Math.atan2(T.ay, T.ax);
+    if (T.stage >= 3) {
+      if (f !== s.e.color || !s.ground) return;         // lying flat: no tall shadow; drawn in the ground pass
+      g.lineCap = 'round';
+      g.strokeStyle = '#210f2e'; g.lineWidth = 4.2;
+      g.beginPath(); g.moveTo(s.x, s.y); g.lineTo(s.x + T.ax * 40, s.y + T.ay * 40); g.stroke();
+      g.strokeStyle = '#3a3044'; g.lineWidth = 2.6;
+      g.beginPath(); g.moveTo(s.x, s.y); g.lineTo(s.x + T.ax * 40, s.y + T.ay * 40); g.stroke();
+      g.fillStyle = '#2a2230'; g.beginPath(); g.ellipse(s.x + T.ax * 43, s.y + T.ay * 43, 4, 3, a, 0, 7); g.fill();
+      g.fillStyle = '#4a3e52'; g.beginPath(); g.arc(s.x, s.y, 3, 0, 7); g.fill();   // the twisted base socket
+      return;
+    }
+    g.save(); g.translate(s.x, s.y); g.rotate((T.stage === 1 ? 0.28 : 0.7) * (Math.sin(a) >= 0 ? 1 : -1));
+    g.translate(T.ax * T.stage * 3, T.ay * T.stage * 3);
+    this.drawEntry(g, f, 0, 0); g.restore();
+  }
+
+  // Lifeguard tower by stage: skewed with a cracked canopy (1), roof crushed and tilted (2), a pile of
+  // tan deck planks and crumpled turquoise canopy strips (3).
+  drawTower(g, s, f, T) {
+    if (!T.stage) { this.drawEntry(g, f, s.x, s.y); return; }
+    const a = Math.atan2(T.ay, T.ax);
+    if (T.stage >= 3) {
+      if (f !== s.e.color) return;
+      let seed = 97 + T.i * 13;
+      const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+      for (let i = 0; i < 9; i++) {
+        g.save(); g.translate(s.x + (rnd() - 0.5) * 26 + T.ax * 6, s.y + (rnd() - 0.5) * 22 + T.ay * 6); g.rotate(rnd() * 3.1);
+        g.fillStyle = i < 6 ? '#d4a070' : '#2fb3a6'; g.strokeStyle = '#210f2e'; g.lineWidth = 0.6;
+        g.fillRect(-7, -1.6, 14, 3.2); g.strokeRect(-7, -1.6, 14, 3.2); g.restore();
+      }
+      return;
+    }
+    g.save(); g.translate(s.x + T.ax * T.stage * 2, s.y + T.ay * T.stage * 2);
+    g.rotate((T.stage === 1 ? 0.06 : -0.28) * (Math.cos(a) >= 0 ? 1 : -1));
+    if (T.stage >= 2) g.scale(0.9, 0.82);               // the roof caved in
+    this.drawEntry(g, f, 0, 0);
+    g.restore();
+    if (f === s.e.color) {                              // a crack across the canopy
+      g.strokeStyle = 'rgba(33,15,46,0.8)'; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(s.x - 6, s.y - 5); g.lineTo(s.x, s.y - 1); g.lineTo(s.x + 4, s.y - 6); g.lineTo(s.x + 8, s.y + 2); g.stroke();
+      if (T.stage >= 2) { g.fillStyle = '#d4a070'; g.fillRect(s.x - 8, s.y + 4, 16, 3); }   // deck beams showing
+    }
   }
 
   drawFallenPalm(g, s, P) {
@@ -389,7 +449,9 @@ export class Renderer {
     P && P('shadows');
     // ---------------- 3. colour sprites
     worldTf(g);
-    for (const s of this.statics) if (s.kind === 'pier' || s.kind === 'fountain' || s.kind === 'lifeguard') if (inView(s.bb)) this.drawEntry(g, s.e.color, s.x, s.y);
+    for (const s of this.statics) if (s.kind === 'pier' || s.kind === 'fountain' || s.kind === 'lifeguard') if (inView(s.bb)) {
+      if (s.kind === 'lifeguard' && S.towers && S.towers[s.pi]) this.drawTower(g, s, s.e.color, S.towers[s.pi]); else this.drawEntry(g, s.e.color, s.x, s.y);
+    }
     this.drawSkatePark(g, S);
     this.drawDebris(g, S, vx0, vy0, vx1, vy1);
     if (S.board) {
@@ -399,6 +461,11 @@ export class Renderer {
       g.drawImage(f.img, f.ox, f.oy, f.w, f.h); g.restore();
     }
     if (S.bushes) for (const B of S.bushes) if (B.stage >= 3 && B.x > vx0 - 20 && B.x < vx1 + 20 && B.y > vy0 - 20 && B.y < vy1 + 20) this.drawRootPit(g, B);
+    if (S.lamps) for (const s of this.statics) {      // downed lamps too
+      if (s.kind !== 'lamp' || !inView(s.bb, 60)) continue;
+      const T = S.lamps[s.li];
+      if (T.stage >= 3) { s.ground = true; this.drawLamp(g, s, s.e.color, T); s.ground = false; }
+    }
     if (S.palms) for (const s of this.statics) {      // fallen palms lie on the ground, under people and cars
       if (s.kind !== 'palm') continue;
       const P = S.palms[s.ti];
@@ -498,11 +565,11 @@ export class Renderer {
     lg.globalCompositeOperation = 'lighter';
     for (const s of this.statics) {
       if (!s.e.night || !inView(s.bb)) continue;
-      lg.globalAlpha = s.kind === 'lamp' ? Math.min(1, G.lamps * 0.78) : s.kind === 'building' ? Math.min(1, G.windows * 1.05) : Math.max(G.windows, G.lamps) * 0.8;
+      lg.globalAlpha = s.kind === 'lamp' ? Math.min(1, G.lamps * 0.78) * this.lampLight(S, s.li, time) : s.kind === 'building' ? Math.min(1, G.windows * 1.05) : Math.max(G.windows, G.lamps) * 0.8;
       if (lg.globalAlpha > 0.01) this.drawEntry(lg, s.e.night, s.x, s.y);
     }
     this.drawNeonPuddles(lg, G, time, vx0, vy0, vx1, vy1);
-    this.drawWetReflections(lg, G, time, vx0, vy0, vx1, vy1);
+    this.drawWetReflections(lg, G, time, vx0, vy0, vx1, vy1, S);
     for (const c of S.cars) {
       if (c.x < vx0 - 250 || c.x > vx1 + 250 || c.y < vy0 - 250 || c.y > vy1 + 250) continue;
       const m = this.M.cars[c.model];
@@ -814,7 +881,7 @@ export class Renderer {
   buildReflectors() {
     const L = this.L, W = this.world, out = [];
     const NEON = { SOLANA: '#ff4fa8', TACOS: '#ff8a3c', DINER: '#3fe0ff', MOTEL: '#ff3f6a', NOVA: '#b45cff' };
-    for (const [x, y] of L.lamps) out.push({ x: x + 13, y: y + 6, col: [255, 178, 86], len: 120, lamp: true, w0: 3.4 });
+    L.lamps.forEach(([x, y], i) => out.push({ x: x + 13, y: y + 6, col: [255, 178, 86], len: 120, lamp: true, li: i, w0: 3.4 }));
     for (const b of L.buildings) if (b.sign) {
       let best = null;
       for (const [px, py] of [[b.x + b.w / 2, b.y + b.d + 36], [b.x + b.w / 2, b.y - 36], [b.x - 36, b.y + b.d / 2], [b.x + b.w + 36, b.y + b.d / 2]]) {
@@ -833,12 +900,12 @@ export class Renderer {
     return out;
   }
 
-  drawWetReflections(lg, G, time, vx0, vy0, vx1, vy1) {
+  drawWetReflections(lg, G, time, vx0, vy0, vx1, vy1, S) {
     if (!this.reflectors) this.reflectors = this.buildReflectors();
     const W = this.world, half = W.halfRoad - 2;
     lg.lineCap = 'round';
     for (const r of this.reflectors) {
-      const peak = r.lamp ? G.lamps * 0.44 : G.neon * 0.50;
+      const peak = r.lamp ? G.lamps * 0.44 * this.lampLight(S, r.li, time) : G.neon * 0.50;
       if (peak < 0.02 || r.x < vx0 - 40 || r.x > vx1 + 40 || r.y < vy0 - 150 || r.y > vy1 + 20) continue;
       const phase = r.x * 0.13 + r.y * 0.07;
       const gr = lg.createLinearGradient(0, r.y, 0, r.y + r.len);
@@ -886,7 +953,14 @@ export class Renderer {
       g.strokeStyle = '#fff4dc'; g.lineWidth = 0.8;
       g.beginPath(); g.moveTo(r.x0 - 0.6, r.y0 - 0.6); g.lineTo(r.x1 - 0.6, r.y1 - 0.6); g.stroke();
     }
+    const X = this.M.destruct;
     for (const b of S.benches) {
+      if (b.stage && X) {                               // cracked / snapped in half / plank pile (stage sprites)
+        const e = X['bench_s' + b.stage];
+        g.save(); g.translate(b.x, b.y); g.rotate(b.a); g.scale(0.8, 0.8);
+        g.drawImage(e.img, e.ox, e.oy, e.w, e.h); g.restore();
+        continue;
+      }
       g.save(); g.translate(b.x, b.y); g.rotate(b.a);
       g.fillStyle = 'rgba(40,24,60,0.35)'; g.fillRect(-b.w / 2 + 3, -b.d / 2 + 2, b.w, b.d);
       for (let i = 0; i < 3; i++) { g.fillStyle = ['#c9875a', '#b97a50', '#d8966a'][i]; g.fillRect(-b.w / 2, -b.d / 2 + i * 3, b.w, 2.6); }
