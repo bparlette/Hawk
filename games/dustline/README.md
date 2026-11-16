@@ -55,6 +55,15 @@ bushes, scenery tire stacks, a start gantry + grid slots, and slightly larger
 trucks. All three looks re-render that same base in their own medium. Engine,
 physics, AI and track data are unchanged from v1; verify still passes 10/10.
 
+**v3 (round 3, owner: "getting closer — keep pushing"):** the terrain now has
+a real heightfield — procedural dunes plus authored masses (NE dune, banked
+sand bowl in the hairpin, corrugated mound under the ribs, carved river
+channel) — hillshaded from a fixed NW sun. The road is graded to a smoothed
+elevation profile along the centreline, so the course reads carved through
+the dunes with cut banks; the infield scrub sits darker so the road pops; the
+river runs a darker deep channel with current streaks and foam churn at the
+ford. Render-only again (`render.js`); verify still 10/10.
+
 **Honest approximations:** the thread's fluid simulation and global
 illumination are approximated (splash particles + wakes; consistent fixed
 sun shading). Phone feel is unverified — the owner's phone is the real gate.
