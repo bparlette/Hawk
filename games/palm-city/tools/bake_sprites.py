@@ -1485,13 +1485,13 @@ def build_lifeguard():
     cube((0, -2.4, 1.2), (1.0, 2.0, 0.08), post, rot=(0.55, 0, 0))
 
 
-def bake_static(name, builder, half, top, ppm=BLD_PPM, night=True, night_half=None, kuw=2):
+def bake_static(name, builder, half, top, ppm=BLD_PPM, night=True, night_half=None, kuw=2, stroke_s=0.30, line=0.74, inner=0.36):
     """Render one static prop centred on its anchor. half = half-extent (m) of the colour frame."""
     hx, hy = half if isinstance(half, tuple) else (half, half)
     set_pass('color')
     frame(0, 0, hx * 2, hy * 2, ppm)
     render(f'{TMP}/c.png')
-    save_np(ink(kuwahara(load_np(f'{TMP}/c.png'), kuw)), f'{OUT}/{name}.webp')
+    save_np(paint_finish(load_np(f'{TMP}/c.png'), kuw_r=kuw, stroke_r=min(3, kuw + 1), stroke_s=stroke_s, line=line, inner=inner), f'{OUT}/{name}.webp')
     entry = {'color': manifest_entry(f'{name}.webp', 0, 0, hx * 2, hy * 2)}
     set_pass('shadow')
     scx, scy, sw, shh = shadow_frame_for(-hx, -hy, hx, hy, top)
@@ -1518,23 +1518,29 @@ def bake_props():
             continue
         rnd = random.Random(seed)
         # build at origin with no lean so the crown is centred on the anchor
-        palm_tree(0, 0, rnd, height=hgt, lean_m=0.6)
-        P[f'palm{i}'] = bake_static(f'palm{i}', None, 4.6, hgt + 0.8, night=False)
+        palm_tree(0, 0, rnd, height=hgt, lean_m=0.6, radius=3.1)
+        P[f'palm{i}'] = bake_static(f'palm{i}', None, 4.6, hgt + 0.8, night=False, kuw=3, stroke_s=0.32, line=0.76, inner=0.38)
         save_manifest(); clear_asset()
-    for i, (r, col, col2, n) in enumerate([(1.1, '#3f7a3a', '#6aa048', 5), (1.6, '#2f6a4a', '#58945a', 7), (0.8, '#7a9a3a', '#b8c25a', 4), (1.3, '#4a6a7a', '#7aa0a0', 6)]):
+    bush_specs = [
+        (1.1, '#2b6e2c', '#5fa63e', '#ff6494', 6),
+        (1.6, '#1f5e40', '#4a9652', '#ffd44c', 8),
+        (0.85, '#64922c', '#a8c84a', '#ffffff', 5),
+        (1.3, '#386074', '#6aa29e', '#f48ee0', 7),
+    ]
+    for i, (r, col, col2, fcol, n) in enumerate(bush_specs):
         if not want(f'bush{i}'):
             continue
         rnd = random.Random(400 + i)
-        a = mat('bA', srgb(col), rough=0.85, noise=0.35, noise_scale=10)
-        b = mat('bB', srgb(col2), rough=0.85, noise=0.35, noise_scale=10)
-        fl = mat('bF', srgb(['#f28fb0', '#ffd166', '#ffffff', '#f4a0d8'][i]), rough=0.7, noise=0)
+        a = mat('bA', srgb(col), rough=0.8, noise=0.32, noise_scale=10)
+        b = mat('bB', srgb(col2), rough=0.8, noise=0.32, noise_scale=10)
+        fl = mat('bF', srgb(fcol), rough=0.65, noise=0)
         for k in range(n):
-            ang = rnd.uniform(0, 6.28); d = rnd.uniform(0, r * 0.6)
-            sphere((math.cos(ang) * d, math.sin(ang) * d, r * 0.5), rnd.uniform(r * 0.45, r * 0.8), a if k % 2 else b, scale=(1, 1, 0.75), segs=12)
-        for k in range(6 if i != 3 else 0):
-            ang = rnd.uniform(0, 6.28); d = rnd.uniform(0, r * 0.8)
-            sphere((math.cos(ang) * d, math.sin(ang) * d, r * 1.05), 0.12, fl, segs=6)
-        P[f'bush{i}'] = bake_static(f'bush{i}', None, r * 1.6, r * 1.3, night=False)
+            ang = rnd.uniform(0, 6.28); d = rnd.uniform(0, r * 0.62)
+            sphere((math.cos(ang) * d, math.sin(ang) * d, r * 0.5), rnd.uniform(r * 0.45, r * 0.82), a if k % 2 else b, scale=(1, 1, 0.75), segs=12)
+        for k in range(8 if i != 3 else 4):
+            ang = rnd.uniform(0, 6.28); d = rnd.uniform(0, r * 0.82)
+            sphere((math.cos(ang) * d, math.sin(ang) * d, r * 1.05), 0.16, fl, segs=6)
+        P[f'bush{i}'] = bake_static(f'bush{i}', None, r * 1.6, r * 1.3, night=False, kuw=3, stroke_s=0.32, line=0.76, inner=0.38)
         save_manifest(); clear_asset()
     if want('board'):
         deck = mat('deck', srgb('#ff6f91'), rough=0.5, coat=0.6, noise=0.1, noise_scale=6)
