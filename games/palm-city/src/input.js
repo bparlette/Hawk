@@ -14,6 +14,7 @@ export class Input {
     this.fightOn = true;            // main.js turns the fight button off when the player isn't on foot
     this.keys = {};
     this.R = 56;
+    this.mapOpen = false; this.safeTop = 0;   // the MAP toggle, top-right under the stars (main.js keeps safeTop fresh)
     this.onFirst = null;
     const opts = { passive: false };
     canvas.addEventListener('pointerdown', e => this.down(e), opts);
@@ -26,6 +27,7 @@ export class Input {
       this.first();
       if (map[e.code]) { this.keys[map[e.code]] = true; e.preventDefault(); }
       if ((e.code === 'Space' || e.code === 'KeyE' || e.code === 'Enter') && !e.repeat) { this.actionEdge = true; e.preventDefault(); }
+      if (e.code === 'KeyM' && !e.repeat) this.mapOpen = !this.mapOpen;
       if ((e.code === 'KeyF' || e.code === 'KeyX' || e.code === 'KeyJ') && !e.repeat) { this.punchEdge = true; e.preventDefault(); }
     });
     addEventListener('keyup', e => { if (map[e.code]) this.keys[map[e.code]] = false; });
@@ -35,6 +37,7 @@ export class Input {
 
   button() { return { x: this.view.w - 72, y: this.view.h - 120, r: 44 }; }
   fight() { return { x: this.view.w - 164, y: this.view.h - 82, r: 34 }; }
+  mapBtn() { return { x: this.view.w - 70, y: this.safeTop + 62, w: 58, h: 28 }; }   // clear of the stick (left half) and the buttons (bottom)
 
   toView(e) {
     const r = this.canvas.getBoundingClientRect();
@@ -45,7 +48,8 @@ export class Input {
     e.preventDefault();
     this.first();
     const p = this.toView(e);
-    const b = this.button(), f = this.fight();
+    const b = this.button(), f = this.fight(), m = this.mapBtn();
+    if (p.x > m.x - 6 && p.x < m.x + m.w + 6 && p.y > m.y - 6 && p.y < m.y + m.h + 6) { this.mapOpen = !this.mapOpen; return; }
     if (this.fightOn && Math.hypot(p.x - f.x, p.y - f.y) < f.r + 6 && this.fightId === null) {
       this.fightId = e.pointerId; this.fightDown = true; this.punchEdge = true;
       return;
