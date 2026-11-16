@@ -18,8 +18,10 @@ export function drawEventsGround(g, S, time) {
   const ev = S.event, pulse = 0.5 + 0.5 * Math.sin(time * 4);
   if (!ev) {
     for (const s of S.eventSites || []) beacon(g, s.p[0], s.p[1], s.kind === 'wreck' ? '#ff7a4a' : '#6ee2ff', pulse, time);
+    if (S.chaseSite) beacon(g, S.chaseSite.p[0], S.chaseSite.p[1], '#7dffa8', pulse, time);
     return;
   }
+  if (ev.kind === 'chase') { beacon(g, ev.spot[0], ev.spot[1], '#7dffa8', pulse, time); return; }   // the next checkpoint
   if (ev.kind === 'wreck') {
     const E = EVENTS.wreck;
     g.save(); g.setLineDash([14, 10]); g.lineDashOffset = -time * 14; g.lineWidth = 3;
@@ -105,6 +107,28 @@ function drawBay(g, b, active, ev, S, time, pulse) {
 // ---- the HUD card + banners (hud.js calls this)
 export function drawEventHud(g, vw, vh, top, S, font) {
   const ev = S.event, R = S.eventResult;
+  if (ev && ev.kind === 'chase') {                          // BOARD CHASE: next checkpoint, clock, the escape meter, an arrow
+    const w = 200, x = vw / 2 - w / 2, y = top + (S.combo ? 108 : 62), h = 58;   // drops below the trick combo when a line is running
+    g.fillStyle = 'rgba(20,12,40,0.62)'; g.beginPath(); g.roundRect(x, y, w, h, 10); g.fill();
+    g.lineWidth = 2; g.strokeStyle = 'rgba(125,255,168,0.9)'; g.stroke();
+    g.textAlign = 'left'; g.font = font(13, 900); g.fillStyle = '#7dffa8'; g.fillText(ev.name, x + 12, y + 16);
+    const tt = Math.max(0, Math.ceil(ev.timer));
+    g.textAlign = 'right'; g.fillStyle = ev.timer < 15 ? '#ff7a8a' : '#fff1d8'; g.fillText(`${Math.floor(tt / 60)}:${String(tt % 60).padStart(2, '0')}`, x + w - 12, y + 16);
+    g.textAlign = 'left'; g.font = font(12, 800); g.fillStyle = '#fff1d8'; g.fillText(`NEXT: ${ev.next}`, x + 12, y + 34);
+    g.textAlign = 'right'; g.fillText(`${ev.idx}/4`, x + w - 12, y + 34);
+    g.fillStyle = 'rgba(255,241,216,0.25)'; g.fillRect(x + 12, y + 45, w - 24, 6);          // the escape meter
+    g.fillStyle = '#7dffa8'; g.fillRect(x + 12, y + 45, (w - 24) * ev.meter, 6);
+    const f = S.player.ped, dx = ev.spot[0] - f.x, dy = ev.spot[1] - f.y, d = Math.hypot(dx, dy);
+    if (d > 150) {                                           // off screen: an arrow round the middle of the view
+      const a = Math.atan2(dy, dx), ax = vw / 2 + Math.cos(a) * 130, ay = vh * 0.46 + Math.sin(a) * 150;
+      g.save(); g.translate(ax, ay); g.rotate(a);
+      g.fillStyle = '#7dffa8'; g.strokeStyle = 'rgba(33,15,46,0.9)'; g.lineWidth = 2.5;
+      g.beginPath(); g.moveTo(16, 0); g.lineTo(-9, -11); g.lineTo(-3, 0); g.lineTo(-9, 11); g.closePath(); g.fill(); g.stroke();
+      g.restore();
+      g.font = font(11, 800); g.textAlign = 'center'; g.fillStyle = '#d8ffe6'; g.fillText(`${Math.round(d / 10)} m`, ax - Math.cos(a) * 26, ay - Math.sin(a) * 26 + 4);
+    }
+    return;
+  }
   if (ev) {
     const w = 200, x = vw / 2 - w / 2, y = top + 62, h = ev.kind === 'wreck' ? 64 : 58;
     g.fillStyle = 'rgba(20,12,40,0.62)'; g.beginPath(); g.roundRect(x, y, w, h, 10); g.fill();
@@ -140,7 +164,7 @@ export function drawEventHud(g, vw, vh, top, S, font) {
     g.textAlign = 'center'; g.font = font(14, 900); g.fillStyle = '#fff1d8'; g.fillText(R.name, vw / 2, y + 22);
     g.font = font(26, 900); g.fillStyle = '#ffd45c'; g.fillText(R.kind === 'valet' ? `$${R.pts.toLocaleString()}` : R.pts.toLocaleString() + ' PTS', vw / 2, y + 54);
     g.font = font(13, 800); g.fillStyle = R.ok ? '#7dffa8' : '#ff9a8a';
-    g.fillText(R.kind === 'wreck' ? `${R.medal === 'NONE' ? 'NO MEDAL' : R.medal + ' MEDAL'} · BEST CHAIN ×${R.chain || 1}` : `${R.text}${R.bays != null ? ' · ' + R.bays + ' BAYS' : ''}`, vw / 2, y + 76);
+    g.fillText(R.kind === 'wreck' ? `${R.medal === 'NONE' ? 'NO MEDAL' : R.medal + ' MEDAL'} · BEST CHAIN ×${R.chain || 1}` : R.kind === 'chase' ? `${R.text.replace('BOARD CHASE — ', '')} · ${R.cp}/${R.of} CHECKPOINTS` : `${R.text}${R.bays != null ? ' · ' + R.bays + ' BAYS' : ''}`, vw / 2, y + 76);
     g.globalAlpha = 1;
   }
 }

@@ -6,12 +6,14 @@
 //                            otherwise TURBO (hold). A wreck has no A action.
 //   on the board           : none shown (the main button is the ollie; the A key ollies too)
 import { jobButton } from './jobs.js';
+import { chaseArmed } from './chase.js';
 
 export const TURBO = { mult: 1.4, accel: 1.6, burn: 3.0, cool: 2.0 };   // top-speed x, accel x, seconds of boost, seconds to recover
 
 export function buttonA(sim) {
   const P = sim.player;
   if (P.mode === 'foot' || P.mode === 'siege') return { kind: 'punch', label: 'PUNCH' };
+  if (P.mode === 'board') return chaseArmed(sim) ? { kind: 'event', label: 'START BOARD CHASE' } : null;
   if (P.mode !== 'car') return null;
   const jb = jobButton(sim);
   if (jb) return { kind: 'job', label: jb.label };

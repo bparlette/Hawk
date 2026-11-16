@@ -162,6 +162,14 @@ export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
     g.font = font(12, 800); g.fillStyle = '#d8f6ff'; g.fillText(jb.label, f.x, f.y - f.r - 11);
   }
   const ba = buttonA(sim);
+  if (ba && ba.kind === 'event') {                         // on the board at the pier marker: START BOARD CHASE
+    const f = input.fight();
+    g.beginPath(); g.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+    g.fillStyle = input.fightDown ? 'rgba(125,255,168,0.55)' : 'rgba(255,240,220,0.16)'; g.fill();
+    g.lineWidth = 3; g.strokeStyle = 'rgba(125,255,168,0.95)'; g.stroke();
+    g.fillStyle = 'rgba(200,255,220,0.95)'; g.font = font(20, 900); g.textAlign = 'center'; g.fillText('★', f.x, f.y + 1);
+    g.font = font(12, 800); g.fillStyle = '#d8ffe6'; g.fillText(ba.label, f.x, f.y - f.r - 11);
+  }
   if (ba && ba.kind === 'turbo') {                         // in a car with no job action armed: TURBO (hold)
     const f = input.fight(), c = P.car, hot = (c.turbo || 0) > 0.05;
     g.globalAlpha = ba.cooling ? 0.5 : 1;

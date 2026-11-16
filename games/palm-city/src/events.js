@@ -11,6 +11,7 @@
 // which calls sim.eventBreak (set here) — the event only multiplies and chains. Domino anchors
 // (hydrants, fuel drums) are ordinary sim.things of two new kinds registered with destruct.js.
 import { hitCar, hitThing, burst, puff, report, registerKind, STAGES, D } from './destruct.js';
+import { initChase, stepChase } from './chase.js';
 
 const TAU = Math.PI * 2;
 const wrap = (a) => { while (a > Math.PI) a -= TAU; while (a < -Math.PI) a += TAU; return a; };
@@ -34,9 +35,10 @@ STAGES.drum = [0.3, 0.6, 1]; STAGES.hydrant = [0.3, 0.6, 1];
 
 export function initEvents(sim) {
   sim.event = null; sim.eventResult = null; sim.hitStopT = 0;
-  sim.eventStats = { wreck: 0, valet: 0 };
+  sim.eventStats = { wreck: 0, valet: 0, chase: 0 };
   sim.eventSites = Object.entries(EVENTS).map(([kind, e]) => ({ kind, name: e.name, p: e.site }));
   sim.eventBreak = (x, y, pts, severity, label) => eventBreak(sim, x, y, pts, severity, label);
+  initChase(sim);                                           // BOARD CHASE: its own site (it starts on the board, not in a car)
 }
 
 // ---------------------------------------------------------------- the button (jobs.js asks)
@@ -263,7 +265,9 @@ export function stepEvents(sim, dt) {
   const ev = sim.event;
   if (!ev) return;
   ev.t += dt;
+  if (sim.busted && ev.kind === 'chase') { endEvent(sim, 'BOARD CHASE — BUSTED', false, { cp: ev.idx, of: 4 }); return; }
   if (sim.busted) { if (ev.kind === 'wreck') sim.ev('vox_evt_wreck_busted'); endEvent(sim, ev.kind === 'wreck' ? 'BUSTED — ' + ev.pts.toLocaleString() + ' PTS KEPT' : 'VALET — BUSTED', false); return; }
   if (ev.car && ev.car.wreck && ev.kind === 'valet') { endEvent(sim, 'VALET — CAR WRECKED', false, { bays: ev.n }); return; }
-  if (ev.kind === 'wreck') stepWreck(sim, ev, dt); else stepValet(sim, ev, dt);
+  if (ev.kind === 'chase') stepChase(sim, ev, dt, (text, ok, extra) => endEvent(sim, text, ok, extra), (pts, label) => pay(sim, pts, label, 2));
+  else if (ev.kind === 'wreck') stepWreck(sim, ev, dt); else stepValet(sim, ev, dt);
 }

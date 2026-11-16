@@ -276,7 +276,11 @@ export function stepBoard(sim, dt, inp) {
     b.prevRd = rd;
   }
   // cops grab you
-  for (const o of sim.peds) if (o.mode === 'cop' && Math.hypot(o.x - b.x, o.y - b.y) < 14 && b.air <= 0) { bail(sim, 'grabbed'); return; }
+  // cops grab a board that is slow or stopped; a board at speed shoulders past them (7C: moving play never busts)
+  for (const o of sim.peds) if (o.mode === 'cop' && Math.hypot(o.x - b.x, o.y - b.y) < 14 && b.air <= 0) {
+    if (boardSpeed(b) < 45) { bail(sim, 'grabbed'); return; }
+    if (sim.time - (o.bumpT || -9) > 0.8) { const d = Math.hypot(o.x - b.x, o.y - b.y) || 1; sim.stumble(o, (o.x - b.x) / d, (o.y - b.y) / d, 60); b.vx *= 0.9; b.vy *= 0.9; sim.ev('bump'); }
+  }
   p.x = b.x; p.y = b.y; p.h = b.h;
   p.pose = 1;
 }
