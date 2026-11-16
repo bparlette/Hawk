@@ -5,6 +5,8 @@
 // Street pressure (roadblocks, spike strips, the SWAT van) lives here too.
 // Gemini's look spec: shots/PRESSURE-DELTA.md; sprites: assets/pressure/ (tools/import_pressure.mjs).
 
+import { burst, report, D } from './destruct.js';
+
 const ALT = 120;                         // chopper altitude (world units) — sets its shadow offset
 const POOL_R = 70;                       // searchlight pool radius on the ground
 const SLEW = [0, 0, 0, 120, 175, 225];   // beam hotspot max speed by stars (u/s); a car tops out ~290
@@ -12,6 +14,95 @@ const FLY = 170;                         // chopper cruise speed (u/s)
 
 export function initPressure(sim) {
   sim.chopper = null;
+  sim.sawhorses = [];        // { x, y, a, broken, t }
+  sim.spikes = [];           // { x, y, a } — a strip 44 units long across a lane
+  sim.rbNext = 0; sim.roadblocks = 0;
+}
+
+// ---------------------------------------------------------------- street pressure (4-5 stars)
+// A roadblock one stretch ahead of where you're driving: two cruisers nosed together in a shallow V
+// across the road (the second is the SWAT van at 5 stars), sawhorses closing most of what's left,
+// a spike strip on the approach. One kerb-side gap is always open — and the sawhorses shatter if
+// you hit them fast enough, so there's a risky way and a brave way through, never a wall.
+const SMASH_V = 130;         // ~45% of a car's top speed: above this a sawhorse shatters and you keep going
+const SPIKE_VMAX = 150;      // blown tyres: this is all the car will do
+
+export function spawnRoadblock(sim, sAt, dirIn) {
+  const W = sim.W, r = sim.rnd;
+  let s = sAt, dir = dirIn;
+  if (s === undefined) {
+    const c = sim.player.car, tp = W.loopAt(sim.playerS);
+    const along = (Math.cos(c.h) * tp.tx + Math.sin(c.h) * tp.ty) * Math.sign(c.v || 1);
+    dir = along >= 0 ? 1 : -1;
+    s = null;
+    for (let k = 0; k < 8 && s === null; k++) {         // a straight stretch, 500-800 units ahead
+      const t = sim.playerS + dir * (500 + k * 40), a = W.loopAt(t - 70), b = W.loopAt(t + 70);
+      if (a.tx * b.tx + a.ty * b.ty > 0.985) s = t;
+    }
+    if (s === null) return false;
+  }
+  const q = W.loopAt(s), nx = -q.ty, ny = q.tx, hr = W.halfRoad, h = Math.atan2(q.ty, q.tx);
+  const side = r() < 0.5 ? -1 : 1;                      // which kerb keeps the gap
+  const at = (across, along) => [q.x + nx * across + q.tx * along, q.y + ny * across + q.ty * along];
+  if (sim.cars.some(c => Math.hypot(c.x - q.x, c.y - q.y) < 70)) return false;
+  const van = sim.stars >= 5 && sim.M.cars.swat_van ? 'swat_van' : 'police';
+  const extra = { parked: true, fixed: false, roadblock: true, siren: true };
+  const [ax, ay] = at(-side * hr * 0.55, 0), [bx, by] = at(-side * hr * 0.02, 0);
+  sim.addCar(ax, ay, h + side * 1.15, 'police', null, extra);
+  sim.addCar(bx, by, h - side * 1.15, van, null, extra);
+  for (const k of [0.5, 0.82]) { const [x, y] = at(side * hr * k, (k - 0.6) * 14); sim.sawhorses.push({ x, y, a: h + Math.PI / 2 + (r() - 0.5) * 0.3, broken: false, t: 0 }); }
+  const [sx, sy] = at(side * hr * 0.5, -dir * 95);      // spikes on the approach, in the lane that leads to the gap
+  sim.spikes.push({ x: sx, y: sy, a: h + Math.PI / 2 });
+  sim.roadblocks++;
+  sim.ev('siren');
+  sim.say(van === 'swat_van' ? 'SWAT ROADBLOCK AHEAD' : 'ROADBLOCK AHEAD', 1.6);
+  return true;
+}
+
+function stepStreet(sim, dt) {
+  const f = sim.focus();
+  if (sim.stars >= 4 && !sim.busted && sim.player.mode === 'car' && Math.abs(sim.player.car.v) > 80 && sim.time > sim.rbNext) {
+    sim.rbNext = sim.time + (spawnRoadblock(sim) ? 16 : 2);
+  }
+  // sawhorses: smash through at speed, or get stopped short
+  for (const h of sim.sawhorses) {
+    if (h.broken) { h.t += dt; continue; }
+    for (const c of sim.cars) {
+      const sp = Math.abs(c.v);
+      if (sp < 20 || Math.hypot(c.x - h.x, c.y - h.y) > c.len / 2 + 7) continue;
+      const lx = (h.x - c.x) * Math.cos(c.h) + (h.y - c.y) * Math.sin(c.h), ly = -(h.x - c.x) * Math.sin(c.h) + (h.y - c.y) * Math.cos(c.h);
+      if (Math.abs(lx) > c.len / 2 + 5 || Math.abs(ly) > c.wid / 2 + 7) continue;
+      h.broken = true; h.t = 0;
+      const dx = Math.cos(c.h) * Math.sign(c.v), dy = Math.sin(c.h) * Math.sign(c.v), mine = c.driver === 'player';
+      burst(sim, D.WOOD, sp > SMASH_V ? 9 : 4, h.x, h.y, dx, dy, sp * 0.7, 1.1);
+      if (sp > SMASH_V) { c.v *= 0.92; sim.ev('crack'); if (mine) { report(sim, h.x, h.y, 60, 0, 'player', 'SMASHED THROUGH'); sim.punchZoom = 1; } }
+      else { c.v *= 0.35; sim.ev('bump'); }
+      break;
+    }
+  }
+  // spike strips: any car that crosses one loses its tyres
+  for (const k of sim.spikes) {
+    const ca = Math.cos(k.a), sa = Math.sin(k.a);
+    for (const c of sim.cars) {
+      if (c.spiked || Math.abs(c.v) < 30) continue;
+      const u = (c.x - k.x) * ca + (c.y - k.y) * sa, w = -(c.x - k.x) * sa + (c.y - k.y) * ca;
+      if (Math.abs(u) > 22 + c.wid / 2 || Math.abs(w) > c.len / 2) continue;
+      c.spiked = true;
+      burst(sim, D.TIRE, 3, c.x, c.y, Math.cos(c.h), Math.sin(c.h), 60, 1);
+      sim.ev('snap');
+      if (c.driver === 'player') sim.say('TYRES BLOWN', 1.6);
+    }
+  }
+  // blown tyres: drag down to a limp, and the wheel fights you
+  for (const c of sim.cars) {
+    if (!c.spiked) continue;
+    const sp = Math.abs(c.v);
+    if (sp > SPIKE_VMAX) c.v = Math.sign(c.v) * Math.max(SPIKE_VMAX, sp - 420 * dt);   // rims on asphalt: no throttle beats this
+    c.h += Math.sin(sim.time * 13 + c.id) * 0.22 * dt * Math.min(1, sp / 120);
+  }
+  // tidy up what's far behind
+  if (sim.sawhorses.length) sim.sawhorses = sim.sawhorses.filter(h => Math.hypot(h.x - f.x, h.y - f.y) < 1300 && !(h.broken && h.t > 20));
+  if (sim.spikes.length) sim.spikes = sim.spikes.filter(k => Math.hypot(k.x - f.x, k.y - f.y) < 1300);
 }
 
 function spawnChopper(sim, f) {
@@ -25,6 +116,7 @@ function spawnChopper(sim, f) {
 }
 
 export function stepPressure(sim, dt) {
+  stepStreet(sim, dt);
   const f = sim.focus();
   const wantChopper = sim.stars >= 3 && !sim.busted && !sim.siege;
   let c = sim.chopper;
@@ -76,3 +168,4 @@ export function stepPressure(sim, dt) {
 }
 
 export const CHOPPER = { ALT, POOL_R };
+export const STREET = { SMASH_V, SPIKE_VMAX };
