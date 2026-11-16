@@ -140,6 +140,7 @@ export function hitCar(sim, c, amt, dx, dy, cause) {
   sim.ev('dent', amt);
   const after = stageOf(c.dmg, 'car');
   if (after > before) report(sim, c.x, c.y, CAR_PTS[after], after >= 3 ? 2 : after >= 2 ? 1 : 0, cause, after >= 3 ? 'WRECKED' : after >= 2 ? 'CRUMPLED' : 'DENT');
+  if (after >= 3 && before < 3 && cause === 'player') sim.ev('vox_dest_car_smash');
   if (c.dmg >= 1 && !c.wreck) wreckCar(sim, c);
 }
 
@@ -265,6 +266,7 @@ export function stepDestruct(sim, dt) {
   // trails pale grey wisps on the breeze
   for (const c of sim.cars) {
     if (!c.dent || c.dmg < STAGES.car[1]) continue;
+    if (!c.smokeSaid) { c.smokeSaid = true; sim.ev('vox_dest_car_smoke'); }
     c.smokeT = (c.smokeT || 0) - dt;
     if (c.smokeT <= 0) {
       c.smokeT = c.wreck ? 0.2 : 0.35;
@@ -309,6 +311,14 @@ registerKind('palm', (sim, t, before, after, dx, dy, cause, speed) => {
   if (after > before) {
     report(sim, t.x, t.y, PALM_PTS[after], after >= 3 ? 2 : after >= 2 ? 1 : 0, cause, after >= 3 ? 'TIMBER' : 'CRACKED PALM');
     sim.ev(after >= 3 ? 'snap' : 'crack', after);
+    if (after >= 3) {
+      if (sim.peds.some(p => !p.hidden && p.mode !== 'down' && p !== sim.player.ped && Math.hypot(p.x - t.x, p.y - t.y) < 90)) sim.ev('vox_palm_near');
+      if (cause === 'player') {
+        sim.ev('vox_palm_dry');
+        sim.palmSnaps = (sim.palmSnaps || []).filter(x => sim.time - x < 4); sim.palmSnaps.push(sim.time);
+        if (sim.palmSnaps.length >= 2) sim.ev('vox_palm_multi');
+      }
+    }
   }
   if (after >= 3 && !t.fall) {
     t.fall = { t: 0, ax: nx, ay: ny, landed: false, cause };
@@ -334,8 +344,11 @@ export function stepPalm(sim, t, dt) {
     const px = t.x + F.ax * u, py = t.y + F.ay * u;
     return Math.hypot(x - px, y - py) < 6 * t.sc + pad || Math.hypot(x - cx, y - cy) < crown + pad;
   };
-  for (const c of sim.cars) if (under(c.x, c.y, c.wid / 2)) hitCar(sim, c, 0.55, F.ax, F.ay, F.cause);
-  for (const p of sim.peds) if (!p.hidden && p.mode !== 'down' && under(p.x, p.y, 4)) { sim.knockDown(p, F.ax * 60, F.ay * 60, 3); sim.ev('hit'); }
+  let carCrushed = false, pedDown = false;
+  for (const c of sim.cars) if (under(c.x, c.y, c.wid / 2)) { hitCar(sim, c, 0.55, F.ax, F.ay, F.cause); carCrushed = true; }
+  if (carCrushed) sim.ev('vox_palm_car');
+  for (const p of sim.peds) if (!p.hidden && p.mode !== 'down' && under(p.x, p.y, 4)) { sim.knockDown(p, F.ax * 60, F.ay * 60, 3); sim.ev('hit'); pedDown = true; }
+  if (pedDown) sim.ev('vox_palm_tourist');
   for (const o of sim.things) {
     if (o === t || o.stage >= 3 || !under(o.x, o.y, o.r)) continue;
     if (o.kind === 'palm') sim.shakeTree(o.tr, 1, F.ax, F.ay);
@@ -459,6 +472,11 @@ function propHit(sim, t, before, after, dx, dy, cause) {
   const l = Math.hypot(dx, dy) || 1;
   t.ax = dx / l; t.ay = dy / l;
   const ex = t.x - t.ax * t.r * 0.5, ey = t.y - t.ay * t.r * 0.5;
+  if (cause === 'player' && after > before) {
+    if (t.kind === 'bench' && after >= 2) sim.ev('vox_dest_bench');
+    else if (t.kind === 'lifeguard' && after >= 3) sim.ev('vox_dest_tower');
+    else if (t.kind === 'rail' && after >= 2) sim.ev('vox_dest_fence');
+  }
   if (t.kind === 'rail') {
     burst(sim, D.METAL, 1 + after, t.x, t.y, t.ax, t.ay, 50, 0.8);
     sim.ev(after >= 2 && after > before ? 'snap' : 'dent', 0.25);

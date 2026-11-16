@@ -102,7 +102,7 @@ registerKind('hydrant', (sim, t, before, after, dx, dy, cause) => {
   const l = Math.hypot(dx, dy) || 1; t.ax = dx / l; t.ay = dy / l;
   burst(sim, D.METAL, 2, t.x, t.y, t.ax, t.ay, 60, 0.7); sim.ev('dent', 0.6);
   if (after >= 1 && t.state === 'intact') {
-    t.state = 'jet'; t.jet = 2.6; t.jetN = 0; sim.ev('snap', 0.5);
+    t.state = 'jet'; t.jet = 2.6; t.jetN = 0; sim.ev('snap', 0.5); sim.ev('vox_dest_hydrant');
     report(sim, t.x, t.y, 150, 0, cause, 'HYDRANT BLOWN');
   }
 });

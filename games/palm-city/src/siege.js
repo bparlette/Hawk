@@ -79,6 +79,7 @@ export function enterSiege(sim) {
   P.ped.hidden = true;
   sim.say('MOTEL SIEGE', 1.8);
   sim.ev('door');
+  sim.ev('vox_siege_start'); sim.ev('vox_swat_arrive');
   return sg;
 }
 
@@ -152,7 +153,7 @@ function score(sim, sg, pts, label, x, z) {
   pop(sg, x, z, pts, label);
 }
 
-function knockOut(sim, sg, c, dur, face, pts, label) {
+function knockOut(sim, sg, c, dur, face, pts, label, src) {
   if (c.st === 'down') return false;
   c.st = 'down'; c.downT = dur; c.link = null;
   if (!c.surf) { c.surf = c.z > 0.1 ? nearestSurf(sg, c) : 'F0'; c.z = surfZ(sg, c.surf); }
@@ -160,6 +161,9 @@ function knockOut(sim, sg, c, dur, face, pts, label) {
   sg.kos++;
   if (pts) score(sim, sg, pts, label, c.x, c.z + 1.4);
   sim.ev('crash', 120);
+  if (src === 'trap' && c.kind === 'swat') sim.ev('vox_swat_stunned');
+  if ((c.surf === 'F1' || c.surf === 'F2') && sg.t - (sg.floorVoxT || -99) > 8 &&
+      !sg.cops.some(o => o !== c && (o.surf === 'F1' || o.surf === 'F2') && o.st !== 'down' && o.st !== 'gone')) { sg.floorVoxT = sg.t; sim.ev('vox_siege_floor'); }
   return true;
 }
 function nearestSurf(sg, p) {
@@ -189,7 +193,7 @@ function stepWaves(sim, sg) {
   sim.stars = Math.max(sim.stars, Math.min(5, w + 1));
   sim.ev('siren');
   const k = Math.min(w, 4);
-  if (k === 0) { spawnCop(sg, 'cop', 'F0', -11.4, 1); spawnCop(sg, 'cop', 'F0', -12.0, 1); sim.say('THE COPS ARE COMING IN', 1.8); }
+  if (k === 0) { spawnCop(sg, 'cop', 'F0', -11.4, 1); spawnCop(sg, 'cop', 'F0', -12.0, 1); sim.say('THE COPS ARE COMING IN', 1.8); sim.ev('vox_swat_breach'); }
   else if (k === 1) {
     sg.breaches.pool = true; spark(sg, 'glass', S.x1, 1.4, 22, -3, 1.5, 4); sim.ev('glass');
     spawnCop(sg, 'cop', 'F0', 11.6, -1); spawnCop(sg, 'cop', 'F0', 12.1, -1); spawnCop(sg, 'cop', 'F0', -11.6, 1);
@@ -198,14 +202,14 @@ function stepWaves(sim, sg) {
     sg.breaches.ladder = true;
     spawnCop(sg, 'cop', 'F1', S.fireEscape.x1 - 0.3, -1, 3.0); spawnCop(sg, 'cop', 'F1', S.fireEscape.x1 - 0.3, -1, 4.6);
     spawnCop(sg, 'cop', 'F0', -11.8, 1);
-    sim.say('LADDER ON THE BALCONY', 1.6);
+    sim.say('LADDER ON THE BALCONY', 1.6); sim.ev('vox_swat_ladder');
   } else if (k === 3) {
     sg.breaches.roof = true; sg.chopper = 1;
     spawnCop(sg, 'swat', 'R', -4.5, 1, 5); spawnCop(sg, 'swat', 'R', -5.4, 1, 7);
-    sim.say('SWAT ON THE ROOF', 1.8);
+    sim.say('SWAT ON THE ROOF', 1.8); sim.ev('vox_swat_sniper');
   } else {
     const r = sg.rnd();
-    if (r < 0.4) { spawnCop(sg, 'cop', 'F0', -11.6, 1); spawnCop(sg, 'swat', 'F0', -12.2, 1); }
+    if (r < 0.4) { spawnCop(sg, 'cop', 'F0', -11.6, 1); spawnCop(sg, 'swat', 'F0', -12.2, 1); sim.ev('vox_swat_shield'); }
     else if (r < 0.7) { spawnCop(sg, 'cop', 'F0', 11.8, -1); spawnCop(sg, 'cop', 'F1', S.fireEscape.x1 - 0.3, -1, 3.2); }
     else { spawnCop(sg, 'swat', 'R', -4.5, 1, 5); }
   }
@@ -270,7 +274,7 @@ function pryHatch(sim, sg) {
   sg.hatch.hits++;
   sim.ev('dent');
   spark(sg, 'dust', sg.geo.S.ladder.x, sg.geo.S.roof - 0.3, 6, 0, -1, 2);
-  if (sg.hatch.hits >= 2) { sg.hatch.open = true; sim.ev('snap'); score(sim, sg, 50, 'HATCH OPEN', sg.geo.S.ladder.x, sg.geo.S.roof); }
+  if (sg.hatch.hits >= 2) { sg.hatch.open = true; sim.ev('snap'); score(sim, sg, 50, 'HATCH OPEN', sg.geo.S.ladder.x, sg.geo.S.roof); sim.ev('vox_siege_roof'); }
 }
 
 function springTrap(sim, sg, t, face) {
@@ -282,9 +286,10 @@ function springTrap(sim, sg, t, face) {
   else if (t.kind === 'fusebox') {
     t.state = 'done'; sg.lightsOut = 2.5; sim.ev('snap');
     spark(sg, 'spark', t.x, S.floors[2] + 1.6, 26, 0, 1, 6);
-    let n = 0;
-    for (const c of sg.cops) if (c.surf === 'F2' && c.st !== 'down' && c.st !== 'gone' && Math.abs(c.x - t.x) < 1.8) { c.st = 'stun'; c.stunT = 2.5; n++; }
+    let n = 0, swatStun = false;
+    for (const c of sg.cops) if (c.surf === 'F2' && c.st !== 'down' && c.st !== 'gone' && Math.abs(c.x - t.x) < 1.8) { c.st = 'stun'; c.stunT = 2.5; n++; if (c.kind === 'swat') swatStun = true; }
     score(sim, sg, 150 + n * 100, n ? 'SHOCK TRAP' : 'LIGHTS OUT', t.x, S.floors[2] + 2);
+    sim.ev('vox_siege_fuse'); if (swatStun) sim.ev('vox_swat_stunned');
   } else if (t.kind === 'ac') { t.state = 'falling'; t.vx = 0.9; t.vz = 0; sim.ev('snap'); spark(sg, 'dust', t.x, t.z, 8, 0.5, 0, 2); }
 }
 
@@ -298,8 +303,9 @@ function stepTraps(sim, sg, dt) {
         spark(sg, 'can', t.x + t.dir * 1.6, 0.3, 14, t.dir * 2, 2, 4);
         let n = 0;
         const a = Math.min(t.x, t.x + t.dir * 2.2), b = Math.max(t.x, t.x + t.dir * 2.2);
-        for (const c of sg.cops) if (c.surf === 'F0' && c.x > a && c.x < b && knockOut(sim, sg, c, 5, t.dir, 0)) n++;
+        for (const c of sg.cops) if (c.surf === 'F0' && c.x > a && c.x < b && knockOut(sim, sg, c, 5, t.dir, 0, null, 'trap')) n++;
         score(sim, sg, n ? 300 * n : 60, n ? 'TRAP KO' : 'VENDING TIPPED', t.x + t.dir, 2.2);
+        sim.ev('vox_siege_vend');
       }
     } else if (t.kind === 'vend' && t.state === 'down' && t.block > 0) {
       // cops at it chip the block time away
@@ -312,12 +318,13 @@ function stepTraps(sim, sg, dt) {
         t.state = 'broken'; t.z = fz; sim.ev('glass'); sg.shake = 0.2;
         spark(sg, 'glass', t.x, fz + 0.4, 18, 0, 2, 4);
         let n = 0;
-        for (const c of sg.cops) if (c.surf === 'F1' && Math.abs(c.x - t.x) < 1.6 && knockOut(sim, sg, c, 3.5, Math.sign(c.x - t.x) || 1, 0)) n++;
+        for (const c of sg.cops) if (c.surf === 'F1' && Math.abs(c.x - t.x) < 1.6 && knockOut(sim, sg, c, 3.5, Math.sign(c.x - t.x) || 1, 0, null, 'trap')) n++;
         score(sim, sg, n ? 250 * n : 40, n ? 'TV DROP' : 'TV SMASHED', t.x, fz + 2);
+        sim.ev('vox_siege_tv');
       }
     } else if (t.kind === 'cart' && t.state === 'rolling') {
       t.x += t.vx * dt;
-      for (const c of sg.cops) if (c.surf === 'F1' && Math.abs(c.x - t.x) < 0.6 && knockOut(sim, sg, c, 3.2, Math.sign(t.vx), 200, 'BOWLED')) { t.hits++; t.vx *= 0.85; }
+      for (const c of sg.cops) if (c.surf === 'F1' && Math.abs(c.x - t.x) < 0.6 && knockOut(sim, sg, c, 3.2, Math.sign(t.vx), 200, 'BOWLED', 'trap')) { t.hits++; if (t.hits === 1) sim.ev('vox_siege_cart'); t.vx *= 0.85; }
       const blk = blockedAt(sg, null, 'F1', t.x - t.vx * dt, t.x);
       if (t.x < S.x0 + 0.6 || t.x > S.x1 - 0.5 || blk || Math.abs(t.vx) < 1) {
         t.state = 'tipped'; t.x = Math.max(S.x0 + 0.6, Math.min(S.x1 - 0.5, t.x)); sim.ev('crash', 90); sg.shake = 0.15;
@@ -329,10 +336,11 @@ function stepTraps(sim, sg, dt) {
         t.z = 0; t.state = 'dropped'; sg.shake = 0.5; sim.ev('wreck'); sim.ev('glass');
         spark(sg, 'dust', t.x, 0.4, 20, 0, 2, 5);
         let n = 0;
-        for (const c of sg.cops) if (c.surf === 'F0' && Math.abs(c.x - t.x) < 1.4 && knockOut(sim, sg, c, 5, 1, 0)) n++;
+        for (const c of sg.cops) if (c.surf === 'F0' && Math.abs(c.x - t.x) < 1.4 && knockOut(sim, sg, c, 5, 1, 0, null, 'trap')) n++;
         const car = sg.cruisers.find(c => Math.abs(c.x - t.x) < 3.5);
-        if (car) car.dmg = Math.max(car.dmg, 2);
+        if (car) { car.dmg = Math.max(car.dmg, 2); sim.ev('vox_sig_sign'); }
         score(sim, sg, 500 + n * 300, 'BIG DROP', t.x, 2.5);
+        sim.ev('vox_siege_ac');
       }
     }
   }
@@ -382,7 +390,7 @@ function stepHero(sim, sg, dt, inp) {
   if (inp.punch && !(h.punchCd > 0)) heroPunch(sim, sg);
   if (inp.action) {
     const a = siegeAction(sim);
-    if (a && a.kind === 'push') { a.b.placed = true; a.b.slide = 0.4; a.b.from = a.b.cur; sim.ev('crash', 60); score(sim, sg, 25, 'BARRICADE', a.b.to, surfZ(sg, h.surf) + 1.8); }
+    if (a && a.kind === 'push') { a.b.placed = true; a.b.slide = 0.4; a.b.from = a.b.cur; sim.ev('crash', 60); score(sim, sg, 25, 'BARRICADE', a.b.to, surfZ(sg, h.surf) + 1.8); sim.ev('vox_siege_barricade'); }
     else if (a && a.kind === 'pry') pryHatch(sim, sg);
     else if (a && a.kind === 'link') { const atA = a.l.a === h.surf && Math.abs(h.x - a.l.ax) < 0.7; startLink(sg, h, a.l); h.autoDir = atA ? 1 : -1; }
     else if (a && a.kind === 'leap') { h.air = { vx: 3.2, vz: 3.4, leap: true }; h.surf = null; h.face = 1; sim.ev('hop'); }
@@ -395,6 +403,7 @@ function escape(sim, sg) {
   sim.score = (sim.score || 0) + pts;
   sim.lastTrick = { name: 'MOTEL ESCAPED!', pts, t: 1.8, mult: 1 };
   sim.ev('timber');
+  sim.ev('vox_swat_retreat');
 }
 
 function leaveSiege(sim, busted) {
@@ -466,6 +475,7 @@ function stepCop(sim, sg, c, dt) {
     }
     c.linkTo = l.a === c.surf ? 1 : -1;
     startLink(sg, c, l);
+    if (l.id === 'flight' && !sg.flankVox) { sg.flankVox = 1; sim.ev('vox_swat_flank'); }
     return;
   }
   c.face = Math.sign(dx);
@@ -481,7 +491,7 @@ function bash(sim, sg, c, dt) {
   c.bashT = 0;
   b.hp--; sim.ev('dent'); sg.shake = 0.08;
   spark(sg, 'splinter', b.cur, surfZ(sg, sg.geo.fl[b.floor]) + 0.8, 6, -c.face * 1.5, 1.5, 2);
-  if (b.hp <= 0) { b.broken = true; sim.ev('crack'); spark(sg, 'splinter', b.cur, surfZ(sg, sg.geo.fl[b.floor]) + 0.6, 14, -c.face * 2, 2, 3); }
+  if (b.hp <= 0) { b.broken = true; sim.ev('crack'); sim.ev('vox_sig_ram'); spark(sg, 'splinter', b.cur, surfZ(sg, sg.geo.fl[b.floor]) + 0.6, 14, -c.face * 2, 2, 3); }
 }
 
 // --------------------------------------------------------------------------- step
@@ -496,6 +506,7 @@ export function stepSiege(sim, dt, inp) {
   if (sg.chopper) sg.chopper += dt;
   stepWaves(sim, sg);
   stepHero(sim, sg, dt, sg.enterT < 0.35 ? { jx: 0, jy: 0, jm: 0, keys: {} } : inp);
+  if (sg.hero.surf === 'R' && !sg.roofVox) { sg.roofVox = 1; sim.ev('vox_sig_roof'); }
   for (const c of sg.cops) stepCop(sim, sg, c, dt);
   stepTraps(sim, sg, dt);
   for (const b of sg.barricades) if (b.slide > 0) { b.slide = Math.max(0, b.slide - dt); const u = 1 - b.slide / 0.4, e = 1 - (1 - u) * (1 - u); b.cur = b.from + (b.to - b.from) * e; }

@@ -10,6 +10,7 @@ import { SiegeRenderer } from './siege_render.js';
 import { Sim } from './sim.js';
 import { Input } from './input.js';
 import { Audio } from './audio.js';
+import { Voice } from './voice.js';
 import { drawHud } from './hud.js';
 import { DemoPilot } from './demo.js';
 import { Director } from './director.js';
@@ -75,7 +76,8 @@ if (Q.has('prof')) { renderer.prof = {}; window.__prof = renderer.prof; }
 
 const input = new Input(canvas, view);
 const audio = new Audio();
-input.onFirst = () => audio.start();
+const voice = new Voice('assets/audio/voice/');          // task 8: the recorded lines (voice.js)
+input.onFirst = () => { audio.start(); voice.unlock(); };
 if (DEMO) { try { audio.start(); } catch (_) {} }
 
 let sim, pilot, simTime = 0;
@@ -84,6 +86,8 @@ const director = new Director(SEED);
 const feel = { punch: 0, roll: 0, lastH: 0, slowT: 0 };      // 2D camera feel + the slow-mo beat
 const NO_DIRECTOR = Q.has('nodirector') || Q.has('t') || Q.has('cam');   // staged captures stay un-interrupted
 function onEvent(name, v) {
+  if (name.startsWith('vox_')) { voice.play(name, sim ? sim.time : 0); return; }   // task 8: voice hooks
+  if (name === 'jobstart') voice.play('vox_job_' + v + '_start', sim ? sim.time : 0);
   audio.play(name, v);
   director.mark(name, v);
   if (name === 'wreck' || name === 'timber' || name === 'hood' || (name === 'crash' && v > 150)) feel.punch = 1;
@@ -254,6 +258,7 @@ function frame(now) {
   drawHud(ctx, VIEW_W, view.h, DPR, sim, input, t, simTime, { title: titleT, demo: DEMO, hintStick: !DEMO && simTime < 8, safeTop: safeTop() });
   if (panel) drawHelp(ctx, VIEW_W, view.h, DPR, sim, panel, safeTop(), now / 1000);
   audio.update(sim, cam, world);
+  voice.update(sim, dt, t);
   prefetch(dt);
   requestAnimationFrame(frame);
 }
@@ -295,3 +300,4 @@ function replayFrame(dt) {
 }
 requestAnimationFrame(frame);
 window.__palm = { director, input, world, ground, cam, dpr: () => DPR, get sim() { return sim; }, M };
+window.__vox = voice;          // task 8 proof/debug: the voice module + its play log
