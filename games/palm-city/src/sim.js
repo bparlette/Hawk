@@ -5,6 +5,7 @@ import { mulberry32 } from './world.js';
 import { enterSiege, stepSiege } from './siege.js';
 import { initPressure, stepPressure } from './pressure.js';
 import { initJobs, stepJobs } from './jobs.js';
+import { initEvents, stepEvents } from './events.js';
 import { initSkate, stepBoard, stepCombo, nearBoard, mount, boardSpeed } from './skate.js';
 import { initDestruct, stepDestruct, punchWorld, carState, carImpact, carsCollide, hitThing, palmImpact, initProps, propImpact } from './destruct.js';
 
@@ -52,6 +53,7 @@ export class Sim {
     initProps(this);                                     // benches, lamps, lifeguard towers can be broken (destruct.js)
     initPressure(this);                                  // the chopper, roadblocks, spikes (pressure.js)
     initJobs(this);                                      // job vehicles + the one job slot (jobs.js)
+    initEvents(this);                                    // WRECK IT! + VALET sites and the one event slot (events.js)
     // two people strolling the pier, out to the end and back
     const PR = world.L.pier;
     for (const [fx, dir, outfit, dy] of [[0.3, 1, 'ped_straw', -5], [0.75, -1, 'ped_blue', 5]]) {
@@ -162,6 +164,7 @@ export class Sim {
 
   // ------------------------------------------------------------------ main step
   step(dt, input) {
+    if (this.hitStopT > 0) { this.hitStopT -= dt; return; }     // events.js hit-stop: the world freezes a few ticks on a big break
     this.time += dt;
     if (this.msg) { this.msg.t -= dt; if (this.msg.t <= 0) this.msg = null; }
     const P = this.player;
@@ -190,6 +193,7 @@ export class Sim {
     else if (P.mode === 'siege') stepSiege(this, dt, input);
     else this.stepPlayerCar(dt, input);
     stepJobs(this, dt, input);
+    stepEvents(this, dt);
     stepCombo(this, dt);
     // a board left alone rolls to a stop
     if (!this.board.ridden) { const b = this.board, f = Math.exp(-3 * dt); b.vx *= f; b.vy *= f; const bx = b.x + b.vx * dt, by = b.y + b.vy * dt; if (this.canStand(bx, by) && !this.W.hitTrunk(bx, by, 2)) { b.x = bx; b.y = by; } else { b.vx = b.vy = 0; } }   // never rolls off into the sea or through a rail

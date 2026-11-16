@@ -22,6 +22,7 @@ export function clockText(t) {
 
 import { siegeAction } from './siege.js';
 import { jobButton, JOBS } from './jobs.js';
+import { drawEventHud } from './events_render.js';
 
 export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -152,6 +153,7 @@ export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
     g.fillStyle = 'rgba(190,240,255,0.95)'; g.font = font(20, 900); g.textAlign = 'center'; g.fillText('$', f.x, f.y + 1);
     g.font = font(12, 800); g.fillStyle = '#d8f6ff'; g.fillText(jb.label, f.x, f.y - f.r - 11);
   }
+  drawEventHud(g, vw, vh, top, sim, font);                  // city events: card, chain pill, bay progress, result
   // the job card: title, clock, what it wants, and an arrow to it
   if (sim.job) {
     const j = sim.job, y = top + 62, w = 190, x = vw / 2 - w / 2;

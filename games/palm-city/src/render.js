@@ -11,6 +11,7 @@ import { CHUNK } from './ground.js';
 import { mulberry32 } from './world.js';
 import { CHOPPER } from './pressure.js';
 import { JOBS } from './jobs.js';
+import { drawEventsGround } from './events_render.js';
 import { DEBRIS_CAP, SMOKE_CAP, STAGES, stageOf, FALL_T, palmReach } from './destruct.js';
 
 // procedural debris colours (index = destruct.js D kind) for the kinds with no sprite
@@ -508,6 +509,7 @@ export class Renderer {
     this.drawSkatePark(g, S);
     this.drawStreetPressure(g, S, t, time, vx0, vy0, vx1, vy1);
     this.drawJobsGround(g, S, time);
+    drawEventsGround(g, S, time);
     this.drawDebris(g, S, vx0, vy0, vx1, vy1);
     if (S.board) {
       const b = S.board, f = this.M.props.board.color, k = 1 + b.z * 0.35;
