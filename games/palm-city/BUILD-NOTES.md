@@ -240,3 +240,54 @@ glowing glass roofs at dusk, headlight cones. Where it does **not** yet match:
 - Not yet verified on a physical iPhone. Headless Chrome composites canvas in software, so its
   frame times (50–80 ms) are not representative; CPU work is ~2 ms/frame + one 6–13 ms
   ground-chunk paint when streaming (M4).
+
+## Motel Siege (v2 step 3)
+
+Walk up to the motel door (layout `motelDoor`) on foot: the action button reads **ENTER**. The
+game cuts (0.35 s) to a side-view cutaway of the motel's three floors.
+
+**Play.** Joystick left/right walks; up/down at a stair foot/head or the ladder takes it (or the
+action button: UP / DOWN / CLIMB). Fight button punches cops (2 hits, SWAT 3; they get back up)
+and springs traps. Action: PUSH a barricade into its choke point, PRY the roof hatch (or two
+punches), LEAP off the balcony rail. Cops whose hands are on you fill a red ring; full ring =
+BUSTED (normal respawn). Escape = hatch → roof → off the east edge onto the fire escape → down the
+flight → LEAP: you land on your board in the east alley rolling out at 210 u/s, +1500 (+100 per
+KO), one star shed.
+
+**Escalation** (siege.js `WAVE_T`, starting wave from your stars): 3 s two cops through the lobby;
+18 s the pool doors smash, three more (both sides); 33 s an extension ladder onto the balcony;
+53 s SWAT rappel onto the roof under the chopper's spotlight; then a pair every 13 s. Stars climb
+with the waves.
+
+**Barricades** (desk, mattress, dresser) slide into the lobby door / stair heads; cops stop and
+slam them (one slam / 1.5 s each; desk 3, mattress 3, dresser 4). **Traps**: vending machine
+tips onto the cops in its fall zone (+300 each, then blocks for 3 s of bashing); CRT TV flies off
+the dresser and stuns 1.6 m around where it lands (+250 each); linen cart bowls the corridor
+(+200 each); fuse box blacks out the top floor 2.5 s and stuns within 1.8 m; window AC drops
+three storeys onto the street (+500, KOs below, caves in the cruiser).
+
+**Code.** `src/siege.js` (sim; metres, building-local; surfaces F0/F1/F2/R/E2 joined by stair,
+ladder and fire-escape links, BFS routing for the cops), `src/siege_render.js` (camera 34 units/m,
+street line at 76%), hooks in `sim.js` (`nearMotelDoor`, `P.mode === 'siege'`, wanted logic
+paused while inside), `main.js` (render switch), `hud.js` (labels), `assets.js` (`siege.json`).
+Geometry is shared with the baker through `layout.json` → `siege`.
+
+**Art.** `tools/bake_side.py` (Blender or pip `bpy` 5.x: `python3 tools/bake_side.py -- all`)
+bakes, with the street sprites' own models, Cycles light, Kuwahara paint and plum ink:
+side-view sheets for the player, cop and SWAT (14 poses: 6-frame walk, idle, wind-up, punch,
+2 climb, hurt, down, jump) and the whole cutaway (`motel_color` + additive `motel_night`) at
+68 px/m; the `props` group runs Gemini's barricade/trap sprites (shots/siege-sprites) through the
+same paint filter. Render order: sky → cutaway → the real painted road south of the motel,
+squashed into the foreground with the cruisers on it → the day grade (multiply) → the night light
+layer → props and people from copies pre-multiplied by the grade (so the light never washes
+them out) → siren washes, neon glow, spotlight → vignette.
+
+**Checks.** `node tools/siege_check.mjs` (28 rule checks through the real input object: entry,
+barricade + bashing, every trap, hatch/ladder, cops routing up two flights, the full escape to
+the board, the arrest, the wave schedule). Captures: `node tools/siege_shots.mjs [scene]` →
+shots/siege-{door,lobby,vend,tv,ac,roof,escape}.png, entered by a real touch on ENTER.
+
+**Below the bar / still needs:** owner play on a phone (captures are staged headless runs);
+Gemini's props are still flatter than the baked cutaway even after the paint filter; the
+foreground cruisers are top-down sprites squashed into the street (no side-view car bake) and
+there's no chopper body, only its spotlight; the cop's grab reuses the punch pose.
