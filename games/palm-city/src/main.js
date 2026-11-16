@@ -14,6 +14,7 @@ import { drawHud } from './hud.js';
 import { DemoPilot } from './demo.js';
 import { Director } from './director.js';
 import { jobButton } from './jobs.js';
+import { buttonA } from './controls.js';
 import { CityMap } from './map.js';
 
 const Q = new URLSearchParams(location.search);
@@ -85,6 +86,7 @@ function onEvent(name, v) {
   audio.play(name, v);
   director.mark(name, v);
   if (name === 'wreck' || name === 'timber' || name === 'hood' || (name === 'crash' && v > 150)) feel.punch = 1;
+  if (name === 'turbo') feel.punch = Math.max(feel.punch, 0.7);          // the boost kicks the camera
   if (name === 'wreck' && sim && sim.stars >= 4) feel.slowT = 0.45;      // pressure: a beat of slow-mo on the big hits
 }
 function newRun() {
@@ -175,7 +177,7 @@ function frame(now) {
   acc += dt * (feel.slowT > 0 ? 0.35 : 1);
   let steps = 0;
   while (acc >= STEP && steps < 6) {
-    input.fightOn = sim.player.mode === 'foot' || sim.player.mode === 'siege' || !!jobButton(sim);   // in a car it's the job button
+    input.fightOn = !!buttonA(sim);   // PUNCH on foot, TURBO or the job action in a car
     const inp = pilot ? pilot.input(STEP) : input.read();
     director.record(inp);
     sim.step(STEP, inp);
@@ -200,7 +202,7 @@ function frame(now) {
   if (sim.player.mode === 'car') {
     const c = sim.player.car;
     tx += Math.cos(c.h) * c.v * 0.42; ty += Math.sin(c.h) * c.v * 0.42;
-    tz = 1 - Math.min(0.16, Math.abs(c.v) / 290 * 0.16);
+    tz = 1 - Math.min(0.16, Math.abs(c.v) / 290 * 0.16) - 0.05 * (c.turbo || 0);   // boost pulls the view back a touch more
   }
   if (sim.player.mode === 'board') {
     const b = sim.board; tx += b.vx * 0.35; ty += b.vy * 0.35;

@@ -5,6 +5,7 @@ import { mulberry32 } from './world.js';
 import { enterSiege, stepSiege } from './siege.js';
 import { initPressure, stepPressure } from './pressure.js';
 import { initJobs, stepJobs } from './jobs.js';
+import { stepTurbo, TURBO } from './controls.js';
 import { initEvents, stepEvents } from './events.js';
 import { initSkate, stepBoard, stepCombo, nearBoard, mount, boardSpeed } from './skate.js';
 import { initDestruct, stepDestruct, punchWorld, carState, carImpact, carsCollide, hitThing, palmImpact, initProps, propImpact } from './destruct.js';
@@ -445,7 +446,9 @@ export class Sim {
       }
     }
     if (c.wreck) { throttle = 0; steer = 0; }            // dead: all you can do is get out
-    this.driveCar(c, throttle, steer * (c.heavy ? 0.72 : 1), dt, c.heavy ? 235 : 290);   // the bus: slower, wider turns
+    const boost = stepTurbo(this, c, !!inp.turbo, throttle, dt);                   // A held: turbo
+    const top = (c.heavy ? 235 : 290) * (1 + (TURBO.mult - 1) * (c.turbo || 0));         // eases in and back out, never snaps
+    this.driveCar(c, throttle * (boost ? TURBO.accel : 1), steer * (c.heavy ? 0.72 : 1), dt, top);   // the bus: slower, wider turns
     if (inp.action && Math.abs(c.v) < 60) this.exitCar();
   }
 

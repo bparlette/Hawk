@@ -1,6 +1,6 @@
 // input.js — touch-first: floating joystick on the left half, round action button bottom-right,
-// and a smaller fight button beside it (shown on foot). Keyboard for desktop: arrows/WASD move,
-// Space/E/Enter = action, F/X/J = fight.
+// and a smaller A button beside it (PUNCH on foot, TURBO or the job action in a car — see
+// controls.js). Keyboard for desktop: arrows/WASD move, Space/E/Enter = action, F/X/J = A (hold for turbo).
 
 export class Input {
   constructor(canvas, view) {
@@ -28,9 +28,9 @@ export class Input {
       if (map[e.code]) { this.keys[map[e.code]] = true; e.preventDefault(); }
       if ((e.code === 'Space' || e.code === 'KeyE' || e.code === 'Enter') && !e.repeat) { this.actionEdge = true; e.preventDefault(); }
       if (e.code === 'KeyM' && !e.repeat) this.mapOpen = !this.mapOpen;
-      if ((e.code === 'KeyF' || e.code === 'KeyX' || e.code === 'KeyJ') && !e.repeat) { this.punchEdge = true; e.preventDefault(); }
+      if (e.code === 'KeyF' || e.code === 'KeyX' || e.code === 'KeyJ') { if (!e.repeat) this.punchEdge = true; this.fightKey = true; e.preventDefault(); }
     });
-    addEventListener('keyup', e => { if (map[e.code]) this.keys[map[e.code]] = false; });
+    addEventListener('keyup', e => { if (map[e.code]) this.keys[map[e.code]] = false; if (e.code === 'KeyF' || e.code === 'KeyX' || e.code === 'KeyJ') this.fightKey = false; });
   }
 
   first() { if (this.onFirst) { const f = this.onFirst; this.onFirst = null; f(); } }
@@ -92,6 +92,6 @@ export class Input {
     }
     const a = this.actionEdge, f = this.punchEdge;
     this.actionEdge = false; this.punchEdge = false;
-    return { jx, jy, jm, action: a, punch: f, keys: this.keys };
+    return { jx, jy, jm, action: a, punch: f, turbo: this.fightDown || !!this.fightKey, keys: this.keys };   // turbo = A held
   }
 }
