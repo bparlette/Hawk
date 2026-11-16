@@ -1,0 +1,131 @@
+{
+ "entries": [
+  {
+   "hero": "Link (Link's Awakening, 1993 / DX 1998)",
+   "heroImage": "assets/gallery-art/e1.png",
+   "id": "e1",
+   "linkStyle": "Link's Awakening DX \u2014 Link (1993/1998)",
+   "playLink": "play/?era=e1",
+   "status": "playable (2D, Lane A staged + verified)",
+   "title": "GTA 1 \u00b7 1997"
+  },
+  {
+   "hero": "Link (Ocarina of Time, 1998)",
+   "heroImage": "assets/gallery-art/e2.png",
+   "id": "e2",
+   "linkStyle": "Ocarina of Time \u2014 Adult Link (1998)",
+   "playLink": "play/?era=e2",
+   "status": "playable (2D, Lane A staged + verified)",
+   "title": "GTA 2 \u00b7 1999"
+  },
+  {
+   "hero": "Link (Majora's Mask Young Link, 2000)",
+   "heroImage": "assets/gallery-art/e3.png",
+   "id": "e3",
+   "linkStyle": "Majora's Mask \u2014 Young Link (2000)",
+   "playLink": "play/?era=e3",
+   "status": "playable (3D world3d, Lane B staged + verified)",
+   "title": "GTA III \u00b7 2001"
+  },
+  {
+   "hero": "Link (The Wind Waker Toon Link, 2002)",
+   "heroImage": "assets/gallery-art/e4.png",
+   "id": "e4",
+   "linkStyle": "The Wind Waker \u2014 Toon Link (2002)",
+   "playLink": "play/?era=e4",
+   "status": "playable (3D world3d, Lane C staged + verified)",
+   "title": "GTA: Vice City \u00b7 2002"
+  },
+  {
+   "hero": "Link (Twilight Princess 2004 Reveal Link)",
+   "heroImage": "assets/gallery-art/e5.png",
+   "id": "e5",
+   "linkStyle": "Twilight Princess \u2014 2004 Reveal Link",
+   "playLink": "play/?era=e5",
+   "status": "playable (3D world3d, Lane C staged + verified)",
+   "title": "GTA: San Andreas \u00b7 2004"
+  },
+  {
+   "hero": "Link (Twilight Princess 2006)",
+   "heroImage": "assets/gallery-art/e6.png",
+   "id": "e6",
+   "linkStyle": "Twilight Princess \u2014 Link (2006)",
+   "playLink": "play/?era=e6",
+   "status": "playable (3D world3d, Lane C staged + verified)",
+   "title": "GTA IV \u00b7 2008"
+  },
+  {
+   "hero": "Link (Skyward Sword)",
+   "heroImage": "assets/gallery-art/e7.png",
+   "id": "e7",
+   "linkStyle": "Skyward Sword \u2014 Link",
+   "playLink": "play/?era=e7",
+   "status": "playable (3D world3d, Lane C staged + verified)",
+   "title": "GTA V \u00b7 2013"
+  },
+  {
+   "hero": "Link (Tears of the Kingdom)",
+   "heroImage": "assets/gallery-art/e8.png",
+   "id": "e8",
+   "linkStyle": "Tears of the Kingdom \u2014 Link",
+   "playLink": "play/?era=e8",
+   "status": "playable (3D world3d, Lane C staged + verified)",
+   "title": "GTA VI \u00b7 2026"
+  },
+  {
+   "hero": "Link (Minecraft Skin)",
+   "heroImage": "assets/gallery-art/bonus-minecraft.png",
+   "id": "bonus-minecraft",
+   "linkStyle": "Minecraft Skin Link",
+   "playLink": "play/?era=bonus-minecraft",
+   "status": "playable (2D, Lane C staged)",
+   "title": "Bonus \u00b7 Minecraft"
+  },
+  {
+   "hero": "Link (Roblox R6 Avatar)",
+   "heroImage": "assets/gallery-art/bonus-roblox.png",
+   "id": "bonus-roblox",
+   "linkStyle": "Roblox R6 Avatar Link",
+   "playLink": "play/?era=bonus-roblox",
+   "status": "playable (2D, Lane C staged)",
+   "title": "Bonus \u00b7 Roblox"
+  },
+  {
+   "hero": "Link (Slurp Shield Ranger)",
+   "heroImage": "assets/gallery-art/bonus-fortnite.png",
+   "id": "bonus-fortnite",
+   "linkStyle": "Slurp Shield Ranger Link",
+   "playLink": "play/?era=bonus-fortnite",
+   "status": "playable (2D, Lane C staged)",
+   "title": "Bonus \u00b7 Fortnite"
+  },
+  {
+   "hero": "Link (LEGO Minifigure)",
+   "heroImage": "assets/gallery-art/bonus-lego.png",
+   "id": "bonus-lego",
+   "linkStyle": "LEGO Minifigure Link",
+   "playLink": "play/?era=bonus-lego",
+   "status": "playable (2D, Lane C staged)",
+   "title": "Bonus \u00b7 LEGO"
+  },
+  {
+   "hero": "Link (Chibi Island Villager)",
+   "heroImage": "assets/gallery-art/bonus-animal-crossing.png",
+   "id": "bonus-animal-crossing",
+   "linkStyle": "Chibi Island Villager Link",
+   "playLink": "play/?era=bonus-animal-crossing",
+   "status": "playable (2D, Lane C staged)",
+   "title": "Bonus \u00b7 Animal Crossing"
+  },
+  {
+   "hero": "Link (Plumbob Sim)",
+   "heroImage": "assets/gallery-art/bonus-sims.png",
+   "id": "bonus-sims",
+   "linkStyle": "Plumbob Sim Link",
+   "playLink": "play/?era=bonus-sims",
+   "status": "playable (2D, Lane C staged)",
+   "title": "Bonus \u00b7 The Sims"
+  }
+ ],
+ "note": "Merged gallery data (2026-11-16): all 14 eras playable in one tree (e1/e2 Lane A 2D, e3-e8 Lane B/C world3d, 6 bonus Lane C era2d on Lane A's sim). heroImage lives in the gta repo at assets/gallery-art/<file> (420x860, text-free, per assets/gallery-art/manifest.json); all 14 PNGs were mirrored byte-exact into this tree on 2026-11-16 (verified against the gta manifest sizes) and ship with the push. playLink is relative to games/gta-bakeoff/. The gallery page (index.html) was also updated: every era now has a play card in the top Outcomes grid."
+}
