@@ -65,5 +65,57 @@ function fresh(stars) {
   run(s2, 1);
   check(s2.siege && (!s2.chopper || s2.chopper.leaving), 'inside the motel the street chopper leaves (the siege has its own)');
 }
+// ---- street pressure
+const inCar = (s, x, y, h) => { const P = s.player, c = s.addCar(x, y, h, 'sedan_coral', 'player'); P.mode = 'car'; P.car = c; P.ped.hidden = true; return c; };
+// a roadblock appears ahead of a car being driven at 4 stars — not at 3
+{
+  for (const stars of [3, 4]) {
+    const s = fresh(stars);
+    const q = world.loopAt(600, 12), c = inCar(s, q.x, q.y, Math.atan2(q.ty, q.tx));
+    s.playerS = 600;
+    for (let i = 0; i < 5 * 60 && !s.roadblocks; i++) { c.v = 150; s.step(DT, { ...none, keys: { up: true } }); }
+    if (stars === 3) check(!s.roadblocks, 'no roadblock at 3 stars');
+    else {
+      check(s.roadblocks === 1 && s.sawhorses.length === 2 && s.spikes.length === 1, 'at 4 stars a roadblock goes up: two cruisers, two sawhorses, a spike strip', `${s.sawhorses.length} ${s.spikes.length}`);
+      const rb = s.cars.filter(k => k.roadblock), d = Math.hypot(rb[0].x - c.x, rb[0].y - c.y);
+      check(rb.length === 2 && d > 300 && d < 900, 'it is set up ahead, out of sight', `${Math.round(d)} units`);
+      // the kerb-side gap: project the cruisers onto the line across the road; one kerb must keep
+      // a clear stretch wider than a car (20) with only sawhorses — or nothing — in the way
+      const q = world.loopAt(world.loopNearest(rb[0].x, rb[0].y)), nx = -q.ty, ny = q.tx, hr = world.halfRoad;
+      const off = (k) => (k.x - q.x) * nx + (k.y - q.y) * ny;
+      const span = rb.map(k => [off(k) - k.len / 2, off(k) + k.len / 2]);
+      const lo = Math.min(...span.map(a => a[0])), hi = Math.max(...span.map(a => a[1]));
+      const gap = Math.max(hr - hi, lo + hr);
+      check(gap > 22, 'one kerb keeps a gap a car fits through (sawhorses are all that stand in it)', `${Math.round(gap)} units`);
+    }
+  }
+}
+// sawhorses: shatter at speed and you keep most of it; slow, they stop you short
+{
+  for (const [v, name] of [[220, 'fast'], [90, 'slow']]) {
+    const s = fresh(0);
+    const q = world.loopAt(600, 12), h = Math.atan2(q.ty, q.tx), c = inCar(s, q.x, q.y, h);
+    const saw = { x: q.x + Math.cos(h) * 40, y: q.y + Math.sin(h) * 40, a: h + Math.PI / 2, broken: false, t: 0 };
+    s.sawhorses.push(saw); c.v = v;
+    let vAfter = v;
+    for (let i = 0; i < 60 && !saw.broken; i++) { c.v = v; s.step(DT, none); vAfter = c.v; }
+    if (name === 'fast') check(saw.broken && vAfter > v * 0.85 && (s.score || 0) >= 60, 'a sawhorse hit at speed shatters: ~8% lost, +60', `v ${v} -> ${Math.round(vAfter)}`);
+    else check(saw.broken && vAfter < v * 0.5, 'hit slowly it stops you short', `v ${v} -> ${Math.round(vAfter)}`);
+  }
+}
+// spikes: tyres blown, top speed gone
+{
+  const s = fresh(0);
+  const q = world.loopAt(600, 12), h = Math.atan2(q.ty, q.tx), c = inCar(s, q.x, q.y, h);
+  s.spikes.push({ x: q.x + Math.cos(h) * 50, y: q.y + Math.sin(h) * 50, a: h + Math.PI / 2 });
+  let t1 = -1, v1 = 0;
+  for (let i = 0; i < 4 * 60; i++) {
+    if (!c.spiked) c.v = 240;
+    s.step(DT, { ...none, keys: { up: true } });
+    if (c.spiked && t1 < 0) t1 = i;
+    if (t1 >= 0 && i === t1 + 60) { v1 = Math.abs(c.v); break; }
+  }
+  check(c.spiked && v1 > 110 && v1 < 165, 'a spike strip blows the tyres: floored, a second later the car is limping at ~150', `v ${Math.round(v1)}`);
+}
 console.log(fails ? `PRESSURE FAIL (${fails})` : 'PRESSURE OK');
 process.exit(fails ? 1 : 0);

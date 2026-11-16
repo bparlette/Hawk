@@ -499,6 +499,7 @@ export class Renderer {
       if (s.kind === 'lifeguard' && S.towers && S.towers[s.pi]) this.drawTower(g, s, s.e.color, S.towers[s.pi]); else this.drawEntry(g, s.e.color, s.x, s.y);
     }
     this.drawSkatePark(g, S);
+    this.drawStreetPressure(g, S, t, time, vx0, vy0, vx1, vy1);
     this.drawDebris(g, S, vx0, vy0, vx1, vy1);
     if (S.board) {
       const b = S.board, f = this.M.props.board.color, k = 1 + b.z * 0.35;
@@ -614,6 +615,13 @@ export class Renderer {
     this.drawNeonPuddles(lg, G, time, vx0, vy0, vx1, vy1);
     this.drawWetReflections(lg, G, time, vx0, vy0, vx1, vy1, S);
     if (S.chopper) this.drawSearchlight(lg, S.chopper, t, time, S.stars);
+    for (const h of S.sawhorses) {                       // amber beacons on the barricades
+      if (h.broken || h.x < vx0 - 40 || h.x > vx1 + 40 || h.y < vy0 - 40 || h.y > vy1 + 40) continue;
+      const e = this.M.pressure.sawhorse.night;
+      lg.globalAlpha = (0.35 + 0.5 * G.lamps) * (0.6 + 0.4 * Math.sin(time * 8 + h.x));
+      lg.drawImage(e.img, h.x + e.ox, h.y + e.oy, e.w, e.h);
+    }
+    lg.globalAlpha = 1;
     for (const c of S.cars) {
       if (c.x < vx0 - 250 || c.x > vx1 + 250 || c.y < vy0 - 250 || c.y > vy1 + 250) continue;
       const m = this.M.cars[c.model];
@@ -763,6 +771,34 @@ export class Renderer {
       deep: make(41, 70, ['#2482ba', '#38a6cc', '#165a96', '#56bed6', '#124686', '#2a6cb4'], 5, 9, 16, 34, 0.45, 0.8),
       light: make(42, 38, ['#bfefff', '#7ad0dc', '#9fe2ea', '#f0c890'], 1.6, 3.4, 10, 24, 0.5, 0.9),
     };
+  }
+
+  // ---- Street pressure (pressure.js): spike strips and sawhorses, on the road under the cars
+  drawStreetPressure(g, S, t, time, vx0, vy0, vx1, vy1) {
+    const P = this.M.pressure, dusk = t >= 0.55;
+    for (const k of S.spikes) {
+      if (k.x < vx0 - 40 || k.x > vx1 + 40 || k.y < vy0 - 40 || k.y > vy1 + 40) continue;
+      const e = dusk ? P.spikes.dusk : P.spikes.color;
+      g.save(); g.translate(k.x, k.y); g.rotate(k.a); g.drawImage(e.img, e.ox, e.oy, e.w, e.h);
+      // stud glints, so it reads at speed
+      g.fillStyle = '#fff'; g.globalAlpha = 0.5 + 0.5 * Math.sin(time * 6 + k.x);
+      for (let i = -2; i <= 2; i++) g.fillRect(i * 8 - 0.8, -0.8, 1.6, 1.6);
+      g.restore();
+    }
+    g.globalAlpha = 1;
+    for (const h of S.sawhorses) {
+      if (h.x < vx0 - 40 || h.x > vx1 + 40 || h.y < vy0 - 40 || h.y > vy1 + 40) continue;
+      const e = dusk ? P.sawhorse.dusk : P.sawhorse.color;
+      g.save(); g.translate(h.x, h.y); g.rotate(h.a);
+      if (h.broken) {                                   // knocked flat and split: two halves thrown apart
+        const u = Math.min(1, h.t / 0.25), d = 5 + 9 * u;
+        g.globalAlpha = 0.9;
+        g.save(); g.translate(-d, 2 * u); g.rotate(-0.5 * u); g.drawImage(e.img, 0, 0, e.img.width / 2, e.img.height, e.ox, e.oy, e.w / 2, e.h); g.restore();
+        g.save(); g.translate(d, -2 * u); g.rotate(0.7 * u); g.drawImage(e.img, e.img.width / 2, 0, e.img.width / 2, e.img.height, 0, e.oy, e.w / 2, e.h); g.restore();
+      } else g.drawImage(e.img, e.ox, e.oy, e.w, e.h);
+      g.restore();
+    }
+    g.globalAlpha = 1;
   }
 
   // ---- Sky pressure (pressure.js): the police chopper and its searchlight
