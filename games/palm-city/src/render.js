@@ -10,6 +10,7 @@
 import { CHUNK } from './ground.js';
 import { mulberry32 } from './world.js';
 import { CHOPPER } from './pressure.js';
+import { JOBS } from './jobs.js';
 import { DEBRIS_CAP, SMOKE_CAP, STAGES, stageOf, FALL_T, palmReach } from './destruct.js';
 
 // procedural debris colours (index = destruct.js D kind) for the kinds with no sprite
@@ -506,6 +507,7 @@ export class Renderer {
     }
     this.drawSkatePark(g, S);
     this.drawStreetPressure(g, S, t, time, vx0, vy0, vx1, vy1);
+    this.drawJobsGround(g, S, time);
     this.drawDebris(g, S, vx0, vy0, vx1, vy1);
     if (S.board) {
       const b = S.board, f = this.M.props.board.color, k = 1 + b.z * 0.35;
@@ -578,6 +580,7 @@ export class Renderer {
       }
       g.globalAlpha = 1;
     }
+    this.drawJobsTop(g, S, time);
     if (S.chopper) this.drawChopper(g, S.chopper, t, time);    // above roofs and palms
 
     P && P('sprites');
@@ -796,6 +799,60 @@ export class Renderer {
       deep: make(41, 70, ['#2482ba', '#38a6cc', '#165a96', '#56bed6', '#124686', '#2a6cb4'], 5, 9, 16, 34, 0.45, 0.8),
       light: make(42, 38, ['#bfefff', '#7ad0dc', '#9fe2ea', '#f0c890'], 1.6, 3.4, 10, 24, 0.5, 0.9),
     };
+  }
+
+  // ---- Jobs (jobs.js). Ground layer: the pulsing halo at the job's target, the waiting fare / riders / crew.
+  drawJobsGround(g, S, time) {
+    const j = S.job;
+    if (!j || !j.spot) return;
+    const [x, y] = j.spot, pulse = 0.5 + 0.5 * Math.sin(time * 4);
+    g.save();
+    g.lineWidth = 3; g.strokeStyle = `rgba(110,226,255,${0.55 + 0.35 * pulse})`;
+    g.beginPath(); g.ellipse(x, y, 30 + pulse * 5, 30 + pulse * 5, 0, 0, 7); g.stroke();
+    g.fillStyle = `rgba(110,226,255,${0.10 + 0.08 * pulse})`; g.fill();
+    g.restore();
+    const who = (outfit, ox, oy, h, walk) => {
+      const m = this.M.peds[outfit] || this.M.peds.ped_sun;
+      let a = Math.round(h / (Math.PI * 2) * m.angles) % m.angles; if (a < 0) a += m.angles;
+      const rows = Math.ceil(m.angles * m.poses / m.cols);
+      this.drawCell(g, m.color, a * m.poses + (walk ? [0, 1, 2, 1][Math.floor(time * 7) % 4] : 1), m.cols, rows, x + ox, y + oy);
+    };
+    if (j.kind === 'taxi' && j.phase === 'pickup') who(['fare_tourist', 'fare_vip', 'fare_chaos'][j.n % 3], 0, -14, Math.PI / 2 + Math.sin(time * 2) * 0.3, false);
+    if (j.kind === 'bus' && !(j.dwell >= 1.8)) {
+      const u = Math.min(1, j.dwell / 1.8), c = j.car;
+      for (let i = 0; i < 4; i++) { const sx = (i - 1.5) * 13, sy = -26 - (i % 2) * 8; who(['fare_tourist', 'ped_rose', 'fare_vip', 'ped_blue'][i], sx + (c.x - x - sx) * u, sy + (c.y - y - sy) * u, Math.atan2(c.y - y - sy, c.x - x - sx), u > 0); }
+    }
+    if (j.kind === 'getaway' && j.phase === 'goto') { who('fare_chaos', -8, -16, 1.2, j.wait > 0); who('ped_blue', 9, -20, 1.9, j.wait > 0); }
+  }
+
+  // Top layer: the tow cable and hook, the taxi's roof sign, the crewmate riding tandem on the board.
+  drawJobsTop(g, S, time) {
+    const J = this.M.jobs;
+    if (!J) return;
+    for (const c of S.cars) {                               // every cab wears its sign; the job cab's shows the fare's mood
+      if (c.model !== 'taxi' || c.wreck) continue;
+      const j = S.job && S.job.car === c ? S.job : null, f = j && j.fare;
+      const e = !f ? J.sign.free : f.fed && f.revealed ? J.sign.fed : f.mood < 25 ? J.sign.low : J.sign.fare;
+      if ((e === J.sign.low || e === J.sign.fed) && Math.floor(time * 6) % 2) continue;
+      g.save(); g.translate(c.x, c.y); g.rotate(c.h + Math.PI / 2); g.drawImage(e.img, e.ox, e.oy, e.w, e.h); g.restore();
+    }
+    const j = S.job;
+    if (!j) return;
+    if (j.kind === 'tow' && j.hooked && j.target) {
+      const c = j.car, t = j.target, hx = c.x - Math.cos(c.h) * c.len / 2, hy = c.y - Math.sin(c.h) * c.len / 2;
+      const a = Math.atan2(t.y - hy, t.x - hx), d = Math.hypot(t.x - hx, t.y - hy), e = J.cable;
+      g.save(); g.translate(hx, hy); g.rotate(a);
+      for (let x = 0; x < d; x += e.w) { const w = Math.min(e.w, d - x); g.drawImage(e.img, 0, 0, e.img.width * w / e.w, e.img.height, x, e.oy, w, e.h); }
+      if (j.tension > 0.8) { g.globalCompositeOperation = 'source-atop'; g.strokeStyle = 'rgba(255,74,56,0.8)'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, 0); g.lineTo(d, 0); g.stroke(); g.globalCompositeOperation = 'source-over'; }
+      g.translate(d, 0); g.drawImage(J.hook.img, J.hook.ox, J.hook.oy, J.hook.w, J.hook.h);
+      g.restore();
+    }
+    if (j.kind === 'getaway' && j.tandem && S.board.ridden) {  // the crewmate crouched behind you on the deck
+      const b = S.board, m = this.M.peds.fare_chaos || this.M.peds.ped_blue;
+      let a = Math.round(b.h / (Math.PI * 2) * m.angles) % m.angles; if (a < 0) a += m.angles;
+      this.drawCell(g, m.color, a * m.poses + 1, m.cols, Math.ceil(m.angles * m.poses / m.cols), b.x - Math.cos(b.h) * 9, b.y - Math.sin(b.h) * 9);
+    }
+    void JOBS;
   }
 
   // ---- Street pressure (pressure.js): spike strips and sawhorses, on the road under the cars

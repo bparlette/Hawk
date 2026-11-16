@@ -13,6 +13,7 @@ import { Audio } from './audio.js';
 import { drawHud } from './hud.js';
 import { DemoPilot } from './demo.js';
 import { Director } from './director.js';
+import { jobButton } from './jobs.js';
 
 const Q = new URLSearchParams(location.search);
 const DEMO = Q.has('demo');
@@ -172,7 +173,7 @@ function frame(now) {
   acc += dt * (feel.slowT > 0 ? 0.35 : 1);
   let steps = 0;
   while (acc >= STEP && steps < 6) {
-    input.fightOn = sim.player.mode === 'foot' || sim.player.mode === 'siege';
+    input.fightOn = sim.player.mode === 'foot' || sim.player.mode === 'siege' || !!jobButton(sim);   // in a car it's the job button
     const inp = pilot ? pilot.input(STEP) : input.read();
     director.record(inp);
     sim.step(STEP, inp);

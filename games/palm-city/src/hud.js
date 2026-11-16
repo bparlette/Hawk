@@ -21,6 +21,7 @@ export function clockText(t) {
 }
 
 import { siegeAction } from './siege.js';
+import { jobButton, JOBS } from './jobs.js';
 
 export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -132,6 +133,50 @@ export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
   if (label) {
     g.font = font(13, 800); g.textAlign = 'center'; g.fillStyle = '#fff4dc';
     g.fillText(label, b.x, b.y - b.r - 12);
+  }
+  const jb = P.mode === 'car' ? jobButton(sim) : null;
+  if (jb) {                                              // in a car the fight button is the job button
+    const f = input.fight();
+    g.beginPath(); g.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+    g.fillStyle = input.fightDown ? 'rgba(90,220,255,0.55)' : 'rgba(255,240,220,0.16)'; g.fill();
+    g.lineWidth = 3; g.strokeStyle = 'rgba(110,226,255,0.95)'; g.stroke();
+    g.fillStyle = 'rgba(190,240,255,0.95)'; g.font = font(20, 900); g.textAlign = 'center'; g.fillText('$', f.x, f.y + 1);
+    g.font = font(12, 800); g.fillStyle = '#d8f6ff'; g.fillText(jb.label, f.x, f.y - f.r - 11);
+  }
+  // the job card: title, clock, what it wants, and an arrow to it
+  if (sim.job) {
+    const j = sim.job, y = top + 62, w = 190, x = vw / 2 - w / 2;
+    g.fillStyle = 'rgba(20,12,40,0.55)'; g.beginPath(); g.roundRect(x, y, w, j.kind === 'taxi' && j.fare ? 52 : 40, 10); g.fill();
+    g.textAlign = 'left'; g.font = font(13, 900); g.fillStyle = '#6ee2ff';
+    g.fillText(JOBS.TITLES[j.kind], x + 12, y + 14);
+    g.textAlign = 'right'; g.fillStyle = j.timer < 8 ? '#ff7a8a' : '#fff1d8';
+    g.fillText(`0:${String(Math.max(0, Math.ceil(j.timer))).padStart(2, '0')}`, x + w - 12, y + 14);
+    g.textAlign = 'left'; g.font = font(11, 700); g.fillStyle = '#fff1d8';
+    const want = j.kind === 'taxi' ? (j.phase === 'pickup' ? 'FARE AT ' : 'DROP AT ') + j.spotName
+      : j.kind === 'tow' ? (j.hooked ? 'HAUL TO GARAGE' : 'HOOK THE TARGET')
+      : j.kind === 'bus' ? `STOP ${j.stop + 1}/6 · ${j.spotName}${j.dwell > 0 ? ' · BOARDING' : ''}`
+      : j.phase === 'goto' ? 'CREW AT THE OFFICE' : j.tandem ? 'SKATE TO THE SAFE HOUSE' : 'SAFE HOUSE';
+    g.fillText(want, x + 12, y + 30);
+    if (j.kind === 'taxi' && j.fare) {                    // mood bar: green happy / amber nervous / red panic
+      const m = j.fare.mood / 100, fed = j.fare.fed && j.fare.revealed;
+      g.fillStyle = 'rgba(255,241,216,0.25)'; g.fillRect(x + 12, y + 41, w - 24, 5);
+      g.fillStyle = fed ? (Math.floor(time * 6) % 2 ? '#ff2438' : '#369eff') : m > 0.6 ? '#62d66a' : m > 0.25 ? '#ffb84a' : '#ff5a5a';
+      g.fillRect(x + 12, y + 41, (w - 24) * (fed ? 1 : m), 5);
+    }
+    if (j.kind === 'bus' && j.dwell > 0) { g.fillStyle = '#62d66a'; g.fillRect(x + 12, y + 36, (w - 24) * Math.min(1, j.dwell / 1.8), 3); }
+    if (j.kind === 'tow' && j.hooked) { g.fillStyle = j.tension > 0.8 ? '#ff4a38' : '#ffd45c'; g.fillRect(x + 12, y + 36, (w - 24) * Math.min(1, j.tension || 0), 3); }
+    if (j.spot) {                                        // arrow at the edge of a ring round the player
+      const f = sim.focus(), dx = j.spot[0] - f.x, dy = j.spot[1] - f.y, d = Math.hypot(dx, dy);
+      if (d > 170) {
+        const a = Math.atan2(dy, dx), ax = vw / 2 + Math.cos(a) * 130, ay = vh / 2 + Math.sin(a) * 130;
+        g.save(); g.translate(ax, ay); g.rotate(a);
+        g.fillStyle = '#6ee2ff'; g.strokeStyle = 'rgba(20,12,40,0.7)'; g.lineWidth = 2.5;
+        g.beginPath(); g.moveTo(14, 0); g.lineTo(-8, -10); g.lineTo(-3, 0); g.lineTo(-8, 10); g.closePath(); g.stroke(); g.fill();
+        g.restore();
+        g.font = font(11, 800); g.textAlign = 'center'; g.fillStyle = '#d8f6ff';
+        g.fillText(`${Math.round(d / 10)} m`, ax - Math.cos(a) * 26, ay - Math.sin(a) * 26);
+      }
+    }
   }
   if (input.fightOn && (P.mode === 'foot' || P.mode === 'siege')) {                // fight button: on foot only
     const f = input.fight(), hot = input.fightDown || P.punchT > 0;
