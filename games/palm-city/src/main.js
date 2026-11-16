@@ -15,6 +15,7 @@ import { DemoPilot } from './demo.js';
 import { Director } from './director.js';
 import { jobButton } from './jobs.js';
 import { buttonA } from './controls.js';
+import { drawHelp, helpHit } from './help.js';
 import { CityMap } from './map.js';
 
 const Q = new URLSearchParams(location.search);
@@ -168,17 +169,31 @@ function safeTop() {
 }
 
 const STEP = 1 / 60;
-let acc = 0, last = performance.now(), titleT = 3.2;
+// START PAGE + HELP: the game is paused while either panel is up. Staged captures and the demo skip the start page.
+const ui = { start: !DEMO && !Q.has('t') && !Q.has('cam') && !Q.has('nostart') && !Q.has('prof'), jump: null };
+const panelMode = () => (ui.start ? 'start' : input.helpOpen && !sim.siege ? 'help' : null);
+function panelAct(hit) {
+  if (!hit) return;
+  if (hit.type === 'jump') ui.jump = hit.id;                 // delivered to the sim as input on the next step
+  ui.start = false; input.helpOpen = false;
+  last = performance.now(); acc = 0;
+}
+input.panelKey = (code) => { if (!panelMode()) return false; if (code === 'Enter' || code === 'Space') { panelAct({ type: 'close' }); return true; } return false; };
+window.__ui = ui;
+let acc = 0, last = performance.now(), titleT = ui.start ? 0 : 3.2;
 function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000);
   last = now;
   if (director.play) { replayFrame(dt); requestAnimationFrame(frame); return; }
+  const panel = panelMode();
+  input.panelTap = panel ? (p) => panelAct(helpHit(p, VIEW_W, view.h, sim, panel, safeTop())) : null;
   if (feel.slowT > 0) feel.slowT -= dt;
-  acc += dt * (feel.slowT > 0 ? 0.35 : 1);
+  acc += panel ? 0 : dt * (feel.slowT > 0 ? 0.35 : 1);      // paused under a panel
   let steps = 0;
   while (acc >= STEP && steps < 6) {
     input.fightOn = !!buttonA(sim);   // PUNCH on foot, TURBO or the job action in a car
-    const inp = pilot ? pilot.input(STEP) : input.read();
+    let inp = pilot ? pilot.input(STEP) : input.read();
+    if (ui.jump) { inp = { ...inp, jump: ui.jump }; ui.jump = null; }
     director.record(inp);
     sim.step(STEP, inp);
     simTime += STEP;
@@ -209,6 +224,7 @@ function frame(now) {
     tz = 1 - Math.min(0.1, Math.hypot(b.vx, b.vy) / 250 * 0.1);
   }
   if (fixedCam) { tx = fixedCam[0]; ty = fixedCam[1]; tz = fixedCam[2] || 1; }
+  if (sim.camSnap) { sim.camSnap = false; cam.x = tx; cam.y = ty; }   // a JUMP cuts, it doesn't swoop
   const k = fixedCam ? 1 : 1 - Math.exp(-dt * 3.2);
   cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k; cam.zoom += (tz - cam.zoom) * (fixedCam ? 1 : 1 - Math.exp(-dt * 1.5));
   const hw = VIEW_W / 2 / cam.zoom, hh = view.h / 2 / cam.zoom;
@@ -236,6 +252,7 @@ function frame(now) {
   if (sim.siege) input.mapOpen = false;
   if (input.mapOpen) cityMap.draw(ctx, VIEW_W, view.h, DPR, sim, simTime);     // live: the game runs on under the map
   drawHud(ctx, VIEW_W, view.h, DPR, sim, input, t, simTime, { title: titleT, demo: DEMO, hintStick: !DEMO && simTime < 8, safeTop: safeTop() });
+  if (panel) drawHelp(ctx, VIEW_W, view.h, DPR, sim, panel, safeTop(), now / 1000);
   audio.update(sim, cam, world);
   prefetch(dt);
   requestAnimationFrame(frame);

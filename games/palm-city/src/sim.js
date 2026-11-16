@@ -7,7 +7,7 @@ import { initPressure, stepPressure } from './pressure.js';
 import { initJobs, stepJobs } from './jobs.js';
 import { stepTurbo, TURBO } from './controls.js';
 import { initSkid, layMarks } from './skid.js';
-import { initActivities } from './activities.js';
+import { initActivities, jump } from './activities.js';
 import { initEvents, stepEvents } from './events.js';
 import { initSkate, stepBoard, stepCombo, nearBoard, mount, boardSpeed } from './skate.js';
 import { initDestruct, stepDestruct, punchWorld, carState, carImpact, carsCollide, hitThing, palmImpact, initProps, propImpact } from './destruct.js';
@@ -173,6 +173,7 @@ export class Sim {
     this.time += dt;
     if (this.msg) { this.msg.t -= dt; if (this.msg.t <= 0) this.msg = null; }
     const P = this.player;
+    if (input.jump) jump(this, input.jump);            // HELP / start page JUMP (recorded like any other input)
     if (this.busted) {
       this.busted.t += dt;
       input = { jx: 0, jy: 0, jm: 0, action: false, keys: {} };

@@ -465,3 +465,35 @@ Proof: `node tools/activities_check.mjs` (27 rules — a marker, how-to and map 
 `CHROME=… node tools/activity_shots.mjs [motel motel-dusk garage events]` → `shots/activity-*.png`,
 keyboard-driven, frozen on the exact step the car passes.
 
+## 7G — HELP button, start page, JUMP (Nov 16 2026)
+
+`src/help.js` draws one panel in two dresses, both generated from `helpRows(sim)` (the 7F
+registry): icon + name + one how-to line + a **JUMP** button per activity.
+
+- **Start page** — up on load (title, the seven rows, a big PLAY button). The game is paused and
+  dimmed behind it. Skipped for `?demo` and for staged captures (`?t=`, `?cam=`, `?prof`,
+  `?nostart`).
+- **HELP** — a `?` button top-left under the clock (`Input.helpBtn`, key H or `/`) opens the same
+  rows plus a four-line controls recap. It pauses the game; BACK TO THE GAME, a tap outside, or Esc
+  closes it.
+- **Pause** is the main loop not stepping the sim while a panel is up (`panelMode()` in main.js);
+  while it is up `input.panelTap` owns every touch, so nothing leaks into the game.
+- **JUMP** (`jump(sim, id)` in activities.js) ends whatever is running exactly as getting out would
+  (`quitJob`, `quitEvent`, dismount), then: MOTEL SIEGE → on foot at the door, ENTER armed; TAXI /
+  TOW / BUS / GETAWAY → seated in that vehicle, START armed; WRECK IT! / VALET → in a car on the
+  ring, START armed (your own car if you are in one, else the nearest that runs). Free: no score,
+  no stars. The camera cuts. A jump is delivered to the sim as an input field (`inp.jump`) and
+  recorded by the director, so highlight re-sims stay exact. Refused mid-siege and while busted.
+- **Not-yet-startable rows**: a row whose `live()` is false right now (its vehicle is wrecked, a job
+  or event is already running) stays listed but dimmed with BUSY instead of JUMP. Every registered
+  activity is live in this build, so nothing is listed that cannot be started.
+- `helpLayout()` is a pure function shared by drawing and hit-testing; rows shrink (54 → 40 px) to
+  fit a 640-tall phone.
+
+Proof: `node tools/help_check.mjs` (35 rules: rows = registry, layout fits 420×860 and 420×640,
+tap resolution, every JUMP lands armed and free and starts with one press of A, a jump ends a
+running job, refused mid-siege, a run with a jump re-simulates identically).
+`CHROME=… node tools/help_shots.mjs` drives it with real touches and asserts pause / PLAY / ? /
+JUMP in the page → `shots/help-start-page.png`, `help-panel.png`, `help-jump-tow.png`.
+`tools/touch_check.mjs` now taps PLAY first, as a player must.
+

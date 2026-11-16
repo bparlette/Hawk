@@ -21,7 +21,7 @@ export class Director {
 
   record(inp) {
     const k = inp.keys || {};
-    this.log.push({ jx: inp.jx, jy: inp.jy, jm: inp.jm, action: !!inp.action, punch: !!inp.punch, turbo: !!inp.turbo, keys: { up: !!k.up, down: !!k.down, left: !!k.left, right: !!k.right } });
+    this.log.push({ jx: inp.jx, jy: inp.jy, jm: inp.jm, action: !!inp.action, punch: !!inp.punch, turbo: !!inp.turbo, jump: inp.jump || null, keys: { up: !!k.up, down: !!k.down, left: !!k.left, right: !!k.right } });
   }
 
   mark(name, v) {
