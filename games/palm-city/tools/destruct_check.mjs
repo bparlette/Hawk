@@ -147,5 +147,29 @@ const clearCops = (s) => { s.cars = s.cars.filter(c => c.kind !== 'police'); };
   run(s, 1);
   check('a falling palm crushes the car it lands on', victim.dmg >= 0.5, `car dmg ${victim.dmg.toFixed(2)}`);
 }
+// ---- bushes
+{
+  const s = fresh(); clearCops(s);
+  check('sim and renderer share the 141 seeded bushes', s.bushes.length === world.bushes.length && s.bushes.length > 100, `${s.bushes.length}`);
+  // an isolated bush with open ground to its west (so every punch lands on it)
+  const t = s.bushes.find(b => !s.bushes.some(o => o !== b && Math.hypot(o.x - b.x, o.y - b.y) < 40) && s.canStand(b.x - b.r - 8, b.y) && !s.W.hitTrunk(b.x - 20, b.y, 10));
+  const p = s.player.ped; p.x = t.x - t.r - 8; p.y = t.y; p.h = 0;
+  for (const o of s.peds) if (o !== p && Math.hypot(o.x - p.x, o.y - p.y) < 80) o.x += 400;
+  const stages = [];
+  for (let i = 0; i < 4 && t.stage < 3; i++) { punchN(s, 1); stages.push(t.stage); }
+  check('punches shear, flatten, then tear a bush out', stages.join(',') === '1,2,3', stages.join(','));
+  check('a torn-out bush throws leaves, petals and soil', s.debris.filter(d => d.on && (d.kind === 4 || d.kind === 10 || d.kind === 6)).length >= 10);
+  const P = s.player; p.x = t.x - 40; run(s, 0.8, { ...none, jx: 1, jy: 0, jm: 1 });
+  check('you still walk through bushes', p.x > t.x);
+}
+{
+  const s = fresh(); clearCops(s);
+  const near = s.bushes.filter(b => Math.hypot(b.x - 198, b.y - 1771) < 30);
+  const c = s.addCar(34, 1771, 0, 'sedan_coral', 'player'); s.player.mode = 'car'; s.player.car = c; s.player.ped.hidden = true; c.v = 120;
+  run(s, 1.6, { ...none, keys: { up: true } });
+  check('a car ploughs through a cluster without stopping', c.x > 230, `x ${c.x.toFixed(0)}`);
+  check('the bushes it ran over are flattened or torn out', near.filter(b => b.stage >= 2).length >= 2, near.map(b => b.stage).join(','));
+  check('nothing breaks below walking pace', (() => { const s2 = fresh(); const b = s2.bushes[0]; const c2 = s2.addCar(b.x - 30, b.y, 0, 'sedan_teal', null); c2.v = 20; run(s2, 1); return b.dmg === 0; })());
+}
 console.log(fails ? `DESTRUCT FAIL (${fails})` : 'DESTRUCT OK');
 process.exit(fails ? 1 : 0);

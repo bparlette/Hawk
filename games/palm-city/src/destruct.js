@@ -34,6 +34,7 @@ export function initDestruct(sim) {
   sim.lastWreckStar = -9; sim.lastWitnessStar = -9;
   sim.wrecks = 0;
   initPalms(sim);
+  initBushes(sim);
 }
 
 export function spawnDebris(sim, kind, x, y, vx, vy, s, c = 0) {
@@ -270,6 +271,7 @@ export function stepDestruct(sim, dt) {
     }
   }
   for (const t of sim.things) if (t.step) t.step(sim, t, dt);
+  carsThroughBushes(sim);
 }
 
 // ------------------------------------------------------------------ palms
@@ -353,5 +355,56 @@ function stepLog(sim, t, F) {
   for (const c of sim.cars) {
     if (Math.abs(c.v) < 30 || !near(c.x, c.y, c.wid / 2) || sim.time - (c.logT || -9) < 0.6) continue;
     c.logT = sim.time; c.v *= 0.8; if (c.driver === 'player') sim.ev('bump');
+  }
+}
+
+// ------------------------------------------------------------------ bushes
+// Bushes are scenery you walk through, so they never block. Hit one (fist, car, falling tree) and it
+// bursts leaves and petals and shears away from the hit (stage 1), is flattened into a splayed,
+// bruised oval (stage 2), and is finally torn out, leaving a root pit (stage 3) — look spec §3.
+const BUSH_PTS = [0, 20, 60, 150];
+
+function initBushes(sim) {
+  sim.bushes = [];
+  for (const b of sim.W.bushes) {
+    const t = { kind: 'bush', i: b.i, x: b.x, y: b.y, r: 8 * b.sc, sc: b.sc, v: b.v, dmg: 0, stage: 0, hitT: -9, punch: 0.36, ax: 1, ay: 0 };
+    sim.things.push(t); sim.bushes.push(t);
+  }
+}
+
+// What a car ploughing through at speed sp does to a bush: anything quick flattens it; flat out
+// tears it out of the ground.
+export function bushImpact(sp) { return sp < 25 ? 0 : Math.min(1, 0.2 + sp / 300); }
+
+registerKind('bush', (sim, t, before, after, dx, dy, cause, speed) => {
+  const l = Math.hypot(dx, dy) || 1;
+  t.ax = dx / l; t.ay = dy / l;
+  if (speed > 0) t.track = true;                       // run over by a car: tyre tracks through it
+  // thrown clear of the canopy (from its far edge, outward), so they land where you can see them
+  const ex = t.x + t.ax * t.r, ey = t.y + t.ay * t.r;
+  burst(sim, D.LEAF, 3 + after * 2, ex, ey, t.ax, t.ay, 110, 0.9 * t.sc);
+  burst(sim, D.PETAL, 2 + after * 2, ex, ey, t.ax, t.ay, 95, 1);
+  burst(sim, D.LEAF, 2, t.x - t.ax * t.r, t.y - t.ay * t.r, -t.ax, -t.ay, 70, 0.8 * t.sc);
+  if (after >= 3) burst(sim, D.DIRT, 5, ex, ey, t.ax, t.ay, 60, 1.2);
+  sim.ev('rustle', 0.3 + 0.2 * after);
+  if (after > before) report(sim, t.x, t.y, BUSH_PTS[after], after >= 3 ? 1 : 0, cause, after >= 3 ? 'TORN OUT' : after >= 2 ? 'FLATTENED' : 'BUSHWHACKED');
+});
+
+// Cars plough through bushes (they never stop a car): the bush takes damage scaled by speed,
+// the car loses a little speed.
+function carsThroughBushes(sim) {
+  for (const c of sim.cars) {
+    const sp = Math.abs(c.v);
+    if (sp < 25) continue;
+    const reach = c.len / 2;
+    for (const t of sim.bushes) {
+      if (t.stage >= 3) continue;
+      const dx = t.x - c.x, dy = t.y - c.y;
+      if (dx > reach + t.r || dx < -reach - t.r || dy > reach + t.r || dy < -reach - t.r) continue;
+      const ca = Math.cos(c.h), sa = Math.sin(c.h), u = dx * ca + dy * sa, v = -dx * sa + dy * ca;
+      if (Math.abs(u) > c.len / 2 + t.r * 0.5 || Math.abs(v) > c.wid / 2 + t.r * 0.5 || sim.time - t.hitT < 0.5) continue;
+      hitThing(sim, t, bushImpact(sp), ca * Math.sign(c.v), sa * Math.sign(c.v), c.driver === 'player' ? 'player' : 'world', sp);
+      c.v *= 0.95;
+    }
   }
 }
