@@ -628,6 +628,13 @@
    "width": 20.0
   }
  },
+ "groundSlice": {
+  "file": "ground_slice.webp",
+  "h": 990,
+  "w": 860,
+  "x": 680,
+  "y": 710
+ },
  "peds": {
   "cop": {
    "angles": 16,

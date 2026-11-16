@@ -1284,8 +1284,21 @@ def bake_props():
     print('palms + 4 bush types baked.', flush=True)
 
 
+def bake_ground():
+    raw = '/tmp/palm_ground_slice_raw.png'
+    assert os.path.exists(raw), f'Run gen_ground_slice.mjs first ({raw} missing)'
+    arr = load_np(raw)
+    arr = oriented_stroke_pass(arr, rad=4, strength=0.30, sat_boost=1.10)
+    save_np(arr, f'{OUT}/ground_slice.webp')
+    MANIFEST['groundSlice'] = {'file': 'ground_slice.webp', 'x': 680, 'y': 710, 'w': 860, 'h': 990}
+    save_manifest()
+    print(f'ground_slice.webp baked ({arr.shape[1]}x{arr.shape[0]}).', flush=True)
+
+
 if GROUP in ('buildings', 'all'):
     bake_buildings()
+if GROUP in ('ground', 'all'):
+    bake_ground()
 if GROUP in ('cars', 'all'):
     bake_cars()
 if GROUP in ('peds', 'all'):

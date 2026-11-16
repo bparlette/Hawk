@@ -209,6 +209,10 @@ export class Renderer {
     for (let cy = r0; cy <= r1; cy++) for (let cx = c0; cx <= c1; cx++) {
       g.drawImage(G0.get(cx, cy), cx * CHUNK, cy * CHUNK, CHUNK + 0.6, CHUNK + 0.6);
     }
+    const gs = this.M.groundSlice;
+    if (gs && gs.img && vx1 > gs.x && vx0 < gs.x + gs.w && vy1 > gs.y && vy0 < gs.y + gs.h) {
+      g.drawImage(gs.img, gs.x, gs.y, gs.w, gs.h);
+    }
     this.drawOcean(g, G, t, time, vx0, vy0, vx1, vy1);
 
     P && P('ocean');
