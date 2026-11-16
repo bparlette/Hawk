@@ -99,7 +99,7 @@ export class Renderer {
       if (!e) throw new Error('no baked sprite for building ' + b.id + ' — run tools/bake_sprites.py');
       out.push({ kind: 'building', x: b.x + b.w / 2, y: b.y + b.d / 2, e, id: b.id });
     }
-    L.palms.forEach(([x, y], i) => out.push({ kind: 'palm', x, y, e: M.props['palm' + (i % 3)] }));
+    L.palms.forEach(([x, y], i) => out.push({ kind: 'palm', x, y, ti: i, sc: this.world.trunks[i].sc, e: M.props['palm' + (i % 3)] }));
     for (const [x, y] of L.lamps) out.push({ kind: 'lamp', x, y, e: M.props.lamp });
     // vegetation clusters: seeded, scattered in grass and along block edges, mixed variants + sizes
     const vr = mulberry32(2024), W = this.world;
@@ -115,7 +115,6 @@ export class Renderer {
         out.push({ kind: 'bush', x: bx, y: by, sc: 0.7 + vr() * 0.7, e: M.props['bush' + v] });
       }
     }
-    L.palms.forEach(([x, y], i) => { const p = out.find(o => o.kind === 'palm' && o.x === x && o.y === y); if (p) p.sc = 0.8 + ((i * 37) % 10) / 22; });
     for (const p of L.props) out.push({ kind: p.type, x: p.x, y: p.y, e: M.props[p.type] });
     const P = L.pier;
     out.push({ kind: 'pier', x: P.x + P.w / 2, y: P.y + P.h / 2, e: M.props.pier });
@@ -159,6 +158,30 @@ export class Renderer {
   static sheetFrame(e, idx, cols, img) {
     const rows = Math.ceil((e.frames || 0) / cols) || null;
     return idx;
+  }
+
+  // A static that may be mid-shake (a palm that just took a knock): the trunk jolts along the
+  // impact and the crown twists, both dying away over about a second.
+  drawStatic(g, s, f, S) {
+    const sh = s.kind === 'palm' && S.shakes ? S.shakes[s.ti] : null;
+    if (!sh) { this.drawEntry(g, f, s.x, s.y, s.sc); return; }
+    const e = Math.exp(-3.6 * sh.t) * sh.amp;
+    g.save();
+    g.translate(s.x + sh.ax * Math.sin(sh.t * 40) * 4.5 * e, s.y + sh.ay * Math.sin(sh.t * 40) * 4.5 * e);
+    g.rotate(Math.sin(sh.t * 27) * 0.13 * e);
+    this.drawEntry(g, f, 0, 0, s.sc);
+    g.restore();
+  }
+
+  drawLeaves(g, S) {
+    for (const l of S.leaves || []) {
+      if (l.t < 0) continue;
+      const u = l.t / l.life;
+      g.globalAlpha = Math.min(1, (1 - u) * 2.2);
+      g.fillStyle = (l.rot * 10 | 0) % 2 ? '#7fb24a' : '#4f8f3a';
+      g.beginPath(); g.ellipse(l.x, l.y, 4.2 * (1 - u * 0.35), 1.7, l.rot, 0, 7); g.fill();
+    }
+    g.globalAlpha = 1;
   }
 
   drawEntry(g, f, x, y, sc = 1) {
@@ -228,7 +251,7 @@ export class Renderer {
     sg.globalCompositeOperation = 'source-over';
     sg.clearRect(0, 0, this.shadowCv.width, this.shadowCv.height);
     worldTf(sg);
-    for (const s of this.statics) if (inView(s.bb)) this.drawEntry(sg, s.e.shadow, s.x, s.y, s.sc);
+    for (const s of this.statics) if (inView(s.bb)) this.drawStatic(sg, s, s.e.shadow, S);
     for (const c of S.cars) {
       if (c.x < vx0 - 80 || c.x > vx1 + 80 || c.y < vy0 - 80 || c.y > vy1 + 80) continue;
       const { m, k, rows } = this.carCell(c);
@@ -277,8 +300,12 @@ export class Renderer {
     for (const p of S.peds) {
       if (p.hidden || p.x < vx0 - 30 || p.x > vx1 + 30 || p.y < vy0 - 30 || p.y > vy1 + 30) continue;
       const { m, idx, rows } = this.pedCell(p);
-      if (p.down) {
-        g.save(); g.translate(p.x, p.y); g.rotate(p.spin || 0); g.scale(1, 0.75);
+      if (p.down) {                                     // lying flat; the last half second is the get-up
+        const k = Math.min(1, p.downT / 0.5);
+        g.save(); g.translate(p.x, p.y); g.rotate((p.spin || 0) * k + 1.1 * k); g.scale(1, 1 - 0.25 * k);
+        this.drawCell(g, m.color, idx, m.cols, rows, 0, 0); g.restore();
+      } else if (p.mode === 'stumble') {                // staggering
+        g.save(); g.translate(p.x, p.y); g.rotate(Math.sin(p.stT * 26) * 0.45 * Math.min(1, p.stT / 0.3));
         this.drawCell(g, m.color, idx, m.cols, rows, 0, 0); g.restore();
       } else if (p.outfit === 'player') {  // the hero is drawn a touch larger so you never lose them
         const z = S.board && S.board.ridden ? S.board.z : 0;
@@ -293,8 +320,9 @@ export class Renderer {
     }
     for (const s of this.statics) {
       if (s.kind === 'pier' || s.kind === 'fountain' || s.kind === 'lifeguard') continue;
-      if (inView(s.bb)) this.drawEntry(g, s.e.color, s.x, s.y, s.sc);
+      if (inView(s.bb)) this.drawStatic(g, s, s.e.color, S);
     }
+    this.drawLeaves(g, S);
 
     P && P('sprites');
     // painted surface grain (world-anchored)

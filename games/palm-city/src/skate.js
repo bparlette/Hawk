@@ -212,8 +212,15 @@ export function stepBoard(sim, dt, inp) {
   }
   // move + collide
   const nx = b.x + b.vx * dt, ny = b.y + b.vy * dt;
+  const tree = W.hitTrunk(nx, ny, 4);
+  if (tree) {                                             // palms are solid, in the air too
+    const s = boardSpeed(b);
+    sim.shakeTree(tree, Math.min(1, 0.2 + s / 200), b.vx, b.vy);
+    if (s > 90) { b.vx *= -0.5; b.vy *= -0.5; bail(sim, 'tree'); return; }   // the board bounces back off the trunk
+    b.vx *= -0.3; b.vy *= -0.3; sim.ev('bump');
+  }
   const hit = W.hitSolid(nx, ny, 4) || nx < 4 || ny < 4 || nx > W.L.world.w - 4 || ny > W.L.world.h - 4;
-  if (hit) {
+  if (tree) { /* stopped by the trunk */ } else if (hit) {
     if (boardSpeed(b) > 140) { bail(sim, 'wall'); return; }
     b.vx *= -0.3; b.vy *= -0.3;
   } else { b.x = nx; b.y = ny; }
@@ -223,6 +230,17 @@ export function stepBoard(sim, dt, inp) {
     const rd = W.roadInfo(b.x, b.y).d, prevRd = b.prevRd ?? rd;
     b.prevRd = rd;
     for (const be of sim.benches) if (Math.hypot(be.x - b.x, be.y - b.y) < 11 && sp > 70) { bail(sim, 'bench'); return; }
+    // people: clip one slowly and they stumble, hit one at speed and they go down; either way you lose speed
+    for (const o of sim.peds) {
+      if (o === p || o.hidden || o.mode === 'down' || o.mode === 'cop') continue;
+      const dx = o.x - b.x, dy = o.y - b.y, d = Math.hypot(dx, dy);
+      if (d >= 10 || d < 0.01) continue;
+      const ox = dx / d, oy = dy / d;
+      if (sp > 110) { sim.knockDown(o, b.vx * 0.5 + ox * 30, b.vy * 0.5 + oy * 30, 2.4); b.vx *= 0.55; b.vy *= 0.55; sim.ev('hit'); }
+      else if (sp > 25) { if (o.mode !== 'stumble') { sim.stumble(o, ox, oy, 40 + sp * 0.3); sim.ev('bump'); } b.vx *= 0.75; b.vy *= 0.75; }
+      b.x -= ox * (10 - d); b.y -= oy * (10 - d);
+      sp = boardSpeed(b);
+    }
     for (const c of sim.cars) {
       const lx = b.x - c.x, ly = b.y - c.y, ca = Math.cos(c.h), sa = Math.sin(c.h);
       const u = lx * ca + ly * sa, v = -lx * sa + ly * ca;

@@ -18,6 +18,8 @@ export class Sim {
   constructor(world, M, seed = 1, events = () => {}) {
     this.W = world; this.M = M; this.ev = events;
     this.rnd = mulberry32(seed);
+    this.fxr = mulberry32(seed * 7 + 11);   // cosmetic randomness only, so effects never disturb the seeded run
+    this.shakes = {}; this.leaves = [];     // palm index -> { t, amp, ax, ay }; falling leaves
     this.cars = []; this.peds = [];
     this.time = 0;
     this.stars = 0; this.starDecay = 0; this.lostT = 0;
@@ -86,7 +88,7 @@ export class Sim {
       }
       const d = Math.hypot(x - f.x, y - f.y);
       if ((!anywhere && (d < 480 || d > 900)) || (anywhere && d > 900)) continue;
-      if (W.hitSolid(x, y, 4)) continue;
+      if (W.hitSolid(x, y, 4) || W.hitTrunk(x, y, 6)) continue;
       const p = this.makePed(x, y, PED_OUTFITS[(this.rnd() * PED_OUTFITS.length) | 0], path);
       this.peds.push(p);
       return p;
@@ -98,6 +100,32 @@ export class Sim {
     if (this.time - (this.lastCrash || -9) < 0.5) return;
     this.lastCrash = this.time;
     this.ev('crash', v);
+  }
+
+  // A palm takes a knock: the trunk jolts along the impact, the fronds rustle, a few leaves fall.
+  shakeTree(tr, power, ax, ay) {
+    const l = Math.hypot(ax, ay) || 1, old = this.shakes[tr.i];
+    if (old && old.t < 0.15 && old.amp >= power) return;
+    this.shakes[tr.i] = { t: 0, amp: Math.min(1, power), ax: ax / l, ay: ay / l };
+    const n = 2 + Math.round(power * 5), r = this.fxr;
+    for (let i = 0; i < n && this.leaves.length < 60; i++) {
+      const a = r() * TAU, d = (10 + r() * 22) * tr.sc;
+      this.leaves.push({ x: tr.x + Math.cos(a) * d, y: tr.y + Math.sin(a) * d, vx: ax / l * 14 + (r() - 0.5) * 26, vy: ay / l * 14 + (r() - 0.5) * 26, t: -r() * 0.25, life: 1.1 + r() * 0.9, rot: r() * TAU, vr: (r() - 0.5) * 7 });
+    }
+    this.ev('rustle', power);
+  }
+
+  // A pedestrian staggers off the way they were shoved, then carries on (or runs).
+  stumble(p, nx, ny, speed) {
+    if (p.mode === 'down' || p.mode === 'stumble') return;
+    p.after = p.mode === 'cop' ? 'cop' : p.mode === 'flee' || !p.path ? 'flee' : 'return';
+    p.mode = 'stumble'; p.stT = 0.55; p.vx = nx * speed; p.vy = ny * speed; p.bumpT = this.time;
+    if (!p.from) p.from = { x: p.x - nx, y: p.y - ny };
+  }
+
+  // A pedestrian goes down, slides, lies there, then gets up and runs.
+  knockDown(p, vx, vy, dur) {
+    p.mode = 'down'; p.down = true; p.downT = dur; p.vx = vx; p.vy = vy; p.spin = 0; p.bumpT = this.time;
   }
 
   say(text, dur = 2.2) { this.msg = { text, t: dur, dur }; }
@@ -121,6 +149,12 @@ export class Sim {
       if (this.busted.t > 4.4) this.busted = null;
     }
 
+    // --- effects
+    for (const k in this.shakes) { const s = this.shakes[k]; s.t += dt; if (s.t > 1.3) delete this.shakes[k]; }
+    for (const l of this.leaves) { l.t += dt; if (l.t > 0) { l.x += l.vx * dt; l.y += l.vy * dt; l.vx *= Math.pow(0.2, dt); l.vy *= Math.pow(0.2, dt); l.rot += l.vr * dt; } }
+    if (this.leaves.length) this.leaves = this.leaves.filter(l => l.t < l.life);
+    if (P.slowT > 0) P.slowT -= dt;
+
     // --- player
     if (P.stunT > 0) { P.stunT -= dt; input = { ...input, jm: 0, action: false, keys: {} }; }
     if (P.mode === 'foot') this.stepPlayerFoot(dt, input);
@@ -128,7 +162,7 @@ export class Sim {
     else this.stepPlayerCar(dt, input);
     stepCombo(this, dt);
     // a board left alone rolls to a stop
-    if (!this.board.ridden) { const b = this.board, f = Math.exp(-3 * dt); b.vx *= f; b.vy *= f; if (!this.W.hitSolid(b.x + b.vx * dt, b.y + b.vy * dt, 2)) { b.x += b.vx * dt; b.y += b.vy * dt; } }
+    if (!this.board.ridden) { const b = this.board, f = Math.exp(-3 * dt); b.vx *= f; b.vy *= f; const bx = b.x + b.vx * dt, by = b.y + b.vy * dt; if (!this.W.hitSolid(bx, by, 2) && !this.W.hitTrunk(bx, by, 2)) { b.x = bx; b.y = by; } else { b.vx = b.vy = 0; } }
 
     // --- AI cars
     for (const c of this.cars) {
@@ -171,9 +205,14 @@ export class Sim {
       if (jm) { const l = Math.hypot(jx, jy); jx /= l; jy /= l; }
     }
     if (jm > 0.12) {
-      const sp = jm > 0.65 ? 74 : 30 + jm * 50;
+      const sp = (jm > 0.65 ? 74 : 30 + jm * 50) * (this.player.slowT > 0 ? 0.35 : 1);
       p.h = Math.atan2(jy, jx);
-      this.walkMove(p, Math.cos(p.h) * sp * dt, Math.sin(p.h) * sp * dt);
+      const tr = this.walkMove(p, Math.cos(p.h) * sp * dt, Math.sin(p.h) * sp * dt);
+      if (tr && sp > 55 && this.time - (this.lastBump || -9) > 0.45) {      // ran into a palm
+        this.lastBump = this.time; this.player.slowT = 0.3;
+        this.shakeTree(tr, 0.35, tr.x - p.x, tr.y - p.y); this.ev('bump');
+      }
+      this.bumpPeds(p, sp);
       p.walk += sp * dt;
       p.pose = [0, 1, 2, 1][Math.floor(p.walk / 9) % 4];
     } else p.pose = 1;
@@ -187,6 +226,26 @@ export class Sim {
     }
   }
 
+  // The player on foot never passes through people: walking nudges them aside, running into
+  // someone makes them stumble and costs the player a beat.
+  bumpPeds(p, sp) {
+    for (const o of this.peds) {
+      if (o === p || o.hidden || o.mode === 'down') continue;
+      const dx = o.x - p.x, dy = o.y - p.y, d = Math.hypot(dx, dy);
+      if (d >= 9 || d < 0.01) continue;
+      const nx = dx / d, ny = dy / d, push = 9 - d;
+      p.x -= nx * push * 0.5; p.y -= ny * push * 0.5;
+      if (this.W.hitSolid(p.x, p.y, 3)) { p.x += nx * push * 0.5; p.y += ny * push * 0.5; }
+      if (o.mode !== 'cop') this.walkMove(o, nx * push * 0.5, ny * push * 0.5);
+      if (sp > 55 && o.mode !== 'cop' && o.mode !== 'stumble' && this.time - (o.bumpT || -9) > 0.8) {
+        this.stumble(o, nx, ny, 52);
+        this.player.slowT = 0.25; this.ev('bump');
+      }
+    }
+  }
+
+  // Moves a walker with building, shoreline, car and palm collisions. Returns the palm trunk it
+  // pressed against this step (or null) so callers can react.
   walkMove(p, dx, dy) {
     const W = this.W;
     const ok = (x, y) => !W.hitSolid(x, y, 3) && x > 4 && y > 4 && x < W.L.world.w - 4 && y < W.L.world.h - 4 && x < W.shoreX(y) + 6;
@@ -205,6 +264,14 @@ export class Sim {
         else { const s = Math.sign(v) * pv; p.x += -sa * s; p.y += ca * s; }
       }
     }
+    // palm trunks are solid: slide round them
+    const tr = W.hitTrunk(p.x, p.y, 3);
+    if (tr) {
+      let nx = p.x - tr.x, ny = p.y - tr.y, d = Math.hypot(nx, ny);
+      if (d < 0.01) { nx = 1; ny = 0; d = 1; }
+      p.x = tr.x + nx / d * (tr.r + 3); p.y = tr.y + ny / d * (tr.r + 3);
+    }
+    return tr;
   }
 
   tryEnterCar() {
@@ -285,13 +352,23 @@ export class Sim {
     for (const [u, v] of [[c.len / 2, c.wid / 2], [c.len / 2, -c.wid / 2], [-c.len / 2, c.wid / 2], [-c.len / 2, -c.wid / 2], [c.len / 2, 0]]) {
       const px = x + ca * u - sa * v, py = y + sa * u + ca * v;
       if (!W.isDrivable(px, py)) return true;
+      const tr = W.hitTrunk(px, py, 1);
+      if (tr) { this.hitTree = tr; return true; }
     }
     return false;
   }
 
   moveCar(c, dt) {
     const dx = Math.cos(c.h) * c.v * dt, dy = Math.sin(c.h) * c.v * dt;
+    this.hitTree = null;
     if (!this.carBlocked(c, c.x + dx, c.y + dy, c.h)) { c.x += dx; c.y += dy; return; }
+    if (this.hitTree) {                                   // a palm: solid stop, and the tree answers
+      const tr = this.hitTree, sp = Math.abs(c.v);
+      if (sp > 20) this.shakeTree(tr, Math.min(1, 0.25 + sp / 220), dx, dy);
+      if (sp > 60 && c.driver === 'player') this.crash(sp);
+      c.v *= -0.15;
+      return;
+    }
     if (Math.abs(c.v) > 120 && c.driver === 'player') this.crash(Math.abs(c.v));
     if (!this.carBlocked(c, c.x + dx, c.y, c.h)) { c.x += dx; c.v *= 0.8; }
     else if (!this.carBlocked(c, c.x, c.y + dy, c.h)) { c.y += dy; c.v *= 0.8; }
@@ -491,7 +568,8 @@ export class Sim {
     const W = this.W;
     if (p.mode === 'down') {
       p.downT -= dt;
-      p.x += p.vx * dt; p.y += p.vy * dt;
+      const sx = p.x + p.vx * dt, sy = p.y + p.vy * dt;
+      if (W.hitSolid(sx, sy, 2) || W.hitTrunk(sx, sy, 2)) { p.vx = p.vy = 0; } else { p.x = sx; p.y = sy; }
       p.vx *= Math.pow(0.02, dt); p.vy *= Math.pow(0.02, dt);
       p.spin = (p.spin || 0) + (Math.hypot(p.vx, p.vy) * 0.02) * dt;
       if (p.downT <= 0) { p.down = false; p.mode = 'flee'; p.fleeT = 3; p.from = { x: p.x - p.vx, y: p.y - p.vy }; }
@@ -499,19 +577,34 @@ export class Sim {
     }
     // hit by a car?
     for (const c of this.cars) {
-      if (Math.abs(c.v) < 45) continue;
+      if (Math.abs(c.v) < 8) continue;
       const lx = p.x - c.x, ly = p.y - c.y, ca = Math.cos(c.h), sa = Math.sin(c.h);
       const u = lx * ca + ly * sa, v = -lx * sa + ly * ca;
       if (Math.abs(u) < c.len / 2 + 4 && Math.abs(v) < c.wid / 2 + 4) {
         if (p.mode === 'cop' && c.driver !== 'player') continue;
-        p.mode = 'down'; p.down = true; p.downT = 5;
-        p.vx = ca * c.v * 0.7 - sa * Math.sign(v) * 60; p.vy = sa * c.v * 0.7 + ca * Math.sign(v) * 60;
-        p.spin = 0;
+        const side = Math.sign(v) || 1;
+        if (Math.abs(c.v) < 45) {                         // a slow bumper: shoved aside, stumbling
+          if (p.mode !== 'stumble' && this.time - (p.bumpT || -9) > 0.5) {
+            this.stumble(p, -sa * side * 0.8 + ca * Math.sign(c.v) * 0.6, ca * side * 0.8 + sa * Math.sign(c.v) * 0.6, 58);
+            if (c.driver === 'player') { c.v *= 0.8; this.ev('bump'); }
+          }
+          continue;
+        }
+        this.knockDown(p, ca * c.v * 0.7 - sa * side * 60, sa * c.v * 0.7 + ca * side * 60, 5);
+        if (c.driver === 'player') c.v *= 0.88;           // the car sheds a little momentum
         this.ev('hit');
         if (c.driver === 'player' && (this.time - (this.lastHitStar || -9)) > 2.5) { this.addStars(1, 'hit'); this.lastHitStar = this.time; }
         for (const o of this.peds) if (o.mode === 'walk' && dist(o, p) < 160) { o.mode = 'flee'; o.fleeT = 3; o.from = { x: c.x, y: c.y }; }
         return;
       }
+    }
+    if (p.mode === 'stumble') {
+      p.stT -= dt;
+      this.walkMove(p, p.vx * dt, p.vy * dt);
+      p.vx *= Math.pow(0.01, dt); p.vy *= Math.pow(0.01, dt);
+      p.walk += 40 * dt; p.pose = [0, 1, 2, 1][Math.floor(p.walk / 4) % 4];
+      if (p.stT <= 0) { p.mode = p.after; if (p.mode === 'flee') p.fleeT = Math.max(p.fleeT || 0, 2.2); }
+      return;
     }
     let mx = 0, my = 0, sp = p.speed;
     if (p.mode === 'cop') {

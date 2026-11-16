@@ -115,6 +115,8 @@ export class Audio {
     if (name === 'jack') { this.note(523, t + 0.12, 0.12, 0.08, 'triangle'); this.note(784, t + 0.2, 0.2, 0.08, 'triangle'); }
     if (name === 'crash') this.burst(700, 0.6, Math.min(0.6, (v || 100) / 400), 0.35);
     if (name === 'hit') this.burst(400, 1, 0.3, 0.15);
+    if (name === 'bump') this.burst(240, 1, 0.22, 0.09);
+    if (name === 'rustle') { this.burst(5200, 0.8, 0.05 + 0.1 * (v || 0.4), 0.4, 'highpass'); this.burst(170, 1, 0.12 + 0.2 * (v || 0.4), 0.1); }
     if (name === 'star') { this.note(880, t, 0.08, 0.06, 'square', 3000); this.note(1175, t + 0.08, 0.12, 0.06, 'square', 3000); }
     if (name === 'busted') {
       // short brass-ish sting: three falling stabs + a low thud
