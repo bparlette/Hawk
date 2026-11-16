@@ -106,6 +106,27 @@ export class Renderer {
       }
     }
     L.palms.forEach(([x, y], i) => { const p = out.find(o => o.kind === 'palm' && o.x === x && o.y === y); if (p) p.sc = 0.8 + ((i * 37) % 10) / 22; });
+    // Slice lush palm & 4-bush-type clusters anchored along plaza edges, promenade verge, and beach dunes (never on road or skate path)
+    const sr = mulberry32(7711);
+    const sliceClusters = [
+      [1128, 920], [1132, 1060], [1130, 1175], [1128, 1290], [1130, 1345],
+      [880, 1162], [990, 1162], [1085, 1160], [855, 925], [855, 1295],
+      [1262, 875], [1262, 1110], [1262, 1340], [1338, 900], [1338, 1180], [1338, 1350],
+      [1132, 1525], [1132, 1620], [730, 1525], [730, 1620],
+    ];
+    for (let idx = 0; idx < sliceClusters.length; idx++) {
+      const [cx, cy] = sliceClusters[idx];
+      if (!W.hitSolid(cx, cy, 10) && W.roadInfo(cx, cy).d >= W.walkEdge + 4 && idx % 3 === 0) {
+        out.push({ kind: 'palm', x: cx, y: cy, sc: 0.92 + sr() * 0.35, e: M.props['palm' + (idx % 3)] });
+      }
+      const nB = 2 + (idx % 3);
+      for (let j = 0; j < nB; j++) {
+        const bx = cx + (sr() - 0.5) * 26, by = cy + (sr() - 0.5) * 26;
+        if (W.hitSolid(bx, by, 7) || W.roadInfo(bx, by).d < W.walkEdge + 2) continue;
+        const v = (idx + j) % 4;
+        out.push({ kind: 'bush', x: bx, y: by, sc: 0.8 + sr() * 0.55, e: M.props['bush' + v] });
+      }
+    }
     for (const p of L.props) out.push({ kind: p.type, x: p.x, y: p.y, e: M.props[p.type] });
     const P = L.pier;
     out.push({ kind: 'pier', x: P.x + P.w / 2, y: P.y + P.h / 2, e: M.props.pier });
