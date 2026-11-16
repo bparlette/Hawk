@@ -2,6 +2,7 @@
 // Fixed-timestep and seeded, so ?demo plays the same route every time.
 
 import { mulberry32 } from './world.js';
+import { enterSiege, stepSiege } from './siege.js';
 import { initSkate, stepBoard, stepCombo, nearBoard, mount, boardSpeed } from './skate.js';
 import { initDestruct, stepDestruct, punchWorld, carState, carImpact, carsCollide, hitThing, palmImpact, initProps, propImpact } from './destruct.js';
 
@@ -182,6 +183,7 @@ export class Sim {
     if (P.stunT > 0) { P.stunT -= dt; input = { ...input, jm: 0, action: false, keys: {} }; }
     if (P.mode === 'foot') this.stepPlayerFoot(dt, input);
     else if (P.mode === 'board') stepBoard(this, dt, input);
+    else if (P.mode === 'siege') stepSiege(this, dt, input);
     else this.stepPlayerCar(dt, input);
     stepCombo(this, dt);
     // a board left alone rolls to a stop
@@ -251,6 +253,7 @@ export class Sim {
     // the fight button: a punch with a short lunge
     if (P0.punchT > 0) { P0.punchT -= dt; if (P0.punchT > 0.14) this.walkMove(p, Math.cos(p.h) * 100 * dt, Math.sin(p.h) * 100 * dt); }
     if (inp.punch && !(P0.punchCd > 0)) this.punch();
+    if (inp.action && this.nearMotelDoor()) { enterSiege(this); return; }
     if (inp.action) {
       // the board wins if it's right at your feet and nearer than any car
       const p2 = this.player.ped, b = this.board;
@@ -259,6 +262,12 @@ export class Sim {
       if (nearBoard(this) && bd < cd) mount(this);
       else this.tryEnterCar();
     }
+  }
+
+  // The motel's door (layout.motelDoor): on foot here, the action button is ENTER -> Motel Siege.
+  nearMotelDoor() {
+    const p = this.player.ped, d = this.W.L.motelDoor;
+    return this.player.mode === 'foot' && !this.busted && Math.hypot(p.x - d[0], p.y - d[1]) < 30;
   }
 
   // Is there a cop who can see this spot? A patrol or pursuit car, or an officer on foot, in range
@@ -602,6 +611,7 @@ export class Sim {
   }
 
   stepWanted(dt) {
+    if (this.siege) return;                     // inside the motel the siege owns the stars and the arrest
     const W = this.W, f = this.focus();
     this.playerS = this.playerS === undefined ? W.loopNearest(f.x, f.y) : this.playerS;
     // keep the player's loop position fresh with a cheap local search

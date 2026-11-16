@@ -603,5 +603,137 @@
    436,
    0
   ]
- ]
+ ],
+ "siege": {
+  "_doc": "Motel Siege cutaway (src/siege.js, tools/bake_side.py). Metres, building-local: x east from the motel's centre, z up from the street. Floors are walkable spans; stairs join floor `from` at x0 to floor `to` at x1; the ladder joins F3 to the roof through the hatch; the fire escape hangs off the east wall. Cutaway units: su per metre.",
+  "su": 22,
+  "x0": -7.6,
+  "x1": 6.2,
+  "floors": [
+   0,
+   3.6,
+   7.2
+  ],
+  "roof": 10.8,
+  "stairs": [
+   {
+    "from": 0,
+    "to": 1,
+    "x0": 2.9,
+    "x1": 5.3
+   },
+   {
+    "from": 1,
+    "to": 2,
+    "x0": -4.2,
+    "x1": -6.6
+   }
+  ],
+  "ladder": {
+   "x": 0.2,
+   "from": 2
+  },
+  "fireEscape": {
+   "x0": 6.2,
+   "x1": 8.8,
+   "balconies": [
+    1,
+    2
+   ],
+   "flight": {
+    "from": 2,
+    "to": 1,
+    "x0": 8.5,
+    "x1": 6.6
+   },
+   "exitX": 8.8
+  },
+  "breaches": [
+   {
+    "id": "lobby",
+    "floor": 0,
+    "x": -7.6,
+    "side": -1,
+    "wave": 0
+   },
+   {
+    "id": "pool",
+    "floor": 0,
+    "x": 6.2,
+    "side": 1,
+    "wave": 1
+   },
+   {
+    "id": "ladder",
+    "floor": 1,
+    "x": 6.2,
+    "side": 1,
+    "wave": 2
+   },
+   {
+    "id": "roof",
+    "floor": 3,
+    "x": -4.5,
+    "side": 0,
+    "wave": 3
+   }
+  ],
+  "barricades": [
+   {
+    "kind": "desk",
+    "floor": 0,
+    "x": -5.0,
+    "to": -6.9,
+    "hp": 3,
+    "half": 1.05
+   },
+   {
+    "kind": "mattress",
+    "floor": 1,
+    "x": 2.4,
+    "to": 4.6,
+    "hp": 3,
+    "half": 0.95
+   },
+   {
+    "kind": "dresser",
+    "floor": 2,
+    "x": -4.0,
+    "to": -5.8,
+    "hp": 4,
+    "half": 0.7
+   }
+  ],
+  "traps": [
+   {
+    "kind": "vend",
+    "floor": 0,
+    "x": 0.4
+   },
+   {
+    "kind": "tv",
+    "floor": 1,
+    "x": -3.0
+   },
+   {
+    "kind": "cart",
+    "floor": 1,
+    "x": -0.8
+   },
+   {
+    "kind": "fusebox",
+    "floor": 2,
+    "x": -2.4
+   },
+   {
+    "kind": "ac",
+    "floor": 2,
+    "x": 5.75
+   }
+  ],
+  "exit": [
+   712,
+   1232
+  ]
+ }
 }

@@ -9,6 +9,10 @@ export async function loadAssets(onProgress) {
   const dres = await fetch('assets/destruct.json');
   if (!dres.ok) throw new Error('assets/destruct.json failed to load (' + dres.status + ')');
   M.destruct = await dres.json();
+  // the Motel Siege's side-view art (tools/bake_side.py): cutaway, side-view people, Gemini's props
+  const sres = await fetch('assets/siege.json');
+  if (!sres.ok) throw new Error('assets/siege.json failed to load (' + sres.status + ')');
+  M.siege = await sres.json();
   const files = new Set();
   const walk = (o) => {
     if (!o || typeof o !== 'object') return;

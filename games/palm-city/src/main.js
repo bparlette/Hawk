@@ -6,6 +6,7 @@ import { World } from './world.js';
 import { GroundPainter, CHUNK } from './ground.js';
 import { loadAssets } from './assets.js';
 import { Renderer } from './render.js';
+import { SiegeRenderer } from './siege_render.js';
 import { Sim } from './sim.js';
 import { Input } from './input.js';
 import { Audio } from './audio.js';
@@ -62,6 +63,7 @@ const world = new World(layout);
 const ground = new GroundPainter(world);
 const M = await loadAssets(p => loading(p * 0.8));
 renderer = new Renderer(ctx, world, ground, M);
+const siegeR = new SiegeRenderer(ctx, world, ground, M);
 renderer.resize(VIEW_W, view.h, DPR);
 if (Q.has('prof')) { renderer.prof = {}; window.__prof = renderer.prof; }
 
@@ -156,7 +158,7 @@ function frame(now) {
   acc += dt;
   let steps = 0;
   while (acc >= STEP && steps < 6) {
-    input.fightOn = sim.player.mode === 'foot';
+    input.fightOn = sim.player.mode === 'foot' || sim.player.mode === 'siege';
     const inp = pilot ? pilot.input(STEP) : input.read();
     sim.step(STEP, inp);
     simTime += STEP;
@@ -187,7 +189,8 @@ function frame(now) {
   cam.y = Math.max(hh, Math.min(layout.world.h - hh, cam.y));
 
   const t = timeOfDay();
-  renderer.draw(sim, cam, t, simTime);
+  if (sim.siege) siegeR.draw(sim, t, simTime, VIEW_W, view.h, DPR);
+  else renderer.draw(sim, cam, t, simTime);
   drawHud(ctx, VIEW_W, view.h, DPR, sim, input, t, simTime, { title: titleT, demo: DEMO, hintStick: !DEMO && simTime < 8, safeTop: safeTop() });
   audio.update(sim, cam, world);
   prefetch(dt);

@@ -20,6 +20,8 @@ export function clockText(t) {
   return `${h}:${String(m).padStart(2, '0')} PM`;
 }
 
+import { siegeAction } from './siege.js';
+
 export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   g.globalCompositeOperation = 'source-over';
@@ -114,7 +116,9 @@ export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
   const b = input.button();
   const P = sim.player;
   let label = '';
-  if (P.mode === 'car') label = Math.abs(P.car.v) < 60 ? 'EXIT' : '';
+  if (P.mode === 'siege') { const a = siegeAction(sim); label = a ? a.label : ''; }
+  else if (sim.nearMotelDoor()) label = 'ENTER';
+  else if (P.mode === 'car') label = Math.abs(P.car.v) < 60 ? 'EXIT' : '';
   else if (P.mode === 'board') label = Math.hypot(sim.board.vx, sim.board.vy) < 22 ? 'DROP' : sim.board.grind ? 'POP' : 'OLLIE';
   else if (!sim.board.ridden && Math.hypot(sim.board.x - P.ped.x, sim.board.y - P.ped.y) < 26) label = 'BOARD';
   else if (sim.cars.some(c => Math.hypot(c.x - P.ped.x, c.y - P.ped.y) < 40)) label = 'JACK';
@@ -129,7 +133,7 @@ export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
     g.font = font(13, 800); g.textAlign = 'center'; g.fillStyle = '#fff4dc';
     g.fillText(label, b.x, b.y - b.r - 12);
   }
-  if (input.fightOn && P.mode === 'foot') {                // fight button: on foot only
+  if (input.fightOn && (P.mode === 'foot' || P.mode === 'siege')) {                // fight button: on foot only
     const f = input.fight(), hot = input.fightDown || P.punchT > 0;
     g.beginPath(); g.arc(f.x, f.y, f.r, 0, Math.PI * 2);
     g.fillStyle = hot ? 'rgba(255,110,90,0.6)' : 'rgba(255,240,220,0.16)'; g.fill();

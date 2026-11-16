@@ -1,0 +1,227 @@
+{
+ "motel": {
+  "color": {
+   "file": "siege/motel_color.webp",
+   "h": 356.4,
+   "ox": -264.0,
+   "oy": -343.2,
+   "w": 536.8
+  },
+  "night": {
+   "file": "siege/motel_night.webp",
+   "h": 356.4,
+   "ox": -264.0,
+   "oy": -343.2,
+   "w": 536.8
+  }
+ },
+ "peds": {
+  "cop": {
+   "color": {
+    "file": "siege/side_cop.webp",
+    "h": 59.4,
+    "ox": -50.6,
+    "oy": -56.1,
+    "w": 101.2
+   },
+   "cols": 7,
+   "poses": [
+    "walk0",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "walk5",
+    "idle",
+    "wind",
+    "punch",
+    "climbA",
+    "climbB",
+    "hurt",
+    "down",
+    "jump"
+   ]
+  },
+  "player": {
+   "color": {
+    "file": "siege/side_player.webp",
+    "h": 59.4,
+    "ox": -50.6,
+    "oy": -56.1,
+    "w": 101.2
+   },
+   "cols": 7,
+   "poses": [
+    "walk0",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "walk5",
+    "idle",
+    "wind",
+    "punch",
+    "climbA",
+    "climbB",
+    "hurt",
+    "down",
+    "jump"
+   ]
+  },
+  "swat": {
+   "color": {
+    "file": "siege/side_swat.webp",
+    "h": 59.4,
+    "ox": -50.6,
+    "oy": -56.1,
+    "w": 101.2
+   },
+   "cols": 7,
+   "poses": [
+    "walk0",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "walk5",
+    "idle",
+    "wind",
+    "punch",
+    "climbA",
+    "climbB",
+    "hurt",
+    "down",
+    "jump"
+   ]
+  }
+ },
+ "props": {
+  "ac": {
+   "file": "siege/trap_ac_intact.webp",
+   "h": 24,
+   "ox": -14.0,
+   "oy": -12.0,
+   "w": 28
+  },
+  "ac_dropped": {
+   "file": "siege/trap_ac_dropped.webp",
+   "h": 28,
+   "ox": -16.0,
+   "oy": -28,
+   "w": 32
+  },
+  "cart": {
+   "file": "siege/trap_cart_intact.webp",
+   "h": 32,
+   "ox": -18.0,
+   "oy": -32,
+   "w": 36
+  },
+  "cart_tipped": {
+   "file": "siege/trap_cart_tipped.webp",
+   "h": 28,
+   "ox": -21.0,
+   "oy": -28,
+   "w": 42
+  },
+  "desk": {
+   "file": "siege/barricade_desk_intact.webp",
+   "h": 32,
+   "ox": -24.0,
+   "oy": -32,
+   "w": 48
+  },
+  "desk_damaged": {
+   "file": "siege/barricade_desk_damaged.webp",
+   "h": 32,
+   "ox": -24.0,
+   "oy": -32,
+   "w": 48
+  },
+  "dresser": {
+   "file": "siege/barricade_dresser.webp",
+   "h": 40,
+   "ox": -16.0,
+   "oy": -40,
+   "w": 32
+  },
+  "ext_ladder": {
+   "file": "siege/prop_ext_ladder.webp",
+   "h": 72,
+   "ox": -12.0,
+   "oy": -72,
+   "w": 24
+  },
+  "fusebox": {
+   "file": "siege/trap_fusebox_intact.webp",
+   "h": 24,
+   "ox": -10.0,
+   "oy": -12.0,
+   "w": 20
+  },
+  "fusebox_shorted": {
+   "file": "siege/trap_fusebox_shorted.webp",
+   "h": 28,
+   "ox": -12.0,
+   "oy": -14.0,
+   "w": 24
+  },
+  "hatch": {
+   "file": "siege/prop_roof_hatch_closed.webp",
+   "h": 16,
+   "ox": -22.0,
+   "oy": -8.0,
+   "w": 44
+  },
+  "hatch_open": {
+   "file": "siege/prop_roof_hatch_open.webp",
+   "h": 44,
+   "ox": -24.0,
+   "oy": -22.0,
+   "w": 48
+  },
+  "mattress": {
+   "file": "siege/barricade_mattress.webp",
+   "h": 24,
+   "ox": -22.0,
+   "oy": -24,
+   "w": 44
+  },
+  "neon": {
+   "file": "siege/prop_neon_motel_sign.webp",
+   "h": 56,
+   "ox": -48.0,
+   "oy": -56,
+   "w": 96
+  },
+  "tv": {
+   "file": "siege/trap_tv_intact.webp",
+   "h": 24,
+   "ox": -12.0,
+   "oy": -24,
+   "w": 24
+  },
+  "tv_broken": {
+   "file": "siege/trap_tv_broken.webp",
+   "h": 24,
+   "ox": -14.0,
+   "oy": -24,
+   "w": 28
+  },
+  "vend": {
+   "file": "siege/trap_vend_intact.webp",
+   "h": 40,
+   "ox": -16.0,
+   "oy": -40,
+   "w": 32
+  },
+  "vend_down": {
+   "file": "siege/trap_vend_dropped.webp",
+   "h": 32,
+   "ox": -24.0,
+   "oy": -32,
+   "w": 48
+  }
+ },
+ "su": 22
+}
