@@ -43,7 +43,7 @@ export function grade(t) {
     shadow: lerp(a.shadow, b.shadow, u),
     windows: smooth(0.26, 0.82, t),  // windows warm up first
     lamps: smooth(0.48, 0.92, t),    // street lamps after
-    neon: 0.10 + 0.90 * smooth(0.35, 0.85, t),
+    neon: 0.02 + 0.98 * smooth(0.32, 0.85, t),
     heads: smooth(0.45, 0.85, t),
   };
 }
