@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>PAC-MAN AR — the arcade maze in your room</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; overflow:hidden; background:#05060f; }
+  body { font-family:'Trebuchet MS','Segoe UI',Verdana,sans-serif; color:#eef;
+         -webkit-user-select:none; user-select:none; }
+  #cam { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-index:0;
+         background:radial-gradient(120% 90% at 50% 20%, #131a3a 0%, #05060f 70%); }
+  #camlabel { position:fixed; top:calc(6px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%);
+    z-index:5; background:rgba(10,10,30,.72); color:#ffd76a; border:1px solid #ffd76a55;
+    font-size:11px; letter-spacing:.14em; padding:4px 10px; border-radius:999px; display:none;
+    pointer-events:none; white-space:nowrap; }
+  #ui { position:fixed; inset:0; z-index:10; display:flex; flex-direction:column;
+        padding-top:env(safe-area-inset-top); }
+  #hud { display:flex; justify-content:space-between; align-items:flex-end;
+         padding:8px 14px 4px; text-shadow:0 2px 8px #000, 0 0 2px #000; pointer-events:none; }
+  #hud .lab { font-size:10px; letter-spacing:.22em; color:#9fd8ff; }
+  #hud .val { font-size:22px; font-weight:800; line-height:1; color:#fff; }
+  #hud .mid { text-align:center; } #hud .rgt { text-align:right; }
+  #stage { flex:1; display:flex; align-items:center; justify-content:center; position:relative;
+           min-height:0; }
+  canvas#game { height:100%; max-width:100vw; aspect-ratio:672/744; display:block;
+           filter:drop-shadow(0 10px 28px rgba(0,0,0,.55)); touch-action:none; }
+  #title { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+           justify-content:flex-start; padding-top:6%; pointer-events:none; text-align:center; }
+  #title h1 { font-size:44px; font-weight:900; letter-spacing:.06em; color:#ffe600;
+           text-shadow:0 0 18px #ffb30088, 0 3px 0 #b97e00, 0 6px 22px #000; }
+  #title p { margin-top:6px; font-size:13px; letter-spacing:.18em; color:#cfe6ff;
+           text-shadow:0 2px 8px #000; }
+  #title .ghosts { margin-top:8px; font-size:12px; line-height:1.9; letter-spacing:.12em;
+           color:#fff; text-shadow:0 2px 6px #000; }
+  #bottom { padding:6px 14px calc(10px + env(safe-area-inset-bottom)); display:flex;
+            align-items:center; gap:10px; }
+  #lives { display:flex; gap:5px; flex:1; align-items:center; min-height:22px; }
+  .life { width:20px; height:20px; border-radius:50%;
+          background:conic-gradient(from -30deg, transparent 0deg 70deg, #ffe600 70deg 360deg); }
+  #fruitlab { font-size:11px; letter-spacing:.14em; color:#ffb8ae; text-shadow:0 1px 6px #000;
+              min-width:74px; text-align:right; }
+  button { z-index:1200; position:relative; font-family:inherit; font-weight:800; letter-spacing:.1em;
+           border:2px solid #ffe600; background:rgba(20,20,50,.82); color:#ffe600;
+           border-radius:12px; padding:11px 16px; font-size:15px; cursor:pointer;
+           box-shadow:0 4px 16px rgba(0,0,0,.5); }
+  button:active { transform:scale(.96); background:rgba(60,50,0,.9); }
+  #btnCam { border-color:#7fd4ff; color:#7fd4ff; padding:11px 12px; }
+  #joy { position:fixed; width:110px; height:110px; border-radius:50%; z-index:1100;
+         border:2px solid rgba(255,255,255,.45); background:rgba(255,255,255,.08);
+         display:none; pointer-events:none; transform:translate(-50%,-50%); }
+  #joyknob { position:absolute; left:50%; top:50%; width:48px; height:48px; border-radius:50%;
+         background:rgba(255,230,0,.85); transform:translate(-50%,-50%);
+         box-shadow:0 2px 10px rgba(0,0,0,.5); }
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body>
+<video id="cam" autoplay playsinline muted></video>
+<div id="camlabel">&#128247; CAMERA OFF &mdash; DARK BACKDROP (NOT YOUR ROOM)</div>
+
+<div id="ui">
+  <div id="hud">
+    <div><div class="lab">SCORE</div><div class="val" id="score">0</div></div>
+    <div class="mid"><div class="lab">HI-SCORE</div><div class="val" id="high">0</div></div>
+    <div class="rgt"><div class="lab">LEVEL</div><div class="val" id="level">1</div></div>
+  </div>
+  <div id="stage">
+    <canvas id="game" width="672" height="744"></canvas>
+    <div id="title">
+      <h1>PAC-MAN AR</h1>
+      <p>THE ARCADE MAZE, IN YOUR ROOM</p>
+      <div class="ghosts">
+        <span style="color:#ff5b5b">&#9679; BLINKY</span>
+        <span style="color:#ffb8de">&#9679; PINKY</span>
+        <span style="color:#00e8ff">&#9679; INKY</span>
+        <span style="color:#ffb847">&#9679; CLYDE</span>
+      </div>
+    </div>
+  </div>
+  <div id="bottom">
+    <div id="lives"></div>
+    <div id="fruitlab"></div>
+    <button id="btnCam" title="Retry camera">&#128247;</button>
+    <button id="btnMain">&#9654; START</button>
+  </div>
+</div>
+<div id="joy"><div id="joyknob"></div></div>
+
+<script src="pacman-core.js"></script>
+<script>
+(function () {
+'use strict';
+var C = window.PacCore;
+var T = 24;                       /* tile px on the backing canvas */
+var cv = document.getElementById('game');
+var ctx = cv.getContext('2d');
+
+/* ---------------- audio (all synthesized, no files) ---------------- */
+try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+var Snd = {
+  ctx: null, wakaAlt: false, siren: null,
+  init: function () {
+    if (this.ctx) return;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    try { this.ctx = new AC(); } catch (e) { this.ctx = null; }
+  },
+  resume: function () {
+    this.init();
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+  },
+  tone: function (f0, f1, dur, type, vol, delay) {
+    if (!this.ctx) return;
+    var t = this.ctx.currentTime + (delay || 0);
+    var o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = type || 'triangle';
+    o.frequency.setValueAtTime(f0, t);
+    o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t + dur);
+    g.gain.setValueAtTime(vol || 0.06, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(this.ctx.destination);
+    o.start(t); o.stop(t + dur + 0.02);
+  },
+  waka: function () {
+    this.wakaAlt = !this.wakaAlt;
+    if (this.wakaAlt) this.tone(560, 280, 0.075, 'triangle', 0.055);
+    else this.tone(280, 560, 0.075, 'triangle', 0.055);
+  },
+  power: function () { this.tone(140, 700, 0.28, 'sawtooth', 0.05); },
+  ghostEaten: function () { this.tone(160, 980, 0.38, 'sawtooth', 0.06); },
+  fruit: function () { this.tone(880, 880, 0.07, 'sine', 0.07); this.tone(1318, 1318, 0.12, 'sine', 0.07, 0.08); },
+  extra: function () {
+    var n = [659, 880, 988, 1318], i;
+    for (i = 0; i < n.length; i++) this.tone(n[i], n[i], 0.11, 'square', 0.045, i * 0.1);
+  },
+  intro: function () {
+    var n = [494, 988, 740, 622, 988, 740, 1318, 1046, 831, 659, 1318, 1568], i;
+    for (i = 0; i < n.length; i++) this.tone(n[i], n[i], 0.09, 'square', 0.035, i * 0.085);
+  },
+  death: function () {
+    this.tone(640, 42, 1.15, 'sawtooth', 0.055);
+    this.tone(1200, 1200, 0.07, 'square', 0.05, 1.25);
+    this.tone(1200, 1200, 0.07, 'square', 0.05, 1.38);
+  },
+  startSiren: function () {
+    if (!this.ctx || this.siren) return;
+    var o = this.ctx.createOscillator(), lfo = this.ctx.createOscillator(),
+        lg = this.ctx.createGain(), g = this.ctx.createGain();
+    o.type = 'triangle'; o.frequency.value = 330;
+    lfo.type = 'sine'; lfo.frequency.value = 0.55; lg.gain.value = 65;
+    lfo.connect(lg); lg.connect(o.frequency);
+    g.gain.value = 0.028;
+    o.connect(g); g.connect(this.ctx.destination);
+    o.start(); lfo.start();
+    this.siren = { o: o, lfo: lfo, g: g };
+  },
+  setSirenFright: function (on) {
+    if (!this.siren) return;
+    var t = this.ctx.currentTime;
+    this.siren.o.frequency.setTargetAtTime(on ? 205 : 330, t, 0.05);
+    this.siren.lfo.frequency.setTargetAtTime(on ? 2.4 : 0.55, t, 0.05);
+  },
+  stopSiren: function () {
+    if (!this.siren) return;
+    try { this.siren.o.stop(); this.siren.lfo.stop(); } catch (e) {}
+    this.siren = null;
+  }
+};
+
+/* ---------------- camera passthrough ---------------- */
+var video = document.getElementById('cam');
+var camLabel = document.getElementById('camlabel');
+var camOn = false;
+function startCamera() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    camLabel.style.display = 'block'; return;
+  }
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+    .then(function (stream) {
+      video.srcObject = stream; camOn = true;
+      camLabel.style.display = 'none';
+    })
+    .catch(function () { camOn = false; camLabel.style.display = 'block'; });
+}
+startCamera();
+document.getElementById('btnCam').addEventListener('click', function () { startCamera(); });
+
+/* ---------------- game state ---------------- */
+var HIGH_KEY = 'pacman-ar-high';
+var G = {
+  state: 'title', stateT: 0, prevState: '',
+  score: 0, high: parseInt(localStorage.getItem(HIGH_KEY) || '0', 10) || 0,
+  lives: 3, level: 1, extraGiven: false,
+  pellets: null, pelletsEaten: 0, pelletsLeft: 0,
+  modeTime: 0, mode: 'scatter', frightT: 0, chain: 0,
+  fruitT: 0, fruitSpawned: 0, popups: [], deathT: 0, flashT: 0,
+  deaths: 0
+};
+var FRUIT_POS = { x: 14.0, y: 17.5 };
+
+var pac = null, ghosts = [];
+var GHOST_DEFS = [
+  { name: 'blinky', color: '#ff2b2b' },
+  { name: 'pinky',  color: '#ffb8de' },
+  { name: 'inky',   color: '#00e8ff' },
+  { name: 'clyde',  color: '#ffb847' }
+];
+
+function levelParams(level) {
+  /* fractions of the original 10 tiles/sec full speed */
+  var i = Math.min(level - 1, 4);
+  var pacF  = [0.80, 0.90, 0.90, 0.95, 1.00][i];
+  var ghF   = [0.75, 0.85, 0.85, 0.90, 0.95][i];
+  var frF   = [0.50, 0.55, 0.60, 0.65, 0.70][i];
+  return {
+    pac: pacF * 10, pacFright: Math.min(1, pacF + 0.07) * 10,
+    ghost: ghF * 10, fright: frF * 10, tunnel: 4.5 + i * 0.4,
+    eyes: 15, fright: C.frightDuration(level)
+  };
+}
+function elroyLevel() {
+  if (G.pelletsLeft <= 10) return 2;
+  if (G.pelletsLeft <= 20) return 1;
+  return 0;
+}
+
+function resetActors() {
+  pac = { x: 14.0, y: 23.5, dir: 'left', wantDir: 'left', moving: false, phase: 0 };
+  ghosts = GHOST_DEFS.map(function (d, i) {
+    var g = { name: d.name, color: d.color, dir: 'left', moving: true, phase: i * 1.3,
+              state: 'house', releaseT: 0, x: 14.0, y: 14.5, bobOff: i * 2.1, wp: 0 };
+    if (d.name === 'blinky') { g.state = 'active'; g.x = 14.0; g.y = 11.5; g.dir = 'left'; }
+    if (d.name === 'pinky')  { g.x = 14.0; g.y = 14.5; g.releaseT = 0.2; }
+    if (d.name === 'inky')   { g.x = 12.0; g.y = 14.5; g.releaseT = G.deaths ? 1.5 : 3.0; }
+    if (d.name === 'clyde')  { g.x = 16.0; g.y = 14.5; g.releaseT = G.deaths ? 4.0 : 8.0; }
+    return g;
+  });
+  G.modeTime = 0; G.mode = 'scatter'; G.frightT = 0; G.chain = 0; G.fruitT = 0;
+}
+function resetLevel() {
+  var p = C.parsePellets();
+  G.pellets = p; G.pelletsLeft = p.total; G.pelletsEaten = 0; G.fruitSpawned = 0;
+  resetActors();
+}
+function startGame() {
+  G.score = 0; G.lives = 3; G.level = 1; G.extraGiven = false; G.deaths = 0;
+  resetLevel();
+  G.state = 'ready'; G.stateT = 1.7;
+  document.getElementById('title').style.display = 'none';
+  Snd.resume(); Snd.intro();
+  updateHud();
+}
+function saveHigh() {
+  if (G.score > G.high) { G.high = G.score; localStorage.setItem(HIGH_KEY, String(G.high)); }
+}
+
+/* ---------------- movement ---------------- */
+function canGoPac(tx, ty, dir) {
+  var d = C.DIRS[dir], nx = tx + d.x, ny = ty + d.y;
+  if (ny === 14 && (nx < 0 || nx >= C.COLS)) return true; /* tunnel mouth */
+  return !C.isWall(nx, ny) && !C.isDoor(nx, ny) && !C.isHouse(nx, ny);
+}
+function canGoGhost(tx, ty, dir, eyes) {
+  var d = C.DIRS[dir], nx = tx + d.x, ny = ty + d.y;
+  if (ny === 14 && (nx < 0 || nx >= C.COLS)) return true;
+  if (C.isWall(nx, ny)) return false;
+  if (C.isDoor(nx, ny) || C.isHouse(nx, ny)) return !!eyes;
+  return true;
+}
+function reverseOf(dir) {
+  return dir === 'up' ? 'down' : dir === 'down' ? 'up' : dir === 'left' ? 'right' : 'left';
+}
+/* Move an entity in tile units; fire decide() each time it crosses a
+   tile centre (entity snaps to the centre, may turn or stop there). */
+function stepEntity(e, dt, speed, decide) {
+  if (!e.moving) return;
+  var distLeft = speed * dt, guard = 0;
+  while (distLeft > 1e-9 && guard++ < 12) {
+    var d = C.DIRS[e.dir], nc, dist;
+    /* next tile centre strictly ahead in the movement direction */
+    if (d.x > 0)      { nc = Math.floor(e.x + 0.5) + 0.5; dist = nc - e.x; }
+    else if (d.x < 0) { nc = Math.ceil(e.x - 0.5) - 0.5;  dist = e.x - nc; }
+    else if (d.y > 0) { nc = Math.floor(e.y + 0.5) + 0.5; dist = nc - e.y; }
+    else              { nc = Math.ceil(e.y - 0.5) - 0.5;  dist = e.y - nc; }
+    if (dist <= 1e-9) { decide(e); if (!e.moving) break; continue; }
+    var step = Math.min(distLeft, dist);
+    e.x += d.x * step; e.y += d.y * step;
+    distLeft -= step;
+    if (e.x < -0.5) e.x += 29; else if (e.x > 28.5) e.x -= 29;
+    if (step >= dist - 1e-9) {          /* arrived at the centre */
+      if (d.x !== 0) e.x = nc; else e.y = nc;
+      decide(e);
+      if (!e.moving) break;
+    }
+  }
+}
+function pacDecide(e) {
+  var tx = Math.floor(e.x), ty = Math.floor(e.y);
+  if (e.wantDir && canGoPac(tx, ty, e.wantDir)) e.dir = e.wantDir;
+  e.moving = canGoPac(tx, ty, e.dir);
+}
+function ghostTarget(g) {
+  var pacTile = { tx: Math.floor(pac.x), ty: Math.floor(pac.y), dir: pac.dir };
+  if (g.state === 'eyes') return { x: 13, y: 11 };
+  if (G.mode === 'scatter') {
+    if (g.name === 'blinky' && elroyLevel() > 0) return pacTile; /* Cruise Elroy hunts */
+    return C.SCATTER[g.name];
+  }
+  var blinky = ghosts[0];
+  return C.chaseTarget(g.name, pacTile,
+    { tx: Math.floor(g.x), ty: Math.floor(g.y) },
+    { tx: Math.floor(blinky.x), ty: Math.floor(blinky.y) });
+}
+function ghostDecide(g) {
+  var tx = Math.floor(g.x), ty = Math.floor(g.y);
+  var eyes = g.state === 'eyes';
+  var fright = !eyes && G.frightT > 0;
+  var rev = reverseOf(g.dir);
+  var opts = C.DIR_ORDER.filter(function (d) {
+    return d !== rev && canGoGhost(tx, ty, d, eyes);
+  });
+  if (!fright && !eyes && C.NO_UP[tx + ',' + ty]) {
+    var noUp = opts.filter(function (d) { return d !== 'up'; });
+    if (noUp.length) opts = noUp;
+  }
+  if (!opts.length) { g.dir = rev; return; }
+  if (fright) { g.dir = opts[Math.floor(Math.random() * opts.length)]; return; }
+  var target = ghostTarget(g), best = null, bestD = Infinity;
+  opts.forEach(function (d) {
+    var dd = C.DIRS[d], nx = tx + dd.x - target.x, ny = ty + dd.y - target.y;
+    var dist = nx * nx + ny * ny;
+    if (dist < bestD) { bestD = dist; best = d; }
+  });
+  g.dir = best;
+}
+function reverseGhosts() {
+  ghosts.forEach(function (g) { if (g.state === 'active') g.dir = reverseOf(g.dir); });
+}
+function moveToward(e, wx, wy, speed, dt) {
+  var dx = wx - e.x, dy = wy - e.y;
+  var dist = Math.sqrt(dx * dx + dy * dy), step = speed * dt;
+  if (dist <= step) { e.x = wx; e.y = wy; return true; }
+  e.x += dx / dist * step; e.y += dy / dist * step;
+  if (Math.abs(dx) > Math.abs(dy)) e.dir = dx > 0 ? 'right' : 'left';
+  else if (dy !== 0) e.dir = dy > 0 ? 'down' : 'up';
+  return false;
+}
+
+/* ---------------- per-frame update ---------------- */
+function eatAtPacTile() {
+  var tx = Math.floor(pac.x), ty = Math.floor(pac.y), key = tx + ',' + ty;
+  var P = levelParams(G.level);
+  if (G.pellets.dots[key]) {
+    delete G.pellets.dots[key];
+    G.score += C.SCORES.dot; G.pelletsEaten++; G.pelletsLeft--;
+    Snd.waka(); onScore();
+  } else if (G.pellets.powers[key]) {
+    delete G.pellets.powers[key];
+    G.score += C.SCORES.power; G.pelletsEaten++; G.pelletsLeft--;
+    Snd.power(); onScore();
+    if (P.fright > 0) {
+      G.frightT = P.fright; G.chain = 0;
+      reverseGhosts(); Snd.setSirenFright(true);
+    }
+  } else { return; }
+  if ((G.pelletsEaten === 70 || G.pelletsEaten === 170) && G.fruitT <= 0) {
+    G.fruitT = 9.5; G.fruitSpawned++;
+  }
+  if (G.pelletsLeft <= 0) {
+    G.state = 'clear'; G.stateT = 1.8; G.flashT = 0;
+    Snd.stopSiren(); saveHigh();
+  }
+}
+function onScore() {
+  if (!G.extraGiven && G.score >= 10000) {
+    G.extraGiven = true; G.lives++; Snd.extra(); updateHud();
+  }
+  if (G.score > G.high) G.high = G.score;
+  updateHud();
+}
+function addPopup(x, y, text, color) {
+  G.popups.push({ x: x, y: y, text: text, color: color || '#7ff3ff', t: 0.9 });
+}
+
+function update(dt) {
+  var P = levelParams(G.level);
+  /* mode clock (pauses during fright) */
+  if (G.frightT > 0) {
+    G.frightT -= dt;
+    if (G.frightT <= 0) { G.frightT = 0; Snd.setSirenFright(false); }
+  } else {
+    G.modeTime += dt;
+    var m = C.modeAtTime(G.modeTime).mode;
+    if (m !== G.mode) { G.mode = m; reverseGhosts(); }
+  }
+  if (G.fruitT > 0) G.fruitT -= dt;
+
+  /* Pac-Man */
+  if (pac.wantDir === reverseOf(pac.dir) && canGoPac(Math.floor(pac.x), Math.floor(pac.y), pac.wantDir)) {
+    pac.dir = pac.wantDir; pac.moving = true;      /* instant reverse, like the arcade */
+  }
+  if (!pac.moving && pac.wantDir && canGoPac(Math.floor(pac.x), Math.floor(pac.y), pac.wantDir)) {
+    pac.dir = pac.wantDir; pac.moving = true;
+  }
+  var pacSpeed = G.frightT > 0 ? P.pacFright : P.pac;
+  stepEntity(pac, dt, pacSpeed, pacDecide);
+  if (pac.moving) pac.phase += dt * pacSpeed * 2.6;
+  eatAtPacTile();
+  if (G.state !== 'playing') return;
+
+  /* fruit */
+  if (G.fruitT > 0) {
+    var fdx = pac.x - FRUIT_POS.x, fdy = pac.y - FRUIT_POS.y;
+    if (fdx * fdx + fdy * fdy < 0.3) {
+      var fr = C.fruitForLevel(G.level);
+      G.score += fr.points; addPopup(FRUIT_POS.x, FRUIT_POS.y, String(fr.points), '#ffb8de');
+      G.fruitT = 0; Snd.fruit(); onScore();
+    }
+  }
+
+  /* ghosts */
+  ghosts.forEach(function (g) {
+    if (g.state === 'house') {
+      g.y = 14.5 + Math.sin(perfNow() * 0.005 + g.bobOff) * 0.16;
+      g.releaseT -= dt;
+      if (g.releaseT <= 0) { g.state = 'leaving'; g.wp = 0; }
+    } else if (g.state === 'leaving') {
+      if (g.wp === 0) { if (moveToward(g, 14.0, 14.5, 4.6, dt)) g.wp = 1; }
+      else if (moveToward(g, 14.0, 11.5, 4.6, dt)) {
+        g.state = 'active'; g.dir = 'left'; g.moving = true;
+      }
+    } else if (g.state === 'entering') {
+      if (moveToward(g, 14.0, 14.5, 6.5, dt)) { g.state = 'house'; g.releaseT = 0.35; }
+    } else if (g.state === 'eyes') {
+      stepEntity(g, dt, P.eyes, ghostDecide);
+      var ty = Math.floor(g.y);
+      if (ty === 11 && Math.abs(g.x - 14.0) < 0.55) g.state = 'entering';
+    } else { /* active */
+      var sp;
+      if (G.frightT > 0) sp = P.fright;
+      else if (Math.floor(g.y) === 14 && (g.x < 6.5 || g.x > 21.5)) sp = P.tunnel;
+      else if (g.name === 'blinky' && elroyLevel() === 2) sp = P.pac * 1.06;
+      else if (g.name === 'blinky' && elroyLevel() === 1) sp = P.pac * 1.02;
+      else sp = P.ghost;
+      stepEntity(g, dt, sp, ghostDecide);
+    }
+  });
+
+  /* collisions */
+  ghosts.forEach(function (g) {
+    var dangerous = g.state === 'active' || (g.state === 'leaving' && g.y < 12.4);
+    if (!dangerous) return;
+    var dx = g.x - pac.x, dy = g.y - pac.y;
+    if (dx * dx + dy * dy < 0.2) {
+      if (G.frightT > 0 && g.state === 'active') {
+        var pts = C.GHOST_CHAIN[Math.min(G.chain, 3)];
+        G.score += pts; G.chain++;
+        addPopup(g.x, g.y, String(pts));
+        g.state = 'eyes'; g.moving = true;
+        Snd.ghostEaten(); onScore();
+        G.state = 'freeze'; G.stateT = 0.45;
+      } else if (g.state === 'active') {
+        die();
+      }
+    }
+  });
+}
+function die() {
+  G.state = 'dying'; G.stateT = 2.6; G.deathT = 0;
+  Snd.stopSiren(); Snd.death();
+}
+function perfNow() { return performance.now(); }
+
+/* ---------------- HUD ---------------- */
+var elScore = document.getElementById('score'), elHigh = document.getElementById('high'),
+    elLevel = document.getElementById('level'), elLives = document.getElementById('lives'),
+    elFruit = document.getElementById('fruitlab'), btnMain = document.getElementById('btnMain');
+function updateHud() {
+  elScore.textContent = G.score;
+  elHigh.textContent = G.high;
+  elLevel.textContent = G.level;
+  var html = '', i;
+  for (i = 0; i < G.lives; i++) html += '<div class="life"></div>';
+  elLives.innerHTML = html;
+  var fr = C.fruitForLevel(G.level);
+  elFruit.textContent = 'BONUS ' + fr.name.toUpperCase() + ' ' + fr.points;
+}
+
+/* ---------------- rendering ---------------- */
+function buildMaze(flash) {
+  var off = document.createElement('canvas');
+  off.width = cv.width; off.height = cv.height;
+  var g = off.getContext('2d'), x, y, d;
+  g.fillStyle = flash ? 'rgba(40,40,90,0.94)' : 'rgba(7,7,46,0.94)';
+  for (y = 0; y < C.ROWS; y++) for (x = 0; x < C.COLS; x++)
+    if (C.isWall(x, y)) g.fillRect(x * T, y * T, T, T);
+  g.strokeStyle = flash ? '#ffffff' : '#2e3dff';
+  g.lineWidth = 3; g.shadowColor = flash ? '#fff' : '#2e3dff'; g.shadowBlur = 7;
+  g.beginPath();
+  var segs = [[0, -1, 0, 0, 1, 0], [0, 1, 0, 1, 1, 1], [-1, 0, 0, 0, 0, 1], [1, 0, 1, 0, 1, 1]];
+  for (y = 0; y < C.ROWS; y++) for (x = 0; x < C.COLS; x++) {
+    if (!C.isWall(x, y)) continue;
+    for (d = 0; d < 4; d++) {
+      var s = segs[d];
+      if (!C.isWall(x + s[0], y + s[1])) {
+        g.moveTo((x + s[2]) * T, (y + s[3]) * T);
+        g.lineTo((x + s[4]) * T, (y + s[5]) * T);
+      }
+    }
+  }
+  g.stroke();
+  g.shadowBlur = 0;
+  g.fillStyle = '#ffb8de';
+  g.fillRect(13 * T, 12 * T + T * 0.4, 2 * T, T * 0.2);   /* ghost-house door */
+  return off;
+}
+var mazeBlue = buildMaze(false), mazeWhite = buildMaze(true);
+
+function drawPacShape(x, y, r, dir, mouthRad) {
+  var ang = { right: 0, down: Math.PI / 2, left: Math.PI, up: -Math.PI / 2 }[dir];
+  ctx.fillStyle = '#ffe600';
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.arc(x, y, r, ang + mouthRad, ang + Math.PI * 2 - mouthRad);
+  ctx.closePath(); ctx.fill();
+}
+function drawGhost(g, now) {
+  var x = g.x * T, y = g.y * T, r = T * 0.74;
+  var eyesOnly = g.state === 'eyes' || g.state === 'entering';
+  var fright = !eyesOnly && G.frightT > 0;
+  var flash = fright && G.frightT < 1.8 && Math.floor(now * 5) % 2 === 0;
+  if (!eyesOnly) {
+    ctx.fillStyle = fright ? (flash ? '#f2f4ff' : '#2430e8') : g.color;
+    ctx.beginPath();
+    ctx.moveTo(x - r, y + r * 0.92);
+    ctx.lineTo(x - r, y - r * 0.12);
+    ctx.arc(x, y - r * 0.12, r, Math.PI, 0);
+    ctx.lineTo(x + r, y + r * 0.92);
+    var feet = 8, fw = (2 * r) / feet, i;
+    for (i = 1; i <= feet; i++) {
+      var px = x + r - i * fw;
+      var py = y + r * 0.92 - ((i % 2 === (Math.floor(now * 9 + g.bobOff * 2) % 2)) ? r * 0.3 : 0);
+      ctx.lineTo(px, py);
+    }
+    ctx.closePath(); ctx.fill();
+  }
+  var d = C.DIRS[g.dir] || C.DIRS.left;
+  if (fright) {
+    var fc = flash ? '#ff3b30' : '#ffb8ae';
+    ctx.fillStyle = fc;
+    [-0.34, 0.34].forEach(function (o) {
+      ctx.beginPath(); ctx.arc(x + o * r, y - r * 0.16, r * 0.15, 0, 7); ctx.fill();
+    });
+    ctx.strokeStyle = fc; ctx.lineWidth = 2; ctx.beginPath();
+    var mx = x - r * 0.52, my = y + r * 0.34, s;
+    ctx.moveTo(mx, my);
+    for (s = 1; s <= 6; s++) ctx.lineTo(mx + s * (r * 1.04 / 6), my + (s % 2 ? -r * 0.13 : r * 0.05));
+    ctx.stroke();
+  } else {
+    [-0.36, 0.36].forEach(function (o) {
+      var ex = x + o * r + d.x * r * 0.13, ey = y - r * 0.24 + d.y * r * 0.13;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.ellipse(ex, ey, r * 0.21, r * 0.27, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = '#2430ff';
+      ctx.beginPath(); ctx.arc(ex + d.x * r * 0.15, ey + d.y * r * 0.15, r * 0.135, 0, 7); ctx.fill();
+    });
+  }
+}
+function drawFruitShape(kind, x, y) {
+  var r = T * 0.62;
+  ctx.save(); ctx.translate(x, y);
+  if (kind === 'cherry') {
+    ctx.strokeStyle = '#57d93d'; ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.moveTo(-r * 0.35, r * 0.25); ctx.quadraticCurveTo(0, -r * 0.7, r * 0.55, -r * 0.75); ctx.stroke();
+    ctx.fillStyle = '#ff2b3a';
+    ctx.beginPath(); ctx.arc(-r * 0.38, r * 0.42, r * 0.42, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(r * 0.34, r * 0.55, r * 0.5, 0, 7); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.55)';
+    ctx.beginPath(); ctx.arc(-r * 0.5, r * 0.28, r * 0.13, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(r * 0.2, r * 0.4, r * 0.15, 0, 7); ctx.fill();
+  } else if (kind === 'strawberry') {
+    ctx.fillStyle = '#ff2b4e';
+    ctx.beginPath(); ctx.moveTo(0, r * 0.85);
+    ctx.quadraticCurveTo(-r * 0.95, -r * 0.1, -r * 0.45, -r * 0.5);
+    ctx.quadraticCurveTo(0, -r * 0.85, r * 0.45, -r * 0.5);
+    ctx.quadraticCurveTo(r * 0.95, -r * 0.1, 0, r * 0.85); ctx.fill();
+    ctx.fillStyle = '#57d93d';
+    ctx.fillRect(-r * 0.5, -r * 0.78, r, r * 0.26);
+    ctx.fillStyle = '#ffe9a8';
+    [[-0.3, 0], [0.25, 0.1], [0, 0.4], [-0.15, -0.25], [0.35, -0.2]].forEach(function (p) {
+      ctx.fillRect(p[0] * r, p[1] * r, 2.4, 3.4);
+    });
+  } else {
+    var col = kind === 'orange' || kind === 'apple' ? (kind === 'orange' ? '#ff9f1a' : '#ff2b3a')
+            : kind === 'melon' ? '#7ed957' : kind === 'bell' ? '#ffd23e' : '#ffe600';
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(0, r * 0.15, r * 0.68, 0, 7); ctx.fill();
+    ctx.strokeStyle = '#7a4a12'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(0, -r * 0.4); ctx.lineTo(0, -r * 0.75); ctx.stroke();
+    ctx.fillStyle = '#57d93d';
+    ctx.beginPath(); ctx.ellipse(r * 0.3, -r * 0.62, r * 0.3, r * 0.14, 0.5, 0, 7); ctx.fill();
+  }
+  ctx.restore();
+}
+function drawText(text, tx, ty, color, size) {
+  ctx.fillStyle = color;
+  ctx.font = '900 ' + (size || 19) + 'px "Trebuchet MS", Verdana, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.shadowColor = '#000'; ctx.shadowBlur = 6;
+  ctx.fillText(text, tx * T, ty * T);
+  ctx.shadowBlur = 0;
+}
+function draw(now) {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = 'rgba(3,3,16,0.30)';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  var flash = G.state === 'clear' && Math.floor(G.flashT / 0.22) % 2 === 1;
+  ctx.drawImage(flash ? mazeWhite : mazeBlue, 0, 0);
+
+  /* pellets */
+  var key, parts;
+  ctx.fillStyle = '#ffcf9e';
+  for (key in G.pellets.dots) {
+    parts = key.split(',');
+    ctx.beginPath();
+    ctx.arc((+parts[0] + 0.5) * T, (+parts[1] + 0.5) * T, T * 0.13, 0, 7); ctx.fill();
+  }
+  if (Math.floor(now * 4) % 2 === 0) {
+    ctx.fillStyle = '#ffd9c9';
+    for (key in G.pellets.powers) {
+      parts = key.split(',');
+      ctx.beginPath();
+      ctx.arc((+parts[0] + 0.5) * T, (+parts[1] + 0.5) * T, T * 0.36, 0, 7); ctx.fill();
+    }
+  }
+  if (G.fruitT > 0) drawFruitShape(C.fruitForLevel(G.level).name, FRUIT_POS.x * T, FRUIT_POS.y * T);
+
+  var dying = G.state === 'dying';
+  var hideActors = G.state === 'clear';
+  if (!hideActors && !(dying && G.deathT > 0.6)) {
+    ghosts.forEach(function (g) { drawGhost(g, now); });
+  }
+  if (!hideActors) {
+    if (dying) {
+      if (G.deathT <= 0.6) {
+        drawPacShape(pac.x * T, pac.y * T, T * 0.8, pac.dir, 0.12 * Math.PI);
+      } else if (G.deathT <= 2.3) {
+        var a = Math.PI * Math.min(1, (G.deathT - 0.6) / 1.5);
+        if (a < Math.PI * 0.995) {
+          ctx.fillStyle = '#ffe600';
+          ctx.beginPath();
+          ctx.moveTo(pac.x * T, pac.y * T);
+          ctx.arc(pac.x * T, pac.y * T, T * 0.8, -Math.PI / 2 + a, -Math.PI / 2 - a + Math.PI * 2);
+          ctx.closePath(); ctx.fill();
+        }
+      }
+    } else if (G.state !== 'gameover') {
+      var mouth = (0.05 + Math.abs(Math.sin(pac.phase)) * 0.25) * Math.PI;
+      drawPacShape(pac.x * T, pac.y * T, T * 0.8, pac.dir, pac.moving ? mouth : 0.14 * Math.PI);
+    }
+  }
+  G.popups.forEach(function (p) {
+    ctx.globalAlpha = Math.min(1, p.t / 0.4);
+    drawText(p.text, p.x, p.y - (0.9 - p.t) * 0.7, p.color, 15);
+    ctx.globalAlpha = 1;
+  });
+  if (G.state === 'ready') drawText('READY!', 14, 17.62, '#ffe600', 20);
+  if (G.state === 'gameover') drawText('GAME  OVER', 14, 17.62, '#ff3b30', 20);
+  if (G.state === 'paused') drawText('PAUSED', 14, 17.62, '#7fd4ff', 20);
+}
+
+/* ---------------- main loop ---------------- */
+var lastTs = 0;
+function frame() {
+  requestAnimationFrame(frame);
+  var ts = performance.now();
+  var dt = Math.min(0.05, lastTs ? (ts - lastTs) / 1000 : 0.016);
+  lastTs = ts;
+  var now = ts / 1000;
+  if (G.state === 'playing') update(dt);
+  else if (G.state === 'freeze') { G.stateT -= dt; if (G.stateT <= 0) G.state = 'playing'; }
+  else if (G.state === 'ready') {
+    G.stateT -= dt;
+    if (G.stateT <= 0) { G.state = 'playing'; Snd.startSiren(); }
+  } else if (G.state === 'dying') {
+    G.stateT -= dt; G.deathT += dt;
+    if (G.stateT <= 0) {
+      G.lives--; updateHud();
+      if (G.lives > 0) { G.deaths++; resetActors(); G.state = 'ready'; G.stateT = 1.4; }
+      else { saveHigh(); G.state = 'gameover'; G.stateT = 2.4; }
+    }
+  } else if (G.state === 'clear') {
+    G.stateT -= dt; G.flashT += dt;
+    if (G.stateT <= 0) { G.level++; resetLevel(); G.state = 'ready'; G.stateT = 1.4; updateHud(); }
+  } else if (G.state === 'gameover') {
+    G.stateT -= dt;
+    if (G.stateT <= 0) {
+      G.state = 'title'; G.deaths = 0;
+      document.getElementById('title').style.display = 'flex';
+      resetLevel(); updateHud();
+    }
+  }
+  G.popups = G.popups.filter(function (p) { return (p.t -= dt) > 0; });
+  btnMain.innerHTML = G.state === 'paused' ? '&#9654; RESUME'
+    : (G.state === 'title' || G.state === 'gameover') ? '&#9654; START' : '&#10074;&#10074; PAUSE';
+  draw(now);
+}
+
+/* ---------------- input: keys + swipe + floating joystick ---------------- */
+function setWant(d) { if (pac) pac.wantDir = d; }
+var KEYMAP = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
+               w: 'up', s: 'down', a: 'left', d: 'right', W: 'up', S: 'down', A: 'left', D: 'right' };
+document.addEventListener('keydown', function (e) {
+  if (KEYMAP[e.key]) { setWant(KEYMAP[e.key]); Snd.resume(); e.preventDefault(); }
+  if (e.key === ' ' || e.key === 'Enter') { btnMain.click(); e.preventDefault(); }
+});
+var joyEl = document.getElementById('joy'), knobEl = document.getElementById('joyknob');
+var joyId = null, joyOX = 0, joyOY = 0, downId = null, downX = 0, downY = 0;
+document.addEventListener('pointerdown', function (e) {
+  Snd.resume();
+  if (e.target.closest && e.target.closest('button')) return;
+  downId = e.pointerId; downX = e.clientX; downY = e.clientY;
+  if (e.clientX < window.innerWidth * 0.5) {
+    joyId = e.pointerId; joyOX = e.clientX; joyOY = e.clientY;
+    joyEl.style.display = 'block';
+    joyEl.style.left = joyOX + 'px'; joyEl.style.top = joyOY + 'px';
+    knobEl.style.transform = 'translate(-50%,-50%)';
+  }
+}, { passive: true });
+document.addEventListener('pointermove', function (e) {
+  if (e.pointerId !== joyId) return;
+  var dx = e.clientX - joyOX, dy = e.clientY - joyOY;
+  var len = Math.sqrt(dx * dx + dy * dy), cl = Math.min(len, 40);
+  var nx = len ? dx / len * cl : 0, ny = len ? dy / len * cl : 0;
+  knobEl.style.transform = 'translate(calc(-50% + ' + nx + 'px), calc(-50% + ' + ny + 'px))';
+  if (len > 16) setWant(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
+}, { passive: true });
+function pointerEnd(e) {
+  if (e.pointerId === downId) {
+    var dx = e.clientX - downX, dy = e.clientY - downY;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) > 24)
+      setWant(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
+    downId = null;
+  }
+  if (e.pointerId === joyId) { joyId = null; joyEl.style.display = 'none'; }
+}
+document.addEventListener('pointerup', pointerEnd);
+document.addEventListener('pointercancel', pointerEnd);
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden) {
+    if (G.state === 'playing') { G.prevState = 'playing'; G.state = 'paused'; }
+  } else Snd.resume();
+});
+document.addEventListener('pointerdown', function () { Snd.resume(); });
+
+btnMain.addEventListener('click', function () {
+  Snd.resume();
+  if (G.state === 'title' || G.state === 'gameover') startGame();
+  else if (G.state === 'playing' || G.state === 'freeze') {
+    G.prevState = G.state; G.state = 'paused';
+    if (Snd.ctx) Snd.ctx.suspend();
+  } else if (G.state === 'paused') {
+    G.state = G.prevState || 'playing';
+    if (Snd.ctx) Snd.ctx.resume();
+  }
+});
+
+/* ---------------- boot + debug hooks ---------------- */
+resetLevel();
+updateHud();
+requestAnimationFrame(frame);
+window.__pac = {
+  start: startGame,
+  want: setWant,
+  fright: function () {
+    G.frightT = levelParams(G.level).fright || 6; G.chain = 0; Snd.setSirenFright(true);
+  },
+  warp: function (x, y) { pac.x = x; pac.y = y; },
+  state: function () {
+    return {
+      state: G.state, score: G.score, high: G.high, lives: G.lives, level: G.level,
+      pelletsLeft: G.pelletsLeft, pelletsEaten: G.pelletsEaten,
+      frightT: Math.round(G.frightT * 10) / 10, mode: G.mode, camOn: camOn,
+      pac: pac && { x: Math.round(pac.x * 10) / 10, y: Math.round(pac.y * 10) / 10, dir: pac.dir, moving: pac.moving },
+      ghosts: ghosts.map(function (g) {
+        return { name: g.name, state: g.state, x: Math.round(g.x * 10) / 10, y: Math.round(g.y * 10) / 10 };
+      })
+    };
+  }
+};
+})();
+</script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
