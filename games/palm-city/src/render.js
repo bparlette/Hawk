@@ -425,9 +425,15 @@ export class Renderer {
     const hw = vw / 2 / zoom, hh = vh / 2 / zoom;
     const vx0 = cam.x - hw, vy0 = cam.y - hh, vx1 = cam.x + hw, vy1 = cam.y + hh;
     const inView = (bb, m = 0) => bb[2] > vx0 - m && bb[0] < vx1 + m && bb[3] > vy0 - m && bb[1] < vy1 + m;
+    // 2D camera feel: zoom-punch (cam.kick) and a clamped roll (cam.roll) on the WORLD transform only;
+    // the grade, light composite, HUD stay level. Culling keeps the un-kicked bounds, which cover it.
+    const kick = cam.kick || 1, roll = cam.roll || 0;
     const worldTf = (ctx, s = 1) => {
-      ctx.setTransform(dpr * zoom * s, 0, 0, dpr * zoom * s, 0, 0);
-      ctx.translate(hw - cam.x, hh - cam.y);
+      ctx.setTransform(dpr * s, 0, 0, dpr * s, 0, 0);
+      ctx.translate(vw / 2, vh / 2);
+      if (roll) ctx.rotate(roll);
+      ctx.scale(zoom * kick, zoom * kick);
+      ctx.translate(-cam.x, -cam.y);
     };
 
     P && P('setup');
@@ -670,6 +676,25 @@ export class Renderer {
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.fillStyle = G.vigGrad;
     g.fillRect(0, 0, vw, vh);
+    // pressure grade (4-5 stars): a hot amber rim by day; after dusk, slow red / blue washes down the edges
+    if (S.stars >= 4 && !S.busted) {
+      if (!this.rimGrad || this.rimGrad.vh !== vh) {
+        const r = this.rimGrad = g.createRadialGradient(vw / 2, vh / 2, vh * 0.36, vw / 2, vh / 2, vh * 0.66);
+        r.addColorStop(0, 'rgba(135,34,24,0)'); r.addColorStop(1, 'rgba(135,34,24,1)'); r.vh = vh;
+        const l = this.edgeL = g.createLinearGradient(0, 0, vw * 0.45, 0); l.addColorStop(0, 'rgba(255,42,74,1)'); l.addColorStop(1, 'rgba(255,42,74,0)');
+        const e = this.edgeR = g.createLinearGradient(vw, 0, vw * 0.55, 0); e.addColorStop(0, 'rgba(42,142,255,1)'); e.addColorStop(1, 'rgba(42,142,255,0)');
+      }
+      const dark = clamp01((t - 0.45) / 0.3), k = S.stars >= 5 ? 1 : 0.7;
+      g.globalAlpha = 0.34 * (1 - dark) * k; g.fillStyle = this.rimGrad; g.fillRect(0, 0, vw, vh);
+      if (dark > 0) {
+        const ph = Math.sin(time * 2.6);
+        g.globalCompositeOperation = 'screen';
+        g.globalAlpha = 0.22 * dark * k * Math.max(0, ph); g.fillStyle = this.edgeL; g.fillRect(0, 0, vw * 0.45, vh);
+        g.globalAlpha = 0.24 * dark * k * Math.max(0, -ph); g.fillStyle = this.edgeR; g.fillRect(vw * 0.55, 0, vw * 0.45, vh);
+        g.globalCompositeOperation = 'source-over';
+      }
+      g.globalAlpha = 1;
+    }
     P && P('end');
   }
 
