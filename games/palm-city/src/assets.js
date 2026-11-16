@@ -13,6 +13,10 @@ export async function loadAssets(onProgress) {
   const sres = await fetch('assets/siege.json');
   if (!sres.ok) throw new Error('assets/siege.json failed to load (' + sres.status + ')');
   M.siege = await sres.json();
+  // Sky + Street Pressure sprites (Gemini; tools/import_pressure.mjs): chopper, SWAT van, roadblock props
+  const pres = await fetch('assets/pressure.json');
+  if (!pres.ok) throw new Error('assets/pressure.json failed to load (' + pres.status + ')');
+  M.pressure = await pres.json();
   const files = new Set();
   const walk = (o) => {
     if (!o || typeof o !== 'object') return;
