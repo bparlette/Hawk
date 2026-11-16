@@ -5,6 +5,7 @@
 // ends the job cleanly. Money is score. All job points are kerb-side on the real road grid.
 import { hitCar, impactDamage, burst, hitThing, palmImpact, D } from './destruct.js';
 import { mount } from './skate.js';
+import { eventButton, startEvent } from './events.js';
 
 export const PLACES = {
   SOLANA: [392, 535], DINER: [550, 770], NOVA: [990, 1390], MOTEL: [570, 1390], PIER: [1232, 1035],
@@ -33,7 +34,8 @@ export function jobButton(sim) {
   const P = sim.player, j = sim.job;
   if (P.mode !== 'car') return null;
   const c = P.car;
-  if (!j) return c.job && !c.wreck ? { kind: 'start', label: 'START ' + TITLES[c.job] } : null;
+  if (!j && sim.event) return null;                                  // an event owns the button's time
+  if (!j) return eventButton(sim) || (c.job && !c.wreck ? { kind: 'start', label: 'START ' + TITLES[c.job] } : null);
   if (j.kind === 'tow') {
     if (j.hooked) return Math.abs(c.v) > 140 ? { kind: 'sling', label: 'SLING' } : { kind: 'unhook', label: 'UNHOOK' };
     const t = j.target;
@@ -292,6 +294,7 @@ export function pressJobButton(sim) {
   const a = jobButton(sim), j = sim.job;
   if (!a) return false;
   if (a.kind === 'start') startJob(sim, sim.player.car.job);
+  else if (a.kind === 'evstart') startEvent(sim, a.ev);
   else if (a.kind === 'hook') { j.hooked = true; j.target.towed = true; j.target.parked = false; j.pvx = 0; j.pvy = 0; j.strain = 0; sim.ev('snap'); sim.ev('vox_tow_hooked'); sim.say('HOOKED — HAUL IT TO THE GARAGE', 1.6); }
   else if (a.kind === 'unhook') { j.hooked = false; j.target.towed = false; }
   else if (a.kind === 'sling') {

@@ -74,6 +74,7 @@ export function report(sim, x, y, pts, severity, cause, label) {
   if (cause !== 'player' || sim.busted) return;
   sim.score = (sim.score || 0) + pts;
   sim.lastTrick = { name: label, pts, t: 1.2, mult: 1 };
+  if (sim.eventBreak) sim.eventBreak(x, y, pts, severity, label);     // events.js: WRECK IT! chains the breaks
   if (severity <= 0) return;
   if (sim.copSees(x, y)) {
     if (sim.time - sim.lastWreckStar > 2.5) { sim.lastWreckStar = sim.time; sim.addStars(1, 'destruction'); sim.say('A COP SAW THAT', 1.6); }
