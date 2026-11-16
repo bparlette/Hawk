@@ -39,6 +39,20 @@ function curlAngle(wx, wy, scale, seed, baseAng) {
   return baseAng * 0.45 + cAng * 0.55;
 }
 
+// MOTH-SLICE: shore calm factor — 0 at the shoreline (or at the pier's edge),
+// rising smoothly to 1 in open water ~170 world units out. Water strokes and
+// the shallows tint key off it, so the sea is calm where it meets the land
+// and only gathers energy offshore.
+export function shoreCalm(W, x, y) {
+  const sd = x - W.shoreX(y);
+  const P = W.L.pier;
+  const pdx = Math.max(P.x - x, 0, x - (P.x + P.w));
+  const pdy = Math.max(P.y - y, 0, y - (P.y + P.h));
+  const d = Math.min(sd, Math.hypot(pdx, pdy));
+  const t = Math.max(0, Math.min(1, d / 170));
+  return t * t * (3 - 2 * t);
+}
+
 export class GroundPainter {
   constructor(world) {
     this.world = world;
@@ -95,6 +109,14 @@ export class GroundPainter {
         d[o + 1] = p.base[1] + p.var[1] * (n1 * 2.2 + n2) + warm * 10;
         d[o + 2] = p.base[2] + p.var[2] * (n1 * 2.2 + n2) - warm * 16;
         d[o + 3] = 255;
+        if (t === 'water') {
+          // MOTH-SLICE: pale shallows — the base colour itself lightens toward
+          // the shore, so the calm zone reads even where no strokes land.
+          const sh = (1 - shoreCalm(W, wx, wy)) * 0.38;
+          d[o]     += (92 - d[o]) * sh;
+          d[o + 1] += (164 - d[o + 1]) * sh;
+          d[o + 2] += (178 - d[o + 2]) * sh;
+        }
       }
     }
     sg.putImageData(img, 0, 0);
@@ -130,7 +152,7 @@ export class GroundPainter {
           const t = W.surfaceAt(wx, wy, vnoise(wx * 0.055, wy * 0.055, 9) * 2 - 1);
           const p = PAL[t];
           const r1 = cr(), r2 = cr(), r3 = cr(), r4 = cr(), r5 = cr(), r6 = cr();
-          let ang, len, wid, alpha;
+          let ang, len, wid, alpha, skipDab = false, dabFade = 1;
           if (t === 'road' || t === 'parking') {
             const r = W.roadInfo(wx, wy);
             const roadA = Math.atan2(r.dy, r.dx);
@@ -144,6 +166,16 @@ export class GroundPainter {
             len = (pass === 0 ? 24 : 15) + r2 * 20;
             wid = (pass === 0 ? 9.0 : 5.5) + r3 * 5.2;
             alpha = (pass === 0 ? 0.42 : 0.48) + r4 * 0.30;
+            // MOTH-SLICE: calm near shore — strokes get shorter, thinner and
+            // fainter toward the beach and the pier, and most dabs are skipped
+            // outright in the shallows. The skip is decided AFTER r1..r6 are
+            // drawn from the seeded stream, so chunk borders stay seamless.
+            const calm = shoreCalm(W, wx, wy);
+            dabFade = 0.16 + 0.84 * calm;
+            len *= 0.45 + 0.55 * calm;
+            wid *= 0.65 + 0.35 * calm;
+            alpha *= dabFade;
+            if (r5 > 0.22 + 0.78 * calm) skipDab = true;
           } else if (t === 'sand') {
             const dune = Math.PI / 2 + 0.25 + Math.sin(wy * 0.018) * 0.3;
             ang = curlAngle(wx, wy, 0.015, 23, dune) + (r1 - 0.5) * 0.38;
@@ -166,6 +198,7 @@ export class GroundPainter {
             wid = (pass === 0 ? 8.5 : 5.5) + r3 * 4.6;
             alpha = 0.30 + r4 * 0.28;
           }
+          if (!skipDab) {
           const col = p.dabs[(r5 * p.dabs.length) | 0];
           const cxs = Math.cos(ang) * len / 2, sys = Math.sin(ang) * len / 2;
           const bend = (r6 - 0.5) * 0.36;
@@ -187,12 +220,13 @@ export class GroundPainter {
           g.stroke();
           if (pass === 1 && r4 > 0.74) {
             g.strokeStyle = t === 'water' ? '#bfefff' : (t === 'road' ? '#cfc6d0' : '#fff3ce');
-            g.globalAlpha = 0.26;
+            g.globalAlpha = 0.26 * dabFade;
             g.lineWidth = Math.max(1.4, wid * 0.35);
             g.beginPath();
             g.moveTo(px - cxs - 0.9, py - sys - 0.7);
             g.quadraticCurveTo(px - sys * bend - 0.9, py + cxs * bend - 0.7, px + cxs - 0.9, py + sys - 0.7);
             g.stroke();
+          }
           }
         }
       }

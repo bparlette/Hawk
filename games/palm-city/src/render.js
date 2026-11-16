@@ -471,8 +471,28 @@ export class Renderer {
       g.fillRect((wx0 - ox) / sc, (vy0 - oy) / sc, (vx1 - wx0) / sc, (vy1 - vy0) / sc);
       g.restore();
     };
-    slide(this.waterStrokes.deep, -time * 5.5, time * 3.2 + Math.sin(time * 0.31) * 6, 1.25, 0.36 + Math.sin(time * 0.4) * 0.05);
-    slide(this.waterStrokes.light, -time * 10, -time * 2.6 + Math.sin(time * 0.47 + 1) * 5, 1, 0.42 + Math.sin(time * 0.53 + 2) * 0.08);
+    // MOTH-SLICE: the drifting stroke sheets fade toward the shoreline, so the
+    // animated surface is calm in the shallows and only gathers energy offshore
+    // (matching the ground painter's shoreCalm falloff). Bands are anchored to
+    // the shore x at mid-view; shoreX wobbles ~±25 units, far less than a band.
+    const sxB = W.shoreX((vy0 + vy1) / 2);
+    const BANDS = [[-40, 0.30], [45, 0.38], [105, 0.62], [190, 0.85], [320, 1.0], [1e6, 1.0]];
+    const slideBanded = (pat, ox, oy, sc, alpha) => {
+      let prev = -1e6;
+      for (const [edge, f] of BANDS) {
+        const bx0 = Math.max(wx0, sxB + prev), bx1 = Math.min(vx1, sxB + edge);
+        if (bx1 > bx0) {
+          g.save();
+          g.translate(ox, oy); g.scale(sc, sc);
+          g.globalAlpha = alpha * f; g.fillStyle = pat;
+          g.fillRect((bx0 - ox) / sc, (vy0 - oy) / sc, (bx1 - bx0) / sc, (vy1 - vy0) / sc);
+          g.restore();
+        }
+        prev = edge;
+      }
+    };
+    slideBanded(this.waterStrokes.deep, -time * 5.5, time * 3.2 + Math.sin(time * 0.31) * 6, 1.25, 0.36 + Math.sin(time * 0.4) * 0.05);
+    slideBanded(this.waterStrokes.light, -time * 10, -time * 2.6 + Math.sin(time * 0.47 + 1) * 5, 1, 0.42 + Math.sin(time * 0.53 + 2) * 0.08);
     // sky reflection: a gradient across the water that drifts gold -> rose -> violet as the sun goes;
     // brighter offshore (open sky), deeper near the shore (land shadow)
     const sx = W.shoreX((vy0 + vy1) / 2);
@@ -514,7 +534,10 @@ export class Renderer {
       if (p.x < vx0 || p.x > vx1 || p.y < vy0 || p.y > vy1) continue;
       const s = Math.sin(time * p.f + p.ph);
       if (s < 0.4) continue;
-      const a = Math.pow((s - 0.4) / 0.6, 2) * 0.85;
+      // MOTH-SLICE: sparkle glints also quieten in the shallows.
+      const gd = p.x - W.shoreX(p.y);
+      const gf = 0.25 + 0.75 * Math.min(1, Math.max(0, gd / 150));
+      const a = Math.pow((s - 0.4) / 0.6, 2) * 0.85 * gf;
       g.fillStyle = `rgba(${gc[0]},${gc[1]},${gc[2]},${a})`;
       g.beginPath();
       g.ellipse(p.x + Math.sin(time * 0.5 + p.ph) * 3, p.y, p.w / 2, 1.3, 0, 0, 7);
