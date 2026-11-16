@@ -17,11 +17,11 @@ const prefix = process.argv[2] || 'after';
 const want = process.argv.slice(3);
 const errors = [];
 
-async function scene(name, setup, drive) {
+async function scene(name, setup, drive, cam = '') {
   if (want.length && !want.includes(name)) return;
   const page = await browser.newPage({ viewport: { width: 420, height: 860 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
   page.on('pageerror', e => errors.push(name + ': ' + e));
-  await page.goto(`http://localhost:${server.address().port}/index.html?t=0.25`);
+  await page.goto(`http://localhost:${server.address().port}/index.html?t=0.25${cam ? '&cam=' + cam : ''}`);
   await page.waitForFunction(() => window.__palm && window.__palm.sim);
   await page.waitForTimeout(5500);                       // let the title card fade
   await page.evaluate(setup);
@@ -80,7 +80,11 @@ await scene('palm-fall', inCar(1150, 880, 0, 0), async (page) => {
   await page.waitForTimeout(300);
 });
 // bush-plow: drive through a cluster of five bushes on the villa lawns
-await scene('bush-plow', inCar(34, 1771, 0, 0), drive('c.x > 215', 0, 0));
+await scene('bush-plow', inCar(34, 1771, 0, 60), async (page) => {
+  await page.keyboard.down('ArrowUp');           // freeze just past the cluster, before the palm beyond it
+  await page.waitForFunction(() => { const s = window.__palm.sim, c = s.player.car; if (c && c.x > 258) { s.step = () => {}; return true; } return false; }, null, { timeout: 15000, polling: 'raf' });
+  await page.keyboard.up('ArrowUp'); await page.waitForTimeout(400);
+}, '205,1771,1.7');                                  // fixed camera on the cluster, zoomed in
 // bench-ram: cross the promenade into the side of a bench
 await scene('bench-ram', inCar(1150, 1420, 0, 0), drive('false', 0, 300));
 // lamp-ram: run down a street lamp

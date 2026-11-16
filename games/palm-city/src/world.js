@@ -61,6 +61,26 @@ export class World {
     this.solids = layout.buildings.map(b => ({ x: b.x, y: b.y, w: b.w, h: b.d, id: b.id }));
     // palm trunks: solid for everyone. `sc` is the palm's drawn scale (the renderer reads it from here).
     this.trunks = layout.palms.map(([x, y], i) => { const sc = 0.8 + ((i * 37) % 10) / 22; return { x, y, i, sc, r: 5.5 * sc }; });
+    this.bushes = this.buildBushes();
+  }
+
+  // Vegetation clusters: seeded, scattered in grass and along block edges, mixed variants + sizes.
+  // Shared by the renderer (sprites) and the sim (they can be flattened and torn out: destruct.js).
+  buildBushes() {
+    const L = this.L, vr = mulberry32(2024), out = [];
+    for (let n = 0; n < 900 && out.length < 140; n++) {
+      const x = vr() * L.world.w, y = vr() * L.world.h, t = this.surfaceAt(x, y);
+      if (t !== 'grass' && !(t === 'paving' && vr() < 0.25) && !(t === 'sand' && vr() < 0.08)) continue;
+      if (this.hitSolid(x, y, 14)) continue;
+      const k = 1 + ((vr() * 4) | 0);  // cluster of 1-4
+      for (let j = 0; j < k; j++) {
+        const bx = x + (vr() - 0.5) * 34, by = y + (vr() - 0.5) * 34;
+        if (this.hitSolid(bx, by, 10) || this.roadInfo(bx, by).d < this.walkEdge) continue;
+        const v = (vr() * 4) | 0;
+        out.push({ i: out.length, x: bx, y: by, v, sc: 0.7 + vr() * 0.7 });
+      }
+    }
+    return out;
   }
 
   shoreX(y) {

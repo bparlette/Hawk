@@ -12,7 +12,7 @@ import { mulberry32 } from './world.js';
 import { DEBRIS_CAP, SMOKE_CAP, STAGES, stageOf, FALL_T, palmReach } from './destruct.js';
 
 // procedural debris colours (index = destruct.js D kind) for the kinds with no sprite
-const DEBRIS_COL = ['#d8f0ff', '#8a8f9c', '#b97a50', '#e0a878', '#6fa844', '#7a5232', '#523420', '#b8b0a4', '#222', '#6fa844', '#ff6494'];
+const DEBRIS_COL = ['#d8f0ff', '#8a8f9c', '#b97a50', '#e0a878', '#2f6a22', '#7a5232', '#523420', '#b8b0a4', '#222', '#6fa844', '#ff6494'];
 const PETALS = ['#ff6494', '#ffd44c', '#fff4e8'];
 
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -122,20 +122,7 @@ export class Renderer {
     }
     L.palms.forEach(([x, y], i) => out.push({ kind: 'palm', x, y, ti: i, sc: this.world.trunks[i].sc, e: M.props['palm' + (i % 3)] }));
     for (const [x, y] of L.lamps) out.push({ kind: 'lamp', x, y, e: M.props.lamp });
-    // vegetation clusters: seeded, scattered in grass and along block edges, mixed variants + sizes
-    const vr = mulberry32(2024), W = this.world;
-    for (let n = 0; n < 900 && out.filter(o => o.kind === 'bush').length < 140; n++) {
-      const x = vr() * L.world.w, y = vr() * L.world.h, t = W.surfaceAt(x, y);
-      if (t !== 'grass' && !(t === 'paving' && vr() < 0.25) && !(t === 'sand' && vr() < 0.08)) continue;
-      if (W.hitSolid(x, y, 14)) continue;
-      const k = 1 + ((vr() * 4) | 0);  // cluster of 1-4
-      for (let j = 0; j < k; j++) {
-        const bx = x + (vr() - 0.5) * 34, by = y + (vr() - 0.5) * 34;
-        if (W.hitSolid(bx, by, 10) || W.roadInfo(bx, by).d < W.walkEdge) continue;
-        const v = (vr() * 4) | 0;
-        out.push({ kind: 'bush', x: bx, y: by, sc: 0.7 + vr() * 0.7, e: M.props['bush' + v] });
-      }
-    }
+    for (const b of this.world.bushes) out.push({ kind: 'bush', x: b.x, y: b.y, sc: b.sc, bi: b.i, e: M.props['bush' + b.v] });
     for (const p of L.props) out.push({ kind: p.type, x: p.x, y: p.y, e: M.props[p.type] });
     const P = L.pier;
     out.push({ kind: 'pier', x: P.x + P.w / 2, y: P.y + P.h / 2, e: M.props.pier });
@@ -187,6 +174,7 @@ export class Renderer {
   // with a split showing at the collar; a snapped one falls (crown sweeping out from the stump), then
   // lies on the ground as Gemini's fallen-trunk sprite.
   drawStatic(g, s, f, S) {
+    if (s.kind === 'bush' && S.bushes) { this.drawBush(g, s, f, S.bushes[s.bi], S.time); return; }
     const P = s.kind === 'palm' && S.palms ? S.palms[s.ti] : null;
     if (P && P.fall) {                                 // no tall shadow once it goes; a landed palm is drawn at ground level
       if (f === s.e.color && !P.fall.landed) this.drawFallenPalm(g, s, P);
@@ -209,6 +197,58 @@ export class Renderer {
       g.beginPath(); g.moveTo(3.5 * s.sc, -2.2 * P.stage); g.lineTo(7 * s.sc, 0); g.lineTo(3.5 * s.sc, 2.2 * P.stage); g.closePath(); g.fill(); g.stroke();
       g.restore();
     }
+  }
+
+  // Bushes by stage (look spec §3): a quick wobble on every hit; sheared and squashed away from the
+  // hit; flattened into a wide bruised oval; torn out (drawn as a root pit at ground level instead).
+  drawBush(g, s, f, B, time) {
+    if (!B || B.stage === 0) {
+      const w = B ? time - B.hitT : 9;
+      if (w > 0.4) { this.drawEntry(g, f, s.x, s.y, s.sc); return; }
+      g.save(); g.translate(s.x, s.y); g.rotate(Math.sin(w * 40) * 0.18 * (1 - w / 0.4));
+      this.drawEntry(g, f, 0, 0, s.sc); g.restore(); return;
+    }
+    if (B.stage >= 3) return;
+    const a = Math.atan2(B.ay, B.ax), flat = B.stage >= 2;
+    g.save(); g.translate(s.x + B.ax * (flat ? 3 : 2), s.y + B.ay * (flat ? 3 : 2)); g.rotate(a);
+    // stage 1: sheared ~12 deg away from the hit and squashed a little; stage 2: splayed wide across
+    // the hit, pressed forward, with a bruised, trampled middle
+    if (flat) g.scale(1.12, 1.34); else { g.transform(1, 0, 0.3, 1, 0, 0); g.scale(0.84, 1.06); }
+    g.rotate(-a);
+    this.drawEntry(g, f, 0, 0, s.sc);
+    g.restore();
+    if (flat && f === s.e.color) {
+      g.save(); g.translate(s.x + B.ax * 3, s.y + B.ay * 3); g.rotate(a);
+      g.globalAlpha = 0.42; g.fillStyle = '#3a3018';  // pressed down: darker all over, bruised in the middle
+      g.beginPath(); g.ellipse(0, 0, 11 * s.sc, 13 * s.sc, 0, 0, 7); g.fill();
+      g.globalAlpha = 0.5; g.fillStyle = '#4a3c1c';
+      g.beginPath(); g.ellipse(0, 0, 5 * s.sc, 9 * s.sc, 0, 0, 7); g.fill();
+      g.globalAlpha = 0.55; g.strokeStyle = '#2e3a18'; g.lineWidth = 1.2; g.lineCap = 'round';
+      g.beginPath();                                    // stems pressed flat in the direction of the hit
+      for (let i = -2; i <= 2; i++) { g.moveTo(-5 * s.sc, i * 3 * s.sc); g.lineTo(6 * s.sc, i * 3.6 * s.sc); }
+      g.stroke(); g.globalAlpha = 1; g.restore();
+    }
+    if (B.track && f === s.e.color) {                 // tyre tracks straight through it
+      g.save(); g.translate(s.x, s.y); g.rotate(a);
+      g.lineCap = 'round'; g.strokeStyle = '#2a2014'; g.lineWidth = 2.6;
+      for (const o of [-6.5, 6.5]) {
+        g.globalAlpha = 0.42; g.beginPath(); g.moveTo(-13 * s.sc, o); g.lineTo(13 * s.sc, o + 0.6); g.stroke();
+        g.globalAlpha = 0.35; g.setLineDash([2, 2.4]); g.lineWidth = 1.2; g.strokeStyle = '#120c08';   // tread
+        g.beginPath(); g.moveTo(-12 * s.sc, o); g.lineTo(12 * s.sc, o + 0.6); g.stroke(); g.setLineDash([]); g.lineWidth = 2.6; g.strokeStyle = '#2a2014';
+      }
+      g.globalAlpha = 1; g.restore();
+    }
+  }
+
+  // Root pit where a bush was torn out: dark soil ringed in ink, two torn root stubs.
+  drawRootPit(g, B) {
+    const r = 9 * B.sc;
+    g.fillStyle = '#382214'; g.strokeStyle = '#210f2e'; g.lineWidth = 1;
+    g.beginPath(); g.ellipse(B.x, B.y, r, r * 0.72, 0.3, 0, 7); g.fill(); g.stroke();
+    g.fillStyle = '#523420'; g.beginPath(); g.ellipse(B.x - r * 0.15, B.y - r * 0.12, r * 0.6, r * 0.38, 0.3, 0, 7); g.fill();
+    g.strokeStyle = '#6c4428'; g.lineWidth = 1.4; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(B.x + r * 0.2, B.y); g.lineTo(B.x + r * 0.95, B.y + r * 0.35);
+    g.moveTo(B.x - r * 0.3, B.y + r * 0.1); g.lineTo(B.x - r * 0.8, B.y + r * 0.6); g.stroke();
   }
 
   drawFallenPalm(g, s, P) {
@@ -358,6 +398,7 @@ export class Renderer {
       if (b.grind) { g.shadowColor = 'rgba(255,220,140,0.9)'; g.shadowBlur = 8; }
       g.drawImage(f.img, f.ox, f.oy, f.w, f.h); g.restore();
     }
+    if (S.bushes) for (const B of S.bushes) if (B.stage >= 3 && B.x > vx0 - 20 && B.x < vx1 + 20 && B.y > vy0 - 20 && B.y < vy1 + 20) this.drawRootPit(g, B);
     if (S.palms) for (const s of this.statics) {      // fallen palms lie on the ground, under people and cars
       if (s.kind !== 'palm') continue;
       const P = S.palms[s.ti];
@@ -567,7 +608,7 @@ export class Renderer {
       }
       g.fillStyle = d.kind === 10 ? PETALS[d.v % 3] : DEBRIS_COL[d.kind];
       g.beginPath();
-      if (d.kind === 4 || d.kind === 10) g.ellipse(d.x, d.y, (d.kind === 4 ? 3.2 : 1.6) * d.s, (d.kind === 4 ? 1.4 : 1.1) * d.s, d.rot, 0, 7);
+      if (d.kind === 4 || d.kind === 10) g.ellipse(d.x, d.y, (d.kind === 4 ? 4 : 2.4) * d.s, (d.kind === 4 ? 1.8 : 1.7) * d.s, d.rot, 0, 7);
       else g.ellipse(d.x, d.y, 2 * d.s, 1.5 * d.s, d.rot, 0, 7);
       g.fill();
     }
