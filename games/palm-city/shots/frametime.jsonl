@@ -3,3 +3,4 @@
 {"label":"before-x1","frames":119,"throttle":1,"p50":133.3,"p95":283.4,"p99":433.3,"worst":433.4,"over33":119,"dpr":null,"at":"2026-11-16T12:39:37.111Z"}
 {"label":"after-1","frames":158,"throttle":1,"p50":116.6,"p95":183.3,"p99":466.7,"worst":516.7,"over33":158,"dpr":null,"ground":{"sync":31,"sliced":16},"at":"2026-11-16T12:42:14.963Z"}
 {"label":"after-1b","frames":141,"throttle":1,"p50":133.3,"p95":183.4,"p99":250,"worst":300,"over33":141,"dpr":null,"ground":{"sync":3,"sliced":36},"at":"2026-11-16T12:42:52.598Z"}
+{"label":"after-2","frames":292,"throttle":1,"p50":50,"p95":166.7,"p99":216.7,"worst":300.1,"over33":202,"dpr":1,"ground":{"sync":2,"sliced":41},"at":"2026-11-16T12:44:33.032Z"}

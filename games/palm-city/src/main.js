@@ -20,12 +20,18 @@ const ctx = canvas.getContext('2d');
 const VIEW_W = 420;
 const view = { w: VIEW_W, h: 860 };
 let DPR = 1;
+// Dynamic resolution (perf pass): the backing store is capped at 2x and steps down a rung when frame
+// time stays high, back up when it stays low. ?dpr=N pins it (captures, tests).
+const RUNGS = [1, 0.8, 0.65, 0.5];
+let rung = 0, maxDPR = 1, slowT = 0, fastT = 0, ftEma = 16.7;
+const pinDPR = Q.has('dpr') ? Number(Q.get('dpr')) : null;
 
 function resize() {
   const iw = innerWidth, ih = innerHeight;
   view.h = Math.round(Math.max(640, Math.min(1000, VIEW_W * ih / iw)));
   const scale = Math.min(iw / VIEW_W, ih / view.h);
-  DPR = Math.min(2, Math.max(1, (devicePixelRatio || 1) * scale));
+  maxDPR = pinDPR || Math.min(2, Math.max(1, (devicePixelRatio || 1) * scale));
+  DPR = Math.max(1, maxDPR * RUNGS[rung]);
   canvas.width = Math.round(VIEW_W * DPR);
   canvas.height = Math.round(view.h * DPR);
   canvas.style.width = Math.round(VIEW_W * scale) + 'px';
@@ -123,6 +129,17 @@ function prefetch(dt) {
   ground.work(Math.min(12, Math.max(3, dt * 120)));
 }
 
+// Sustained > 24 ms frames (EMA) for 1.5 s: drop a rung. Sustained < 15 ms for 5 s: climb one.
+function adaptResolution(dt) {
+  if (pinDPR || titleT > 0) return;
+  ftEma += (dt * 1000 - ftEma) * 0.1;
+  if (ftEma > 24) { slowT += dt; fastT = 0; } else if (ftEma < 15) { fastT += dt; slowT = 0; } else { slowT = 0; fastT = 0; }
+  let r = rung;
+  if (slowT > 1.5 && rung < RUNGS.length - 1 && maxDPR * RUNGS[rung] > 1) r++;
+  else if (fastT > 5 && rung > 0) r--;
+  if (r !== rung) { rung = r; slowT = fastT = 0; ftEma = 16.7; resize(); }
+}
+
 // notch-safe HUD offset, in view units
 const safeEl = document.getElementById('safe');
 function safeTop() {
@@ -146,6 +163,7 @@ function frame(now) {
     acc -= STEP; steps++;
   }
   if (steps === 6) acc = 0;
+  adaptResolution(dt);
   if (pilot && pilot.done) newRun();
   titleT -= dt;
 
@@ -176,4 +194,4 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
-window.__palm = { world, ground, cam, get sim() { return sim; }, M };
+window.__palm = { world, ground, cam, dpr: () => DPR, get sim() { return sim; }, M };
