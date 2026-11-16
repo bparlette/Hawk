@@ -1,6 +1,6 @@
 // Era 1 — GTA 1 (1997). Canvas2D, straight-down top-down, real decoded Vice City art.
 // Tiles are the native 64x64 GTA 1 lids from assets/e1/tiles.png, drawn per frame at
-// 21 px per metre (~84 px per tile — The Original's framing) with smoothing on the
+// PPM px per metre (12.5 since build -6, ~50 px per tile) with smoothing on the
 // ground layer: The Original presents this same art filtered in WebGL, and
 // nearest-neighbour at 64 px/tile turns the paving tiles' fine grout grid into a hard
 // checkerboard and the road tiles' contour shading into harsh stripes. Sprites stay
@@ -53,15 +53,23 @@
 // manifest-validate sub-stages, mirrored live into canvas.dataset.e1stage, so any
 // remaining lurker narrows to a line from one screenshot.
 //
+// Build 2026-11-15-6 — ZOOM OUT. Owner verdict on build -5 (Nov 15, 20:31 ET):
+// "way too zoomed in." The view scale drops from 21 to 12.5 px per metre (PPM
+// below — the ONE view-scale constant): a 420 px-wide screen now shows ~33.6 m
+// of city instead of ~20 m. Character height (CHARH) is derived from PPM so
+// people shrink WITH the world instead of looming over it (a fixed 41 px figure
+// at 12.5 px/m would read ~3.3 m tall). Nothing else changes: same sim, same
+// demo route, same asset loading; HUD chrome keeps its fixed screen size.
+//
 // Until the asset pack loads (or if it fails), a flat zone-colour fallback keeps the page
 // playable — see ARCHITECTURE.md ("a renderer draws its own placeholder rather than failing").
-const PPM = 21, TILE = 64;                       // screen px per metre; px per tile in the baked ground
+const PPM = 12.5, TILE = 64;                     // PPM = screen px per metre — THE view scale; TILE = px per tile in the baked ground
 const GPX = TILE / 4, S = PPM / GPX;             // source-art px per metre (16); native->screen scale
-const TS = TILE * S;                             // one tile on screen: 84 px
-const CHARH = 41;                                // character figure height on screen, px (The Original's ped scale at this framing)
+const TS = TILE * S;                             // one tile on screen: 50 px
+const CHARH = Math.round(PPM * 41 / 21);         // character figure height on screen, px — tracks PPM (41 px at the old 21 px/m framing)
 const KPED = CHARH / 15, KLINK = CHARH / 16;     // frame scales: a ped figure fills 15 of its 24px frame; Link's fills 16 of 20
 const ASSET_BASE = new URL("../../assets/e1/", import.meta.url).href;   // resolved from THIS module's URL (play/eras/), never the document's — see the build -5 note in the header
-const BUILD = "2026-11-15-5";   // version stamp: keep in sync with play/index.html + play/eras/index.js (?v= on every import/fetch)
+const BUILD = "2026-11-15-6";   // version stamp: keep in sync with play/index.html + play/eras/index.js (?v= on every import/fetch)
 const PLAN = typeof location !== "undefined" && new URLSearchParams(location.search).has("plan");
 const SHADOW_LIDS = new Set([97, 100, 127, 128, 129]);   // flat lids baked under the sprites
 const PALM_LIDS = new Set([21, 126]);                    // flat lids baked into the overhead layer
