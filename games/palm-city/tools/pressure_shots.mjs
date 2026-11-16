@@ -35,7 +35,8 @@ const waitLock = async (page) => {
   try { await page.waitForFunction(() => { const c = window.__palm.sim.chopper; return c && c.lock && c.lockT > 0.6; }, null, { timeout: 40000, polling: 'raf' }); }
   catch (e) { await page.waitForTimeout(8000); }     // (before the pass there is no chopper: same wait)
 };
-await scene('chopper-golden', 0.25, 1035, 1275, waitLock);
-await scene('chopper-dusk', 0.9, 1035, 1275, waitLock);
+// on the avenue south of NOVA, in the open
+await scene('chopper-golden', 0.25, 1000, 1340, waitLock);
+await scene('chopper-dusk', 0.9, 1000, 1340, waitLock);
 await browser.close(); server.close();
 if (errors.length) { console.error('PAGE ERRORS:\n' + errors.join('\n')); process.exit(1); }

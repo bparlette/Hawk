@@ -59,7 +59,7 @@ export function stepPressure(sim, dt) {
   if (sd > smax) { c.bx += sx / sd * smax; c.by += sy / sd * smax; } else { c.bx = tx; c.by = ty; }
   // the aircraft holds a stand-off point behind and up-sun of the beam, turning to face it
   const hx = c.bx - 80, hy = c.by - 120;    // close enough to share the phone frame with its pool
-  const ax = (hx - c.x) * 0.9 - c.vx * 1.1, ay = (hy - c.y) * 0.9 - c.vy * 1.1;
+  const ax = (hx - c.x) * 5 - c.vx * 3.6, ay = (hy - c.y) * 5 - c.vy * 3.6;   // a firm hold on station, slightly under-damped
   c.vx += ax * dt; c.vy += ay * dt;
   const sp = Math.hypot(c.vx, c.vy); if (sp > FLY) { c.vx *= FLY / sp; c.vy *= FLY / sp; }
   c.x += c.vx * dt; c.y += c.vy * dt;
