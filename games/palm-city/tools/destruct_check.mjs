@@ -215,5 +215,16 @@ const clearCops = (s) => { s.cars = s.cars.filter(c => c.kind !== 'police'); };
   const n0 = s.score;
   check('smashing street props scores', n0 > 0, `score ${n0}`);
 }
+{
+  // rails: the fence line breaks a section at a time; a bent section can't be grinded
+  const s = fresh(); clearCops(s);
+  const r = s.rails[1];                                   // promenade rail x=1334, y 1080..2120
+  const c = s.addCar(1200, 1250, 0, 'sedan_teal', 'player'); s.player.mode = 'car'; s.player.car = c; s.player.ped.hidden = true; c.v = 200;
+  run(s, 1, { ...none, keys: { up: true } });
+  const hit = r.segs.filter(g => g.stage > 0);
+  check('a car crossing a rail breaks just the section it hit', hit.length >= 1 && hit.length <= 2 && hit[0].stage >= 2, hit.map(g => g.k + ':' + g.stage).join(','));
+  const { railBroken } = await import('../src/destruct.js');
+  check('a broken section is not grindable; the rest still is', railBroken(r, hit[0].s0 + 5) && !railBroken(r, 900));
+}
 console.log(fails ? `DESTRUCT FAIL (${fails})` : 'DESTRUCT OK');
 process.exit(fails ? 1 : 0);

@@ -1,6 +1,8 @@
 // skate.js — the third way to move. Carve physics with momentum, ollies, grinds, hood ollies,
 // near-misses, bails, and the WANTED LINE combo. Operates on the Sim (player.mode === 'board').
 
+import { railBroken } from './destruct.js';
+
 const TAU = Math.PI * 2;
 const wrap = (a) => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
 
@@ -118,7 +120,7 @@ export function stepBoard(sim, dt, inp) {
       const r = g.r, t = g.s / r.len;
       tx = (r.x1 - r.x0) / r.len; ty = (r.y1 - r.y0) / r.len;
       x = r.x0 + (r.x1 - r.x0) * t; y = r.y0 + (r.y1 - r.y0) * t;
-      if (t < 0 || t > 1) { b.grind = null; b.air = 0.25; b.z = 0.3; }
+      if (t < 0 || t > 1 || railBroken(g.r, g.s)) { b.grind = null; b.air = 0.25; b.z = 0.3; }   // off the end, or onto a bent section
     } else {
       const c = g.r, a = g.s / c.r;
       x = c.x + Math.cos(a) * c.r; y = c.y + Math.sin(a) * c.r;
@@ -200,7 +202,7 @@ export function stepBoard(sim, dt, inp) {
       for (const r of sim.rails) {
         const q = distSeg(b.x, b.y, r);
         const along = (hx * (r.x1 - r.x0) + hy * (r.y1 - r.y0)) / r.len;
-        if (q.d < 9 && Math.abs(along) > 0.7) {
+        if (q.d < 9 && Math.abs(along) > 0.7 && !railBroken(r, q.t * r.len)) {
           b.grind = { kind: 'grind', r, s: q.t * r.len, dir: Math.sign(along), v: Math.max(110, boardSpeed(b)), acc: 0 };
           trick(sim, 'RAIL GRIND', TRICK.grind); sim.ev('grind'); break;
         }

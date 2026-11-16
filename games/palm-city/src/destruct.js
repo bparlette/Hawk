@@ -417,10 +417,10 @@ function carsThroughBushes(sim) {
 // dead (3). Lifeguard towers skew (1), have their roof crushed (2), collapse into planks (3).
 // Benches and towers are solid (sim.obst): a car that breaks one ploughs on, otherwise it stops.
 // Lamps aren't solid; a car clips them.
-const PROP_PTS = { bench: [0, 40, 120, 250], lamp: [0, 50, 120, 250], lifeguard: [0, 80, 200, 500] };
-const PROP_LABEL = { bench: ['', 'CRACKED BENCH', 'BENCH SNAPPED', 'BENCH SMASHED'], lamp: ['', 'LAMP BENT', 'LAMP BENT', 'LAMP DOWN'], lifeguard: ['', 'TOWER CRACKED', 'ROOF CAVED', 'TOWER DOWN'] };
+const PROP_PTS = { bench: [0, 40, 120, 250], lamp: [0, 50, 120, 250], lifeguard: [0, 80, 200, 500], rail: [0, 40, 120, 200] };
+const PROP_LABEL = { bench: ['', 'CRACKED BENCH', 'BENCH SNAPPED', 'BENCH SMASHED'], lamp: ['', 'LAMP BENT', 'LAMP BENT', 'LAMP DOWN'], lifeguard: ['', 'TOWER CRACKED', 'ROOF CAVED', 'TOWER DOWN'], rail: ['', 'RAIL BENT', 'RAIL SNAPPED', 'RAIL SCRAPPED'] };
 // how hard a car hit at speed sp breaks each prop (benches go easily, towers are sturdier)
-const PROP_K = { bench: 4, lamp: 3.6, lifeguard: 2.2 };
+const PROP_K = { bench: 4, lamp: 3.6, lifeguard: 2.2, rail: 3.2 };
 export function propImpact(kind, sp) { return sp < 25 ? 0 : sp < 45 ? 0.04 : Math.min(1, impactDamage(sp) * PROP_K[kind]); }
 
 // Called once the sim has built its obstacles (benches' slats, the props).
@@ -435,6 +435,17 @@ export function initProps(sim) {
     const t = { kind: 'lamp', i, x, y, r: 4, dmg: 0, stage: 0, hitT: -9, punch: 0.17, ax: 1, ay: 0 };
     sim.lamps.push(t); sim.things.push(t);
   });
+  // promenade and plaza rails: the fence line, broken a section (~64 units) at a time
+  for (const r of sim.rails) {
+    if (r.pier) continue;
+    const n = Math.max(1, Math.round(r.len / 64)), ux = (r.x1 - r.x0) / r.len, uy = (r.y1 - r.y0) / r.len;
+    r.segs = [];
+    for (let k = 0; k < n; k++) {
+      const s0 = r.len * k / n, s1 = r.len * (k + 1) / n, m = (s0 + s1) / 2;
+      const t = { kind: 'rail', rail: r, k, s0, s1, x: r.x0 + ux * m, y: r.y0 + uy * m, r: 5, dmg: 0, stage: 0, hitT: -9, punch: 0.16, ax: -uy, ay: ux };
+      r.segs.push(t); sim.things.push(t);
+    }
+  }
   sim.W.L.props.forEach((p, i) => {
     if (p.type !== 'lifeguard') return;
     const t = { kind: 'lifeguard', i, x: p.x, y: p.y, r: 12, dmg: 0, stage: 0, hitT: -9, punch: 0.09, ax: 1, ay: 0 };
@@ -447,7 +458,10 @@ function propHit(sim, t, before, after, dx, dy, cause) {
   const l = Math.hypot(dx, dy) || 1;
   t.ax = dx / l; t.ay = dy / l;
   const ex = t.x - t.ax * t.r * 0.5, ey = t.y - t.ay * t.r * 0.5;
-  if (t.kind === 'lamp') {
+  if (t.kind === 'rail') {
+    burst(sim, D.METAL, 1 + after, t.x, t.y, t.ax, t.ay, 50, 0.8);
+    sim.ev(after >= 2 && after > before ? 'snap' : 'dent', 0.25);
+  } else if (t.kind === 'lamp') {
     if (after > before) burst(sim, D.GLASS, after >= 3 ? 6 : 2, t.x + t.ax * 6, t.y + t.ay * 6, t.ax, t.ay, 70, 0.8);
     burst(sim, D.METAL, 1, t.x, t.y, t.ax, t.ay, 40, 0.7);
     sim.ev(after >= 3 ? 'snap' : 'dent', 0.2);
@@ -466,9 +480,22 @@ function propHit(sim, t, before, after, dx, dy, cause) {
 registerKind('bench', propHit);
 registerKind('lamp', propHit);
 registerKind('lifeguard', propHit);
+registerKind('rail', propHit);
+
+// Is the rail section at arc-length s bent past grinding (look spec: no grind above 0.6)?
+export function railBroken(r, s) {
+  if (!r.segs) return false;
+  const k = Math.max(0, Math.min(r.segs.length - 1, Math.floor(s / r.len * r.segs.length)));
+  return r.segs[k].dmg >= 0.6;
+}
+export function railSegAt(r, s) {
+  if (!r.segs) return null;
+  return r.segs[Math.max(0, Math.min(r.segs.length - 1, Math.floor(s / r.len * r.segs.length)))];
+}
 
 // A car clips a street lamp: the lamp takes it (scaled by speed), the car a small dent and a jolt.
 function carsThroughLamps(sim) {
+  carsThroughRails(sim);
   for (const c of sim.cars) {
     const sp = Math.abs(c.v);
     if (sp < 25) continue;
@@ -482,6 +509,28 @@ function carsThroughLamps(sim) {
       hitThing(sim, t, propImpact('lamp', sp), ca * dir, sa * dir, cause, sp);
       hitCar(sim, c, impactDamage(sp) * 0.35, -ca * dir, -sa * dir, cause);
       c.v *= t.stage >= 3 ? 0.85 : 0.6;
+    }
+  }
+}
+
+// A car driven across a rail breaks the section it crosses (by speed); the car takes a dent and a jolt.
+function carsThroughRails(sim) {
+  for (const c of sim.cars) {
+    const sp = Math.abs(c.v);
+    if (sp < 25) continue;
+    for (const r of sim.rails) {
+      if (!r.segs) continue;
+      const vx = r.x1 - r.x0, vy = r.y1 - r.y0;
+      const s = ((c.x - r.x0) * vx + (c.y - r.y0) * vy) / r.len;
+      if (s < -10 || s > r.len + 10) continue;
+      const d = Math.abs((c.x - r.x0) * vy - (c.y - r.y0) * vx) / r.len;
+      if (d > c.wid / 2) continue;
+      const t = railSegAt(r, s);
+      if (!t || t.stage >= 3 || sim.time - t.hitT < 0.5) continue;
+      const cause = c.driver === 'player' ? 'player' : 'world', dir = Math.sign(c.v) || 1, ca = Math.cos(c.h), sa = Math.sin(c.h);
+      hitThing(sim, t, propImpact('rail', sp), ca * dir, sa * dir, cause, sp);
+      hitCar(sim, c, impactDamage(sp) * 0.3, -ca * dir, -sa * dir, cause);
+      c.v *= 0.85;
     }
   }
 }

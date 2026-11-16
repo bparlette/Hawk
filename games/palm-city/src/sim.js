@@ -241,7 +241,8 @@ export class Sim {
         if (r.pier) continue;
         const vx = r.x1 - r.x0, vy = r.y1 - r.y0, t = ((p.x - r.x0) * vx + (p.y - r.y0) * vy) / (r.len * r.len);
         const side = Math.sign(vx * (p.y - r.y0) - vy * (p.x - r.x0));
-        if (t >= 0 && t <= 1 && r.side && side && side !== r.side && !(p.hopT > 0)) { p.hopT = 0.26; this.player.slowT = Math.max(this.player.slowT || 0, 0.16); this.ev('hop'); }
+        const gap = r.segs && r.segs[Math.max(0, Math.min(r.segs.length - 1, Math.floor(t * r.segs.length)))].stage >= 2;   // snapped section: step through
+        if (t >= 0 && t <= 1 && r.side && side && side !== r.side && !(p.hopT > 0) && !gap) { p.hopT = 0.26; this.player.slowT = Math.max(this.player.slowT || 0, 0.16); this.ev('hop'); }
         r.side = t >= 0 && t <= 1 ? side || r.side : 0;
       }
       p.walk += sp * dt;
