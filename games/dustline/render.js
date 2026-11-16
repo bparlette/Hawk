@@ -8,6 +8,11 @@
 // A "REPLICA": 4 px/m chunky buffer, Amiga palette, Bayer-dithered terrain, flat pixel trucks.
 // B "PAINTED": 12 px/m, big brush strokes + broken colour, warm storybook grade, painted trucks.
 // C "SPRITE PIXEL": 6 px/m crunched world, cooler darker grade, voxel-shaded 16-dir truck sprites.
+// v3 ROUND 3: the terrain gets a real HEIGHTFIELD — procedural dunes + authored
+// masses (NE dune, banked sand bowl, corrugated mound, carved river channel),
+// hillshaded from a fixed NW sun. The road is graded to a smoothed height
+// profile along the centreline, so the course reads CARVED through the dunes
+// with cut banks, instead of lying flat on top of them.
 'use strict';
 
 const LOOK_CONF = {
@@ -20,19 +25,19 @@ const PALETTES = {
   A: {
     dirt: ['#a05c26', '#8f4f1e', '#b26a30', '#7e451a'], sand: ['#e0bd76', '#d9b96e'], mud: ['#5e3c1e', '#533417', '#6d4a26'],
     gravel: ['#8a7d6a', '#7f7260'], rock: ['#6e685f', '#625c53'], water: ['#2456d8', '#173a9e'],
-    road: ['#c9a15e', '#bd9753', '#d4ad68'], roadDark: '#6e4c22', shoulder: '#b08247',
+    road: ['#bb9050', '#ae8445', '#c69e5c'], roadDark: '#6e4c22', shoulder: '#a87c40',
     shore: '#69b7e8', tapeRed: '#d42a1e', tapeWhite: '#ece7da', dark: '#2a1a0e'
   },
   C: {
     dirt: ['#8a5a2e', '#7c4f27', '#96652f', '#6e4522'], sand: ['#d8ba7c', '#cdb071'], mud: ['#5f3f20', '#54371b', '#71502c'],
     gravel: ['#847768', '#796c5c'], rock: ['#6b6257', '#5f574c'], water: ['#1e46b8', '#122c78'],
-    road: ['#bb975a', '#af8c50', '#c6a261'], roadDark: '#63451f', shoulder: '#a37f47',
+    road: ['#ac854a', '#a17a40', '#b89152'], roadDark: '#63451f', shoulder: '#98753d',
     shore: '#5aa2d8', tapeRed: '#c22e20', tapeWhite: '#e6e1d2', dark: '#241a10'
   },
   B: {
     dirt: ['#bb8a54', '#b3814b', '#c2915c', '#a3743f'], sand: ['#ecd096', '#e6c78a'], mud: ['#6e4a28', '#654324', '#7d5730'],
     gravel: ['#9a8a72', '#91805f'], rock: ['#7d7468', '#726a5e'], water: ['#2f6fd0', '#2a66c2'],
-    road: ['#dcbc7d', '#d2b26f', '#e6c98b'], roadDark: '#8a6132', shoulder: '#c8a668',
+    road: ['#dcbc7d', '#c9a55f', '#e6c98b'], roadDark: '#8a6132', shoulder: '#bd9c5e',
     shore: '#8ec9ec', tapeRed: '#c8402a', tapeWhite: '#f3e6c8', dark: '#3a2318'
   }
 };
@@ -40,6 +45,43 @@ const SURF_KEYS = ['dirt', 'sand', 'mud', 'gravel', 'rock', 'water', 'dirt']; //
 
 function hash2(x, y) { let h = (x * 374761393 + y * 668265263) ^ 0x5bf03635; h = (h ^ (h >> 13)) * 1274126177; return ((h ^ (h >> 16)) >>> 0) / 4294967296; }
 function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+function sstep(a, b, v) { const t = clamp01((v - a) / (b - a)); return t * t * (3 - 2 * t); }
+// smooth value noise (bilinear lattice, smootherstep) — the dunes' raw material
+function vnoise(x, y) {
+  const xi = Math.floor(x), yi = Math.floor(y);
+  const xf = x - xi, yf = y - yi;
+  const u = xf * xf * xf * (xf * (xf * 6 - 15) + 10), v = yf * yf * yf * (yf * (yf * 6 - 15) + 10);
+  const a = hash2(xi, yi), b = hash2(xi + 1, yi), c = hash2(xi, yi + 1), d = hash2(xi + 1, yi + 1);
+  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+}
+function gauss2(x, y, cx, cy, r) { const dx = (x - cx) / r, dy = (y - cy) / r; return Math.exp(-(dx * dx + dy * dy)); }
+// Terrain elevation (arbitrary metres) BEFORE the road is graded through it:
+// broad dune octaves + authored masses + the bowl dome + the rib mound +
+// the river channel carved down. Authored features sit where the reference
+// puts them: dark NE dune, pale banked bowl in the hairpin, mound mid-east.
+function terrainHeight(x, y) {
+  let h = 1.85 * vnoise(x * 0.028 + 13.7, y * 0.028 + 7.1)
+        + 0.6 * vnoise(x * 0.075 + 3.1, y * 0.075 + 9.4)
+        + 0.18 * vnoise(x * 0.22 + 8.8, y * 0.22 + 2.2);
+  h -= 1.32; // recenter (mean of the three octaves)
+  h += 1.45 * gauss2(x, y, 90, 6, 17);   // NE dune mass
+  h += 1.00 * gauss2(x, y, 4, 12, 13);   // NW rise
+  h += 0.85 * gauss2(x, y, 58, 71, 15);  // S rise
+  h += 0.75 * gauss2(x, y, 97, 65, 12);  // SE rise
+  h += 0.65 * gauss2(x, y, 3, 44, 10);   // W rise
+  // banked sand bowl: a dome with a dished top inside the hairpin island
+  const bq = Math.hypot((x - 28) / 8.5, (y - 47) / 7.5);
+  h += 1.30 * Math.exp(-bq * bq * 1.1) - 0.45 * Math.exp(-bq * bq * 5.0);
+  // corrugated mound under the rib section (x 56..70, axis y 38.2)
+  const mProfile = Math.exp(-Math.pow((y - 38.2) / 3.1, 2));
+  const mTaper = sstep(55.2, 58.6, x) * (1 - sstep(67.8, 71.2, x));
+  h += 1.50 * mProfile * mTaper;
+  h += 0.17 * Math.sin((x - 56) / 0.85 * Math.PI) * mProfile * mTaper;
+  // river channel carved down (banks slope into it)
+  const dRiv = Math.abs(y - riverCenterY(x));
+  h -= 1.2 * (1 - sstep(4.2, 7.6, dRiv));
+  return h;
+}
 function toRGB(col) {
   if (col[0] === '#') { const n = parseInt(col.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
   const m = col.match(/\d+/g); return [+m[0], +m[1], +m[2]];
@@ -68,6 +110,7 @@ const FIELD = (() => {
   const lat = new Float32Array(n);
   const wear = new Float32Array(n);
   const ang = new Float32Array(n);
+  const sIdx = new Int32Array(n);
   const S = TRACK.samples;
   for (let i = 0; i < S.length; i++) {
     const s = S[i];
@@ -84,7 +127,7 @@ const FIELD = (() => {
         if (d < dist[idx]) {
           dist[idx] = d; halfW[idx] = s.w / 2;
           lat[idx] = dx * nx + dy * ny;
-          wear[idx] = s.curv; ang[idx] = s.ang;
+          wear[idx] = s.curv; ang[idx] = s.ang; sIdx[idx] = i;
         }
       }
     }
@@ -139,7 +182,52 @@ const FIELD = (() => {
     if (gy < gh - 1) m = Math.min(m, wdepth[i + gw] + 1);
     wdepth[i] = m;
   }
-  return { dist, halfW, lat, wear, ang, wd, wdepth, gw, gh, cell };
+  return { dist, halfW, lat, wear, ang, wd, wdepth, sIdx, gw, gh, cell };
+})();
+
+// ---------- relief: heightfield graded by the road, hillshaded ----------
+// The road's own elevation is the terrain height along the centreline,
+// box-smoothed so the course rises gently (it climbs the rib mound, dips to
+// the river). Each cell blends from that profile inside the corridor to the
+// raw terrain outside it — the difference is the cut/fill bank you see.
+// HS is a per-cell brightness factor from a fixed NW sun, relief exaggerated
+// the way map hillshading always is (real dune slopes are too gentle to read).
+const RELIEF = (() => {
+  const { gw, gh, cell } = FIELD;
+  const n = gw * gh;
+  const S = TRACK.samples;
+  const hS = new Float32Array(S.length);
+  for (let i = 0; i < S.length; i++) hS[i] = terrainHeight(S[i].x, S[i].y);
+  for (let pass = 0; pass < 3; pass++) {
+    const src = Float32Array.from(hS);
+    for (let i = 0; i < S.length; i++) {
+      let sum = 0;
+      for (let o = -5; o <= 5; o++) sum += src[(i + o + S.length) % S.length];
+      hS[i] = sum / 11;
+    }
+  }
+  const H = new Float32Array(n);
+  for (let gy = 0; gy < gh; gy++) {
+    for (let gx = 0; gx < gw; gx++) {
+      const i = gy * gw + gx;
+      const ht = terrainHeight((gx + 0.5) * cell, (gy + 0.5) * cell);
+      const w = sstep(FIELD.halfW[i] - 0.6, FIELD.halfW[i] + 3.6, FIELD.dist[i]);
+      H[i] = hS[FIELD.sIdx[i]] * (1 - w) + ht * w;
+    }
+  }
+  const SUNX = -0.60, SUNY = -0.46, SUNZ = 0.80, K = 3.4;
+  const HS = new Float32Array(n).fill(1);
+  for (let gy = 0; gy < gh; gy++) {
+    for (let gx = 0; gx < gw; gx++) {
+      const i = gy * gw + gx;
+      const xl = H[gy * gw + Math.max(0, gx - 1)], xr = H[gy * gw + Math.min(gw - 1, gx + 1)];
+      const yu = H[Math.max(0, gy - 1) * gw + gx], yd = H[Math.min(gh - 1, gy + 1) * gw + gx];
+      const ddx = (xr - xl) / (2 * cell), ddy = (yd - yu) / (2 * cell);
+      const dot = (-ddx * SUNX - ddy * SUNY) * K + SUNZ;
+      HS[i] = Math.max(0.60, Math.min(1.42, 1 + (dot - SUNZ)));
+    }
+  }
+  return { H, HS };
 })();
 
 function fieldIdx(x, y) {
@@ -236,7 +324,15 @@ function surfaceLayer(look) {
         else if (dep > deepT) col = pal.water[1];
         else if (look === 'A') col = pal.water[(BAYER[(gx & 1) + (gy & 1) * 2] + (h < 0.5 ? 0 : 1)) % 2 === 0 ? 0 : 1];
         else col = pal.water[h < 0.6 ? 0 : 1];
-      } else if (d < hw + 1.6) {
+        if (dep >= shoreT) {
+          // deep channel: the middle of the river runs darker than the edges
+          const depF = clamp01((dep - 0.6) / 4.6);
+          col = mixHex(col, shadeCol(pal.water[1], 0.64), depF * 0.65);
+          // current streaks: noise stretched along the flow (x) direction
+          const streak = vnoise(gx * 0.10 + 4.4, gy * 0.62 + 1.9);
+          col = shadeCol(col, 1 + (streak - 0.5) * 0.17);
+        }
+      } else if (d < hw + 1.3) {
         // ----- ROAD corridor (surface flavour still shows through) -----
         const edgeJitter = (h2 - 0.5) * 0.8;
         const t = clamp01((d + edgeJitter) / hw); // 0 centre -> 1 edge
@@ -253,7 +349,7 @@ function surfaceLayer(look) {
         col = dk > 0.02 ? shadeCol(base, 1 - dk * 0.40) : base;
         // dusty shoulder blend into scrub at the very edge
         if (d > hw) {
-          const f = clamp01((d - hw) / 1.6);
+          const f = clamp01((d - hw) / 1.3);
           const scrub = pal.dirt[ln > 0.62 ? 2 : ln > 0.38 ? 0 : 1];
           col = mixHex(f < 0.5 ? pal.shoulder : col, scrub, f * f);
           if (h < f * 0.5) col = scrub;
@@ -288,6 +384,17 @@ function surfaceLayer(look) {
           if (nb.some(v => v !== s) && h < 0.30) col = pal.dirt[1];
         }
       }
+      if (s !== SURF.WATER) {
+        // hillshade: graded roads take it weakly, open terrain takes it full;
+        // sand keeps it almost anywhere (the bowl's banking IS its shading)
+        let wgt = d < hw ? 0.30 : d < hw + 1.3 ? 0.30 + 0.70 * ((d - hw) / 1.3) : 1;
+        if (s === SURF.SAND) wgt = Math.max(wgt, 0.85);
+        if (s === SURF.RIBS) wgt = Math.max(wgt, 0.55);
+        let f = 1 + (RELIEF.HS[i] - 1) * wgt;
+        // scrub sits a touch darker than v2 so the road pops against it
+        if (d >= hw + 1.3 && (s === SURF.DIRT || s === SURF.RIBS)) f *= 0.93;
+        if (f !== 1) col = shadeCol(col, f);
+      }
       g.fillStyle = col; g.fillRect(gx, gy, 1, 1);
     }
   }
@@ -296,16 +403,31 @@ function surfaceLayer(look) {
 
 // ---------- baked ground detail (shared scene, per-look medium) ----------
 function duneShade(g, W, H) {
+  // v3: real hillshading does the heavy lifting now — these are just a whisper
+  // of warm/cool variety over the top, at roughly half their v2 strength.
   const blobs = [
-    [0.28, 0.25, 0.62, 'rgba(255,230,180,0.07)'], [0.68, 0.10, 0.5, 'rgba(255,230,180,0.05)'],
-    [0.86, 0.82, 0.6, 'rgba(40,18,4,0.10)'], [0.08, 0.92, 0.5, 'rgba(40,18,4,0.08)'],
-    [0.55, 0.55, 0.75, 'rgba(60,28,6,0.05)']
+    [0.28, 0.25, 0.62, 'rgba(255,230,180,0.045)'], [0.68, 0.10, 0.5, 'rgba(255,230,180,0.03)'],
+    [0.86, 0.82, 0.6, 'rgba(40,18,4,0.055)'], [0.08, 0.92, 0.5, 'rgba(40,18,4,0.045)'],
+    [0.55, 0.55, 0.75, 'rgba(60,28,6,0.03)']
   ];
   for (const [fx, fy, fr, col] of blobs) {
     const gr = g.createRadialGradient(W * fx, H * fy, 4, W * fx, H * fy, H * fr);
     gr.addColorStop(0, col); gr.addColorStop(1, 'rgba(0,0,0,0)');
     g.fillStyle = gr; g.fillRect(0, 0, W, H);
   }
+}
+
+// Banked-bowl shading washes over the hairpin sand island: a shadow pool on
+// the SE inner side and a light wash on the NW rim. The heightfield's own
+// hillshade does the per-cell work; these broad washes sell the banking at
+// whole-track scale in every look.
+function drawBowlShade(g, ppm) {
+  let gr = g.createRadialGradient(31.5 * ppm, 50 * ppm, 1, 31.5 * ppm, 50 * ppm, 8.8 * ppm);
+  gr.addColorStop(0, 'rgba(46,24,8,0.20)'); gr.addColorStop(1, 'rgba(46,24,8,0)');
+  g.fillStyle = gr; g.fillRect(19 * ppm, 38 * ppm, 21 * ppm, 19 * ppm);
+  gr = g.createRadialGradient(24.5 * ppm, 43.5 * ppm, 1, 24.5 * ppm, 43.5 * ppm, 7.8 * ppm);
+  gr.addColorStop(0, 'rgba(255,238,196,0.17)'); gr.addColorStop(1, 'rgba(255,238,196,0)');
+  g.fillStyle = gr; g.fillRect(15 * ppm, 35 * ppm, 21 * ppm, 19 * ppm);
 }
 
 // Static wear: twin wheel lines that darken where the corner bites (curvature),
@@ -342,17 +464,30 @@ function drawWearArcs(g, ppm, look) {
   }
 }
 
-// Corrugated rib section: ridge stripes across the road with light/shadow
-// pairs and ramp shading at both ends — a place, not a striped rectangle.
+// Corrugated rib section: a raised MOUND the road climbs — it throws a soft
+// cast shadow to the SE, its north face catches the sun, its south face sits
+// in shade, and the ridge stripes fade in/out at the ramps instead of
+// starting abruptly. The heightfield gives the broad profile; this pass
+// adds the crisp corrugation on top.
 function drawRibs(g, ppm, look) {
   const { grid, gw, gh, cell } = TRACK.surf;
+  // cast shadow (sun from NW -> shadow falls SE of the mound)
+  g.fillStyle = 'rgba(24,12,4,0.13)';
+  g.beginPath(); g.ellipse(64.8 * ppm, 40.9 * ppm, 9.8 * ppm, 4.6 * ppm, 0, 0, 7); g.fill();
+  g.fillStyle = 'rgba(24,12,4,0.22)';
+  g.beginPath(); g.ellipse(64.8 * ppm, 40.5 * ppm, 8.6 * ppm, 3.7 * ppm, 0, 0, 7); g.fill();
   for (let gy = 0; gy < gh; gy++) {
     for (let gx = 0; gx < gw; gx++) {
       if (grid[gy * gw + gx] !== SURF.RIBS) continue;
       const x = gx * cell, y = gy * cell;
+      const xc = x + cell / 2, yc = y + cell / 2;
+      const env = sstep(56, 58.6, xc) * (1 - sstep(67.6, 70.2, xc)); // ramp envelope
       const ph = Math.floor(x / 0.85) % 2;
-      g.fillStyle = ph ? 'rgba(255,240,200,0.17)' : 'rgba(30,16,6,0.22)';
+      g.fillStyle = ph ? `rgba(255,240,200,${(0.06 + 0.19 * env).toFixed(3)})` : `rgba(30,16,6,${(0.08 + 0.24 * env).toFixed(3)})`;
       g.fillRect(x * ppm, y * ppm, cell * ppm + 0.6, cell * ppm + 0.6);
+      // mound cross-shading: lit north face, shaded south face
+      if (yc < 37.3) { g.fillStyle = 'rgba(255,240,200,0.10)'; g.fillRect(x * ppm, y * ppm, cell * ppm + 0.6, cell * ppm + 0.6); }
+      if (yc > 39.7) { g.fillStyle = 'rgba(30,16,6,0.13)'; g.fillRect(x * ppm, y * ppm, cell * ppm + 0.6, cell * ppm + 0.6); }
       if (x < 57.6 || x > 68.4) { g.fillStyle = 'rgba(20,10,4,0.10)'; g.fillRect(x * ppm, y * ppm, cell * ppm + 0.6, cell * ppm + 0.6); }
     }
   }
@@ -528,7 +663,7 @@ function paintRoadB(g, ppm, pal) {
   const S = TRACK.samples;
   g.lineCap = 'round';
   const passes = [
-    { extra: 2.6, col: pal.shoulder, alpha: 0.45, wMul: 1 },
+    { extra: 1.7, col: pal.shoulder, alpha: 0.36, wMul: 1 },
     { extra: 0, col: pal.road[1], alpha: 0.80, wMul: 1 },
     { extra: 0, col: pal.roadDark, alpha: 0.16, wMul: 0.55 }
   ];
@@ -553,6 +688,7 @@ function buildBackground(look) {
   g.imageSmoothingEnabled = look === 'B';
   g.drawImage(layer, 0, 0, W, H);
   duneShade(g, W, H);
+  drawBowlShade(g, ppm);
   const rng = mulberry32(look === 'A' ? 11 : look === 'C' ? 22 : 33);
   if (look === 'B') {
     paintRoadB(g, ppm, pal);
@@ -592,6 +728,15 @@ function buildBackground(look) {
       g.globalAlpha = 0.25 + rng() * 0.3; g.lineWidth = 1.6 + rng() * 1.6;
       g.beginPath(); g.moveTo(x * ppm, y * ppm); g.lineTo(x * ppm + 5 + rng() * 8, y * ppm + (rng() - 0.5) * 3); g.stroke();
     }
+    // foam churn where the road fords the river (the crossing)
+    for (let i = 0; i < 150; i++) {
+      const x = rng() * WORLD.w, y = rng() * WORLD.h;
+      if (TRACK.surfaceAt(x, y) !== SURF.WATER) continue;
+      const gr = groundAt(x, y);
+      if (gr.d > gr.hw + 2.2) continue;
+      g.globalAlpha = 0.22 + rng() * 0.3; g.lineWidth = 1.5 + rng() * 1.8;
+      g.beginPath(); g.moveTo(x * ppm, y * ppm); g.lineTo(x * ppm + 4 + rng() * 9, y * ppm + (rng() - 0.5) * 3); g.stroke();
+    }
     g.globalAlpha = 1;
     drawWearArcs(g, ppm, look);
     drawRibs(g, ppm, look);
@@ -615,7 +760,10 @@ function buildBackground(look) {
       const x = rng() * W, y = rng() * H;
       const s = TRACK.surfaceAt(x / ppm, y / ppm);
       if (s === SURF.WATER) {
-        if (rng() < 0.4) { g.fillStyle = 'rgba(220,240,255,0.5)'; g.fillRect(x, y, ppm * 0.32, 1.4); }
+        // foam flecks gather where the road fords the river
+        const fi = fieldIdx(x / ppm, y / ppm);
+        const nearRoad = FIELD.dist[fi] < FIELD.halfW[fi] + 2.5;
+        if (rng() < (nearRoad ? 0.8 : 0.4)) { g.fillStyle = 'rgba(220,240,255,0.5)'; g.fillRect(x, y, ppm * (nearRoad ? 0.45 : 0.32), 1.4); }
       } else {
         g.fillStyle = rng() < 0.5 ? 'rgba(30,18,8,0.20)' : 'rgba(255,240,210,0.13)';
         const sz = look === 'A' ? 2 : 2.6;
