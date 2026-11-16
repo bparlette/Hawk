@@ -2,7 +2,7 @@
 // To add an era: write play/eras/<id>.js exporting create(canvas, level) -> { draw(sim), dispose() },
 // then set its `load` here. Nothing else in the page changes.
 export const ERAS = [
-  { id: "e1", n: 1, name: "GTA 1 · 1997",          load: () => import("./e1.js?v=2026-11-15-4") },   // ?v= = build stamp, keep in sync with play/index.html + e1.js
+  { id: "e1", n: 1, name: "GTA 1 · 1997",          load: () => import("./e1.js?v=2026-11-15-5") },   // ?v= = build stamp, keep in sync with play/index.html + e1.js
   { id: "e2", n: 2, name: "GTA 2 · 1999",          load: null },
   { id: "e3", n: 3, name: "GTA III · 2001",        load: null },
   { id: "e4", n: 4, name: "GTA: Vice City · 2002", load: null },

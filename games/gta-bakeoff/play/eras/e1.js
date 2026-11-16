@@ -19,7 +19,7 @@
 // area), so on iPhones its 2D context failed, bake() threw, and the game silently stayed
 // on the flat fallback forever (Nov 15, 2026 — see STATUS.md).
 //
-// Build 2026-11-15-4 — the phone-truth build. The bake fix above was serve-verified,
+// Build 2026-11-15-5 — the phone-truth build. The bake fix above was serve-verified,
 // yet Cherie's iPhone STILL showed the fallback (Nov 15, 18:13 ET), with two live
 // suspects: (A) the in-app browser serving the OLD module graph from cache — the
 // imports carried no version stamp — or (B) a second load-path failure the canvas-cap
@@ -33,6 +33,26 @@
 // sprite/ped/link/HUD sheet degrades just that layer instead of stranding the whole
 // renderer on the fallback.
 //
+// Build 2026-11-15-5 — THE PHONE SPOKE, and it was neither suspect. Cherie's screenshot
+// showed the box: stage "manifest", error "The string did not match the expected
+// pattern." That is WebKit's canned SyntaxError DOMException for a failed
+// Response.json() body extraction — the manifest fetch had resolved to a 404 HTML
+// page and Safari rejected its parse with that generic message (Chromium words the
+// same failure "Unexpected token '<'…", but Chromium never got to throw it: it was
+// only ever run against the local harness, whose server root makes the bad path
+// resolve). Root cause: ASSET_BASE was "../../assets/e1/" — the depth computed from
+// THIS MODULE's folder (play/eras/) — but fetch() resolves relative URLs against the
+// DOCUMENT base (play/), so on any host deeper than the server root (Hawk:
+// /Hawk/games/gta-bakeoff/play/) the extra ".." escaped the game folder and the
+// manifest URL landed on /Hawk/games/assets/e1/manifest.json (404). Locally the
+// extra ".." clamped at the root and hit the real file, masking the bug in every
+// harness run. Fixes: ASSET_BASE is now resolved from import.meta.url (immune to
+// document depth); the manifest response is checked with resp.ok and a descriptive
+// error (a future path slip reports "manifest HTTP 404 for <url>", not a parser
+// riddle); and the manifest stage is split into manifest-fetch / manifest-parse /
+// manifest-validate sub-stages, mirrored live into canvas.dataset.e1stage, so any
+// remaining lurker narrows to a line from one screenshot.
+//
 // Until the asset pack loads (or if it fails), a flat zone-colour fallback keeps the page
 // playable — see ARCHITECTURE.md ("a renderer draws its own placeholder rather than failing").
 const PPM = 21, TILE = 64;                       // screen px per metre; px per tile in the baked ground
@@ -40,8 +60,8 @@ const GPX = TILE / 4, S = PPM / GPX;             // source-art px per metre (16)
 const TS = TILE * S;                             // one tile on screen: 84 px
 const CHARH = 41;                                // character figure height on screen, px (The Original's ped scale at this framing)
 const KPED = CHARH / 15, KLINK = CHARH / 16;     // frame scales: a ped figure fills 15 of its 24px frame; Link's fills 16 of 20
-const ASSET_BASE = "../../assets/e1/";
-const BUILD = "2026-11-15-4";   // version stamp: keep in sync with play/index.html + play/eras/index.js (?v= on every import/fetch)
+const ASSET_BASE = new URL("../../assets/e1/", import.meta.url).href;   // resolved from THIS module's URL (play/eras/), never the document's — see the build -5 note in the header
+const BUILD = "2026-11-15-5";   // version stamp: keep in sync with play/index.html + play/eras/index.js (?v= on every import/fetch)
 const PLAN = typeof location !== "undefined" && new URLSearchParams(location.search).has("plan");
 const SHADOW_LIDS = new Set([97, 100, 127, 128, 129]);   // flat lids baked under the sprites
 const PALM_LIDS = new Set([21, 126]);                    // flat lids baked into the overhead layer
@@ -127,17 +147,25 @@ export function create(canvas, level) {
     catch (e) { IMG[name] = null; failedAssets.push(name); }
   }
   async function load() {
-    let stage = "manifest";
+    let stage = "manifest-fetch";
+    const setStage = s => { stage = s; canvas.dataset.e1stage = s; };
+    setStage(stage);
     try {
-      M = await (await fetch(ASSET_BASE + "manifest.json?v=" + BUILD)).json();
-      stage = "images";
+      const resp = await fetch(ASSET_BASE + "manifest.json?v=" + BUILD);
+      if (!resp.ok) throw new Error("manifest HTTP " + resp.status + " for " + ASSET_BASE + "manifest.json");
+      setStage("manifest-parse");
+      M = await resp.json();
+      setStage("manifest-validate");
+      if (!M || !M.files || !M.files.tiles || !M.tiles || !M.sprites || !M.viceBeachPlacements)
+        throw new Error("manifest parsed but files/tiles/sprites/placements are missing");
+      setStage("images");
       const F = M.files;
       await Promise.all([loadAsset("tiles", F.tiles), loadAsset("sprites", F.sprites),
         loadAsset("peds", F.peds), loadAsset("link", F.link), loadAsset("hud", F.hudFont)]);
       if (failedAssets.length) canvas.dataset.e1fail = failedAssets.join(",");
       if (!IMG.tiles) throw new Error("tiles sheet failed to load");
-      stage = "prepare";
-      prepare(); ready = true; canvas.dataset.e1 = "ready";
+      setStage("prepare");
+      prepare(); ready = true; canvas.dataset.e1 = "ready"; setStage("ready");
     } catch (e) {
       canvas.dataset.e1 = "fallback";
       const msg = e && e.message ? e.message : String(e);
