@@ -101,6 +101,7 @@ function distSeg(px, py, r) {
 }
 
 export function stepBoard(sim, dt, inp) {
+  if (inp.punch && !inp.action) inp = { ...inp, action: true };   // on the board the fight button is the ollie too
   const W = sim.W, b = sim.board, P = sim.player, p = P.ped;
   let sp = boardSpeed(b);
 

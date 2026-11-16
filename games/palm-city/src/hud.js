@@ -56,7 +56,7 @@ export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
     g.fillText('PALM CITY', vw / 2, vh * 0.3);
     g.font = font(14, 600);
     g.fillStyle = '#fff1d8';
-    g.fillText(opts.demo ? 'DEMO — watching a 30 second run' : 'drag left side to move  ·  tap ● to jack a car', vw / 2, vh * 0.3 + 44);
+    g.fillText(opts.demo ? 'DEMO — watching a 30 second run' : 'drag left to move  ·  ● jack / board  ·  fist to punch', vw / 2, vh * 0.3 + 44);
     g.globalAlpha = 1;
   }
 
@@ -128,6 +128,18 @@ export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
   if (label) {
     g.font = font(13, 800); g.textAlign = 'center'; g.fillStyle = '#fff4dc';
     g.fillText(label, b.x, b.y - b.r - 12);
+  }
+  if (input.fightOn && P.mode === 'foot') {                // fight button: on foot only
+    const f = input.fight(), hot = input.fightDown || P.punchT > 0;
+    g.beginPath(); g.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+    g.fillStyle = hot ? 'rgba(255,110,90,0.6)' : 'rgba(255,240,220,0.16)'; g.fill();
+    g.lineWidth = 3; g.strokeStyle = 'rgba(255,150,120,0.95)'; g.stroke();
+    // a little fist: four knuckles over a palm
+    g.fillStyle = 'rgba(255,196,170,0.95)';
+    for (let i = 0; i < 4; i++) { g.beginPath(); g.arc(f.x - 9 + i * 6, f.y - 5, 3.6, 0, Math.PI * 2); g.fill(); }
+    g.fillRect(f.x - 12, f.y - 4, 24, 12); g.beginPath(); g.arc(f.x - 12, f.y + 3, 4, 0, Math.PI * 2); g.fill();
+    g.font = font(12, 800); g.textAlign = 'center'; g.fillStyle = '#ffe2d4';
+    g.fillText('PUNCH', f.x, f.y - f.r - 11);
   }
   if (input.stick) {
     const s = input.stick;

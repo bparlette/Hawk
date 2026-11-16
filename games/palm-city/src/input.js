@@ -1,5 +1,6 @@
-// input.js — touch-first: floating joystick on the left half, one round action button bottom-right.
-// Keyboard (arrows/WASD + Space/E) for desktop testing.
+// input.js — touch-first: floating joystick on the left half, round action button bottom-right,
+// and a smaller fight button beside it (shown on foot). Keyboard for desktop: arrows/WASD move,
+// Space/E/Enter = action, F/X/J = fight.
 
 export class Input {
   constructor(canvas, view) {
@@ -9,6 +10,8 @@ export class Input {
     this.btnId = null;
     this.actionEdge = false;
     this.btnDown = false;
+    this.fightId = null; this.fightDown = false; this.punchEdge = false;
+    this.fightOn = true;            // main.js turns the fight button off when the player isn't on foot
     this.keys = {};
     this.R = 56;
     this.onFirst = null;
@@ -23,6 +26,7 @@ export class Input {
       this.first();
       if (map[e.code]) { this.keys[map[e.code]] = true; e.preventDefault(); }
       if ((e.code === 'Space' || e.code === 'KeyE' || e.code === 'Enter') && !e.repeat) { this.actionEdge = true; e.preventDefault(); }
+      if ((e.code === 'KeyF' || e.code === 'KeyX' || e.code === 'KeyJ') && !e.repeat) { this.punchEdge = true; e.preventDefault(); }
     });
     addEventListener('keyup', e => { if (map[e.code]) this.keys[map[e.code]] = false; });
   }
@@ -30,6 +34,7 @@ export class Input {
   first() { if (this.onFirst) { const f = this.onFirst; this.onFirst = null; f(); } }
 
   button() { return { x: this.view.w - 72, y: this.view.h - 120, r: 44 }; }
+  fight() { return { x: this.view.w - 164, y: this.view.h - 82, r: 34 }; }
 
   toView(e) {
     const r = this.canvas.getBoundingClientRect();
@@ -40,7 +45,11 @@ export class Input {
     e.preventDefault();
     this.first();
     const p = this.toView(e);
-    const b = this.button();
+    const b = this.button(), f = this.fight();
+    if (this.fightOn && Math.hypot(p.x - f.x, p.y - f.y) < f.r + 6 && this.fightId === null) {
+      this.fightId = e.pointerId; this.fightDown = true; this.punchEdge = true;
+      return;
+    }
     if (Math.hypot(p.x - b.x, p.y - b.y) < b.r + 14 && this.btnId === null) {
       this.btnId = e.pointerId; this.btnDown = true; this.actionEdge = true;
       return;
@@ -67,6 +76,7 @@ export class Input {
   up(e) {
     if (this.stick && e.pointerId === this.stick.id) this.stick = null;
     if (e.pointerId === this.btnId) { this.btnId = null; this.btnDown = false; }
+    if (e.pointerId === this.fightId) { this.fightId = null; this.fightDown = false; }
   }
 
   read() {
@@ -76,8 +86,8 @@ export class Input {
       jm = Math.min(1, l / this.R);
       if (l > 0.01) { jx = dx / l; jy = dy / l; }
     }
-    const a = this.actionEdge;
-    this.actionEdge = false;
-    return { jx, jy, jm, action: a, keys: this.keys };
+    const a = this.actionEdge, f = this.punchEdge;
+    this.actionEdge = false; this.punchEdge = false;
+    return { jx, jy, jm, action: a, punch: f, keys: this.keys };
   }
 }

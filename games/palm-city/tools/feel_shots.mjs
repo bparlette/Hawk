@@ -42,6 +42,6 @@ await scene('bump', () => { const s = window.__palm.sim; s.player.ped.x = 1290; 
 // punch: tap the fight button next to a pedestrian
 await scene('punch', () => { const s = window.__palm.sim; s.player.ped.x = 1250; s.player.ped.y = 1240; s.player.ped.h = 0;
     const o = s.makePed(1264, 1240, 'ped_blue', { type: 'line', x: 1264, y: 1240, dir: 1 }, 0); s.peds.push(o); },
-  async (page, touch) => { const b = await page.evaluate(() => ({ x: 420 - 158, y: innerHeight - 74 })); await touch('touchStart', [[b.x, b.y, 2]]); await page.waitForTimeout(140); });
+  async (page, touch) => { const b = await page.evaluate(() => ({ x: 420 - 158, y: innerHeight - 74 })); await touch('touchStart', [[b.x, b.y, 2]]); await page.waitForFunction(() => window.__palm.sim.fx.length > 0, null, { timeout: 5000 }); });
 await browser.close(); server.close();
 if (errors.length) { console.error('PAGE ERRORS:\n' + errors.join('\n')); process.exit(1); }

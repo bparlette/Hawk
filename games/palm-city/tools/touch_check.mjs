@@ -1,6 +1,7 @@
 // touch_check.mjs — verifies the controls with real touch events (CDP Input.dispatchTouchEvent),
 // not mouse clicks: drag the floating joystick to walk to the parked convertible, tap the round
-// action button to jack it, drive with the stick, tap again to get out.
+// action button to jack it, drive with the stick, tap again to get out. First of all: tap the
+// fight button and see a punch thrown.
 // Usage: node tools/touch_check.mjs [shots-prefix]
 import { chromium } from 'playwright-core';
 import http from 'node:http';
@@ -29,6 +30,15 @@ const touch = (type, pts) => cdp.send('Input.dispatchTouchEvent', { type, touchP
 const state = () => page.evaluate(() => { const s = window.__palm.sim, f = s.focus(); return { mode: s.player.mode, x: f.x, y: f.y, v: f.v || 0, stars: s.stars }; });
 const fail = (m) => { console.error('TOUCH FAIL:', m); process.exitCode = 1; };
 
+// fight button (left of the action button): one tap = one punch
+const fb = await page.evaluate(() => ({ x: 420 - 164, y: innerHeight - 82 }));
+await touch('touchStart', [[fb.x, fb.y, 9]]);
+await page.waitForTimeout(80);
+await touch('touchEnd', []);
+await page.waitForTimeout(600);
+const punches = await page.evaluate(() => window.__palm.sim.player.punchN || 0);
+console.log('after fight tap: punches', punches);
+if (punches !== 1) fail('fight button did not throw a punch');
 const s0 = await state();
 console.log('start', s0);
 // joystick: press left half, drag toward the convertible (parked at 1302,1300 — south-east of spawn)
@@ -65,7 +75,8 @@ await touch('touchEnd', []);
 console.log('after driving', s3);
 if (Math.hypot(s3.x - s2.x, s3.y - s2.y) < 60) fail('stick did not drive the car');
 if (prefix) await page.screenshot({ path: prefix + '_2_drive.png' });
-await page.waitForTimeout(2500);
+// let it roll down to exit speed (a slow machine runs the sim slower than real time, so wait on the speed, not the clock)
+for (let i = 0; i < 80 && Math.abs((await state()).v) > 40; i++) await page.waitForTimeout(150);
 await touch('touchStart', [[btn.x, btn.y, 4]]);
 await page.waitForTimeout(80);
 await touch('touchEnd', []);

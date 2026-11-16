@@ -115,6 +115,7 @@ function frame(now) {
   acc += dt;
   let steps = 0;
   while (acc >= STEP && steps < 6) {
+    input.fightOn = sim.player.mode === 'foot';
     const inp = pilot ? pilot.input(STEP) : input.read();
     sim.step(STEP, inp);
     simTime += STEP;

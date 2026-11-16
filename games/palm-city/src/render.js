@@ -309,7 +309,13 @@ export class Renderer {
         this.drawCell(g, m.color, idx, m.cols, rows, 0, 0); g.restore();
       } else if (p.outfit === 'player') {  // the hero is drawn a touch larger so you never lose them
         const z = S.board && S.board.ridden ? S.board.z : p.hopT > 0 ? Math.sin(Math.PI * p.hopT / 0.26) * 0.7 : 0;
-        g.save(); g.translate(p.x, p.y); g.scale(1.2 + z * 0.4, 1.2 + z * 0.4);
+        const pt = S.player.punchT > 0 ? S.player.punchT / 0.26 : 0, jab = Math.sin(Math.PI * pt) * 5;
+        if (pt > 0) {                                     // the fist: a quick pale streak thrown out ahead
+          g.strokeStyle = 'rgba(255,232,200,0.95)'; g.lineWidth = 3.4; g.lineCap = 'round';
+          g.beginPath(); g.moveTo(p.x + Math.cos(p.h + 0.5) * 6, p.y + Math.sin(p.h + 0.5) * 6);
+          g.lineTo(p.x + Math.cos(p.h) * (9 + jab * 1.6), p.y + Math.sin(p.h) * (9 + jab * 1.6)); g.stroke();
+        }
+        g.save(); g.translate(p.x + Math.cos(p.h) * jab, p.y + Math.sin(p.h) * jab); g.scale(1.2 + z * 0.4, 1.2 + z * 0.4);
         this.drawCell(g, m.color, idx, m.cols, rows, 0, 0); g.restore();
       } else this.drawCell(g, m.color, idx, m.cols, rows, p.x, p.y);
     }
@@ -323,6 +329,16 @@ export class Renderer {
       if (inView(s.bb)) this.drawStatic(g, s, s.e.color, S);
     }
     this.drawLeaves(g, S);
+    for (const f of S.fx || []) {                         // hit flash: a burst of short rays
+      const u = Math.min(1, f.t / 0.36), r0 = 4 + u * 9, r1 = 9 + u * 16;
+      g.globalAlpha = 1 - u; g.lineCap = 'round';
+      for (let i = 0; i < 8; i++) {
+        const a = i * Math.PI / 4 + 0.3;
+        g.strokeStyle = i % 2 ? '#fff4c8' : '#ffb04a'; g.lineWidth = i % 2 ? 2.2 : 3;
+        g.beginPath(); g.moveTo(f.x + Math.cos(a) * r0, f.y + Math.sin(a) * r0); g.lineTo(f.x + Math.cos(a) * r1, f.y + Math.sin(a) * r1); g.stroke();
+      }
+      g.globalAlpha = 1;
+    }
 
     P && P('sprites');
     // painted surface grain (world-anchored)
@@ -447,11 +463,12 @@ export class Renderer {
     g.save();
     g.clip(this.waterPath);
     // drifting paint: two stroke sheets sliding shoreward at different speeds over the painted base
+    const wx0 = Math.max(vx0, this.L.shore.x - this.L.shore.amp * 1.5);   // only fill where there can be water
     const slide = (pat, ox, oy, sc, alpha) => {
       g.save();
       g.translate(ox, oy); g.scale(sc, sc);
       g.globalAlpha = alpha; g.fillStyle = pat;
-      g.fillRect((vx0 - ox) / sc, (vy0 - oy) / sc, (vx1 - vx0) / sc, (vy1 - vy0) / sc);
+      g.fillRect((wx0 - ox) / sc, (vy0 - oy) / sc, (vx1 - wx0) / sc, (vy1 - vy0) / sc);
       g.restore();
     };
     slide(this.waterStrokes.deep, -time * 5.5, time * 3.2 + Math.sin(time * 0.31) * 6, 1.25, 0.36 + Math.sin(time * 0.4) * 0.05);
@@ -469,7 +486,7 @@ export class Renderer {
     sky.addColorStop(1, `rgba(${c2[0]},${c2[1]},${c2[2]},0.42)`);
     g.globalCompositeOperation = 'soft-light';
     g.fillStyle = sky;
-    g.fillRect(vx0, vy0, vx1 - vx0, vy1 - vy0);
+    g.fillRect(wx0, vy0, vx1 - wx0, vy1 - vy0);
     g.globalCompositeOperation = 'source-over';
     // swell: crest lines parallel to the shore, rolling in and sharpening as they near the sand
     g.lineCap = 'round';
