@@ -945,13 +945,30 @@ export class Renderer {
       g.fillStyle = '#4a3550';
       for (let x = P.x + 8; x <= ex + 1; x += (P.w - 10) / 9) for (const y of [P.y + 2, P.y + P.h - 2]) { g.beginPath(); g.arc(x, y, 2.1, 0, 7); g.fill(); }
     }
+    const XR = this.M.destruct;
     for (const r of S.rails) {
-      g.strokeStyle = 'rgba(40,24,60,0.35)'; g.lineWidth = 4;
-      g.beginPath(); g.moveTo(r.x0 + 4, r.y0 - 1.5); g.lineTo(r.x1 + 4, r.y1 - 1.5); g.stroke();
-      g.strokeStyle = '#d9d4e6'; g.lineWidth = 2.4;
-      g.beginPath(); g.moveTo(r.x0, r.y0); g.lineTo(r.x1, r.y1); g.stroke();
-      g.strokeStyle = '#fff4dc'; g.lineWidth = 0.8;
-      g.beginPath(); g.moveTo(r.x0 - 0.6, r.y0 - 0.6); g.lineTo(r.x1 - 0.6, r.y1 - 0.6); g.stroke();
+      // intact runs as painted lines; damaged sections (destruct.js) as Gemini's bent/snapped/scrap sprites
+      const ux = (r.x1 - r.x0) / r.len, uy = (r.y1 - r.y0) / r.len;
+      const run = (s0, s1) => {
+        const ax = r.x0 + ux * s0, ay = r.y0 + uy * s0, bx = r.x0 + ux * s1, by = r.y0 + uy * s1;
+        g.strokeStyle = 'rgba(40,24,60,0.35)'; g.lineWidth = 4;
+        g.beginPath(); g.moveTo(ax + 4, ay - 1.5); g.lineTo(bx + 4, by - 1.5); g.stroke();
+        g.strokeStyle = '#d9d4e6'; g.lineWidth = 2.4;
+        g.beginPath(); g.moveTo(ax, ay); g.lineTo(bx, by); g.stroke();
+        g.strokeStyle = '#fff4dc'; g.lineWidth = 0.8;
+        g.beginPath(); g.moveTo(ax - 0.6, ay - 0.6); g.lineTo(bx - 0.6, by - 0.6); g.stroke();
+      };
+      if (!r.segs || !XR) { run(0, r.len); continue; }
+      let from = 0;
+      for (const sg of r.segs) {
+        if (!sg.stage) continue;
+        if (sg.s0 > from) run(from, sg.s0);
+        from = sg.s1;
+        const e = XR['rail_s' + sg.stage], k = (sg.s1 - sg.s0) / 64;
+        g.save(); g.translate(sg.x, sg.y); g.rotate(Math.atan2(uy, ux)); g.scale(k, 1);
+        g.drawImage(e.img, e.ox, e.oy, e.w, e.h); g.restore();
+      }
+      if (from < r.len) run(from, r.len);
     }
     const X = this.M.destruct;
     for (const b of S.benches) {

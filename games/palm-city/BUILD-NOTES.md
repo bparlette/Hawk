@@ -139,6 +139,44 @@ Five fixes from hands-on play of the merged build. Rules are checked by `tools/f
    you become wanted nearby. On the board the same key/button is the ollie; in a car it does
    nothing. Desktop: **F / X / J**.
 
+## Destruction pass (Nov 16 2026 — fable.md task 1, owner: "make everything more destructive")
+
+One system, `src/destruct.js`, that everything breakable runs on (the base for step 5's
+smash-throughs and step 7's WRECK IT!). Look: Gemini's spec `shots/DESTRUCTION-DELTA.md` and stage
+sprites, installed as `assets/destruct/` with their own manifest `assets/destruct.json` (a Blender
+re-bake of `manifest.json` never drops them).
+
+- **Stages, never binary.** One damage number (0..1) per object; per-kind thresholds (cars
+  0.25 / 0.60 / 1.0) map it to intact → scuffed/dented → cracked/bent → destroyed.
+- **Hit by:** the fist (`PUNCH` on foot: a punch with no person in reach lands on the nearest
+  breakable thing in front, with no lunge through it), car impacts scaled by speed
+  (`impactDamage`: a slow nudge only scuffs, ~290 u/s crumples a car in one go), and a falling palm.
+- **Cars:** dents on the struck panel (painted scuffs below 0.25), then the stage sprites: dented
+  with cracked glass → bent chassis with dark hood smoke → crumpled smoking wreck with soot stain and
+  an engine ember that glows at dusk, wheels and trim on the ground. Crash energy is shared by mass;
+  the car you drive takes 60 %. A battered car is slower; a wreck is dead for the session (its
+  driver bails — a cop chases on foot if you're wanted; yours won't drive; nobody can jack it).
+- **Palms:** crack and lean away from the blows, crack deeper, then snap: fall away from the hit
+  (0.55 s, crown sweeping out from a split stump), land with a thud, crush what's under them (cars,
+  people, bushes, props), and lie there as a log (hop it on foot, cars bump over). Cars crack a palm
+  from ~160 u/s and snap it from ~210, then plough on.
+- **Bushes:** now shared world data (`World.buildBushes`, the same seeded 141). Leaves and petals
+  burst clear of the canopy; sheared → flattened (spread, bruised, tyre tracks if a car did it) →
+  torn out (root pit). Cars plough through, scaled by speed; still walk-through.
+- **Benches:** crack → snap in half → plank pile (stops blocking and counting for bench ollies).
+  **Street lamps:** skew and flicker → bend → down (light pool and wet reflection go dead).
+  **Lifeguard towers:** skew → roof caved → plank pile. **Rails** (the fence line), a ~64-unit
+  section at a time: bent → snapped → scrap; a section bent past 0.6 can't be grinded, a snapped one
+  isn't hopped. Solid props stop a slow car and break under a fast one, which carries on.
+- **Debris and smoke** come from fixed pools (180 / 56 slots, allocated once; the oldest slot is
+  reused), so no per-hit allocation and a hard cap. Debris slides, settles and stays; broken objects
+  themselves stay broken for the session.
+- **Score and wanted:** player-caused breakage scores (popups like `TIMBER +500`); in view of a cop
+  it's a star (2.5 s cooldown); in a witness's view they run or stare, and three reports are a star.
+- `node tools/destruct_check.mjs` — 51 headless rule checks. `node tools/destruct_shots.mjs
+  <before|after> [scene]` — staged action captures through the real input path (keyboard driving,
+  touch fight button) → `shots/destruct-<before|after>-<scene>.png` (before = clean main).
+
 ## Layout (`layout.json`)
 
 1 world unit = 10 cm. World 1800 × 2200. One drivable loop (rounded rectangle, 96 wide) with three
