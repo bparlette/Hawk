@@ -46,6 +46,13 @@ export function adaptLevel(canon) {
     ground,
     route: VICE_ROUTE,
     cells: canon.cells,          // raw [zone, type, z, lid, lidrot, dir, slope, palm] per cell — renderers draw from this
+    // Map objects + parked cars, straight from miami.cmp (REVIEW-e1 C1: layout lives in the level,
+    // never in an asset pack). Positions in tile units like route; rot in radians, clockwise from
+    // north like sim headings. Era packs say how a type LOOKS, never where it is.
+    placements: canon.placements ? {
+      objects: canon.placements.objects.map(o => ({ x: o.x, y: o.y, z: o.z, type: o.type, remap: o.remap, rot: o.rot / 1024 * 2 * Math.PI })),
+      cars: canon.placements.cars.map(c => ({ x: c.x, y: c.y, z: c.z, model: c.type, remap: c.remap, rot: c.rot / 1024 * 2 * Math.PI })),
+    } : { objects: [], cars: [] },
     zones: canon.zones,
     rect: canon.rect,
   };
