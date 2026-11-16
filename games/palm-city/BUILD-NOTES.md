@@ -363,7 +363,7 @@ kerb-side on the road grid (`PLACES`) — the spec's coordinates were up to 230 
 
 Sprites: Gemini's, `node tools/import_jobs.mjs` (shots/jobs-sprites → assets/jobs/ + jobs.json;
 bus and tow truck join `M.cars`, fares join `M.peds`). Checks: `node tools/jobs_check.mjs`
-(40 rules). Captures: `node tools/jobs_shots.mjs` → shots/jobs-{taxi-pickup,taxi-fed,tow-swing,
+(36 rules). Captures: `node tools/jobs_shots.mjs` → shots/jobs-{taxi-pickup,taxi-fed,tow-swing,
 bus-stop,getaway-decoy}.png (job started by a real touch on the job button).
 
 **Below the bar / still needs:** owner play; no kiosk board (jobs start from the vehicles only);
@@ -371,3 +371,17 @@ tow contracts 3+ are parked cars, not the spec's live cruiser / courier van; bus
 double-parked vans or rush-hour traffic; getaway has one difficulty tier and the crew are drawn
 only at pickup and on the board; fares/riders are drawn, not simulated pedestrians; vox_* hooks
 fire but play nothing until task 8.
+
+## City map (task 5B)
+
+MAP button under the wanted stars (canvas HUD, 58×28 at top-right — clear of the stick's left
+half and the bottom buttons; `M` on a keyboard). `src/map.js` paints the whole city from
+layout.json: every pixel's surface from `world.surfaceAt` in a painted palette with brush
+variation, buildings in roof colours with the plum ink line, palms, the pier — built once on
+first open. Labels: SOLANA, TACOS, DINER, NOVA, MOTEL (a pink dot on `motelDoor`, the siege
+entrance), GARAGE, POLICE, PIER, BEACH, SKATE PARK; cyan dots for the job vehicles and the active
+job/event target; police cars blink when you're wanted. The player is a gold arrow (position +
+facing). **The map is LIVE**: the game keeps running under it and the stick still moves you.
+`CHROME=… node tools/map_check.mjs`: 26 rules — POIs present and inside the frame, the marker
+tracking a scripted walk, and in the real page a touch opening it, a live walk under it, a touch
+closing it — and writes shots/map-{spawn,motel}.png.

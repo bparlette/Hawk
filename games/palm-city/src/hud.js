@@ -113,6 +113,15 @@ export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
     if (a > 0) { g.fillStyle = `rgba(14,8,28,${a})`; g.fillRect(0, 0, vw, vh); }
   }
 
+  // MAP toggle, under the stars
+  if (!sim.siege) {
+    const m = input.mapBtn();
+    g.fillStyle = input.mapOpen ? 'rgba(255,212,92,0.9)' : 'rgba(20,12,40,0.5)'; g.beginPath(); g.roundRect(m.x, m.y, m.w, m.h, 8); g.fill();
+    g.lineWidth = 2; g.strokeStyle = 'rgba(255,214,120,0.95)'; g.stroke();
+    g.font = font(12, 900); g.textAlign = 'center'; g.fillStyle = input.mapOpen ? '#210f2e' : '#ffe9b0';
+    g.fillText(input.mapOpen ? '✕ MAP' : 'MAP', m.x + m.w / 2, m.y + m.h / 2 + 1);
+  }
+
   // controls
   const b = input.button();
   const P = sim.player;

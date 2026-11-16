@@ -14,6 +14,7 @@ import { drawHud } from './hud.js';
 import { DemoPilot } from './demo.js';
 import { Director } from './director.js';
 import { jobButton } from './jobs.js';
+import { CityMap } from './map.js';
 
 const Q = new URLSearchParams(location.search);
 const DEMO = Q.has('demo');
@@ -66,6 +67,7 @@ const ground = new GroundPainter(world);
 const M = await loadAssets(p => loading(p * 0.8));
 renderer = new Renderer(ctx, world, ground, M);
 const siegeR = new SiegeRenderer(ctx, world, ground, M);
+const cityMap = new CityMap(world);
 renderer.resize(VIEW_W, view.h, DPR);
 if (Q.has('prof')) { renderer.prof = {}; window.__prof = renderer.prof; }
 
@@ -228,6 +230,9 @@ function frame(now) {
   const t = timeOfDay();
   if (sim.siege) siegeR.draw(sim, t, simTime, VIEW_W, view.h, DPR);
   else renderer.draw(sim, cam, t, simTime);
+  input.safeTop = safeTop();
+  if (sim.siege) input.mapOpen = false;
+  if (input.mapOpen) cityMap.draw(ctx, VIEW_W, view.h, DPR, sim, simTime);     // live: the game runs on under the map
   drawHud(ctx, VIEW_W, view.h, DPR, sim, input, t, simTime, { title: titleT, demo: DEMO, hintStick: !DEMO && simTime < 8, safeTop: safeTop() });
   audio.update(sim, cam, world);
   prefetch(dt);
@@ -270,4 +275,4 @@ function replayFrame(dt) {
   if (director.done || ((inp.action || inp.punch || input.stick) && p.t > 0.6)) { director.end(); last = performance.now(); acc = 0; }
 }
 requestAnimationFrame(frame);
-window.__palm = { director, world, ground, cam, dpr: () => DPR, get sim() { return sim; }, M };
+window.__palm = { director, input, world, ground, cam, dpr: () => DPR, get sim() { return sim; }, M };
