@@ -4,7 +4,10 @@
 // Pass 2: two-pass curl-following impasto brushstrokes with shadow under-ridges & edge glints.
 // Pass 3: painted details — curbs, lane paint, mosaic pavers, boardwalk planks, sand swirls,
 //         crosswalks, cracks, oil, wet reflection troughs, shoreline foam.
-// Nothing is baked bigger than one chunk; chunks are LRU-cached.
+// Nothing is baked bigger than one chunk. Painting is TIME-SLICED (perf pass): paintGen is a generator
+// that yields between rows / dab rows / detail layers, and work(budgetMs) advances queued chunks a few
+// milliseconds per frame, so streaming never paints a whole chunk in one frame. Every chunk stays
+// cached once painted (72 chunks, ~72 MB): revisits never repaint.
 
 import { mulberry32, fbm, vnoise } from './world.js';
 
@@ -57,28 +60,65 @@ export class GroundPainter {
   constructor(world) {
     this.world = world;
     this.cache = new Map(); // key -> canvas
-    this.order = [];
-    this.max = 48;
     this.cols = Math.ceil(world.L.world.w / CHUNK);
     this.rows = Math.ceil(world.L.world.h / CHUNK);
+    this.queue = [];        // [cx, cy] waiting to be painted, nearest-first
+    this.job = null;        // { k, gen } the chunk being painted a slice at a time
+    this.stats = { sync: 0, sliced: 0 };   // chunks painted all at once (a hitch) vs in slices
   }
 
   key(cx, cy) { return cx + ',' + cy; }
 
+  // A chunk that must be drawn NOW. Painted ahead by work() in the normal case; if not, finish it here
+  // (finishing the in-flight job if it's this chunk) — that's the hitch the prefetch is there to avoid.
   get(cx, cy) {
     const k = this.key(cx, cy);
-    let c = this.cache.get(k);
+    const c = this.cache.get(k);
     if (c) return c;
-    c = this.paint(cx, cy);
-    this.cache.set(k, c);
-    this.order.push(k);
-    while (this.order.length > this.max) this.cache.delete(this.order.shift());
-    return c;
+    let gen;
+    if (this.job && this.job.k === k) { gen = this.job.gen; this.job = null; } else gen = this.paintGen(cx, cy);
+    let r = gen.next();
+    while (!r.done) r = gen.next();
+    this.cache.set(k, r.value);
+    this.stats.sync++;
+    return r.value;
+  }
+
+  // Replace the wish list (nearest-first); chunks already painted are dropped.
+  request(list) {
+    this.queue.length = 0;
+    for (const [cx, cy] of list) if (!this.cache.has(this.key(cx, cy))) this.queue.push(cx, cy);
+  }
+
+  // Advance painting for up to budgetMs. Returns true while there's more to do.
+  work(budgetMs) {
+    const t0 = performance.now();
+    let qi = 0;
+    while (performance.now() - t0 < budgetMs) {
+      if (!this.job) {
+        while (qi < this.queue.length && this.cache.has(this.key(this.queue[qi], this.queue[qi + 1]))) qi += 2;
+        if (qi >= this.queue.length) return false;
+        const cx = this.queue[qi], cy = this.queue[qi + 1];
+        qi += 2;
+        this.job = { k: this.key(cx, cy), gen: this.paintGen(cx, cy) };
+      }
+      const r = this.job.gen.next();
+      if (r.done) { this.cache.set(this.job.k, r.value); this.job = null; this.stats.sliced++; }
+    }
+    return true;
   }
 
   has(cx, cy) { return this.cache.has(this.key(cx, cy)); }
 
+  // Paint a whole chunk at once (tools/profile.mjs times this).
   paint(cx, cy) {
+    const gen = this.paintGen(cx, cy);
+    let r = gen.next();
+    while (!r.done) r = gen.next();
+    return r.value;
+  }
+
+  *paintGen(cx, cy) {
     const W = this.world;
     const cv = document.createElement('canvas');
     cv.width = CPX; cv.height = CPX;
@@ -95,6 +135,7 @@ export class GroundPainter {
     const d = img.data;
     const typeGrid = new Uint8Array(gw * gw);
     for (let j = 0; j < gw; j++) {
+      if ((j & 15) === 15) yield;
       for (let i = 0; i < gw; i++) {
         const wx = ox + i * S / PX_PER_UNIT, wy = oy + j * S / PX_PER_UNIT;
         const wob = vnoise(wx * 0.055, wy * 0.055, 9) * 2 - 1;
@@ -119,6 +160,7 @@ export class GroundPainter {
         }
       }
     }
+    yield;
     sg.putImageData(img, 0, 0);
     g.imageSmoothingEnabled = true;
     g.imageSmoothingQuality = 'high';
@@ -141,6 +183,7 @@ export class GroundPainter {
       const count = pass === 0 ? Math.floor(PER * 0.50) : PER;
       const seedXor = pass ? 0x9e3779b9 : 0x5bd1e995;
       for (let ky = k0y; ky <= k1y; ky++) for (let kx = k0x; kx <= k1x; kx++) {
+        if (kx === k0x) yield;                           // a slice per row of brush cells
         const cr = mulberry32((kx * 73856093) ^ (ky * 19349663) ^ seedXor);
         for (let n = 0; n < count; n++) {
           const wx = (kx + cr()) * CELL, wy = (ky + cr()) * CELL;
@@ -233,12 +276,12 @@ export class GroundPainter {
     }
     g.globalAlpha = 1;
 
-    this.details(g, ox, oy, rnd, typeAt);
+    yield* this.details(g, ox, oy, rnd, typeAt);
     return cv;
   }
 
   // ---- pass 3: painted details in world coordinates
-  details(g, ox, oy, rnd, typeAt) {
+  *details(g, ox, oy, rnd, typeAt) {
     const W = this.world, P = PX_PER_UNIT;
     g.save();
     g.scale(P, P);
@@ -280,6 +323,7 @@ export class GroundPainter {
       }
     });
 
+    yield;
     // Hand-painted golden-cream dashed lane lines
     edgeWalk((x, y, ux, uy, s) => {
       if (W.roadInfo(x - uy * (hr + 6), y + ux * (hr + 6)).d < hr - 2 &&
@@ -293,6 +337,7 @@ export class GroundPainter {
       }
     });
 
+    yield;
     // Sidewalk slab joints
     const sw = W.L.roads.sidewalk;
     edgeWalk((x, y, ux, uy, s) => {
@@ -308,6 +353,7 @@ export class GroundPainter {
       }
     });
 
+    yield;
     // Plaza & paving terracotta mosaic, promenade boardwalk planks
     const sample = (x, y) => typeAt((x - ox) * P, (y - oy) * P);
     for (let y = oy - 8; y < oy + CHUNK + 8; y += 8) {
@@ -334,6 +380,7 @@ export class GroundPainter {
       }
     }
 
+    yield;
     // Beach sand wind-carved Van Gogh contour swirls & shells
     for (let n = 0; n < 48; n++) {
       const x = ox + rnd() * CHUNK, y = oy + rnd() * CHUNK;
@@ -343,6 +390,7 @@ export class GroundPainter {
       if (rnd() < 0.18) { g.globalAlpha = 0.85; g.fillStyle = '#fff5e2'; g.beginPath(); g.arc(x, y, 1.3, 0, 7); g.fill(); }
     }
 
+    yield;
     // Parking stalls: painted lines in parking rects.
     for (const q of W.L.ground) {
       if (q.type !== 'parking' || !inChunk(q.x + q.w / 2, q.y + q.h / 2, Math.max(q.w, q.h))) continue;
@@ -375,6 +423,7 @@ export class GroundPainter {
       }
     }
 
+    yield;
     // Oil stains, cracks, manholes, grass flowers.
     for (let n = 0; n < 70; n++) {
       const x = ox + rnd() * CHUNK, y = oy + rnd() * CHUNK;
@@ -405,6 +454,7 @@ export class GroundPainter {
       }
     }
 
+    yield;
     // Deep wet-asphalt reflection troughs & gutter sheen on roads
     const wr = mulberry32(((ox * 31) ^ (oy * 17)) >>> 0);
     for (let n = 0; n < 16; n++) {
@@ -422,6 +472,7 @@ export class GroundPainter {
       }
     }
 
+    yield;
     // Broken foamy scalloped surf along shoreX
     for (let y = Math.max(0, oy - 4); y < oy + CHUNK + 4; y += 3.8) {
       const sx = W.shoreX(y);

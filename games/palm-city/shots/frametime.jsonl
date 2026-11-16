@@ -1,0 +1,5 @@
+{"label":"before","frames":28,"throttle":4,"p50":733.3,"p95":1183.3,"p99":1366.6,"worst":1366.6,"over33":28,"dpr":null,"at":"2026-11-16T12:38:29.363Z"}
+{"label":"before","frames":25,"throttle":4,"p50":783.3,"p95":1266.6,"p99":1350,"worst":1350,"over33":25,"dpr":null,"at":"2026-11-16T12:39:05.851Z"}
+{"label":"before-x1","frames":119,"throttle":1,"p50":133.3,"p95":283.4,"p99":433.3,"worst":433.4,"over33":119,"dpr":null,"at":"2026-11-16T12:39:37.111Z"}
+{"label":"after-1","frames":158,"throttle":1,"p50":116.6,"p95":183.3,"p99":466.7,"worst":516.7,"over33":158,"dpr":null,"ground":{"sync":31,"sliced":16},"at":"2026-11-16T12:42:14.963Z"}
+{"label":"after-1b","frames":141,"throttle":1,"p50":133.3,"p95":183.4,"p99":250,"worst":300,"over33":141,"dpr":null,"ground":{"sync":3,"sliced":36},"at":"2026-11-16T12:42:52.598Z"}

@@ -81,6 +81,7 @@ for (let cy = -2; cy <= 2; cy++) for (let cx = -1; cx <= 1; cx++) {
   const gx = Math.floor(cam.x / CHUNK) + cx, gy = Math.floor(cam.y / CHUNK) + cy;
   if (gx >= 0 && gy >= 0 && gx < ground.cols && gy < ground.rows) ground.get(gx, gy);
 }
+ground.stats.sync = 0;   // the prewarm happens behind the loader; count only in-play hitches
 loading(1);
 
 function timeOfDay() {
@@ -89,14 +90,37 @@ function timeOfDay() {
   return Math.min(0.97, 0.18 + simTime / 200);  // ~3 minutes from golden hour into blue dusk, then holds
 }
 
-// paint at most one ground chunk per frame, ahead of the camera, so driving never hitches
-function prefetch() {
-  const m = 320, hw = VIEW_W / 2 / cam.zoom + m, hh = view.h / 2 / cam.zoom + m;
-  const c0 = Math.max(0, Math.floor((cam.x - hw) / CHUNK)), c1 = Math.min(ground.cols - 1, Math.floor((cam.x + hw) / CHUNK));
-  const r0 = Math.max(0, Math.floor((cam.y - hh) / CHUNK)), r1 = Math.min(ground.rows - 1, Math.floor((cam.y + hh) / CHUNK));
+// Ground streaming (perf pass): every frame, wish for the chunks around the view (plus a margin) and
+// around a lead point ~1.2 s ahead along the player's velocity, nearest-first, and let the painter
+// spend ~3 ms of time-sliced work on them. A chunk is never painted whole inside one frame unless it
+// is already on screen unpainted (ground.stats.sync counts those hitches).
+const wish = [], wishD = [];
+let lastFx = 0, lastFy = 0;
+function addRing(x, y, hw, hh) {
+  const c0 = Math.max(0, Math.floor((x - hw) / CHUNK)), c1 = Math.min(ground.cols - 1, Math.floor((x + hw) / CHUNK));
+  const r0 = Math.max(0, Math.floor((y - hh) / CHUNK)), r1 = Math.min(ground.rows - 1, Math.floor((y + hh) / CHUNK));
   for (let cy = r0; cy <= r1; cy++) for (let cx = c0; cx <= c1; cx++) {
-    if (!ground.has(cx, cy)) { ground.get(cx, cy); return; }
+    if (ground.has(cx, cy)) continue;
+    const d = Math.hypot((cx + 0.5) * CHUNK - cam.x, (cy + 0.5) * CHUNK - cam.y);
+    let i = 0; while (i < wish.length && (wish[i][0] !== cx || wish[i][1] !== cy)) i++;
+    if (i < wish.length) { wishD[i] = Math.min(wishD[i], d); continue; }
+    wish.push([cx, cy]); wishD.push(d);
   }
+}
+function prefetch(dt) {
+  const f = sim.focus();
+  const vx = dt > 0 ? (f.x - lastFx) / dt : 0, vy = dt > 0 ? (f.y - lastFy) / dt : 0;
+  lastFx = f.x; lastFy = f.y;
+  wish.length = 0; wishD.length = 0;
+  const m = 320, hw = VIEW_W / 2 / cam.zoom, hh = view.h / 2 / cam.zoom;
+  addRing(cam.x, cam.y, hw + m, hh + m);
+  if (Math.hypot(vx, vy) < 900) addRing(cam.x + vx * 1.2, cam.y + vy * 1.2, hw + 64, hh + 64);
+  if (wish.length) {
+    const idx = wish.map((_, i) => i).sort((a, b) => wishD[a] - wishD[b]);
+    ground.request(idx.map(i => wish[i]));
+  } else ground.request(wish);
+  // ~12% of the frame (3 ms at 60 fps, more on a slow device so streaming keeps pace with the car)
+  ground.work(Math.min(12, Math.max(3, dt * 120)));
 }
 
 // notch-safe HUD offset, in view units
@@ -148,7 +172,7 @@ function frame(now) {
   renderer.draw(sim, cam, t, simTime);
   drawHud(ctx, VIEW_W, view.h, DPR, sim, input, t, simTime, { title: titleT, demo: DEMO, hintStick: !DEMO && simTime < 8, safeTop: safeTop() });
   audio.update(sim, cam, world);
-  prefetch();
+  prefetch(dt);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
