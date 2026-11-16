@@ -129,6 +129,7 @@ export class World {
   // Palm trunk within `pad` of a point, or null.
   hitTrunk(x, y, pad = 0) {
     for (const t of this.trunks) {
+      if (this.felled && this.felled[t.i]) continue;   // a snapped palm (destruct.js) no longer stands
       const dx = x - t.x, dy = y - t.y, r = t.r + pad;
       if (dx * dx + dy * dy < r * r) return t;
     }

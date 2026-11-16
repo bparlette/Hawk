@@ -103,5 +103,49 @@ const clearCops = (s) => { s.cars = s.cars.filter(c => c.kind !== 'police'); };
   for (let i = 0; i < 8 && s.stars === 0; i++) punchN(s, 1);
   check('smashing a car in a cop\'s view raises wanted', s.stars > 0, `stars ${s.stars}`);
 }
+// ---- palms
+{
+  const s = fresh(); clearCops(s);
+  const t = s.palms[10];                                  // promenade palm at 1290,880
+  const p = s.player.ped; p.x = t.x - t.r - 8; p.y = t.y; p.h = 0;
+  for (const o of s.peds) if (o !== p && Math.hypot(o.x - p.x, o.y - p.y) < 80) o.x += 400;
+  punchN(s, 1);
+  check('a punch on a palm shakes it and marks it', t.dmg > 0 && t.stage === 0 && !!s.shakes[t.i]);
+  const stages = new Set([t.stage]);
+  for (let i = 0; i < 12 && !t.fall; i++) { punchN(s, 1); stages.add(t.stage); }
+  check('punched palm cracks, cracks deeper, then snaps', stages.has(1) && stages.has(2) && stages.has(3), [...stages].join(','));
+  check('it falls away from the punches', t.fall && t.fall.ax > 0.5, t.fall ? `fall dir ${t.fall.ax.toFixed(2)},${t.fall.ay.toFixed(2)}` : '');
+  check('a snapped palm no longer blocks', !s.W.hitTrunk(t.x, t.y, 0));
+  run(s, 1);
+  check('it lands (thud, fronds)', t.fall.landed && s.events.includes('timber'));
+  // walk across the log: a hop
+  const hops = s.events.filter(e => e === 'hop').length;
+  p.x = t.x + 30; p.y = t.y - 20; p.h = Math.PI / 2;
+  run(s, 1, { ...none, jx: 0, jy: 1, jm: 0.6 });
+  check('on foot you hop the fallen trunk', s.events.filter(e => e === 'hop').length > hops);
+}
+{
+  // a slow car only scuffs a palm and stops; a fast one snaps it and ploughs on
+  const s = fresh(); clearCops(s);
+  const t = s.palms[10];
+  const mk = (x, v) => { const c = s.addCar(x, 880, 0, 'sedan_teal', 'player'); s.player.mode = 'car'; s.player.car = c; s.player.ped.hidden = true; c.v = v; return c; };
+  const slow = mk(t.x - t.r - 26, 42); run(s, 2);
+  check('a slow nudge only scuffs a palm', t.dmg > 0 && t.stage === 0 && !t.fall, `dmg ${t.dmg.toFixed(2)}`);
+  s.cars = s.cars.filter(c => c !== slow);
+  const fast = mk(1150, 150); run(s, 1.2, { ...none, keys: { up: true } });
+  check('a fast car snaps the palm', !!t.fall, `dmg ${t.dmg.toFixed(2)}`);
+  check('and keeps going, slower', fast.x > t.x, `car x ${fast.x.toFixed(0)}`);
+  check('the car takes its own damage', fast.dmg > 0.05, `car dmg ${fast.dmg.toFixed(2)}`);
+}
+{
+  // a falling palm crushes what it lands on
+  const s = fresh(); clearCops(s);
+  const t = s.palms[10];
+  const victim = s.addCar(t.x - 70, t.y, 0, 'sedan_cream', null, { parked: true });
+  const { hitThing } = await import('../src/destruct.js');
+  hitThing(s, t, 1, -1, 0, 'player', 0);                  // hit from the east: it falls west, onto the car
+  run(s, 1);
+  check('a falling palm crushes the car it lands on', victim.dmg >= 0.5, `car dmg ${victim.dmg.toFixed(2)}`);
+}
 console.log(fails ? `DESTRUCT FAIL (${fails})` : 'DESTRUCT OK');
 process.exit(fails ? 1 : 0);

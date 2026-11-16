@@ -3,7 +3,7 @@
 
 import { mulberry32 } from './world.js';
 import { initSkate, stepBoard, stepCombo, nearBoard, mount, boardSpeed } from './skate.js';
-import { initDestruct, stepDestruct, punchWorld, carState, carImpact, carsCollide } from './destruct.js';
+import { initDestruct, stepDestruct, punchWorld, carState, carImpact, carsCollide, hitThing, palmImpact } from './destruct.js';
 
 const TAU = Math.PI * 2;
 const wrap = (a) => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
@@ -470,11 +470,13 @@ export class Sim {
     this.hitTree = null;
     if (!this.carBlocked(c, c.x + dx, c.y + dy, c.h)) { c.x += dx; c.y += dy; return; }
     const cause = c.driver === 'player' ? 'player' : 'world';
-    if (this.hitTree) {                                   // a palm: solid stop, and the tree answers
-      const tr = this.hitTree, sp = Math.abs(c.v);
+    if (this.hitTree) {                                   // a palm: the tree answers, scaled by speed
+      const tr = this.hitTree, sp = Math.abs(c.v), palm = this.palms[tr.i];
       if (sp > 20) this.shakeTree(tr, Math.min(1, 0.25 + sp / 220), dx, dy);
       if (sp > 60 && c.driver === 'player') this.crash(sp);
       carImpact(this, c, sp, cause);
+      if (palm && this.time - palm.hitT > 0.3) hitThing(this, palm, palmImpact(sp), dx, dy, cause, sp);
+      if (this.W.felled[tr.i]) { c.v *= 0.6; return; }  // snapped it: plough on, slower
       c.v *= -0.15;
       return;
     }

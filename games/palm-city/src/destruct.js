@@ -12,7 +12,7 @@
 const TAU = Math.PI * 2;
 // [stage 1, stage 2, stage 3] damage thresholds per kind
 export const STAGES = {
-  car: [0.25, 0.6, 1], palm: [0.35, 0.7, 1], bush: [0.35, 0.7, 1],
+  car: [0.25, 0.6, 1], palm: [0.3, 0.65, 1], bush: [0.35, 0.7, 1],
   bench: [0.25, 0.65, 1], lamp: [0.3, 0.65, 1], lifeguard: [0.3, 0.65, 1], rail: [0.25, 0.65, 1],
 };
 export const stageOf = (d, kind = 'car') => { const T = STAGES[kind]; return d >= T[2] ? 3 : d >= T[1] ? 2 : d >= T[0] ? 1 : 0; };
@@ -33,6 +33,7 @@ export function initDestruct(sim) {
   sim.heat = 0;             // witness reports since the last witness star
   sim.lastWreckStar = -9; sim.lastWitnessStar = -9;
   sim.wrecks = 0;
+  initPalms(sim);
 }
 
 export function spawnDebris(sim, kind, x, y, vx, vy, s, c = 0) {
@@ -269,4 +270,88 @@ export function stepDestruct(sim, dt) {
     }
   }
   for (const t of sim.things) if (t.step) t.step(sim, t, dt);
+}
+
+// ------------------------------------------------------------------ palms
+// A palm takes knocks (the existing shake + leaves), then cracks at the collar and leans away from
+// the blows (stage 1), cracks deeper and leans further (stage 2), then SNAPS (stage 3): it falls away
+// from the hit over FALL_T seconds, lands with weight and crushes what it lands on, and lies there for
+// the session as a log behind a split stump. world.felled marks it so it no longer blocks.
+export const FALL_T = 0.55;
+const PALM_PTS = [0, 60, 150, 500];
+export const palmReach = (t) => 77 * t.sc;            // stump to crown centre of the fallen sprite (SPRITES.md palm_s2)
+
+function initPalms(sim) {
+  const W = sim.W;
+  W.felled = new Uint8Array(W.trunks.length);          // reset per run: the world object is shared
+  sim.palms = [];
+  for (const tr of W.trunks) {
+    const t = { kind: 'palm', i: tr.i, tr, x: tr.x, y: tr.y, r: tr.r, sc: tr.sc, dmg: 0, stage: 0, hitT: -9, punch: 0.12, lx: 0, ly: 0, fall: null, step: stepPalm };
+    sim.things.push(t); sim.palms.push(t);
+  }
+}
+
+// Damage a car impact at speed sp does to a palm: a nudge only scuffs; flat out snaps it.
+// (crack from ~160 u/s, snap from ~210: ordinary fast driving fells a palm)
+export function palmImpact(sp) { return sp < 25 ? 0 : sp < 50 ? 0.03 : Math.min(1, impactDamage(sp) * 3.4); }
+
+registerKind('palm', (sim, t, before, after, dx, dy, cause, speed) => {
+  const l = Math.hypot(dx, dy) || 1, nx = dx / l, ny = dy / l;
+  sim.shakeTree(t.tr, Math.min(1, 0.3 + t.dmg * 0.7), nx, ny);
+  burst(sim, D.BARK, 2 + after, t.x - nx * t.r, t.y - ny * t.r, -nx, -ny, 45, 0.8);
+  // the lean follows the blows
+  t.lx += nx * 0.6; t.ly += ny * 0.6; const k = Math.hypot(t.lx, t.ly) || 1; t.lx /= k; t.ly /= k;
+  if (after > before) {
+    report(sim, t.x, t.y, PALM_PTS[after], after >= 3 ? 2 : after >= 2 ? 1 : 0, cause, after >= 3 ? 'TIMBER' : 'CRACKED PALM');
+    sim.ev(after >= 3 ? 'snap' : 'crack', after);
+  }
+  if (after >= 3 && !t.fall) {
+    t.fall = { t: 0, ax: nx, ay: ny, landed: false, cause };
+    sim.W.felled[t.i] = 1;
+  }
+});
+
+// Falling and fallen palms. Called from stepDestruct through t.step.
+export function stepPalm(sim, t, dt) {
+  const F = t.fall;
+  if (!F) return;
+  if (F.landed) { stepLog(sim, t, F); return; }
+  F.t += dt;
+  if (F.t < FALL_T) return;
+  F.landed = true;
+  // it lands: a thud, fronds everywhere, and anything under the trunk or crown is crushed
+  const L = palmReach(t), cx = t.x + F.ax * L, cy = t.y + F.ay * L, crown = 24 * t.sc;
+  burst(sim, D.FROND, 7, cx, cy, F.ax, F.ay, 70, 1);
+  burst(sim, D.FROND, 3, cx, cy, -F.ax, -F.ay, 50, 0.9);
+  sim.ev('timber');
+  const under = (x, y, pad) => {                         // distance to the trunk segment, or inside the crown
+    const u = Math.max(0, Math.min(L, (x - t.x) * F.ax + (y - t.y) * F.ay));
+    const px = t.x + F.ax * u, py = t.y + F.ay * u;
+    return Math.hypot(x - px, y - py) < 6 * t.sc + pad || Math.hypot(x - cx, y - cy) < crown + pad;
+  };
+  for (const c of sim.cars) if (under(c.x, c.y, c.wid / 2)) hitCar(sim, c, 0.55, F.ax, F.ay, F.cause);
+  for (const p of sim.peds) if (!p.hidden && p.mode !== 'down' && under(p.x, p.y, 4)) { sim.knockDown(p, F.ax * 60, F.ay * 60, 3); sim.ev('hit'); }
+  for (const o of sim.things) {
+    if (o === t || o.stage >= 3 || !under(o.x, o.y, o.r)) continue;
+    if (o.kind === 'palm') sim.shakeTree(o.tr, 1, F.ax, F.ay);
+    else hitThing(sim, o, 0.8, F.ax, F.ay, F.cause, 200);
+  }
+}
+
+// A fallen palm is a log on the ground: on foot you hop it (a beat of slowdown), a car bumps over it.
+function stepLog(sim, t, F) {
+  const L = palmReach(t) - 18 * t.sc;
+  const near = (x, y, pad) => {
+    const u = (x - t.x) * F.ax + (y - t.y) * F.ay;
+    if (u < 0 || u > L) return false;
+    return Math.abs((x - t.x) * -F.ay + (y - t.y) * F.ax) < 4 * t.sc + pad;
+  };
+  const P = sim.player;
+  if (P.mode === 'foot' && near(P.ped.x, P.ped.y, 2) && !(P.ped.hopT > 0) && sim.time - (t.hopT || -9) > 0.6) {
+    t.hopT = sim.time; P.ped.hopT = 0.26; P.slowT = Math.max(P.slowT || 0, 0.18); sim.ev('hop');
+  }
+  for (const c of sim.cars) {
+    if (Math.abs(c.v) < 30 || !near(c.x, c.y, c.wid / 2) || sim.time - (c.logT || -9) < 0.6) continue;
+    c.logT = sim.time; c.v *= 0.8; if (c.driver === 'player') sim.ev('bump');
+  }
 }
