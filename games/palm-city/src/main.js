@@ -144,7 +144,6 @@ function frame(now) {
   cam.y = Math.max(hh, Math.min(layout.world.h - hh, cam.y));
 
   const t = timeOfDay();
-  sim.marker = sim.player.mode === 'foot' ? sim.player.ped : null;
   renderer.draw(sim, cam, t, simTime);
   drawHud(ctx, VIEW_W, view.h, DPR, sim, input, t, simTime, { title: titleT, demo: DEMO, hintStick: !DEMO && simTime < 8, safeTop: safeTop() });
   audio.update(sim, cam, world);

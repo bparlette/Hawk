@@ -291,7 +291,6 @@ export class Renderer {
       const { m, k, rows } = this.carCell(c);
       this.drawCell(g, m.color, k, m.cols, rows, c.x, c.y);
     }
-    if (S.marker) this.drawMarker(g, S.marker, time);
     for (const s of this.statics) {
       if (s.kind === 'pier' || s.kind === 'fountain' || s.kind === 'lifeguard') continue;
       if (inView(s.bb)) this.drawEntry(g, s.e.color, s.x, s.y, s.sc);
@@ -559,14 +558,6 @@ export class Renderer {
     lg.globalAlpha = 0.9;
     lg.fillStyle = rg;
     lg.fillRect(c.x - 70, c.y - 70, 140, 140);
-  }
-
-  drawMarker(g, m, time) {
-    // a soft painted ring under the player so they read at a glance
-    const r = 13 + Math.sin(time * 4) * 1.5;
-    g.strokeStyle = 'rgba(255,236,170,0.75)';
-    g.lineWidth = 2;
-    g.beginPath(); g.ellipse(m.x, m.y, r, r * 0.9, 0, 0, 7); g.stroke();
   }
 }
 
