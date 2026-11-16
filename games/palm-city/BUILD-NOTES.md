@@ -291,3 +291,44 @@ shots/siege-{door,lobby,vend,tv,ac,roof,escape}.png, entered by a real touch on 
 Gemini's props are still flatter than the baked cutaway even after the paint filter; the
 foreground cruisers are top-down sprites squashed into the street (no side-view car bake) and
 there's no chopper body, only its spotlight; the cop's grab reuses the punch pose.
+
+## Sky + Street Pressure (v2 step 4)
+
+**Chopper** (`src/pressure.js`, 3★+): flies in, holds station up-left of its beam. The beam's
+ground pool (r 70) slews at a capped speed — 120/175/225 u/s at 3/4/5★ — on a figure-8 around
+where it last saw you (3★) or leading your velocity (4–5★). In the pool you're *seen*: the heat
+timer can't run down. A car at speed outruns the 3★ beam; inside the motel it leaves. Render:
+altitude shadow (shadow pass), body ×1.7 + spinning rotor above the roofs, and in the additive
+light layer a feathered cone, pool and 170 hashed dust motes (champagne by day, ice-cyan after
+dusk). Rotor thump + lock beep in `audio.js`.
+
+**Street** (4★+, driving): `spawnRoadblock` picks a straight stretch 500–800 units ahead on the
+loop: two cruisers nosed into a V (the second is the SWAT van at 5★), two sawhorses in the
+kerb-side gap, a spike strip on the approach. Sawhorses shatter above 130 u/s (−8% speed, +60,
+zoom-punch) and stop you short below it. Spikes blow any car's tyres (cops too): 150 u/s limp
+and a fighting wheel. Edge grade at 4–5★: amber rim by day, alternating red/blue washes at dusk.
+
+**2D camera feel** (`main.js` → `cam.kick`, `cam.roll`, applied in `render.js` worldTf only —
+HUD, grade and light composite stay level): zoom-punch ×1.06 on wrecks / hood landings / felled
+palms / smashed barricades; roll clamped to ±1.5° from yaw rate × speed, with ×1.055 overscan
+while tilted so corners never show. At 4–5★ a wreck or barricade smash also buys ~0.4 s at 0.35×.
+
+**Auto-director** (`src/director.js`): records the run as seed + per-step input log + weighted
+event marks. When BUSTED fades out it picks the best 20 s window (max summed weight), builds a
+fresh sim from the seed, fast-forwards the log to the window (2400 steps/frame) and plays it
+letterboxed with its own camera — cuts between follow / wide / tight-lead shots every 3.5–5 s,
+0.35× around the single heaviest mark. Any touch skips. Off under `?t=`/`?cam=`/`?nodirector`;
+`?demo&highlight` shows the demo run's highlight.
+
+**Tools.** `node tools/import_pressure.mjs` (Gemini's shots/pressure-sprites → assets/pressure/ +
+pressure.json); `node tools/pressure_check.mjs` (15 rules); `node tools/director_check.mjs`
+(10 rules, incl. re-simulation landing on exactly the live state); captures
+`node tools/pressure_shots.mjs <before|after> [scene]` → shots/pressure-*-{chopper,roadblock}-
+{golden,dusk}.png and `node tools/director_shots.mjs` → shots/director-{cut,slowmo}.png.
+
+**Below the bar / still needs:** owner play on a phone; no SWAT officers on foot at the block
+(the top-down SWAT sheets exist in shots/siege-sprites, not yet wired); the roadblock capture
+is staged on a bend (the live trigger only uses straights); the replay uses the current time of
+day, not the time the moment happened; input logs grow for the whole session (a very long run
+makes the fast-forward longer); smash-through café fences/crates/tables from the spec are not
+placed — sawhorses are the only new smashable.

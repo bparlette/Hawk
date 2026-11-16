@@ -12,6 +12,7 @@ import { Input } from './input.js';
 import { Audio } from './audio.js';
 import { drawHud } from './hud.js';
 import { DemoPilot } from './demo.js';
+import { Director } from './director.js';
 
 const Q = new URLSearchParams(location.search);
 const DEMO = Q.has('demo');
@@ -73,8 +74,19 @@ input.onFirst = () => audio.start();
 if (DEMO) { try { audio.start(); } catch (_) {} }
 
 let sim, pilot, simTime = 0;
+const SEED = 7;
+const director = new Director(SEED);
+const feel = { punch: 0, roll: 0, lastH: 0, slowT: 0 };      // 2D camera feel + the slow-mo beat
+const NO_DIRECTOR = Q.has('nodirector') || Q.has('t') || Q.has('cam');   // staged captures stay un-interrupted
+function onEvent(name, v) {
+  audio.play(name, v);
+  director.mark(name, v);
+  if (name === 'wreck' || name === 'timber' || name === 'hood' || (name === 'crash' && v > 150)) feel.punch = 1;
+  if (name === 'wreck' && sim && sim.stars >= 4) feel.slowT = 0.45;      // pressure: a beat of slow-mo on the big hits
+}
 function newRun() {
-  sim = new Sim(world, M, 7, (name, v) => audio.play(name, v));
+  director.reset(SEED);
+  sim = new Sim(world, M, SEED, onEvent);
   pilot = DEMO ? new DemoPilot(sim, world) : null;
   simTime = 0;
 }
@@ -155,11 +167,14 @@ let acc = 0, last = performance.now(), titleT = 3.2;
 function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000);
   last = now;
-  acc += dt;
+  if (director.play) { replayFrame(dt); requestAnimationFrame(frame); return; }
+  if (feel.slowT > 0) feel.slowT -= dt;
+  acc += dt * (feel.slowT > 0 ? 0.35 : 1);
   let steps = 0;
   while (acc >= STEP && steps < 6) {
     input.fightOn = sim.player.mode === 'foot' || sim.player.mode === 'siege';
     const inp = pilot ? pilot.input(STEP) : input.read();
+    director.record(inp);
     sim.step(STEP, inp);
     simTime += STEP;
     acc -= STEP; steps++;
@@ -168,6 +183,13 @@ function frame(now) {
   adaptResolution(dt);
   if (pilot && pilot.done) newRun();
   titleT -= dt;
+  // AUTO-DIRECTOR: as BUSTED fades to black, cut to the run's best 20 seconds (once per bust)
+  if (sim.busted && sim.busted.t > 2.9 && !sim.busted.replayed && (Q.has('highlight') || (!NO_DIRECTOR && !pilot))) {   // ?demo&highlight: show the demo run's highlight
+    sim.busted.replayed = true;
+    const win = director.pick();
+    if (win) { director.begin(world, M, (n, v) => audio.play(n, v), win); input.read(); requestAnimationFrame(frame); return; }
+  }
+  if (sim.punchZoom) { feel.punch = 1; if (sim.stars >= 4) feel.slowT = 0.3; sim.punchZoom = 0; }
 
   // camera: follow with lead in the direction of travel, ease out zoom at speed
   const f = sim.focus();
@@ -188,6 +210,20 @@ function frame(now) {
   cam.x = Math.max(hw, Math.min(layout.world.w - hw, cam.x));
   cam.y = Math.max(hh, Math.min(layout.world.h - hh, cam.y));
 
+  // 2D camera feel (world transform only): zoom-punch on the big hits, a few degrees of roll into turns
+  feel.punch *= Math.exp(-dt * 4.5);
+  let rollT = 0;
+  if (sim.player.mode === 'car' && !fixedCam) {
+    const c = sim.player.car;
+    let dh = c.h - feel.lastH; while (dh > Math.PI) dh -= Math.PI * 2; while (dh < -Math.PI) dh += Math.PI * 2;
+    rollT = Math.max(-0.026, Math.min(0.026, -(dh / Math.max(dt, 1e-3)) * Math.abs(c.v) / 290 * 0.022));   // clamp ±1.5°
+    feel.lastH = c.h;
+  }
+  feel.roll += (rollT - feel.roll) * (1 - Math.exp(-dt * 5));
+  const tilt = Math.min(1, Math.abs(feel.roll) / 0.008);
+  cam.roll = Math.abs(feel.roll) > 0.0005 ? feel.roll : 0;
+  cam.kick = fixedCam ? 1 : (1 + 0.06 * feel.punch) * (1 + 0.055 * tilt);     // overscan while tilted: corners stay covered
+
   const t = timeOfDay();
   if (sim.siege) siegeR.draw(sim, t, simTime, VIEW_W, view.h, DPR);
   else renderer.draw(sim, cam, t, simTime);
@@ -196,5 +232,41 @@ function frame(now) {
   prefetch(dt);
   requestAnimationFrame(frame);
 }
+// The highlight playback: the director's own sim, camera and cuts; letterboxed; any touch skips it.
+const rcam = { x: 0, y: 0, zoom: 1, kick: 1, roll: 0 };
+function replayFrame(dt) {
+  const p = director.play;
+  director.step(dt, STEP);
+  const g = ctx;
+  if (!p.ready) {                                       // re-simulating up to the window
+    g.setTransform(DPR, 0, 0, DPR, 0, 0); g.fillStyle = '#0e081c'; g.fillRect(0, 0, VIEW_W, view.h);
+  } else {
+    const s = p.sim, f = s.focus(), sh = director.shot;
+    let vx = 0, vy = 0;
+    if (s.player.mode === 'car') { const c = s.player.car; vx = Math.cos(c.h) * c.v; vy = Math.sin(c.h) * c.v; }
+    else if (s.player.mode === 'board') { vx = s.board.vx; vy = s.board.vy; }
+    const tx = f.x + vx * sh.lead, ty = f.y + vy * sh.lead, tz = sh.zoom * (p.slow ? 1.12 : 1);
+    const k = p.cut || !p.camSet ? 1 : 1 - Math.exp(-dt * 3.2);      // cuts (and the first frame) snap
+    p.cut = false; p.camSet = true;
+    rcam.x += (tx - rcam.x) * k; rcam.y += (ty - rcam.y) * k; rcam.zoom += (tz - rcam.zoom) * (k === 1 ? 1 : 1 - Math.exp(-dt * 4));
+    const hw = VIEW_W / 2 / rcam.zoom, hh = view.h / 2 / rcam.zoom;
+    rcam.x = Math.max(hw, Math.min(layout.world.w - hw, rcam.x)); rcam.y = Math.max(hh, Math.min(layout.world.h - hh, rcam.y));
+    const tod = timeOfDay();
+    if (s.siege) siegeR.draw(s, tod, p.i * STEP, VIEW_W, view.h, DPR);
+    else renderer.draw(s, rcam, tod, p.i * STEP);
+    g.setTransform(DPR, 0, 0, DPR, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+    const bar = 54, fade = Math.min(1, p.t / 0.3, (p.win.i1 - p.i) / 20);
+    g.fillStyle = '#0e081c'; g.fillRect(0, 0, VIEW_W, bar); g.fillRect(0, view.h - bar, VIEW_W, bar);
+    if (fade < 1) { g.fillStyle = `rgba(14,8,28,${1 - Math.max(0, fade)})`; g.fillRect(0, 0, VIEW_W, view.h); }
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = '900 17px "Avenir Next", Futura, system-ui, sans-serif'; g.fillStyle = '#ffd45c';
+    g.fillText(p.slow ? 'HIGHLIGHT  ·  SLOW-MO' : 'HIGHLIGHT', VIEW_W / 2, bar / 2 + Math.max(0, safeTop() - 10));
+    g.font = '600 12px "Avenir Next", Futura, system-ui, sans-serif'; g.fillStyle = 'rgba(255,241,216,0.7)';
+    g.fillText('tap to skip', VIEW_W / 2, view.h - bar / 2);
+    audio.update(s, rcam, world);
+  }
+  const inp = input.read();
+  if (director.done || ((inp.action || inp.punch || input.stick) && p.t > 0.6)) { director.end(); last = performance.now(); acc = 0; }
+}
 requestAnimationFrame(frame);
-window.__palm = { world, ground, cam, dpr: () => DPR, get sim() { return sim; }, M };
+window.__palm = { director, world, ground, cam, dpr: () => DPR, get sim() { return sim; }, M };
