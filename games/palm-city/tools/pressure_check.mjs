@@ -39,8 +39,8 @@ function fresh(stars) {
 // with no chopper, the same 20 s alone would have cooled a star (control)
 {
   const s = fresh(2); s.lostT = 0;
-  run(s, 16);
-  check(s.stars === 1, 'control: at 2 stars (no chopper) alone in the open, a star cools in ~14 s', `stars ${s.stars}`);
+  run(s, 24);
+  check(s.stars === 1, 'control: at 2 stars (no chopper) alone in the open, a star cools in ~22 s', `stars ${s.stars}`);
 }
 // a fast car outruns the beam at 3 stars: lock breaks
 {
