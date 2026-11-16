@@ -66,6 +66,9 @@ function endJob(sim, text, ok) {
   sim.ev(ok ? 'jobdone' : 'jobfail');
 }
 
+// leave the running job, exactly as getting out of the vehicle does (used by JUMP)
+export function quitJob(sim) { if (sim.job) endJob(sim, TITLES[sim.job.kind] + ' OVER', true); }
+
 export function startJob(sim, kind) {
   const c = sim.player.car, r = sim.rnd;
   const j = sim.job = { kind, car: c, t: 0, timer: 0, phase: '', target: null, spot: null, n: 0, earned: sim.score || 0 };

@@ -14,6 +14,7 @@ export class Input {
     this.fightOn = true;            // main.js turns the fight button off when the player isn't on foot
     this.keys = {};
     this.R = 56;
+    this.helpOpen = false; this.panelTap = null;        // HELP: main.js sets panelTap while a panel is up (it then owns every touch)
     this.mapOpen = false; this.safeTop = 0;   // the MAP toggle, top-right under the stars (main.js keeps safeTop fresh)
     this.onFirst = null;
     const opts = { passive: false };
@@ -28,6 +29,9 @@ export class Input {
       if (map[e.code]) { this.keys[map[e.code]] = true; e.preventDefault(); }
       if ((e.code === 'Space' || e.code === 'KeyE' || e.code === 'Enter') && !e.repeat) { this.actionEdge = true; e.preventDefault(); }
       if (e.code === 'KeyM' && !e.repeat) this.mapOpen = !this.mapOpen;
+      if ((e.code === 'KeyH' || e.code === 'Slash') && !e.repeat) this.helpOpen = !this.helpOpen;
+      if (e.code === 'Escape') this.helpOpen = false;
+      if (this.panelKey && this.panelKey(e.code)) { e.preventDefault(); return; }
       if (e.code === 'KeyF' || e.code === 'KeyX' || e.code === 'KeyJ') { if (!e.repeat) this.punchEdge = true; this.fightKey = true; e.preventDefault(); }
     });
     addEventListener('keyup', e => { if (map[e.code]) this.keys[map[e.code]] = false; if (e.code === 'KeyF' || e.code === 'KeyX' || e.code === 'KeyJ') this.fightKey = false; });
@@ -37,6 +41,7 @@ export class Input {
 
   button() { return { x: this.view.w - 72, y: this.view.h - 120, r: 44 }; }
   fight() { return { x: this.view.w - 164, y: this.view.h - 82, r: 34 }; }
+  helpBtn() { return { x: 12, y: this.safeTop + 62, w: 34, h: 28 }; }                 // top-left, under the clock
   mapBtn() { return { x: this.view.w - 70, y: this.safeTop + 62, w: 58, h: 28 }; }   // clear of the stick (left half) and the buttons (bottom)
 
   toView(e) {
@@ -48,7 +53,9 @@ export class Input {
     e.preventDefault();
     this.first();
     const p = this.toView(e);
-    const b = this.button(), f = this.fight(), m = this.mapBtn();
+    if (this.panelTap) { this.panelTap(p); return; }       // a panel is up: it gets the touch, the game gets nothing
+    const b = this.button(), f = this.fight(), m = this.mapBtn(), q = this.helpBtn();
+    if (p.x > q.x - 8 && p.x < q.x + q.w + 8 && p.y > q.y - 8 && p.y < q.y + q.h + 8) { this.helpOpen = true; return; }
     if (p.x > m.x - 6 && p.x < m.x + m.w + 6 && p.y > m.y - 6 && p.y < m.y + m.h + 6) { this.mapOpen = !this.mapOpen; return; }
     if (this.fightOn && Math.hypot(p.x - f.x, p.y - f.y) < f.r + 6 && this.fightId === null) {
       this.fightId = e.pointerId; this.fightDown = true; this.punchEdge = true;

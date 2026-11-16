@@ -255,6 +255,9 @@ function stepValet(sim, ev, dt) {
 }
 
 // ---------------------------------------------------------------- step (sim.step calls this every tick)
+// walk away from the running event (used by JUMP); points already banked stay banked
+export function quitEvent(sim) { const ev = sim.event; if (ev) endEvent(sim, ev.name + ' OVER', false, ev.kind === 'valet' ? { bays: ev.n } : undefined); }
+
 export function stepEvents(sim, dt) {
   if (sim.eventResult) { sim.eventResult.t -= dt; if (sim.eventResult.t <= 0) sim.eventResult = null; }
   const ev = sim.event;

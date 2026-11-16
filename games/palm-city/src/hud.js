@@ -115,6 +115,13 @@ export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
     if (a > 0) { g.fillStyle = `rgba(14,8,28,${a})`; g.fillRect(0, 0, vw, vh); }
   }
 
+  // HELP, top-left under the clock: pauses and lists everything there is to do
+  if (!sim.siege) {
+    const q = input.helpBtn();
+    g.fillStyle = 'rgba(20,12,40,0.5)'; g.beginPath(); g.roundRect(q.x, q.y, q.w, q.h, 8); g.fill();
+    g.lineWidth = 2; g.strokeStyle = 'rgba(255,214,120,0.95)'; g.stroke();
+    g.font = font(16, 900); g.textAlign = 'center'; g.fillStyle = '#ffe9b0'; g.fillText('?', q.x + q.w / 2, q.y + q.h / 2 + 1);
+  }
   // MAP toggle, under the stars
   if (!sim.siege) {
     const m = input.mapBtn();

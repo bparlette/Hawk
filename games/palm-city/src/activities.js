@@ -8,7 +8,9 @@
 //   live  : can it be started right now?      pos : world [x, y] the marker hangs over (null = hide)
 // A hub (the Garage's JOBS sign) is a signpost, not something you start: it gets a marker and no
 // HELP row. To add an activity, push one more entry in build() — nothing else needs touching.
-import { EVENTS } from './events.js';
+import { EVENTS, quitEvent } from './events.js';
+import { quitJob } from './jobs.js';
+import { dismount } from './skate.js';
 
 const JOB = {
   taxi:    { name: 'TAXI',    how: 'Get in the yellow cab and press START. Fares pay more when they stay happy.' },
@@ -55,3 +57,34 @@ export function markers(sim, out = []) {
 
 // the rows HELP and the start page list: everything startable, in one order
 export function helpRows(sim) { return (sim.activities || []).filter(a => a.group !== 'hub'); }
+
+// JUMP: put the player AT an activity, ready to play — free, no score or wanted change. Whatever
+// was running (a job, an event, a board ride, a drive) is ended cleanly first, exactly as getting
+// out would. Motel: on foot at the door, ENTER armed. Jobs: seated in the job vehicle, START armed.
+// Events: in a car on the ring, START armed. Returns true if the jump happened.
+export function jump(sim, id) {
+  const a = (sim.activities || []).find(q => q.id === id), P = sim.player, p = P.ped;
+  if (!a || a.group === 'hub' || P.mode === 'siege' || sim.siege || sim.busted) return false;
+  quitJob(sim); quitEvent(sim);
+  if (P.mode === 'board') dismount(sim);
+  const leave = () => { if (P.mode === 'car') { const c = P.car; c.v = 0; c.driver = null; c.parked = true; c.fixed = false; P.mode = 'foot'; P.car = null; p.hidden = false; } };
+  const seat = (c) => { leave(); c.driver = 'player'; c.parked = false; c.fixed = false; c.v = 0; c.siren = false; P.mode = 'car'; P.car = c; p.hidden = true; p.x = c.x; p.y = c.y; };
+  if (a.group === 'siege') {
+    leave();
+    const d = sim.W.L.motelDoor; p.x = d[0] + 14; p.y = d[1]; p.h = Math.PI; p.hidden = false;
+  } else if (a.group === 'job') {
+    const c = a.car();
+    if (!c || c.wreck) return false;
+    seat(c);
+  } else {
+    // an event wants a car: keep the one you are in, else borrow the nearest one that still runs
+    let c = P.mode === 'car' && !P.car.wreck && !P.car.job ? P.car : null;
+    if (!c) { let bd = 1e18; for (const k of sim.cars) { if (k.wreck || k.job || k.driver) continue; const d = (k.x - a.site.p[0]) ** 2 + (k.y - a.site.p[1]) ** 2; if (d < bd) { bd = d; c = k; } } }
+    if (!c) return false;
+    seat(c); c.x = a.site.p[0]; c.y = a.site.p[1]; c.h = -Math.PI / 2; p.x = c.x; p.y = c.y;
+  }
+  P.stunT = 0; P.slowT = 0;
+  sim.camSnap = true;                                   // main.js cuts the camera instead of swooping across town
+  sim.ev('door');
+  return true;
+}

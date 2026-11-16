@@ -26,6 +26,16 @@ await page.goto(`http://localhost:${server.address().port}/index.html`);
 await page.waitForFunction(() => window.__palm && window.__palm.sim);
 await page.waitForTimeout(1500);
 const cdp = await page.context().newCDPSession(page);
+{ // the start page is up first: tap PLAY, as a player would
+  const { helpLayout } = await import('../src/help.js');
+  const n = await page.evaluate(() => window.__palm.sim.activities.filter(a => a.group !== 'hub').length), vh = await page.evaluate(() => innerHeight);
+  const L = helpLayout(420, vh, n, 'start', 0);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: L.btn.x + L.btn.w / 2, y: L.btn.y + L.btn.h / 2, id: 8 }] });
+  await page.waitForTimeout(80);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await page.waitForTimeout(400);
+  if (await page.evaluate(() => window.__ui.start)) { console.error('TOUCH FAIL: PLAY did not dismiss the start page'); process.exitCode = 1; }
+}
 const touch = (type, pts) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts.map((p, i) => ({ x: p[0], y: p[1], id: p[2] ?? i })) });
 const state = () => page.evaluate(() => { const s = window.__palm.sim, f = s.focus(); return { mode: s.player.mode, x: f.x, y: f.y, v: f.v || 0, stars: s.stars }; });
 const fail = (m) => { console.error('TOUCH FAIL:', m); process.exitCode = 1; };
