@@ -64,6 +64,19 @@ the dunes with cut banks; the infield scrub sits darker so the road pops; the
 river runs a darker deep channel with current streaks and foam churn at the
 ford. Render-only again (`render.js`); verify still 10/10.
 
+**v4 (round 4, owner: "the left one looks great — keep making it better"):**
+the procedural field alone read as soft sculpted masses, so the big features
+are now hand-authored to echo the reference's composition: a dune ridge
+chained along the top with one smooth planar face falling to the river, the
+NE mud bowl raised into a dark earthwork, the hairpin bowl and the rib mound
+scaled up into true earthworks (taller rim + deep dish; taller mound, deeper
+ribs, longer cast shadow). The hillshade swings harder (gain 4.3, range
+0.50–1.55), height also reads in colour (dark red-brown lows, pale crests —
+mud exempt: his high mud stays dark), and the river sparkles with fine
+flecks + flow glints over a bright shallow lip. Look B gets a wider shade
+swing so the relief survives its smoothed upscale. `node tools/shots4.mjs`
+captures the v4 set into `shots4/`. Render-only again; verify still 10/10.
+
 **Honest approximations:** the thread's fluid simulation and global
 illumination are approximated (splash particles + wakes; consistent fixed
 sun shading). Phone feel is unverified — the owner's phone is the real gate.
