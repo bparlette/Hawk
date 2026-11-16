@@ -529,25 +529,28 @@ def build_car(kind, paint):
     root = bpy.data.objects.new('car', None)
     bpy.context.scene.collection.objects.link(root)
     track(root)
-    body = mat('paint', srgb(paint), rough=0.32, coat=0.9, noise=0.05, noise_scale=3)
-    glass = mat('glass', srgb('#141c30'), rough=0.05, spec=1.0, coat=1.0, noise=0)
-    trim = mat('trim', srgb('#22202a'), rough=0.6, noise=0)
-    chrome = mat('chrome', (0.8, 0.8, 0.8), rough=0.15, metal=1.0, noise=0)
-    tyre = mat('tyre', srgb('#16151a'), rough=0.9, noise=0)
-    head = mat('headl', (1, 0.95, 0.85), rough=0.2, emit=(1.0, 0.86, 0.62), night=40, day=0.6, noise=0)
-    tail = mat('taill', srgb('#c0102a'), rough=0.3, emit=(1.0, 0.08, 0.06), night=30, day=0.5, noise=0)
+    body = mat('paint', srgb(paint), rough=0.22, coat=1.0, noise=0.06, noise_scale=3, spec=0.85)
+    glass = mat('glass', srgb('#141c34'), rough=0.04, spec=1.0, coat=1.0, noise=0)
+    trim = mat('trim', srgb('#1f1d28'), rough=0.55, noise=0)
+    chrome = mat('chrome', (0.86, 0.88, 0.92), rough=0.1, metal=1.0, noise=0)
+    tyre = mat('tyre', srgb('#141318'), rough=0.9, noise=0)
+    head = mat('headl', (1, 0.95, 0.85), rough=0.2, emit=(1.0, 0.86, 0.62), night=42, day=0.6, noise=0)
+    tail = mat('taill', srgb('#c8142e'), rough=0.3, emit=(1.0, 0.1, 0.08), night=32, day=0.5, noise=0)
     objs = []
-    L, Wd = 4.6, 1.9
-    if kind == 'van':
-        L, Wd = 4.9, 2.0
+    L, Wd = (4.9, 2.0) if kind == 'van' else (4.6, 1.9)
     # wheels (peek out at the sides)
     for sx in (-1, 1):
         for sy in (-1, 1):
             objs.append(cyl((sx * (Wd / 2 - 0.12), sy * (L / 2 - 0.85), 0.34), 0.34, 0.26, tyre, rot=(0, math.pi / 2, 0)))
+
+    hl = mat('roofhl', tuple(min(1, c * 1.8 + 0.24) for c in srgb(paint)), rough=0.08, coat=1.0, spec=1.0, noise=0)
+    w_glint = mat('windglint', (0.62, 0.76, 0.96), rough=0.05, coat=1.0, spec=1.0, noise=0)
     if kind == 'van':
         objs.append(cube((0, 0, 0.95), (Wd, L, 1.5), body, bevel=0.22, name='body'))
         objs.append(cube((0, L / 2 - 0.65, 1.1), (Wd - 0.18, 0.9, 1.2), glass, bevel=0.15))  # windscreen wrap
         objs.append(cube((0, -0.2, 1.72), (Wd - 0.12, L - 1.3, 0.06), body, bevel=0.02))
+        objs.append(cube((-0.22, -0.1, 1.76), (0.48, L - 1.7, 0.015), hl))
+        objs.append(cube((0.35, -0.3, 1.76), (0.14, L - 2.1, 0.012), w_glint))
         for i in range(4):  # roof rack slats
             objs.append(cube((0, -1.3 + i * 0.7, 1.8), (Wd - 0.35, 0.07, 0.05), chrome))
         objs.append(cube((0, L / 2 - 0.08, 0.7), (Wd - 0.3, 0.1, 0.25), chrome))
@@ -555,11 +558,12 @@ def build_car(kind, paint):
         objs.append(cube((0, 0, 0.55), (Wd, L, 0.62), body, bevel=0.24, segs=4, name='body', taper=(0.9, 0.97)))
         for yy in (L / 2 - 0.95, -L / 2 + 0.75):  # hood / trunk shut lines
             objs.append(cube((0, yy, 0.86), (Wd - 0.5, 0.025, 0.02), trim))
-        objs.append(cube((0, L / 2 - 0.55, 0.865), (0.03, 0.7, 0.015), trim))  # hood crease
+        objs.append(cube((-0.25, L / 2 - 0.6, 0.865), (0.42, 0.65, 0.015), hl))  # hood glint
         if kind == 'convertible':
-            seat = mat('seat', srgb('#e9dcc4'), rough=0.7, noise=0.1)
+            seat = mat('seat', srgb('#f2e3c8'), rough=0.65, noise=0.1)
             objs.append(cube((0, 0.3, 0.86), (Wd - 0.35, 0.6, 0.06), glass, bevel=0.02))
             objs.append(cube((0, 0.55, 1.1), (Wd - 0.3, 0.08, 0.35), glass, rot=(0.5, 0, 0)))
+            objs.append(cube((-0.25, 0.53, 1.24), (0.55, 0.05, 0.04), w_glint))
             for sx in (-0.45, 0.45):
                 objs.append(cube((sx, -0.4, 0.95), (0.6, 0.65, 0.18), seat, bevel=0.08))
                 objs.append(cube((sx, -0.75, 1.15), (0.55, 0.15, 0.45), seat, bevel=0.06))
@@ -568,8 +572,10 @@ def build_car(kind, paint):
             cab_len = 2.2 if kind != 'taxi' else 2.1
             objs.append(cube((0, -0.25, 1.05), (Wd - 0.3, cab_len, 0.55), glass, bevel=0.12, segs=3, name='cabin', taper=(0.78, 0.62)))
             objs.append(cube((0, -0.3, 1.33), (Wd - 0.62, cab_len - 1.0, 0.05), body, bevel=0.06, name='roof'))
-            hl = mat('roofhl', tuple(min(1, c * 1.5 + 0.12) for c in srgb(paint)), rough=0.15, coat=1.0, noise=0)
-            objs.append(cube((-0.15, -0.1, 1.365), (0.35, cab_len - 1.3, 0.01), hl))  # sun glint on the roof
+            # Glossier dual-ribbon roof + windshield glints so cars catch sun at game zoom
+            objs.append(cube((-0.18, -0.18, 1.37), (0.45, cab_len - 1.15, 0.014), hl))
+            objs.append(cube((0.26, -0.32, 1.37), (0.14, cab_len - 1.35, 0.012), hl))
+            objs.append(cube((-0.15, 0.52, 1.15), (0.72, 0.18, 0.02), w_glint, rot=(0.35, 0, 0)))
     # lights
     for sx in (-1, 1):
         objs.append(cube((sx * (Wd / 2 - 0.32), L / 2 - 0.04, 0.62), (0.42, 0.1, 0.16), head, bevel=0.03))
@@ -585,11 +591,11 @@ def build_car(kind, paint):
             objs.append(cube((Wd / 2 + 0.005, -1.3 + i * 0.35, 0.62), (0.02, 0.17, 0.12), check))
             objs.append(cube((-Wd / 2 - 0.005, -1.3 + i * 0.35, 0.62), (0.02, 0.17, 0.12), check))
     if kind == 'police':
-        white = mat('pwhite', srgb('#f1ece2'), rough=0.35, coat=0.8, noise=0.03)
+        white = mat('pwhite', srgb('#f4efe4'), rough=0.25, coat=1.0, noise=0.03)
         objs.append(cube((0, 0, 1.36), (Wd - 0.4, 1.0, 0.04), white, bevel=0.04))   # white roof
         objs.append(cube((0, 1.55, 0.88), (Wd - 0.5, 0.9, 0.04), white, bevel=0.04))  # hood panel
-        red = mat('lbr', srgb('#d01a2a'), rough=0.3, emit=(1, 0.1, 0.1), night=6, day=0.4, noise=0)
-        blue = mat('lbb', srgb('#1a3ad0'), rough=0.3, emit=(0.1, 0.3, 1), night=6, day=0.4, noise=0)
+        red = mat('lbr', srgb('#e01a2a'), rough=0.3, emit=(1, 0.1, 0.1), night=7, day=0.4, noise=0)
+        blue = mat('lbb', srgb('#1a44e0'), rough=0.3, emit=(0.1, 0.3, 1), night=7, day=0.4, noise=0)
         objs.append(cube((-0.4, -0.05, 1.46), (0.7, 0.32, 0.16), red, bevel=0.05))
         objs.append(cube((0.4, -0.05, 1.46), (0.7, 0.32, 0.16), blue, bevel=0.05))
     parent_all(root, objs)
@@ -605,16 +611,16 @@ def car_headlight_rig(kind):
 
 
 CAR_SET = [
-    ('sedan_coral', 'sedan', '#e0644f'),
-    ('sedan_teal', 'sedan', '#2f9c9a'),
-    ('sedan_cream', 'sedan', '#efe0bd'),
-    ('sedan_plum', 'sedan', '#7a4a8c'),
-    ('conv_mint', 'convertible', '#7fd1b9'),
-    ('conv_rose', 'convertible', '#f08aa8'),
-    ('van_sky', 'van', '#7fb2de'),
-    ('van_sun', 'van', '#f2b134'),
-    ('taxi', 'taxi', '#ffc21a'),
-    ('police', 'police', '#1d2233'),
+    ('sedan_coral', 'sedan', '#e65a46'),
+    ('sedan_teal', 'sedan', '#24a6a2'),
+    ('sedan_cream', 'sedan', '#f2dfb4'),
+    ('sedan_plum', 'sedan', '#844ca0'),
+    ('conv_mint', 'convertible', '#6eddc0'),
+    ('conv_rose', 'convertible', '#f47ca2'),
+    ('van_sky', 'van', '#6caee8'),
+    ('van_sun', 'van', '#f5b028'),
+    ('taxi', 'taxi', '#ffc818'),
+    ('police', 'police', '#1a2238'),
 ]
 
 
@@ -633,7 +639,7 @@ def bake_cars():
             set_pass('color')
             frame(0, 0, CAR_FRAME, CAR_FRAME, CAR_PPM)
             render(f'{TMP}/c.png')
-            col.append(ink(kuwahara(load_np(f'{TMP}/c.png'), 1), 0.5, 0.25))
+            col.append(paint_finish(load_np(f'{TMP}/c.png'), kuw_r=2, stroke_r=2, stroke_s=0.28, line=0.68, inner=0.32))
             set_pass('shadow')
             scx, scy = SHADOW_DIR.x * 1.2, SHADOW_DIR.y * 1.2
             frame(scx, scy, CAR_SH_FRAME, CAR_SH_FRAME, CAR_SH_PPM)
