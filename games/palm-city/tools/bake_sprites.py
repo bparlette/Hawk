@@ -1409,6 +1409,23 @@ def bake_props():
             sphere((math.cos(ang) * d, math.sin(ang) * d, r * 1.05), 0.12, fl, segs=6)
         P[f'bush{i}'] = bake_static(f'bush{i}', None, r * 1.6, r * 1.3, night=False)
         save_manifest(); clear_asset()
+    if want('board'):
+        deck = mat('deck', srgb('#ff6f91'), rough=0.5, coat=0.6, noise=0.1, noise_scale=6)
+        grip = mat('grip', srgb('#2a2236'), rough=0.95, noise=0.3, noise_scale=60)
+        truck = mat('truck', srgb('#d8d8dc'), rough=0.3, metal=0.9, noise=0)
+        wheel = mat('wheel', srgb('#ffe08a'), rough=0.4, noise=0)
+        # game scale like the people (x2.4): 0.8 m deck -> ~1.9 m
+        S = 2.4
+        cube((0, 0, 0.11 * S), (0.21 * S, 0.8 * S, 0.02 * S), deck, bevel=0.09 * S, segs=6)
+        cube((0, 0, 0.125 * S), (0.17 * S, 0.62 * S, 0.004 * S), grip, bevel=0.06 * S)
+        stripe = mat('stripe', srgb('#fff1d8'), rough=0.5, noise=0)
+        cube((0, 0.2 * S, 0.128 * S), (0.17 * S, 0.03 * S, 0.003 * S), stripe)
+        for sy in (-0.27, 0.27):
+            cube((0, sy * S, 0.07 * S), (0.16 * S, 0.04 * S, 0.03 * S), truck)
+            for sx in (-0.09, 0.09):
+                cyl((sx * S, sy * S, 0.03 * S), 0.028 * S, 0.03 * S, wheel, verts=12, rot=(0, math.pi / 2, 0))
+        P['board'] = bake_static('board', None, 1.2, 0.4, night=False, kuw=1)
+        save_manifest(); clear_asset()
     if want('lamp'):
         lx, ly, lh = build_lamp()
         e = bake_static('lamp', None, (2.2, 0.8), lh, night=True, night_half=(10, 10))

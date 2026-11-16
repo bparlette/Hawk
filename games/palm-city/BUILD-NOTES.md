@@ -67,6 +67,31 @@ gold → rose → violet, slow swell lines, ~1,400 twinkling glints, and a pulsi
 - **Cars**: a glossy sun-glint panel on each roof so cars read at game zoom.
 - **Life**: 40 pedestrians, 40 % of them on the promenade.
 
+## v2 step 2 — skateboard (`src/skate.js`)
+
+A board lies by the spawn (`layout.spawn.board`). Action button: **BOARD** (pick up, when it's at
+your feet and nearer than any car) → **OLLIE** while rolling → **POP** off a grind → **DROP**
+when nearly stopped.
+
+- **Carve physics**: the stick turns the deck (3.4 rad/s grounded, 1.4 in the air); pushing only
+  adds speed when the stick is roughly along the deck; velocity bends toward the deck heading and
+  keeps most of its speed, so lines carry momentum. Grass and sand drag hard; water bails you.
+- **Grinds**: land an ollie within 9 units of a rail (`layout.rails`: both promenade rails, the plaza
+  edges) with the deck along it → locked grind that ticks points; or on the fountain rim
+  (`layout.rims`) — the pool-edge grind. Pop out with the button.
+- **Ollies**: bench ollies (`layout.benches`), curb hops (crossing the kerb line in the air),
+  **hood ollies** (crossing a car in the air: +300, a **cop** car +900, and it kicks you higher).
+  **Near-misses**: a fast car passing within ~16 units while you're grounded.
+- **Bails**: a wall above 140 u/s, a bench or a car while grounded, water, or a cop grabbing you
+  → on foot, 1.1 s stun, board skitters on, the combo is lost.
+- **WANTED LINE**: every trick feeds one combo (points × multiplier, +1 per trick, max ×12) with a
+  2.6 s fuse that pauses while you're grinding or in the air; it cashes out when the fuse burns
+  down, and is labelled WANTED LINE while you have stars.
+- **HOT ENTRY**: a cop-hood ollie that lands within 70 units of the motel door
+  (`layout.motelDoor`) at 3+ stars sets `sim.hotEntry` (+1500) — the siege (step 3) reads it.
+- `node tools/skate_check.mjs` — 9 headless rule checks (pickup, push, momentum, rail grind, combo,
+  cop hood, near-miss, wall bail, drop).
+
 ## Layout (`layout.json`)
 
 1 world unit = 10 cm. World 1800 × 2200. One drivable loop (rounded rectangle, 96 wide) with three

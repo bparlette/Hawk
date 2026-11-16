@@ -764,6 +764,22 @@
   }
  },
  "props": {
+  "board": {
+   "color": {
+    "file": "board.webp",
+    "h": 24.0,
+    "ox": -12.0,
+    "oy": -12.0,
+    "w": 24.0
+   },
+   "shadow": {
+    "file": "board_sh.webp",
+    "h": 55.79,
+    "ox": -27.0,
+    "oy": -28.79,
+    "w": 60.69
+   }
+  },
   "bush0": {
    "color": {
     "file": "bush0.webp",

@@ -227,7 +227,13 @@ export class Renderer {
     for (const p of S.peds) {
       if (p.x < vx0 - 60 || p.x > vx1 + 60 || p.y < vy0 - 60 || p.y > vy1 + 60 || p.hidden) continue;
       const { m, idx, rows } = this.pedCell(p);
-      this.drawCell(sg, m.shadow, idx, m.cols, rows, p.x, p.y);
+      const lift = p.outfit === 'player' && S.board && S.board.ridden ? S.board.z * 9 : 0;
+      this.drawCell(sg, m.shadow, idx, m.cols, rows, p.x + lift, p.y - lift * 0.3);
+    }
+    if (S.board) {
+      const b = S.board, f = this.M.props.board.shadow;
+      sg.save(); sg.translate(b.x + b.z * 9, b.y - b.z * 3); sg.rotate(b.h + Math.PI / 2);
+      sg.drawImage(f.img, f.ox, f.oy, f.w, f.h); sg.restore();
     }
     sg.setTransform(1, 0, 0, 1, 0, 0);
     sg.globalCompositeOperation = 'source-in';
@@ -244,6 +250,13 @@ export class Renderer {
     // ---------------- 3. colour sprites
     worldTf(g);
     for (const s of this.statics) if (s.kind === 'pier' || s.kind === 'fountain' || s.kind === 'lifeguard') if (inView(s.bb)) this.drawEntry(g, s.e.color, s.x, s.y);
+    this.drawSkatePark(g, S);
+    if (S.board) {
+      const b = S.board, f = this.M.props.board.color, k = 1 + b.z * 0.35;
+      g.save(); g.translate(b.x, b.y); g.rotate(b.h + Math.PI / 2); g.scale(k, k);
+      if (b.grind) { g.shadowColor = 'rgba(255,220,140,0.9)'; g.shadowBlur = 8; }
+      g.drawImage(f.img, f.ox, f.oy, f.w, f.h); g.restore();
+    }
     for (const p of S.peds) {
       if (p.hidden || p.x < vx0 - 30 || p.x > vx1 + 30 || p.y < vy0 - 30 || p.y > vy1 + 30) continue;
       const { m, idx, rows } = this.pedCell(p);
@@ -251,7 +264,8 @@ export class Renderer {
         g.save(); g.translate(p.x, p.y); g.rotate(p.spin || 0); g.scale(1, 0.75);
         this.drawCell(g, m.color, idx, m.cols, rows, 0, 0); g.restore();
       } else if (p.outfit === 'player') {  // the hero is drawn a touch larger so you never lose them
-        g.save(); g.translate(p.x, p.y); g.scale(1.2, 1.2);
+        const z = S.board && S.board.ridden ? S.board.z : 0;
+        g.save(); g.translate(p.x, p.y); g.scale(1.2 + z * 0.4, 1.2 + z * 0.4);
         this.drawCell(g, m.color, idx, m.cols, rows, 0, 0); g.restore();
       } else this.drawCell(g, m.color, idx, m.cols, rows, p.x, p.y);
     }
@@ -477,6 +491,31 @@ export class Renderer {
       }
     }
     lg.globalAlpha = 1;
+  }
+
+  // rails, benches and the fountain rim — painted in place (metal glints, wood slats)
+  drawSkatePark(g, S) {
+    if (!S.rails) return;
+    g.lineCap = 'round';
+    for (const r of S.rails) {
+      g.strokeStyle = 'rgba(40,24,60,0.35)'; g.lineWidth = 4;
+      g.beginPath(); g.moveTo(r.x0 + 4, r.y0 - 1.5); g.lineTo(r.x1 + 4, r.y1 - 1.5); g.stroke();
+      g.strokeStyle = '#d9d4e6'; g.lineWidth = 2.4;
+      g.beginPath(); g.moveTo(r.x0, r.y0); g.lineTo(r.x1, r.y1); g.stroke();
+      g.strokeStyle = '#fff4dc'; g.lineWidth = 0.8;
+      g.beginPath(); g.moveTo(r.x0 - 0.6, r.y0 - 0.6); g.lineTo(r.x1 - 0.6, r.y1 - 0.6); g.stroke();
+    }
+    for (const b of S.benches) {
+      g.save(); g.translate(b.x, b.y); g.rotate(b.a);
+      g.fillStyle = 'rgba(40,24,60,0.35)'; g.fillRect(-b.w / 2 + 3, -b.d / 2 + 2, b.w, b.d);
+      for (let i = 0; i < 3; i++) { g.fillStyle = ['#c9875a', '#b97a50', '#d8966a'][i]; g.fillRect(-b.w / 2, -b.d / 2 + i * 3, b.w, 2.6); }
+      g.fillStyle = '#3a3044'; g.fillRect(-b.w / 2 + 2, -b.d / 2 - 0.5, 2, b.d + 1); g.fillRect(b.w / 2 - 4, -b.d / 2 - 0.5, 2, b.d + 1);
+      g.restore();
+    }
+    for (const c of S.rims) {
+      g.strokeStyle = 'rgba(255,248,230,0.55)'; g.lineWidth = 1.2;
+      g.beginPath(); g.arc(c.x, c.y, c.r, 0, Math.PI * 2); g.stroke();
+    }
   }
 
   drawSiren(lg, c, time) {

@@ -60,6 +60,34 @@ export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
     g.globalAlpha = 1;
   }
 
+  // WANTED LINE combo
+  if (sim.combo) {
+    const c = sim.combo, y = top + 52;
+    g.textAlign = 'center';
+    g.font = font(13, 800);
+    g.fillStyle = sim.stars > 0 ? '#ff7a8a' : '#ffe9b0';
+    g.fillText(sim.stars > 0 ? 'WANTED LINE' : 'LINE', vw / 2, y);
+    g.font = font(26, 900);
+    g.lineWidth = 5; g.strokeStyle = 'rgba(40,20,60,0.6)';
+    const txt = `${c.pts.toLocaleString()} × ${c.mult}`;
+    g.strokeText(txt, vw / 2, y + 24); g.fillStyle = '#fff1d8'; g.fillText(txt, vw / 2, y + 24);
+    g.fillStyle = 'rgba(255,241,216,0.3)'; g.fillRect(vw / 2 - 60, y + 42, 120, 4);
+    g.fillStyle = '#ffd45c'; g.fillRect(vw / 2 - 60, y + 42, 120 * Math.max(0, c.t / 2.6), 4);
+  }
+  if (sim.lastTrick) {
+    const L = sim.lastTrick;
+    g.globalAlpha = Math.min(1, L.t / 0.3);
+    g.textAlign = 'center'; g.font = font(18, 900);
+    g.lineWidth = 4; g.strokeStyle = 'rgba(40,20,60,0.6)';
+    g.strokeText(`${L.name} +${L.pts}`, vw / 2, vh * 0.62 - (1.2 - L.t) * 30);
+    g.fillStyle = '#ffd45c'; g.fillText(`${L.name} +${L.pts}`, vw / 2, vh * 0.62 - (1.2 - L.t) * 30);
+    g.globalAlpha = 1;
+  }
+  if (sim.score) {
+    g.textAlign = 'right'; g.font = font(14, 800); g.fillStyle = '#fff1d8';
+    g.fillText(sim.score.toLocaleString() + ' pts', vw - 16, top + 38);
+  }
+
   // event message
   if (sim.msg) {
     const m = sim.msg, big = m.text === 'BUSTED';
@@ -87,6 +115,8 @@ export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
   const P = sim.player;
   let label = '';
   if (P.mode === 'car') label = Math.abs(P.car.v) < 60 ? 'EXIT' : '';
+  else if (P.mode === 'board') label = Math.hypot(sim.board.vx, sim.board.vy) < 22 ? 'DROP' : sim.board.grind ? 'POP' : 'OLLIE';
+  else if (!sim.board.ridden && Math.hypot(sim.board.x - P.ped.x, sim.board.y - P.ped.y) < 26) label = 'BOARD';
   else if (sim.cars.some(c => Math.hypot(c.x - P.ped.x, c.y - P.ped.y) < 40)) label = 'JACK';
   g.globalAlpha = 1;
   g.beginPath(); g.arc(b.x, b.y, b.r, 0, Math.PI * 2);
