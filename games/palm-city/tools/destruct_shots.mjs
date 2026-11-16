@@ -3,7 +3,7 @@
 // (touch for the fight button, the keyboard for driving), and captured mid-destruction.
 // Usage: CHROME=/path/to/chrome node tools/destruct_shots.mjs <before|after> [scene ...]
 //   -> shots/destruct-<before|after>-<scene>.png
-//   scenes: car-punch, car-ram, palm-ram, bush-plow, bench-ram, lamp-ram
+//   scenes: car-punch, car-ram, palm-ram, palm-fall, bush-plow, bench-ram, lamp-ram
 import { chromium } from 'playwright-core';
 import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -71,6 +71,14 @@ await scene('car-punch', () => { const s = window.__palm.sim, p = s.player.ped; 
 await scene('car-ram', inCar(1170, 1300, 0, 0), drive('false', 0, 400));
 // palm-ram: floor it into a promenade palm; captured mid-fall
 await scene('palm-ram', inCar(1150, 880, 0, 0), drive('false', 0, 250));
+// palm-fall: the same hit, captured mid-fall (waits on the palm's fall clock in the sim)
+await scene('palm-fall', inCar(1150, 880, 0, 0), async (page) => {
+  await page.keyboard.down('ArrowUp');
+  // freeze the sim at mid-fall (rendering carries on) so the slow software capture can't miss it
+  await page.waitForFunction(() => { const s = window.__palm.sim, f = s.palms[10].fall; if (f && f.t > 0.42) { s.step = () => {}; return true; } return false; }, null, { timeout: 15000, polling: 'raf' });
+  await page.keyboard.up('ArrowUp');
+  await page.waitForTimeout(300);
+});
 // bush-plow: drive through a cluster of five bushes on the villa lawns
 await scene('bush-plow', inCar(34, 1771, 0, 0), drive('c.x > 215', 0, 0));
 // bench-ram: cross the promenade into the side of a bench

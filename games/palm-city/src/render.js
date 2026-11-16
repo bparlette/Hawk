@@ -9,7 +9,7 @@
 
 import { CHUNK } from './ground.js';
 import { mulberry32 } from './world.js';
-import { DEBRIS_CAP, SMOKE_CAP, STAGES, stageOf } from './destruct.js';
+import { DEBRIS_CAP, SMOKE_CAP, STAGES, stageOf, FALL_T, palmReach } from './destruct.js';
 
 // procedural debris colours (index = destruct.js D kind) for the kinds with no sprite
 const DEBRIS_COL = ['#d8f0ff', '#8a8f9c', '#b97a50', '#e0a878', '#6fa844', '#7a5232', '#523420', '#b8b0a4', '#222', '#6fa844', '#ff6494'];
@@ -183,14 +183,53 @@ export class Renderer {
 
   // A static that may be mid-shake (a palm that just took a knock): the trunk jolts along the
   // impact and the crown twists, both dying away over about a second.
+  // Palms also carry their destruction state (destruct.js): a cracked palm leans away from the blows
+  // with a split showing at the collar; a snapped one falls (crown sweeping out from the stump), then
+  // lies on the ground as Gemini's fallen-trunk sprite.
   drawStatic(g, s, f, S) {
+    const P = s.kind === 'palm' && S.palms ? S.palms[s.ti] : null;
+    if (P && P.fall) {                                 // no tall shadow once it goes; a landed palm is drawn at ground level
+      if (f === s.e.color && !P.fall.landed) this.drawFallenPalm(g, s, P);
+      return;
+    }
     const sh = s.kind === 'palm' && S.shakes ? S.shakes[s.ti] : null;
-    if (!sh) { this.drawEntry(g, f, s.x, s.y, s.sc); return; }
-    const e = Math.exp(-3.6 * sh.t) * sh.amp;
+    const lean = P && P.stage ? (P.stage === 1 ? 4 : 8) * s.sc : 0;
+    if (!sh && !lean) { this.drawEntry(g, f, s.x, s.y, s.sc); return; }
+    const e = sh ? Math.exp(-3.6 * sh.t) * sh.amp : 0;
     g.save();
-    g.translate(s.x + sh.ax * Math.sin(sh.t * 40) * 4.5 * e, s.y + sh.ay * Math.sin(sh.t * 40) * 4.5 * e);
-    g.rotate(Math.sin(sh.t * 27) * 0.13 * e);
+    const lx = lean ? P.lx * lean : 0, ly = lean ? P.ly * lean : 0;
+    g.translate(s.x + (sh ? sh.ax * Math.sin(sh.t * 40) * 4.5 * e : 0) + lx, s.y + (sh ? sh.ay * Math.sin(sh.t * 40) * 4.5 * e : 0) + ly);
+    g.rotate((sh ? Math.sin(sh.t * 27) * 0.13 * e : 0) + (lean ? 0.05 * P.stage : 0));
     this.drawEntry(g, f, 0, 0, s.sc);
+    g.restore();
+    if (lean && f === s.e.color) {                    // the split at the collar, facing the blows
+      const a = Math.atan2(-P.ly, -P.lx);
+      g.save(); g.translate(s.x, s.y); g.rotate(a);
+      g.fillStyle = '#ddb47e'; g.strokeStyle = '#210f2e'; g.lineWidth = 0.8;
+      g.beginPath(); g.moveTo(3.5 * s.sc, -2.2 * P.stage); g.lineTo(7 * s.sc, 0); g.lineTo(3.5 * s.sc, 2.2 * P.stage); g.closePath(); g.fill(); g.stroke();
+      g.restore();
+    }
+  }
+
+  drawFallenPalm(g, s, P) {
+    const X = this.M.destruct, F = P.fall, sc = s.sc, ang = Math.atan2(F.ay, F.ax);
+    const u = Math.min(1, F.t / FALL_T);
+    if (u >= 1 && X && X.palm_s2) {                    // settled: the fallen trunk + crown, anchored at the stump
+      const e = X.palm_s2;
+      g.save(); g.translate(s.x, s.y); g.rotate(ang); g.scale(sc, sc);
+      g.drawImage(e.img, e.ox, e.oy, e.w, e.h); g.restore();
+      return;
+    }
+    // falling: it tips under gravity — the crown sweeps out along the fall and the trunk stretches to it
+    const th = u * u * Math.PI / 2, L = palmReach(P) * Math.sin(th), cx = s.x + F.ax * L, cy = s.y + F.ay * L;
+    g.lineCap = 'round';
+    g.strokeStyle = '#210f2e'; g.lineWidth = 9 * sc;
+    g.beginPath(); g.moveTo(s.x, s.y); g.lineTo(cx, cy); g.stroke();
+    g.strokeStyle = '#a6764c'; g.lineWidth = 7 * sc;
+    g.beginPath(); g.moveTo(s.x, s.y); g.lineTo(cx, cy); g.stroke();
+    g.fillStyle = '#ddb47e'; g.beginPath(); g.arc(s.x, s.y, 4.5 * sc, 0, 7); g.fill();
+    g.save(); g.translate(cx, cy); g.rotate(th * 0.6 * Math.sign(F.ax || 1));
+    this.drawEntry(g, s.e.color, 0, 0, sc * (1 - 0.12 * Math.sin(th)));
     g.restore();
   }
 
@@ -318,6 +357,11 @@ export class Renderer {
       g.save(); g.translate(b.x, b.y); g.rotate(b.h + Math.PI / 2); g.scale(k, k);
       if (b.grind) { g.shadowColor = 'rgba(255,220,140,0.9)'; g.shadowBlur = 8; }
       g.drawImage(f.img, f.ox, f.oy, f.w, f.h); g.restore();
+    }
+    if (S.palms) for (const s of this.statics) {      // fallen palms lie on the ground, under people and cars
+      if (s.kind !== 'palm') continue;
+      const P = S.palms[s.ti];
+      if (P.fall && P.fall.landed && inView(s.bb, 140)) this.drawFallenPalm(g, s, P);
     }
     if (this.scorch) for (const c of S.cars) {          // soot stain under every wreck
       if (!c.wreck || c.x < vx0 - 40 || c.x > vx1 + 40 || c.y < vy0 - 40 || c.y > vy1 + 40) continue;
