@@ -14,10 +14,10 @@ const CPX = CHUNK * PX_PER_UNIT; // 512
 // Daylight albedo per surface (the time-of-day grade is applied later, in the lighting pass).
 const PAL = {
   road:      { base: [72, 66, 112],  var: [20, 18, 30], dabs: ['#5a5292', '#6e62a8', '#463f7c', '#8576b4', '#4e5a96', '#9a7fb0', '#3d3870'] },
-  sidewalk:  { base: [222, 176, 150], var: [18, 16, 16], dabs: ['#f0c4a0', '#d09684', '#f6d2ac', '#c4888a', '#e8b490'] },
+  sidewalk:  { base: [236, 214, 190], var: [14, 12, 12], dabs: ['#f6e6cc', '#dcc4ac', '#fff0dc', '#cdb6a4', '#eedcc0'] },
   paving:    { base: [200, 120, 88], var: [24, 18, 16], dabs: ['#dc8c60', '#b8624e', '#e8a474', '#a85848', '#d87a62', '#f0b47e'] },
   plaza:     { base: [230, 190, 146], var: [16, 14, 14], dabs: ['#f4cf98', '#dca880', '#ecb98c', '#d09080', '#fadca8'] },
-  parking:   { base: [88, 80, 120],  var: [14, 12, 16], dabs: ['#6a609a', '#58508a', '#7e70a8'] },
+  parking:   { base: [58, 56, 80],   var: [12, 10, 14], dabs: ['#4a4868', '#3e3c5a', '#5a5478', '#2e2c46'] },
   grass:     { base: [70, 130, 64],  var: [26, 30, 20], dabs: ['#4f9a44', '#86be4c', '#357a48', '#a8c850', '#2f6648', '#c4d060', '#5aa03a'] },
   promenade: { base: [196, 150, 108], var: [16, 14, 12], dabs: ['#c99a6a', '#b88658', '#d8ac7a', '#a8784e'] },
   sand:      { base: [242, 198, 132], var: [14, 14, 14], dabs: ['#fcd896', '#eab474', '#fff0b8', '#dca070', '#f6c888'] },
@@ -214,6 +214,31 @@ export class GroundPainter {
         g.beginPath(); g.moveTo(ax, ay); g.lineTo(ax + nx * (sw - 3) + (rnd() - 0.5), ay + ny * (sw - 3)); g.stroke();
       }
     });
+
+    // Distinct surfaces: plaza gets laid pavers in a running bond; sand gets wind ripples + shells;
+    // the promenade gets boardwalk planks.
+    const sample = (x, y) => typeAt((x - ox) * P, (y - oy) * P);
+    for (let y = oy - 8; y < oy + CHUNK + 8; y += 8) {
+      const row = Math.round(y / 8);
+      for (let x = ox - 12 + (row % 2) * 6; x < ox + CHUNK + 12; x += 12) {
+        const t = sample(x, y);
+        if (t === 'plaza') {
+          g.globalAlpha = 0.22; g.strokeStyle = '#8a5a4a'; g.lineWidth = 0.6;
+          g.strokeRect(x + (rnd() - 0.5) * 0.6, y, 12, 8);
+          if (rnd() < 0.18) { g.globalAlpha = 0.18; g.fillStyle = rnd() < 0.5 ? '#fff0d0' : '#c47a62'; g.fillRect(x + 0.6, y + 0.6, 10.8, 6.8); }
+        } else if (t === 'promenade' && (Math.round(x) % 2 === 0)) {
+          g.globalAlpha = 0.2; g.strokeStyle = '#6a4030'; g.lineWidth = 0.6;
+          g.beginPath(); g.moveTo(x, y); g.lineTo(x + 12, y); g.stroke();
+        }
+      }
+    }
+    for (let n = 0; n < 60; n++) {
+      const x = ox + rnd() * CHUNK, y = oy + rnd() * CHUNK;
+      if (sample(x, y) !== 'sand') continue;
+      g.globalAlpha = 0.25; g.strokeStyle = '#c99868'; g.lineWidth = 1;
+      g.beginPath(); g.arc(x, y + 20, 22 + rnd() * 10, -Math.PI / 2 - 0.5, -Math.PI / 2 + 0.5); g.stroke();
+      if (rnd() < 0.2) { g.globalAlpha = 0.8; g.fillStyle = '#fff4e4'; g.beginPath(); g.arc(x, y, 1.2, 0, 7); g.fill(); }
+    }
 
     // Parking stalls: painted lines in parking rects.
     for (const q of W.L.ground) {

@@ -51,6 +51,22 @@ gold → rose → violet, slow swell lines, ~1,400 twinkling glints, and a pulsi
 - No fallback render path. A missing/undecodable sprite, a missing manifest entry or a runtime
   error is shown on screen in red (`index.html` error banner) and `tools/shot.mjs` exits non-zero.
 
+## v2 step 1 — paint pass
+
+- **Roofs**: every flat roof gets a pastel deco palette (cream, mint, pink, peach, lilac, sky)
+  chosen per block, a painted roof shader (brushed streaks via a stretched noise, low-frequency
+  water stains, grit), worn stains, and taller parapets with a lighter coping lip that throws a
+  shadow onto the roof.
+- **Night light discipline**: lamp pools at 70 %, bloom alphas lowered (0.2 / 0.32) so streets
+  don't white out. **Wet reflections**: every lamp and neon sign throws a broken, rippling vertical
+  streak of its colour across the asphalt, fading with distance (`drawWetReflections`).
+- **Ground**: sidewalks are cool cream with joints, plaza is laid pavers (running bond, odd tiles
+  tinted), parking is dark asphalt with stalls, sand has wind ripples + shells, promenade has planks.
+- **Vegetation**: 4 baked bush variants (different sizes, greens, flower colours) placed in seeded
+  clusters of 1–4 at varied scale; palms vary in scale too.
+- **Cars**: a glossy sun-glint panel on each roof so cars read at game zoom.
+- **Life**: 40 pedestrians, 40 % of them on the promenade.
+
 ## Layout (`layout.json`)
 
 1 world unit = 10 cm. World 1800 × 2200. One drivable loop (rounded rectangle, 96 wide) with three

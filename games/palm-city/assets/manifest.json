@@ -764,6 +764,70 @@
   }
  },
  "props": {
+  "bush0": {
+   "color": {
+    "file": "bush0.webp",
+    "h": 35.2,
+    "ox": -17.6,
+    "oy": -17.6,
+    "w": 35.2
+   },
+   "shadow": {
+    "file": "bush0_sh.webp",
+    "h": 71.61,
+    "ox": -32.6,
+    "oy": -39.01,
+    "w": 89.12
+   }
+  },
+  "bush1": {
+   "color": {
+    "file": "bush1.webp",
+    "h": 51.2,
+    "ox": -25.6,
+    "oy": -25.6,
+    "w": 51.2
+   },
+   "shadow": {
+    "file": "bush1_sh.webp",
+    "h": 90.52,
+    "ox": -40.6,
+    "oy": -49.92,
+    "w": 116.0
+   }
+  },
+  "bush2": {
+   "color": {
+    "file": "bush2.webp",
+    "h": 25.6,
+    "ox": -12.8,
+    "oy": -12.8,
+    "w": 25.6
+   },
+   "shadow": {
+    "file": "bush2_sh.webp",
+    "h": 60.26,
+    "ox": -27.8,
+    "oy": -32.46,
+    "w": 73.0
+   }
+  },
+  "bush3": {
+   "color": {
+    "file": "bush3.webp",
+    "h": 41.6,
+    "ox": -20.8,
+    "oy": -20.8,
+    "w": 41.6
+   },
+   "shadow": {
+    "file": "bush3_sh.webp",
+    "h": 79.18,
+    "ox": -35.8,
+    "oy": -43.38,
+    "w": 99.87
+   }
+  },
   "fountain": {
    "color": {
     "file": "fountain.webp",
