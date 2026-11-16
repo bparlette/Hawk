@@ -91,6 +91,21 @@ export class Renderer {
     }
     L.palms.forEach(([x, y], i) => out.push({ kind: 'palm', x, y, e: M.props['palm' + (i % 3)] }));
     for (const [x, y] of L.lamps) out.push({ kind: 'lamp', x, y, e: M.props.lamp });
+    // vegetation clusters: seeded, scattered in grass and along block edges, mixed variants + sizes
+    const vr = mulberry32(2024), W = this.world;
+    for (let n = 0; n < 900 && out.filter(o => o.kind === 'bush').length < 140; n++) {
+      const x = vr() * L.world.w, y = vr() * L.world.h, t = W.surfaceAt(x, y);
+      if (t !== 'grass' && !(t === 'paving' && vr() < 0.25) && !(t === 'sand' && vr() < 0.08)) continue;
+      if (W.hitSolid(x, y, 14)) continue;
+      const k = 1 + ((vr() * 4) | 0);  // cluster of 1-4
+      for (let j = 0; j < k; j++) {
+        const bx = x + (vr() - 0.5) * 34, by = y + (vr() - 0.5) * 34;
+        if (W.hitSolid(bx, by, 10) || W.roadInfo(bx, by).d < W.walkEdge) continue;
+        const v = (vr() * 4) | 0;
+        out.push({ kind: 'bush', x: bx, y: by, sc: 0.7 + vr() * 0.7, e: M.props['bush' + v] });
+      }
+    }
+    L.palms.forEach(([x, y], i) => { const p = out.find(o => o.kind === 'palm' && o.x === x && o.y === y); if (p) p.sc = 0.8 + ((i * 37) % 10) / 22; });
     for (const p of L.props) out.push({ kind: p.type, x: p.x, y: p.y, e: M.props[p.type] });
     const P = L.pier;
     out.push({ kind: 'pier', x: P.x + P.w / 2, y: P.y + P.h / 2, e: M.props.pier });
@@ -98,15 +113,16 @@ export class Renderer {
       if (!s.e) throw new Error('no baked sprite for ' + s.kind);
       // conservative bounds over all passes, for culling
       let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+      const sc = s.sc || 1;
       for (const k of ['color', 'shadow', 'night']) {
         const f = s.e[k]; if (!f) continue;
-        x0 = Math.min(x0, s.x + f.ox); y0 = Math.min(y0, s.y + f.oy);
-        x1 = Math.max(x1, s.x + f.ox + f.w); y1 = Math.max(y1, s.y + f.oy + f.h);
+        x0 = Math.min(x0, s.x + f.ox * sc); y0 = Math.min(y0, s.y + f.oy * sc);
+        x1 = Math.max(x1, s.x + (f.ox + f.w) * sc); y1 = Math.max(y1, s.y + (f.oy + f.h) * sc);
       }
       s.bb = [x0, y0, x1, y1];
     }
     // draw order: ground-level things first, tall things last
-    const rank = { pier: 0, fountain: 1, lifeguard: 2, building: 3, lamp: 4, palm: 5 };
+    const rank = { pier: 0, fountain: 1, lifeguard: 2, bush: 3, building: 4, lamp: 5, palm: 6 };
     out.sort((a, b) => rank[a.kind] - rank[b.kind]);
     return out;
   }
@@ -135,8 +151,8 @@ export class Renderer {
     return idx;
   }
 
-  drawEntry(g, f, x, y) {
-    g.drawImage(f.img, x + f.ox, y + f.oy, f.w, f.h);
+  drawEntry(g, f, x, y, sc = 1) {
+    g.drawImage(f.img, x + f.ox * sc, y + f.oy * sc, f.w * sc, f.h * sc);
   }
 
   // Sprite sheet cell: f.img holds `cols` columns; frame index -> source rect.
@@ -202,7 +218,7 @@ export class Renderer {
     sg.globalCompositeOperation = 'source-over';
     sg.clearRect(0, 0, this.shadowCv.width, this.shadowCv.height);
     worldTf(sg);
-    for (const s of this.statics) if (inView(s.bb)) this.drawEntry(sg, s.e.shadow, s.x, s.y);
+    for (const s of this.statics) if (inView(s.bb)) this.drawEntry(sg, s.e.shadow, s.x, s.y, s.sc);
     for (const c of S.cars) {
       if (c.x < vx0 - 80 || c.x > vx1 + 80 || c.y < vy0 - 80 || c.y > vy1 + 80) continue;
       const { m, k, rows } = this.carCell(c);
@@ -247,7 +263,7 @@ export class Renderer {
     if (S.marker) this.drawMarker(g, S.marker, time);
     for (const s of this.statics) {
       if (s.kind === 'pier' || s.kind === 'fountain' || s.kind === 'lifeguard') continue;
-      if (inView(s.bb)) this.drawEntry(g, s.e.color, s.x, s.y);
+      if (inView(s.bb)) this.drawEntry(g, s.e.color, s.x, s.y, s.sc);
     }
 
     P && P('sprites');
@@ -289,10 +305,11 @@ export class Renderer {
     lg.globalCompositeOperation = 'lighter';
     for (const s of this.statics) {
       if (!s.e.night || !inView(s.bb)) continue;
-      lg.globalAlpha = s.kind === 'lamp' ? G.lamps : s.kind === 'building' ? G.windows * 0.8 : Math.max(G.windows, G.lamps) * 0.8;
+      lg.globalAlpha = s.kind === 'lamp' ? G.lamps * 0.7 : s.kind === 'building' ? G.windows * 0.8 : Math.max(G.windows, G.lamps) * 0.8;
       if (lg.globalAlpha > 0.01) this.drawEntry(lg, s.e.night, s.x, s.y);
     }
     this.drawNeonPuddles(lg, G, time, vx0, vy0, vx1, vy1);
+    this.drawWetReflections(lg, G, time, vx0, vy0, vx1, vy1);
     for (const c of S.cars) {
       if (c.x < vx0 - 250 || c.x > vx1 + 250 || c.y < vy0 - 250 || c.y > vy1 + 250) continue;
       const m = this.M.cars[c.model];
@@ -321,9 +338,9 @@ export class Renderer {
     bb.globalCompositeOperation = 'copy';
     bb.drawImage(this.bloomA, 0, 0, this.bloomB.width, this.bloomB.height);
     g.imageSmoothingEnabled = true;
-    g.globalAlpha = 0.3;
+    g.globalAlpha = 0.2;
     g.drawImage(this.bloomA, 0, 0, this.bloomA.width, this.bloomA.height, 0, 0, this.lightCv.width, this.lightCv.height);
-    g.globalAlpha = 0.45;
+    g.globalAlpha = 0.32;
     g.drawImage(this.bloomB, 0, 0, this.bloomB.width, this.bloomB.height, 0, 0, this.lightCv.width, this.lightCv.height);
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
@@ -420,6 +437,44 @@ export class Renderer {
       lg.globalAlpha = G.neon * 0.35;
       lg.fillStyle = rg;
       lg.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+    }
+    lg.globalAlpha = 1;
+  }
+
+  // Signature move from the neon anchor: every lamp and sign throws a broken vertical streak of its
+  // colour across the wet asphalt toward the viewer, rippling.
+  buildReflectors() {
+    const L = this.L, W = this.world, out = [];
+    const NEON = { SOLANA: '#ff4fa8', TACOS: '#ff8a3c', DINER: '#3fe0ff', MOTEL: '#ff3f6a', NOVA: '#b45cff' };
+    for (const [x, y] of L.lamps) out.push({ x: x + 13, y: y + 6, col: [255, 170, 90], len: 70, lamp: true });
+    for (const b of L.buildings) if (b.sign) {
+      // reflect onto the nearest road edge below / beside the building
+      let best = null;
+      for (const [px, py] of [[b.x + b.w / 2, b.y + b.d + 40], [b.x + b.w / 2, b.y - 40], [b.x - 40, b.y + b.d / 2], [b.x + b.w + 40, b.y + b.d / 2]]) {
+        const d = W.roadInfo(px, py).d; if (!best || d < best.d) best = { x: px, y: py, d };
+      }
+      const h = NEON[b.sign].slice(1);
+      out.push({ x: best.x, y: best.y, col: [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)), len: 95 });
+    }
+    return out;
+  }
+
+  drawWetReflections(lg, G, time, vx0, vy0, vx1, vy1) {
+    if (!this.reflectors) this.reflectors = this.buildReflectors();
+    for (const r of this.reflectors) {
+      const a = r.lamp ? G.lamps * 0.5 : G.neon * 0.55;
+      if (a < 0.02 || r.x < vx0 - 40 || r.x > vx1 + 40 || r.y < vy0 - 120 || r.y > vy1 + 20) continue;
+      // falloff: brightest at the source, fading in broken dashes
+      for (let k = 0; k < 7; k++) {
+        const y = r.y + k * r.len / 7 + 4;
+        const w = (r.lamp ? 3 : 5) * (1 - k / 9) + Math.sin(time * 2.4 + k * 1.9 + r.x) * 1.4;
+        const fade = a * Math.pow(1 - k / 7, 1.6);
+        lg.globalAlpha = Math.max(0, fade);
+        lg.fillStyle = `rgb(${r.col[0]},${r.col[1]},${r.col[2]})`;
+        lg.beginPath();
+        lg.ellipse(r.x + Math.sin(time * 1.7 + k) * 2, y, Math.max(0.5, w), r.len / 9, 0, 0, 7);
+        lg.fill();
+      }
     }
     lg.globalAlpha = 1;
   }

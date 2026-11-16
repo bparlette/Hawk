@@ -532,6 +532,8 @@ def build_car(kind, paint):
             cab_len = 2.2 if kind != 'taxi' else 2.1
             objs.append(cube((0, -0.25, 1.05), (Wd - 0.3, cab_len, 0.55), glass, bevel=0.12, segs=3, name='cabin', taper=(0.78, 0.62)))
             objs.append(cube((0, -0.3, 1.33), (Wd - 0.62, cab_len - 1.0, 0.05), body, bevel=0.06, name='roof'))
+            hl = mat('roofhl', tuple(min(1, c * 1.5 + 0.12) for c in srgb(paint)), rough=0.15, coat=1.0, noise=0)
+            objs.append(cube((-0.15, -0.1, 1.365), (0.35, cab_len - 1.3, 0.01), hl))  # sun glint on the roof
     # lights
     for sx in (-1, 1):
         objs.append(cube((sx * (Wd / 2 - 0.32), L / 2 - 0.04, 0.62), (0.42, 0.1, 0.16), head, bevel=0.03))
@@ -825,13 +827,66 @@ def facade_windows(W, D, floors, rnd, lit=0.75, shop=False, floor_h=3.2):
         quads_mesh('windows', quads, win)
 
 
-def flat_block(cx, cy, W, D, H, wall, roof, parapet, par_h=0.6, par_w=0.35):
+PASTEL = ['#f4e6c8', '#bfe6d2', '#f6c6cf', '#f8cfa8', '#d8d0f0', '#c8e4ec']  # cream, mint, pink, peach, lilac, sky
+
+
+def painted_roof(color, seed):
+    """Roof surface that reads as paint, not a slab: brushed streaks (stretched wave), large water
+    stains (low-freq noise multiply) and fine grit."""
+    m = mat('roofp', srgb(color), rough=0.9, noise=0.22, noise_scale=7)
+    nt = m.node_tree
+    bsdf = nt.nodes['Principled BSDF']
+    ramp = [n for n in nt.nodes if n.type == 'VALTORGB'][0]
+    tc = nt.nodes.new('ShaderNodeTexCoord')
+    mp = nt.nodes.new('ShaderNodeMapping')
+    mp.inputs['Scale'].default_value = (0.35, 4.0, 1.0)
+    mp.inputs['Rotation'].default_value = (0, 0, (seed % 7) * 0.4)
+    nt.links.new(tc.outputs['Object'], mp.inputs['Vector'])
+    streak = nt.nodes.new('ShaderNodeTexNoise')
+    streak.inputs['Scale'].default_value = 3.0
+    streak.inputs['Detail'].default_value = 8.0
+    nt.links.new(mp.outputs['Vector'], streak.inputs['Vector'])
+    stain = nt.nodes.new('ShaderNodeTexNoise')
+    stain.inputs['Scale'].default_value = 0.35
+    stain.noise_dimensions = '4D'
+    stain.inputs['W'].default_value = seed
+    sr = nt.nodes.new('ShaderNodeValToRGB')
+    sr.color_ramp.elements[0].position = 0.45
+    sr.color_ramp.elements[0].color = (0.8, 0.76, 0.8, 1)
+    sr.color_ramp.elements[1].position = 0.62
+    sr.color_ramp.elements[1].color = (1, 1, 1, 1)
+    nt.links.new(stain.outputs['Fac'], sr.inputs['Fac'])
+    m1 = nt.nodes.new('ShaderNodeMix'); m1.data_type = 'RGBA'; m1.blend_type = 'OVERLAY'
+    m1.inputs['Factor'].default_value = 0.3
+    nt.links.new(ramp.outputs['Color'], m1.inputs['A'])
+    nt.links.new(streak.outputs['Color'], m1.inputs['B'])
+    m2 = nt.nodes.new('ShaderNodeMix'); m2.data_type = 'RGBA'; m2.blend_type = 'MULTIPLY'
+    m2.inputs['Factor'].default_value = 1.0
+    nt.links.new(m1.outputs['Result'], m2.inputs['A'])
+    nt.links.new(sr.outputs['Color'], m2.inputs['B'])
+    nt.links.new(m2.outputs['Result'], bsdf.inputs['Base Color'])
+    return m
+
+
+def flat_block(cx, cy, W, D, H, wall, roof, parapet, par_h=0.9, par_w=0.45):
+    seed = int(W * 37 + D * 11 + H)
+    rnd = random.Random(seed)
+    pastel = PASTEL[seed % len(PASTEL)]
     cube((cx, cy, H / 2), (W, D, H), wall)
-    cube((cx, cy, H + 0.02), (W - 0.1, D - 0.1, 0.06), roof)
-    roof_clutter(cx, cy, W - 1, D - 1, H, random.Random(int(W * 100 + D)), n=int(W * D / 30) + 3)
+    # pastel deco: parapets take the block's pastel; the roof is a dusty tint of it, painted
+    pm = mat('par', srgb(pastel), rough=0.6, noise=0.12, noise_scale=9)
+    cap = mat('cap', tuple(min(1, c * 1.15 + 0.05) for c in srgb(pastel)), rough=0.5, noise=0.06)
+    rc = '#%02x%02x%02x' % tuple(int(int(pastel[i:i + 2], 16) * 0.93) for i in (1, 3, 5))
+    cube((cx, cy, H + 0.02), (W - 0.1, D - 0.1, 0.06), painted_roof(rc, seed))
+    roof_clutter(cx, cy, W - 1, D - 1, H, rnd, n=int(W * D / 30) + 3)
+    grime = mat('grime', srgb('#8a7478'), rough=1.0, noise=0.3, noise_scale=14)
+    for i in range(int(W * D / 160) + 1):  # worn stains, drain streaks
+        x = cx + rnd.uniform(-W / 2 + 1, W / 2 - 1); y = cy + rnd.uniform(-D / 2 + 1, D / 2 - 1)
+        cyl((x, y, H + 0.065), rnd.uniform(0.4, 1.6), 0.01, grime, verts=14).scale = (1, rnd.uniform(0.4, 1), 1)
     for (px, py, sx, sy) in [(cx, cy + D / 2 - par_w / 2, W, par_w), (cx, cy - D / 2 + par_w / 2, W, par_w),
                              (cx + W / 2 - par_w / 2, cy, par_w, D), (cx - W / 2 + par_w / 2, cy, par_w, D)]:
-        cube((px, py, H + par_h / 2), (sx, sy, par_h), parapet, bevel=0.05)
+        cube((px, py, H + par_h / 2), (sx, sy, par_h), pm, bevel=0.05)
+        cube((px, py, H + par_h + 0.04), (sx + 0.12, sy + 0.12, 0.08), cap, bevel=0.03)  # coping lip
 
 
 def roof_clutter(cx, cy, W, D, z, rnd, n=10):
@@ -1338,6 +1393,21 @@ def bake_props():
         # build at origin with no lean so the crown is centred on the anchor
         palm_tree(0, 0, rnd, height=hgt, lean_m=0.6)
         P[f'palm{i}'] = bake_static(f'palm{i}', None, 4.6, hgt + 0.8, night=False)
+        save_manifest(); clear_asset()
+    for i, (r, col, col2, n) in enumerate([(1.1, '#3f7a3a', '#6aa048', 5), (1.6, '#2f6a4a', '#58945a', 7), (0.8, '#7a9a3a', '#b8c25a', 4), (1.3, '#4a6a7a', '#7aa0a0', 6)]):
+        if not want(f'bush{i}'):
+            continue
+        rnd = random.Random(400 + i)
+        a = mat('bA', srgb(col), rough=0.85, noise=0.35, noise_scale=10)
+        b = mat('bB', srgb(col2), rough=0.85, noise=0.35, noise_scale=10)
+        fl = mat('bF', srgb(['#f28fb0', '#ffd166', '#ffffff', '#f4a0d8'][i]), rough=0.7, noise=0)
+        for k in range(n):
+            ang = rnd.uniform(0, 6.28); d = rnd.uniform(0, r * 0.6)
+            sphere((math.cos(ang) * d, math.sin(ang) * d, r * 0.5), rnd.uniform(r * 0.45, r * 0.8), a if k % 2 else b, scale=(1, 1, 0.75), segs=12)
+        for k in range(6 if i != 3 else 0):
+            ang = rnd.uniform(0, 6.28); d = rnd.uniform(0, r * 0.8)
+            sphere((math.cos(ang) * d, math.sin(ang) * d, r * 1.05), 0.12, fl, segs=6)
+        P[f'bush{i}'] = bake_static(f'bush{i}', None, r * 1.6, r * 1.3, night=False)
         save_manifest(); clear_asset()
     if want('lamp'):
         lx, ly, lh = build_lamp()
