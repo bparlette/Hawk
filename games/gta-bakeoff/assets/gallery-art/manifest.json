@@ -1,0 +1,134 @@
+{
+  "task": "Task 13 \u2014 Gallery Key Art",
+  "canonicalLevel": "level/canonical/vice_beach.json",
+  "textFreeHeroes": true,
+  "contactSheet": "contact-sheet.png",
+  "heroes": [
+    {
+      "era": "e1",
+      "label": "ERA 1 \u00b7 GTA (1997) + TLoZ (1986)",
+      "file": "e1.png",
+      "width": 420,
+      "height": 860,
+      "bytes": 816024,
+      "textFree": true
+    },
+    {
+      "era": "e2",
+      "label": "ERA 2 \u00b7 GTA 2 (1999) + ALttP (1991)",
+      "file": "e2.png",
+      "width": 420,
+      "height": 860,
+      "bytes": 589350,
+      "textFree": true
+    },
+    {
+      "era": "e3",
+      "label": "ERA 3 \u00b7 GTA III (2001) + MM (2000)",
+      "file": "e3.png",
+      "width": 420,
+      "height": 860,
+      "bytes": 490415,
+      "textFree": true
+    },
+    {
+      "era": "e4",
+      "label": "ERA 4 \u00b7 Vice City (2002) + WW (2002)",
+      "file": "e4.png",
+      "width": 420,
+      "height": 860,
+      "bytes": 518585,
+      "textFree": true
+    },
+    {
+      "era": "e5",
+      "label": "ERA 5 \u00b7 San Andreas (2004) + TP'04",
+      "file": "e5.png",
+      "width": 420,
+      "height": 860,
+      "bytes": 457770,
+      "textFree": true
+    },
+    {
+      "era": "e6",
+      "label": "ERA 6 \u00b7 GTA IV (2008) + TP'06",
+      "file": "e6.png",
+      "width": 420,
+      "height": 860,
+      "bytes": 474150,
+      "textFree": true
+    },
+    {
+      "era": "e7",
+      "label": "ERA 7 \u00b7 GTA V (2013) + SS (2011)",
+      "file": "e7.png",
+      "width": 420,
+      "height": 860,
+      "bytes": 420458,
+      "textFree": true
+    },
+    {
+      "era": "e8",
+      "label": "ERA 8 \u00b7 GTA VI (2026) + TotK (2023)",
+      "file": "e8.png",
+      "width": 420,
+      "height": 860,
+      "bytes": 450757,
+      "textFree": true
+    },
+    {
+      "era": "bonus-minecraft",
+      "label": "BONUS 1 \u00b7 Minecraft + Link Skin",
+      "file": "bonus-minecraft.png",
+      "width": 420,
+      "height": 860,
+      "bytes": 289062,
+      "textFree": true
+    },
+    {
+      "era": "bonus-roblox",
+      "label": "BONUS 2 \u00b7 Roblox + R6 Link",
+      "file": "bonus-roblox.png",
+      "width": 420,
+      "height": 860,
+      "bytes": 511839,
+      "textFree": true
+    },
+    {
+      "era": "bonus-fortnite",
+      "label": "BONUS 3 \u00b7 Fortnite + Slurp Link",
+      "file": "bonus-fortnite.png",
+      "width": 420,
+      "height": 860,
+      "bytes": 417437,
+      "textFree": true
+    },
+    {
+      "era": "bonus-lego",
+      "label": "BONUS 4 \u00b7 LEGO City + Minifig Link",
+      "file": "bonus-lego.png",
+      "width": 420,
+      "height": 860,
+      "bytes": 449936,
+      "textFree": true
+    },
+    {
+      "era": "bonus-animal-crossing",
+      "label": "BONUS 5 \u00b7 Animal Crossing + Chibi",
+      "file": "bonus-animal-crossing.png",
+      "width": 420,
+      "height": 860,
+      "bytes": 358654,
+      "textFree": true
+    },
+    {
+      "era": "bonus-sims",
+      "label": "BONUS 6 \u00b7 The Sims + Plumbob Link",
+      "file": "bonus-sims.png",
+      "width": 420,
+      "height": 860,
+      "bytes": 401364,
+      "textFree": true
+    }
+  ]
+}
