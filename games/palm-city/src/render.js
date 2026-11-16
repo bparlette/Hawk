@@ -31,6 +31,8 @@ const KEYS = [
   { t: 0.86, mul: [52, 68, 148],   roofMul: [128, 132, 206], warm: 0.05, glow: 0.04, shadow: 0.44, shadowCol: [22, 26, 78],  vigCol: [10, 14, 42], vigAlpha: 0.62, eastGlow: [150, 90, 200] },
   { t: 1.00, mul: [24, 38, 108],   roofMul: [108, 120, 198], warm: 0.02, glow: 0.00, shadow: 0.42, shadowCol: [20, 25, 74],  vigCol: [8, 12, 38],  vigAlpha: 0.70, eastGlow: [150, 90, 200] },
 ];
+const DASH = [0, 0], NO_DASH = [];
+
 export function grade(t) {
   let i = 0;
   while (i < KEYS.length - 2 && t > KEYS[i + 1].t) i++;
@@ -108,7 +110,10 @@ export class Renderer {
     this.vw = vw; this.vh = vh; this.dpr = dpr;
     const w = Math.round(vw * dpr), h = Math.round(vh * dpr);
     this.shadowCv = layer(w, h);
-    this.lightCv = layer(w, h);
+    this.fw = w; this.fh = h;
+    // perf pass: the additive light layer is soft by nature (glows, cones, reflections), so it's built
+    // at half resolution and upscaled with smoothing on the composite — a quarter of the fill cost.
+    this.lightCv = layer(Math.ceil(w / 2), Math.ceil(h / 2));
     this.bloomA = layer(Math.ceil(w / 4), Math.ceil(h / 4));
     this.bloomB = layer(Math.ceil(w / 8), Math.ceil(h / 8));
   }
@@ -370,25 +375,61 @@ export class Renderer {
     return { m, idx: a * m.poses + p.pose, rows: Math.ceil(m.angles * m.poses / m.cols) };
   }
 
+  // perf pass (zero per-frame allocation): the grade, and every style and gradient derived from it,
+  // is rebuilt only when time of day moves a visible step (1/2000 of the day ≈ every 0.1 s of play).
+  gradeFor(t) {
+    const tq = Math.round(t * 2000) / 2000;
+    if (this.G && this.G.tq === tq && this.G.vw === this.vw && this.G.vh === this.vh) return this.G;
+    const G = grade(tq), g = this.ctx, vw = this.vw, vh = this.vh;
+    G.tq = tq; G.vw = vw; G.vh = vh;
+    G.roofMulStyle = `rgb(${G.roofMul[0]},${G.roofMul[1]},${G.roofMul[2]})`;
+    G.shadowStyle = `rgb(${G.shadowCol[0]},${G.shadowCol[1]},${G.shadowCol[2]})`;
+    const preMul = G.mul.map((v, k) => Math.min(255, Math.round((v / Math.max(1, G.roofMul[k])) * 255)));
+    G.preMulStyle = preMul[0] < 252 || preMul[1] < 252 || preMul[2] < 252 ? `rgb(${preMul[0]},${preMul[1]},${preMul[2]})` : null;
+    if (G.warm + G.glow > 0.01) {
+      const gr = G.warmGrad = g.createLinearGradient(0, vh * 0.3, vw, vh * 0.8);
+      gr.addColorStop(0, `rgba(255,190,82,${Math.min(1, G.warm + G.glow * 1.4)})`);
+      gr.addColorStop(0.6, `rgba(255,152,96,${Math.min(1, G.warm * 0.9 + G.glow * 0.5)})`);
+      gr.addColorStop(1, `rgba(${G.eastGlow[0]},${G.eastGlow[1]},${G.eastGlow[2]},${Math.min(1, G.warm * 0.45 + G.glow * 0.7)})`);
+    }
+    const vg = G.vigGrad = g.createRadialGradient(vw / 2, vh / 2, vh * 0.32, vw / 2, vh / 2, vh * 0.72);
+    vg.addColorStop(0, `rgba(${G.vigCol[0]},${G.vigCol[1]},${G.vigCol[2]},0)`);
+    vg.addColorStop(1, `rgba(${G.vigCol[0]},${G.vigCol[1]},${G.vigCol[2]},${G.vigAlpha})`);
+    // ocean: sky-reflection stops and glint colour (drawOcean)
+    const u1 = clamp01(tq / 0.6), u2 = clamp01((tq - 0.6) / 0.4);
+    const mix3 = (a, b, u) => a.map((v, k) => Math.round(lerp(v, b[k], u)));
+    const c1 = tq < 0.6 ? mix3([255, 190, 115], [244, 138, 148], u1) : mix3([244, 138, 148], [140, 110, 210], u2);
+    const c2 = tq < 0.6 ? mix3([130, 216, 234], [255, 172, 140], u1) : mix3([255, 172, 140], [90, 130, 220], u2);
+    const sky = G.skyGrad = g.createLinearGradient(0, 0, 380, 0);     // drawn translated to the shore x
+    sky.addColorStop(0, `rgba(30,70,120,0.25)`);
+    sky.addColorStop(0.35, `rgba(${c1[0]},${c1[1]},${c1[2]},0.30)`);
+    sky.addColorStop(1, `rgba(${c2[0]},${c2[1]},${c2[2]},0.42)`);
+    const ug1 = clamp01(tq / 0.55), ug2 = clamp01((tq - 0.55) / 0.45);
+    const gc = tq < 0.55 ? mix3([255, 226, 152], [255, 182, 185], ug1) : mix3([255, 182, 185], [190, 220, 255], ug2);
+    G.glintStyle = `rgb(${gc[0]},${gc[1]},${gc[2]})`;
+    return (this.G = G);
+  }
+
   draw(S, cam, t, time) {
     const g = this.ctx, vw = this.vw, vh = this.vh, dpr = this.dpr;
     // ?prof: per-section CPU time (ms, exponential average) in window.__prof
     let P = null;
     if (this.prof) {
-      let t0 = performance.now(), cur = 'start';
-      P = (name) => { const t1 = performance.now(); this.prof[cur] = (this.prof[cur] || 0) * 0.9 + (t1 - t0) * 0.1; t0 = t1; cur = name; };
+      // P(name) closes the section that just ran and books its time under `name`
+      let t0 = performance.now();
+      P = (name) => { const t1 = performance.now(); this.prof[name] = (this.prof[name] || 0) * 0.9 + (t1 - t0) * 0.1; t0 = t1; };
     }
-    const G = grade(t);
+    const G = this.gradeFor(t);
     const zoom = cam.zoom || 1;
     const hw = vw / 2 / zoom, hh = vh / 2 / zoom;
     const vx0 = cam.x - hw, vy0 = cam.y - hh, vx1 = cam.x + hw, vy1 = cam.y + hh;
     const inView = (bb, m = 0) => bb[2] > vx0 - m && bb[0] < vx1 + m && bb[3] > vy0 - m && bb[1] < vy1 + m;
-    const worldTf = (ctx, s) => {
-      ctx.setTransform(dpr * zoom, 0, 0, dpr * zoom, 0, 0);
+    const worldTf = (ctx, s = 1) => {
+      ctx.setTransform(dpr * zoom * s, 0, 0, dpr * zoom * s, 0, 0);
       ctx.translate(hw - cam.x, hh - cam.y);
     };
 
-    P && P('ground');
+    P && P('setup');
     // ---------------- 1. ground
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.globalCompositeOperation = 'source-over';
@@ -430,17 +471,16 @@ export class Renderer {
     }
     sg.setTransform(1, 0, 0, 1, 0, 0);
     sg.globalCompositeOperation = 'source-in';
-    sg.fillStyle = `rgb(${G.shadowCol[0]},${G.shadowCol[1]},${G.shadowCol[2]})`;
+    sg.fillStyle = G.shadowStyle;
     sg.fillRect(0, 0, this.shadowCv.width, this.shadowCv.height);
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.globalCompositeOperation = 'multiply';
     g.globalAlpha = G.shadow;
     g.drawImage(this.shadowCv, 0, 0);
     // Ground-only pre-darken ratio (M_ground / M_roof) so streets hit midnight [24,38,108] at dusk while roofs retain chroma
-    const preMul = G.mul.map((v, k) => Math.min(255, Math.round((v / Math.max(1, G.roofMul[k])) * 255)));
-    if (preMul[0] < 252 || preMul[1] < 252 || preMul[2] < 252) {
+    if (G.preMulStyle) {
       g.globalAlpha = 1;
-      g.fillStyle = `rgb(${preMul[0]},${preMul[1]},${preMul[2]})`;
+      g.fillStyle = G.preMulStyle;
       g.fillRect(0, 0, vw * dpr, vh * dpr);
     }
     g.globalAlpha = 1;
@@ -539,17 +579,13 @@ export class Renderer {
     // ---------------- 4. grade
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.globalCompositeOperation = 'multiply';
-    g.fillStyle = `rgb(${G.roofMul[0]},${G.roofMul[1]},${G.roofMul[2]})`;
+    g.fillStyle = G.roofMulStyle;
     g.fillRect(0, 0, vw, vh);
     // low-sun warmth + glow from the west, one soft-light pass: pushes lit surfaces toward gold,
     // deepens contrast, and transitions east stop from warm peach/coral in golden hour to violet at twilight
     if (G.warm + G.glow > 0.01) {
       g.globalCompositeOperation = 'soft-light';
-      const gr = g.createLinearGradient(0, vh * 0.3, vw, vh * 0.8);
-      gr.addColorStop(0, `rgba(255,190,82,${Math.min(1, G.warm + G.glow * 1.4)})`);
-      gr.addColorStop(0.6, `rgba(255,152,96,${Math.min(1, G.warm * 0.9 + G.glow * 0.5)})`);
-      gr.addColorStop(1, `rgba(${G.eastGlow[0]},${G.eastGlow[1]},${G.eastGlow[2]},${Math.min(1, G.warm * 0.45 + G.glow * 0.7)})`);
-      g.fillStyle = gr;
+      g.fillStyle = G.warmGrad;
       g.fillRect(0, 0, vw, vh);
     }
 
@@ -561,7 +597,7 @@ export class Renderer {
     lg.globalAlpha = 1;
     lg.fillStyle = '#000';
     lg.fillRect(0, 0, this.lightCv.width, this.lightCv.height);
-    worldTf(lg);
+    worldTf(lg, 0.5);
     lg.globalCompositeOperation = 'lighter';
     for (const s of this.statics) {
       if (!s.e.night || !inView(s.bb)) continue;
@@ -596,7 +632,8 @@ export class Renderer {
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.globalCompositeOperation = 'lighter';
     g.globalAlpha = 1;
-    g.drawImage(this.lightCv, 0, 0);
+    g.imageSmoothingEnabled = true;
+    g.drawImage(this.lightCv, 0, 0, this.fw, this.fh);
     const ba = this.bloomA.getContext('2d'), bb = this.bloomB.getContext('2d');
     ba.imageSmoothingEnabled = bb.imageSmoothingEnabled = true;
     ba.globalCompositeOperation = 'copy';
@@ -606,19 +643,16 @@ export class Renderer {
     g.imageSmoothingEnabled = true;
     g.globalCompositeOperation = 'screen';
     g.globalAlpha = 0.24;
-    g.drawImage(this.bloomA, 0, 0, this.bloomA.width, this.bloomA.height, 0, 0, this.lightCv.width, this.lightCv.height);
+    g.drawImage(this.bloomA, 0, 0, this.bloomA.width, this.bloomA.height, 0, 0, this.fw, this.fh);
     g.globalAlpha = 0.22;
-    g.drawImage(this.bloomB, 0, 0, this.bloomB.width, this.bloomB.height, 0, 0, this.lightCv.width, this.lightCv.height);
+    g.drawImage(this.bloomB, 0, 0, this.bloomB.width, this.bloomB.height, 0, 0, this.fw, this.fh);
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
 
     P && P('bloom');
     // vignette
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const vg = g.createRadialGradient(vw / 2, vh / 2, vh * 0.32, vw / 2, vh / 2, vh * 0.72);
-    vg.addColorStop(0, `rgba(${G.vigCol[0]},${G.vigCol[1]},${G.vigCol[2]},0)`);
-    vg.addColorStop(1, `rgba(${G.vigCol[0]},${G.vigCol[1]},${G.vigCol[2]},${G.vigAlpha})`);
-    g.fillStyle = vg;
+    g.fillStyle = G.vigGrad;
     g.fillRect(0, 0, vw, vh);
     P && P('end');
   }
@@ -763,17 +797,11 @@ export class Renderer {
     // sky reflection: a gradient across the water that drifts gold -> rose -> violet as the sun goes;
     // brighter offshore (open sky), deeper near the shore (land shadow)
     const sx = W.shoreX((vy0 + vy1) / 2);
-    const sky = g.createLinearGradient(sx, 0, sx + 380, 0);
-    const u1 = clamp01(t / 0.6), u2 = clamp01((t - 0.6) / 0.4);
-    const mix3 = (a, b, u) => a.map((v, k) => Math.round(lerp(v, b[k], u)));
-    const c1 = t < 0.6 ? mix3([255, 190, 115], [244, 138, 148], u1) : mix3([244, 138, 148], [140, 110, 210], u2);
-    const c2 = t < 0.6 ? mix3([130, 216, 234], [255, 172, 140], u1) : mix3([255, 172, 140], [90, 130, 220], u2);
-    sky.addColorStop(0, `rgba(30,70,120,0.25)`);
-    sky.addColorStop(0.35, `rgba(${c1[0]},${c1[1]},${c1[2]},0.30)`);
-    sky.addColorStop(1, `rgba(${c2[0]},${c2[1]},${c2[2]},0.42)`);
     g.globalCompositeOperation = 'soft-light';
-    g.fillStyle = sky;
-    g.fillRect(wx0, vy0, vx1 - wx0, vy1 - vy0);
+    g.fillStyle = G.skyGrad;                          // built in gradeFor at x 0..380; slide it to the shore
+    g.translate(sx, 0);
+    g.fillRect(wx0 - sx, vy0, vx1 - wx0, vy1 - vy0);
+    g.translate(-sx, 0);
     g.globalCompositeOperation = 'source-over';
     // swell: crest lines parallel to the shore, rolling in and sharpening as they near the sand
     g.lineCap = 'round';
@@ -781,9 +809,9 @@ export class Renderer {
     for (let k = 0; k < SPAN / GAP; k++) {
       const d = ((k * GAP - time * 11) % SPAN + SPAN) % SPAN;
       const a = Math.pow(Math.sin(Math.PI * Math.min(1, (d + 30) / (SPAN + 30))), 0.8) * 0.42;
-      g.strokeStyle = `rgba(214,244,250,${a})`;
+      g.strokeStyle = '#d6f4fa'; g.globalAlpha = a;
       g.lineWidth = d < 70 ? 4.2 - d * 0.02 : 2.6;
-      g.setLineDash([36 + k * 7, 14 + k * 5]); g.lineDashOffset = k * 31 + time * 3;
+      DASH[0] = 36 + k * 7; DASH[1] = 14 + k * 5; g.setLineDash(DASH); g.lineDashOffset = k * 31 + time * 3;
       g.beginPath();
       for (let y = vy0 - 30; y <= vy1 + 30; y += 22) {
         const x = W.shoreX(y) + d + Math.sin(y * 0.021 + k * 1.7) * 10 + Math.sin(y * 0.05 + time * 0.5 + k) * 4;
@@ -791,12 +819,9 @@ export class Renderer {
       }
       g.stroke();
     }
-    g.setLineDash([]);
+    g.setLineDash(NO_DASH); g.globalAlpha = 1;
     // glints
-    const ug1 = clamp01(t / 0.55), ug2 = clamp01((t - 0.55) / 0.45);
-    const gc = t < 0.55
-      ? [255, 226, 152].map((v, k) => Math.round(lerp(v, [255, 182, 185][k], ug1)))
-      : [255, 182, 185].map((v, k) => Math.round(lerp(v, [190, 220, 255][k], ug2)));
+    g.fillStyle = G.glintStyle;
     for (const p of this.glints) {
       if (p.x < vx0 || p.x > vx1 || p.y < vy0 || p.y > vy1) continue;
       const s = Math.sin(time * p.f + p.ph);
@@ -805,7 +830,7 @@ export class Renderer {
       const gd = p.x - W.shoreX(p.y);
       const gf = 0.25 + 0.75 * Math.min(1, Math.max(0, gd / 150));
       const a = Math.pow((s - 0.4) / 0.6, 2) * 0.85 * gf;
-      g.fillStyle = `rgba(${gc[0]},${gc[1]},${gc[2]},${a})`;
+      g.globalAlpha = a;
       g.beginPath();
       g.ellipse(p.x + Math.sin(time * 0.5 + p.ph) * 3, p.y, p.w / 2, 1.3, 0, 0, 7);
       g.fill();
@@ -832,31 +857,33 @@ export class Renderer {
         if (pass === 0) {
           // wet sand: last wave's stain drying out, and the fresh one spreading under the new wave
           const dry = u < UP ? 0.3 * (1 - u / UP) : lerp(0.72, 0.3, Math.pow((u - UP) / (1 - UP), 0.8));
-          g.fillStyle = `rgba(92,50,40,${dry})`;
+          g.fillStyle = '#5c3228'; g.globalAlpha = dry;
           g.fillRect(sx + 3 - reach, y, reach + 2, STEP);
-          if (u < UP) { g.fillStyle = `rgba(92,50,40,${0.72 - 0.3 * (1 - u / UP)})`; g.fillRect(front - 2, y, sx + 5 - front, STEP); }
+          if (u < UP) { g.globalAlpha = 0.72 - 0.3 * (1 - u / UP); g.fillRect(front - 2, y, sx + 5 - front, STEP); }
           else if (u < UP + 0.3) {                                   // glassy sheen while the water drains off
-            g.fillStyle = `rgba(255,232,196,${0.22 * (1 - (u - UP) / 0.3)})`;
+            g.fillStyle = '#ffe8c4'; g.globalAlpha = 0.22 * (1 - (u - UP) / 0.3);
             g.fillRect(sx + 3 - reach, y, front - (sx + 3 - reach), STEP);
           }
         } else if (pass === 1) {
           // the sheet of water itself, paler toward its leading edge
+          g.globalAlpha = 1;
           g.fillStyle = 'rgba(52,140,188,0.8)'; g.fillRect(front + 6, y, sx + 6 - (front + 6), STEP);
           g.fillStyle = 'rgba(150,218,230,0.72)'; g.fillRect(front, y, Math.min(8, sx + 6 - front), STEP);
         } else {
           // foam: a scalloped lip on the leading edge, bright running in, thinning as it drains;
           // plus the lace it leaves at the high-water mark
           const fa = u < UP ? 0.92 : 0.75 * (1 - smooth(0, 0.8, (u - UP) / (1 - UP))) + 0.12;
-          g.fillStyle = `rgba(252,246,232,${fa})`;
+          g.fillStyle = '#fcf6e8'; g.globalAlpha = fa;
           g.beginPath(); g.ellipse(front + Math.sin(k * 1.9) * 1.6, y + STEP / 2, 3.2 + n1 * 2.2, STEP * 0.72, 0, 0, 7); g.fill();
-          if (u < UP) { g.fillStyle = 'rgba(252,246,232,0.4)'; g.beginPath(); g.ellipse(front + 7 + Math.sin(k * 2.7) * 2, y + STEP / 2, 2.2, STEP * 0.5, 0, 0, 7); g.fill(); }
+          if (u < UP) { g.globalAlpha = 0.4; g.beginPath(); g.ellipse(front + 7 + Math.sin(k * 2.7) * 2, y + STEP / 2, 2.2, STEP * 0.5, 0, 0, 7); g.fill(); }
           else if (u < UP + 0.42 && (Math.floor(k) % 2 === 0)) {
-            g.fillStyle = `rgba(252,246,232,${0.5 * (1 - (u - UP) / 0.42)})`;
+            g.globalAlpha = 0.5 * (1 - (u - UP) / 0.42);
             g.beginPath(); g.ellipse(sx + 3 - reach + Math.sin(k * 3.1) * 1.5, y + STEP / 2, 1.6, 2.4, 0, 0, 7); g.fill();
           }
         }
       }
     }
+    g.globalAlpha = 1;
   }
 
   drawNeonPuddles(lg, G, time, vx0, vy0, vx1, vy1) {
@@ -908,23 +935,26 @@ export class Renderer {
       const peak = r.lamp ? G.lamps * 0.44 * this.lampLight(S, r.li, time) : G.neon * 0.50;
       if (peak < 0.02 || r.x < vx0 - 40 || r.x > vx1 + 40 || r.y < vy0 - 150 || r.y > vy1 + 20) continue;
       const phase = r.x * 0.13 + r.y * 0.07;
-      const gr = lg.createLinearGradient(0, r.y, 0, r.y + r.len);
-      gr.addColorStop(0, `rgba(${r.col[0]},${r.col[1]},${r.col[2]},${peak * 0.85})`);
-      gr.addColorStop(0.35, `rgba(${r.col[0]},${r.col[1]},${r.col[2]},${peak * 0.52})`);
-      gr.addColorStop(1, `rgba(${r.col[0]},${r.col[1]},${r.col[2]},0)`);
-      lg.fillStyle = gr;
-      for (let dy = 2; dy < r.len; dy += 2.2) {
+      if (!r.grad) {                                   // the ribbon's colour ramp at peak 1; peak goes on globalAlpha
+        const gr = r.grad = lg.createLinearGradient(0, r.y, 0, r.y + r.len);
+        gr.addColorStop(0, `rgba(${r.col[0]},${r.col[1]},${r.col[2]},0.85)`);
+        gr.addColorStop(0.35, `rgba(${r.col[0]},${r.col[1]},${r.col[2]},0.52)`);
+        gr.addColorStop(1, `rgba(${r.col[0]},${r.col[1]},${r.col[2]},0)`);
+        r.onRoad = [];
+        for (let dy = 2; dy < r.len; dy += 2.2) r.onRoad.push(W.roadInfo(r.x, r.y + dy).d <= half);
+      }
+      lg.fillStyle = r.grad;
+      for (let dy = 2, n = 0; dy < r.len; dy += 2.2, n++) {
         const wy = r.y + dy;
-        const rd = W.roadInfo(r.x, wy).d;
-        if (rd > half) continue;
+        if (!r.onRoad[n]) continue;
         const u = dy / r.len;
         const amp = (r.lamp ? 2.4 : 3.8) * (0.3 + 0.7 * u);
         const dx = amp * Math.sin(dy * 0.24 + phase + time * 2.2) + 0.45 * amp * Math.sin(dy * 0.55 - time * 1.5);
         const mod = 0.52 + 0.48 * Math.pow(Math.sin(dy * 0.21 + phase), 2);
         const rx = Math.max(1.0, r.w0 * mod * (1 - 0.48 * u));
-        lg.globalAlpha = 0.36;
+        lg.globalAlpha = 0.36 * peak;
         lg.beginPath(); lg.ellipse(r.x + dx, wy, rx * 1.8, 2.6, 0, 0, 7); lg.fill();
-        lg.globalAlpha = 0.62;
+        lg.globalAlpha = 0.62 * peak;
         lg.beginPath(); lg.ellipse(r.x + dx, wy, rx * 0.72, 2.2, 0, 0, 7); lg.fill();
       }
     }

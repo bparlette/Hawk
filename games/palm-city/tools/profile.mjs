@@ -12,7 +12,7 @@ await new Promise(r => server.listen(0, r));
 const CHROME = process.env.CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const browser = await chromium.launch({ executablePath: fs.existsSync(CHROME) ? CHROME : undefined });
 const page = await browser.newPage({ viewport: { width: 420, height: 860 }, deviceScaleFactor: 2 });
-await page.goto(`http://localhost:${server.address().port}/index.html?demo&prof`);
+await page.goto(`http://localhost:${server.address().port}/index.html?demo&prof${process.env.PROFQ ? "&" + process.env.PROFQ : ""}`);
 await page.waitForTimeout(9000);
 const sections = await page.evaluate(() => Object.fromEntries(Object.entries(window.__prof).map(([k, v]) => [k, +v.toFixed(2)])));
 const chunks = await page.evaluate(() => { const g = window.__palm.ground; return [[1, 1], [4, 3], [5, 4], [2, 6], [3, 7]].map(([cx, cy]) => { const t0 = performance.now(); g.paint(cx, cy); return +(performance.now() - t0).toFixed(1); }); });
