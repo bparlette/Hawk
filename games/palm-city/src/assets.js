@@ -17,6 +17,11 @@ export async function loadAssets(onProgress) {
   const pres = await fetch('assets/pressure.json');
   if (!pres.ok) throw new Error('assets/pressure.json failed to load (' + pres.status + ')');
   M.pressure = await pres.json();
+  // Jobs Board sprites (Gemini; tools/import_jobs.mjs): bus + tow truck join the car models, fares the peds
+  const jres = await fetch('assets/jobs.json');
+  if (!jres.ok) throw new Error('assets/jobs.json failed to load (' + jres.status + ')');
+  M.jobs = await jres.json();
+  Object.assign(M.cars, M.jobs.cars); Object.assign(M.peds, M.jobs.peds);
   // the SWAT van drives like any other car model (same cell layout as the vans)
   M.cars.swat_van = { angles: 32, cols: 8, kind: 'police', length: 49, width: 20, color: M.pressure.swatVan.color, shadow: M.pressure.swatVan.shadow, light: M.pressure.swatVan.light };
   const files = new Set();

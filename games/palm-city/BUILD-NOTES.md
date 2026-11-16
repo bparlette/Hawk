@@ -332,3 +332,42 @@ is staged on a bend (the live trigger only uses straights); the replay uses the 
 day, not the time the moment happened; input logs grow for the whole session (a very long run
 makes the fast-forward longer); smash-through café fences/crates/tables from the spec are not
 placed — sawhorses are the only new smashable.
+
+## Jobs Board (v2 step 5)
+
+`src/jobs.js`, one job slot (`sim.job`). Jobs start from their marked vehicle — taxi (816,1000),
+getaway van (640,836), tow truck and bus at the Garage kerb (860/1010,1456): get in and the
+fight button becomes the **job button** (cyan `$`): START, then HOOK / UNHOOK / SLING (tow),
+DECOY / BAIL (getaway). EXIT stays on the action button; getting out, BUSTED, a wreck or the
+clock ends the job. HUD: job card (title, clock, objective, mood / dwell / cable-tension bar)
+and an arrow + distance to the target; the target wears a pulsing cyan halo. All job points are
+kerb-side on the road grid (`PLACES`) — the spec's coordinates were up to 230 units off-road.
+
+- **TAXI** — fare at a landmark → drop at another. Three moods: Speed Freak (+ above 220 u/s,
+  − below 80), VIP (+ cruising, −18 per crash), Chaos Tourist (+15 per hit/score, decays).
+  Pay (150 + distance) ×2 if mood ≥ 80, × streak (to ×5). Mood 0: fare bails. At ≥3★ 35% of
+  fares are feds: cover blown after 5–8 s → 4★, wheel jitter, stop 1.5 s = BUSTED; over 260 then
+  under 110 within 1.2 s throws them (FED SHOOK +600). Roof sign shows free / fare / panic / fed.
+- **TOW** — HOOK a marked car within cable reach of the boom. Payload is a body on a spring-damper
+  cable (rest 44, max 74, k 28): it trails, whips on turns and hits at 2.2× — cars (+250 a
+  cruiser, 400 slung), people, palms (through the task-1 damage calls). SLING above 140 u/s
+  releases it with the truck's velocity. Two over-tensions within 5 s snap the cable. Payload on
+  the Garage apron with the truck slow: +400, next contract (4 rotating targets).
+- **BUS** — six stops (SOLANA → TACOS → PLAZA → PIER → NOVA → GARAGE); under 35 u/s in the halo
+  for 1.8 s boards the riders (+120), pulling out early pays 60; full loop +500, +200 under 75 s;
+  splits tighten per lap (36/30/24 s). The bus is heavy: 235 top speed, 72% steering.
+- **GETAWAY** — to the OFFICE kerb, 1.5 s for the crew: alarm, ≥3★, a spike strip ahead. DECOY
+  (3) throws bills: cruisers within 160 brake for 3 s (+200 each). Safe house (1232,1350): +1000,
+  −2★. Spiked or battered within 350 of it and slow: BAIL puts you and the crew on the board
+  (crewmate drawn behind you) — skate in for +400.
+
+Sprites: Gemini's, `node tools/import_jobs.mjs` (shots/jobs-sprites → assets/jobs/ + jobs.json;
+bus and tow truck join `M.cars`, fares join `M.peds`). Checks: `node tools/jobs_check.mjs`
+(40 rules). Captures: `node tools/jobs_shots.mjs` → shots/jobs-{taxi-pickup,taxi-fed,tow-swing,
+bus-stop,getaway-decoy}.png (job started by a real touch on the job button).
+
+**Below the bar / still needs:** owner play; no kiosk board (jobs start from the vehicles only);
+tow contracts 3+ are parked cars, not the spec's live cruiser / courier van; bus laps don't add
+double-parked vans or rush-hour traffic; getaway has one difficulty tier and the crew are drawn
+only at pickup and on the board; fares/riders are drawn, not simulated pedestrians; vox_* hooks
+fire but play nothing until task 8.

@@ -1,0 +1,182 @@
+{
+ "cars": {
+  "bus": {
+   "angles": 32,
+   "cols": 8,
+   "kind": "bus",
+   "length": 68,
+   "width": 21.5,
+   "color": {
+    "file": "jobs/car_bus.webp",
+    "w": 80,
+    "h": 80,
+    "ox": -40,
+    "oy": -40
+   },
+   "shadow": {
+    "file": "jobs/car_bus_sh.webp",
+    "w": 108,
+    "h": 108,
+    "ox": -41.2,
+    "oy": -57.8
+   },
+   "light": {
+    "file": "jobs/car_bus_light.webp",
+    "w": 75,
+    "h": 240,
+    "ox": -37.5,
+    "oy": -175
+   }
+  },
+  "tow_truck": {
+   "angles": 32,
+   "cols": 8,
+   "kind": "tow",
+   "length": 49,
+   "width": 20,
+   "color": {
+    "file": "jobs/car_tow_truck.webp",
+    "w": 64,
+    "h": 64,
+    "ox": -32,
+    "oy": -32
+   },
+   "shadow": {
+    "file": "jobs/car_tow_truck_sh.webp",
+    "w": 96,
+    "h": 96,
+    "ox": -36.41,
+    "oy": -51.11
+   },
+   "light": {
+    "file": "jobs/car_tow_truck_light.webp",
+    "w": 70,
+    "h": 220,
+    "ox": -35,
+    "oy": -160
+   }
+  }
+ },
+ "peds": {
+  "fare_vip": {
+   "angles": 16,
+   "poses": 3,
+   "cols": 12,
+   "color": {
+    "file": "jobs/ped_fare_vip.webp",
+    "w": 39,
+    "h": 39,
+    "ox": -19.5,
+    "oy": -19.5
+   },
+   "shadow": {
+    "file": "jobs/ped_fare_sh.webp",
+    "w": 110,
+    "h": 110,
+    "ox": -20.23,
+    "oy": -64.32
+   }
+  },
+  "fare_chaos": {
+   "angles": 16,
+   "poses": 3,
+   "cols": 12,
+   "color": {
+    "file": "jobs/ped_fare_chaos.webp",
+    "w": 39,
+    "h": 39,
+    "ox": -19.5,
+    "oy": -19.5
+   },
+   "shadow": {
+    "file": "jobs/ped_fare_sh.webp",
+    "w": 110,
+    "h": 110,
+    "ox": -20.23,
+    "oy": -64.32
+   }
+  },
+  "fare_tourist": {
+   "angles": 16,
+   "poses": 3,
+   "cols": 12,
+   "color": {
+    "file": "jobs/ped_fare_tourist.webp",
+    "w": 39,
+    "h": 39,
+    "ox": -19.5,
+    "oy": -19.5
+   },
+   "shadow": {
+    "file": "jobs/ped_fare_sh.webp",
+    "w": 110,
+    "h": 110,
+    "ox": -20.23,
+    "oy": -64.32
+   }
+  },
+  "fare_fed": {
+   "angles": 16,
+   "poses": 3,
+   "cols": 12,
+   "color": {
+    "file": "jobs/ped_fare_fed.webp",
+    "w": 39,
+    "h": 39,
+    "ox": -19.5,
+    "oy": -19.5
+   },
+   "shadow": {
+    "file": "jobs/ped_fare_sh.webp",
+    "w": 110,
+    "h": 110,
+    "ox": -20.23,
+    "oy": -64.32
+   }
+  }
+ },
+ "cable": {
+  "file": "jobs/prop_tow_cable.webp",
+  "w": 32,
+  "h": 8,
+  "ox": 0,
+  "oy": -4
+ },
+ "hook": {
+  "file": "jobs/prop_tow_hook.webp",
+  "w": 16,
+  "h": 16,
+  "ox": -8,
+  "oy": -8
+ },
+ "sign": {
+  "free": {
+   "file": "jobs/prop_taxi_sign_free.webp",
+   "w": 16,
+   "h": 16,
+   "ox": -8,
+   "oy": -8
+  },
+  "fare": {
+   "file": "jobs/prop_taxi_sign_fare.webp",
+   "w": 16,
+   "h": 16,
+   "ox": -8,
+   "oy": -8
+  },
+  "low": {
+   "file": "jobs/prop_taxi_sign_lowmood.webp",
+   "w": 16,
+   "h": 16,
+   "ox": -8,
+   "oy": -8
+  },
+  "fed": {
+   "file": "jobs/prop_taxi_sign_fed.webp",
+   "w": 16,
+   "h": 16,
+   "ox": -8,
+   "oy": -8
+  }
+ }
+}

@@ -4,6 +4,7 @@
 import { mulberry32 } from './world.js';
 import { enterSiege, stepSiege } from './siege.js';
 import { initPressure, stepPressure } from './pressure.js';
+import { initJobs, stepJobs } from './jobs.js';
 import { initSkate, stepBoard, stepCombo, nearBoard, mount, boardSpeed } from './skate.js';
 import { initDestruct, stepDestruct, punchWorld, carState, carImpact, carsCollide, hitThing, palmImpact, initProps, propImpact } from './destruct.js';
 
@@ -50,6 +51,7 @@ export class Sim {
     for (const p of world.L.props) this.obst.push({ x: p.x, y: p.y, r: p.type === 'fountain' ? 30 : 12, kind: p.type });
     initProps(this);                                     // benches, lamps, lifeguard towers can be broken (destruct.js)
     initPressure(this);                                  // the chopper, roadblocks, spikes (pressure.js)
+    initJobs(this);                                      // job vehicles + the one job slot (jobs.js)
     // two people strolling the pier, out to the end and back
     const PR = world.L.pier;
     for (const [fx, dir, outfit, dy] of [[0.3, 1, 'ped_straw', -5], [0.75, -1, 'ped_blue', 5]]) {
@@ -187,6 +189,7 @@ export class Sim {
     else if (P.mode === 'board') stepBoard(this, dt, input);
     else if (P.mode === 'siege') stepSiege(this, dt, input);
     else this.stepPlayerCar(dt, input);
+    stepJobs(this, dt, input);
     stepCombo(this, dt);
     // a board left alone rolls to a stop
     if (!this.board.ridden) { const b = this.board, f = Math.exp(-3 * dt); b.vx *= f; b.vy *= f; const bx = b.x + b.vx * dt, by = b.y + b.vy * dt; if (this.canStand(bx, by) && !this.W.hitTrunk(bx, by, 2)) { b.x = bx; b.y = by; } else { b.vx = b.vy = 0; } }   // never rolls off into the sea or through a rail
@@ -209,7 +212,7 @@ export class Sim {
       if (c.driver === 'player' || c === P.car) return true;
       const d = Math.hypot(c.x - f.x, c.y - f.y);
       if (c.driver === 'police') return d < 1500 || this.stars > 0;
-      if ((c.parked && c.fixed !== false) || c.patrol) return true;
+      if ((c.parked && c.fixed !== false) || c.patrol || c.job || c.towTarget || c.towed) return true;
       return d < 1250;
     });
     const traffic = this.cars.filter(c => c.driver === 'ai').length;
@@ -438,7 +441,7 @@ export class Sim {
       }
     }
     if (c.wreck) { throttle = 0; steer = 0; }            // dead: all you can do is get out
-    this.driveCar(c, throttle, steer, dt, 290);
+    this.driveCar(c, throttle, steer * (c.heavy ? 0.72 : 1), dt, c.heavy ? 235 : 290);   // the bus: slower, wider turns
     if (inp.action && Math.abs(c.v) < 60) this.exitCar();
   }
 
@@ -511,6 +514,7 @@ export class Sim {
     const cs = this.cars;
     for (let i = 0; i < cs.length; i++) for (let j = i + 1; j < cs.length; j++) {
       const a = cs[i], b = cs[j];
+      if ((a.towed && b.driver === 'player') || (b.towed && a.driver === 'player')) continue;   // the tow truck and its own payload (jobs.js owns that pair)
       const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
       const reach = (a.len + b.len) / 4 + (a.wid + b.wid) / 4;
       if (d > reach || d < 0.01) continue;
