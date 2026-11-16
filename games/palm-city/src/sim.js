@@ -637,7 +637,7 @@ export class Sim {
     W.loopNearestFast = () => this.playerS;
 
     // a patrol car close by joins the chase the moment you're wanted
-    if (this.stars > 0 && !this.busted) for (const c of this.cars) if (c.patrol && c.driver === 'ai' && dist(c, f) < 520) c.driver = 'police';
+    if (this.stars > 0 && !this.busted) for (const c of this.cars) if (c.patrol && c.driver === 'ai' && dist(c, f) < 650) c.driver = 'police';        // 7C: wider re-acquire
     const police = this.cars.filter(c => c.driver === 'police');
     const want = this.stars > 0 && !this.busted ? Math.min(4, this.stars + 1) : 0;
     if (police.length < want && this.rnd() < dt * 0.6) {
@@ -664,24 +664,29 @@ export class Sim {
       for (const c of police) { c.driver = 'ai'; c.siren = false; c.cruise = 120; c.copOut = false; this.syncS(c); }
     }
     // losing the heat
-    const near = police.some(c => dist(c, f) < 460) || (this.chopper && this.chopper.lock);   // in the searchlight = seen
+    const near = police.some(c => dist(c, f) < 600) || (this.chopper && this.chopper.lock);   // in the searchlight = seen
     if (this.stars > 0 && !near) {
       this.lostT += dt;
-      if (this.lostT > 14) { this.stars--; this.lostT = 0; if (this.stars === 0) this.say('LOST THEM'); }
+      if (this.lostT > 22) { this.stars--; this.lostT = 0; if (this.stars === 0) this.say('LOST THEM'); }
     } else this.lostT = 0;
     // busted?
     if (this.busted || this.stars === 0) { this.bustT = 0; return; }
     let pinned = false;
     if (this.player.mode === 'car') {
       const c = this.player.car;
-      pinned = Math.abs(c.v) < 30 && police.some(p => dist(p, c) < 64);
+      // 7C: the meter fills ONLY while crashed / pinned / boxed in (below 15% of the car's top speed)
+      const vmax = (c.heavy ? 235 : 290) * (1 - 0.4 * c.dmg);
+      pinned = Math.abs(c.v) < 0.15 * vmax && police.some(p => dist(p, c) < 64);
     } else {
-      const p = this.player.ped;
-      pinned = police.some(c => dist(c, p) < 46 && Math.abs(c.v) < 50) ||
-               this.peds.some(o => o.mode === 'cop' && dist(o, p) < 14);
+      const p = this.player.ped, lp = this.lastPedPos || { x: p.x, y: p.y };
+      const still = Math.hypot(p.x - lp.x, p.y - lp.y) < 0.6 * dt * 60 * 0.5;       // on foot: only while not moving
+      this.lastPedPos = { x: p.x, y: p.y };
+      pinned = still && (police.some(c => dist(c, p) < 46 && Math.abs(c.v) < 50) ||
+               this.peds.some(o => o.mode === 'cop' && dist(o, p) < 14));
     }
-    this.bustT = pinned ? this.bustT + dt : Math.max(0, this.bustT - dt);
-    if (this.bustT > (this.player.mode === 'car' ? 1.3 : 0.5)) {
+    // fill: 2.8 s standing in a cop's grip (car), 1.5 s on foot; drain at 3x the fill rate once you are moving
+    this.bustT = pinned ? this.bustT + dt : Math.max(0, this.bustT - dt * 3);
+    if (this.bustT > (this.player.mode === 'car' ? 2.8 : 1.5)) {
       this.busted = { t: 0 };
       this.bustT = 0;
       this.say('BUSTED', 4.2);
