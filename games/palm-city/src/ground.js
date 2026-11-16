@@ -1,8 +1,9 @@
 // ground.js — procedural painted ground, streamed in small chunks.
 // Each chunk is CHUNK world units square, painted at PX_PER_UNIT (512x512 px canvas).
 // Pass 1: per-pixel base colour from surface type + low-frequency noise (no visible tiling).
-// Pass 2: thousands of short brush dabs, oriented per surface (along the road, across sand...).
-// Pass 3: painted details — curbs, lane paint, crosswalks, cracks, oil, wet patches.
+// Pass 2: two-pass curl-following impasto brushstrokes with shadow under-ridges & edge glints.
+// Pass 3: painted details — curbs, lane paint, mosaic pavers, boardwalk planks, sand swirls,
+//         crosswalks, cracks, oil, wet reflection troughs, shoreline foam.
 // Nothing is baked bigger than one chunk; chunks are LRU-cached.
 
 import { mulberry32, fbm, vnoise } from './world.js';
@@ -13,17 +14,30 @@ const CPX = CHUNK * PX_PER_UNIT; // 512
 
 // Daylight albedo per surface (the time-of-day grade is applied later, in the lighting pass).
 const PAL = {
-  road:      { base: [72, 66, 112],  var: [20, 18, 30], dabs: ['#5a5292', '#6e62a8', '#463f7c', '#8576b4', '#4e5a96', '#9a7fb0', '#3d3870'] },
-  sidewalk:  { base: [236, 214, 190], var: [14, 12, 12], dabs: ['#f6e6cc', '#dcc4ac', '#fff0dc', '#cdb6a4', '#eedcc0'] },
-  paving:    { base: [200, 120, 88], var: [24, 18, 16], dabs: ['#dc8c60', '#b8624e', '#e8a474', '#a85848', '#d87a62', '#f0b47e'] },
-  plaza:     { base: [230, 190, 146], var: [16, 14, 14], dabs: ['#f4cf98', '#dca880', '#ecb98c', '#d09080', '#fadca8'] },
-  parking:   { base: [58, 56, 80],   var: [12, 10, 14], dabs: ['#4a4868', '#3e3c5a', '#5a5478', '#2e2c46'] },
-  grass:     { base: [70, 130, 64],  var: [26, 30, 20], dabs: ['#4f9a44', '#86be4c', '#357a48', '#a8c850', '#2f6648', '#c4d060', '#5aa03a'] },
-  promenade: { base: [196, 150, 108], var: [16, 14, 12], dabs: ['#c99a6a', '#b88658', '#d8ac7a', '#a8784e'] },
-  sand:      { base: [242, 198, 132], var: [14, 14, 14], dabs: ['#fcd896', '#eab474', '#fff0b8', '#dca070', '#f6c888'] },
-  water:     { base: [30, 92, 150],  var: [14, 20, 22], dabs: ['#2a78b0', '#3a96c4', '#1c5890', '#52aed0', '#184a84', '#6cc4d4', '#2d68a8'] },
+  road:      { base: [80, 72, 112],   var: [20, 18, 28], dabs: ['#605692', '#7466a8', '#4c447c', '#8e7cb8', '#5864a0', '#a286b6', '#423a70', '#b294c4'] },
+  sidewalk:  { base: [242, 214, 178], var: [16, 14, 12], dabs: ['#fae4be', '#dfbe9c', '#fff0d2', '#cfa88c', '#f4d3a6', '#e8b68c'] },
+  paving:    { base: [212, 118, 76],  var: [26, 18, 16], dabs: ['#e68854', '#b85a42', '#f2a46a', '#9c4c3a', '#de7458', '#f8b976', '#8a3e30'] },
+  plaza:     { base: [236, 190, 138], var: [18, 14, 14], dabs: ['#fad090', '#dea274', '#f2b880', '#ce8670', '#ffe0a4', '#e89668'] },
+  parking:   { base: [60, 56, 86],    var: [12, 10, 16], dabs: ['#4a466e', '#3c385a', '#625a88', '#302d4c', '#74689c'] },
+  grass:     { base: [64, 134, 58],   var: [28, 32, 22], dabs: ['#48a03c', '#8cc846', '#2e7c44', '#b2d44c', '#266644', '#d0dc58', '#56ac36', '#72ba44'] },
+  promenade: { base: [208, 138, 92],  var: [20, 16, 14], dabs: ['#d48858', '#b86c48', '#e6a06c', '#9c583c', '#f0b47c', '#c87c4e'] },
+  sand:      { base: [246, 198, 126], var: [16, 15, 14], dabs: ['#ffda92', '#ecb06a', '#fff0b4', '#dc9864', '#f8c67e', '#e49e60'] },
+  water:     { base: [24, 96, 158],   var: [18, 22, 24], dabs: ['#2482ba', '#38a6cc', '#165a96', '#56bed6', '#124686', '#7ad0dc', '#2a6cb4', '#f0ba78'] },
 };
 const TYPES = Object.keys(PAL);
+
+// Curl vector field helper using fast vnoise finite differences
+function curlAngle(wx, wy, scale, seed, baseAng) {
+  const e = 1.2;
+  const n1 = vnoise(wx * scale, (wy + e) * scale, seed);
+  const n2 = vnoise(wx * scale, (wy - e) * scale, seed);
+  const n3 = vnoise((wx + e) * scale, wy * scale, seed);
+  const n4 = vnoise((wx - e) * scale, wy * scale, seed);
+  const cx = (n1 - n2) / (2 * e);
+  const cy = -(n3 - n4) / (2 * e);
+  const cAng = Math.atan2(cy, cx);
+  return baseAng * 0.45 + cAng * 0.55;
+}
 
 export class GroundPainter {
   constructor(world) {
@@ -69,17 +83,17 @@ export class GroundPainter {
     for (let j = 0; j < gw; j++) {
       for (let i = 0; i < gw; i++) {
         const wx = ox + i * S / PX_PER_UNIT, wy = oy + j * S / PX_PER_UNIT;
-        const wob = vnoise(wx * 0.05, wy * 0.05, 9) * 2 - 1;
+        const wob = vnoise(wx * 0.055, wy * 0.055, 9) * 2 - 1;
         const t = W.surfaceAt(wx, wy, wob);
         typeGrid[j * gw + i] = TYPES.indexOf(t);
         const p = PAL[t];
-        const n1 = fbm(wx * 0.012, wy * 0.012, 1, 3) - 0.5;
-        const n2 = vnoise(wx * 0.08, wy * 0.08, 2) - 0.5;
-        const warm = fbm(wx * 0.004, wy * 0.004, 5, 2) - 0.5;
+        const n1 = fbm(wx * 0.015, wy * 0.015, 1, 3) - 0.5;
+        const n2 = vnoise(wx * 0.09, wy * 0.09, 2) - 0.5;
+        const warm = fbm(wx * 0.005, wy * 0.005, 5, 2) - 0.5;
         const o = (j * gw + i) * 4;
-        d[o]     = p.base[0] + p.var[0] * (n1 * 2 + n2) + warm * 30;
-        d[o + 1] = p.base[1] + p.var[1] * (n1 * 2 + n2) + warm * 8;
-        d[o + 2] = p.base[2] + p.var[2] * (n1 * 2 + n2) - warm * 14;
+        d[o]     = p.base[0] + p.var[0] * (n1 * 2.2 + n2) + warm * 34;
+        d[o + 1] = p.base[1] + p.var[1] * (n1 * 2.2 + n2) + warm * 10;
+        d[o + 2] = p.base[2] + p.var[2] * (n1 * 2.2 + n2) - warm * 16;
         d[o + 3] = 255;
       }
     }
@@ -90,52 +104,97 @@ export class GroundPainter {
 
     const typeAt = (px, py) => {
       const i = Math.min(gw - 1, Math.max(0, Math.round(px / S)));
-      const j = Math.min(gw - 1, Math.max(0, Math.round(py / S)));
+      const j = Math.min(gh - 1, Math.max(0, Math.round(py / S)));
       return TYPES[typeGrid[j * gw + i]];
     };
+    const gh = gw;
 
-    // ---- pass 2: brush dabs. Seeded per 32-unit world cell (not per chunk), and every chunk
-    // also paints its neighbours' border cells, so dabs cross chunk edges with no seam.
+    // ---- pass 2: two-pass curl-following impasto brushstrokes. Seeded per 32-unit world cell,
+    // and every chunk also paints its neighbours' border cells, so dabs cross chunk edges with no seam.
     g.lineCap = 'round';
-    const CELL = 32, PER = 54;
+    const CELL = 32, PER = 86;
     const k0x = Math.floor(ox / CELL) - 1, k1x = Math.floor((ox + CHUNK) / CELL) + 1;
     const k0y = Math.floor(oy / CELL) - 1, k1y = Math.floor((oy + CHUNK) / CELL) + 1;
-    for (let ky = k0y; ky <= k1y; ky++) for (let kx = k0x; kx <= k1x; kx++) {
-      const cr = mulberry32((kx * 73856093) ^ (ky * 19349663) ^ 0x5bd1e995);
-      for (let n = 0; n < PER; n++) {
-        const wx = (kx + cr()) * CELL, wy = (ky + cr()) * CELL;
-        const px = (wx - ox) * PX_PER_UNIT, py = (wy - oy) * PX_PER_UNIT;
-        const t = W.surfaceAt(wx, wy, vnoise(wx * 0.05, wy * 0.05, 9) * 2 - 1);
-        const p = PAL[t];
-        let ang, len, wid, alpha;
-        const r1 = cr(), r2 = cr(), r3 = cr(), r4 = cr(), r5 = cr(), r6 = cr();
-        if (t === 'road' || t === 'parking') {
-          const r = W.roadInfo(wx, wy);
-          ang = Math.atan2(r.dy, r.dx) + (r1 - 0.5) * 0.5;
-          len = 8 + r2 * 12; wid = 4 + r3 * 4; alpha = 0.22 + r4 * 0.26;
-        } else if (t === 'water') {
-          ang = Math.PI / 2 + (r1 - 0.5) * 0.35 + Math.sin(wy * 0.02) * 0.2;
-          len = 10 + r2 * 18; wid = 4 + r3 * 4; alpha = 0.3 + r4 * 0.3;
-        } else if (t === 'sand') {
-          ang = Math.PI / 2 + 0.3 + (r1 - 0.5) * 0.6;
-          len = 6 + r2 * 10; wid = 4 + r3 * 4; alpha = 0.22 + r4 * 0.25;
-        } else if (t === 'grass') {
-          ang = fbm(wx * 0.01, wy * 0.01, 4, 2) * Math.PI * 4;
-          len = 6 + r2 * 9; wid = 4 + r3 * 5; alpha = 0.4 + r4 * 0.35;
-        } else {
-          ang = fbm(wx * 0.006, wy * 0.006, 6, 2) * Math.PI * 3 + (r1 - 0.5) * 0.6;
-          len = 6 + r2 * 9; wid = 4 + r3 * 5; alpha = 0.2 + r4 * 0.24;
+    for (let pass = 0; pass < 2; pass++) {
+      const count = pass === 0 ? Math.floor(PER * 0.50) : PER;
+      const seedXor = pass ? 0x9e3779b9 : 0x5bd1e995;
+      for (let ky = k0y; ky <= k1y; ky++) for (let kx = k0x; kx <= k1x; kx++) {
+        const cr = mulberry32((kx * 73856093) ^ (ky * 19349663) ^ seedXor);
+        for (let n = 0; n < count; n++) {
+          const wx = (kx + cr()) * CELL, wy = (ky + cr()) * CELL;
+          const px = (wx - ox) * PX_PER_UNIT, py = (wy - oy) * PX_PER_UNIT;
+          if (px < -30 || py < -30 || px > CPX + 30 || py > CPX + 30) {
+            cr(); cr(); cr(); cr(); cr(); cr();
+            continue;
+          }
+          const t = W.surfaceAt(wx, wy, vnoise(wx * 0.055, wy * 0.055, 9) * 2 - 1);
+          const p = PAL[t];
+          const r1 = cr(), r2 = cr(), r3 = cr(), r4 = cr(), r5 = cr(), r6 = cr();
+          let ang, len, wid, alpha;
+          if (t === 'road' || t === 'parking') {
+            const r = W.roadInfo(wx, wy);
+            const roadA = Math.atan2(r.dy, r.dx);
+            ang = curlAngle(wx, wy, 0.015, 11, roadA) * 0.32 + roadA * 0.68 + (r1 - 0.5) * 0.30;
+            len = (pass === 0 ? 20 : 12) + r2 * 16;
+            wid = (pass === 0 ? 9.5 : 5.8) + r3 * 5.2;
+            alpha = (pass === 0 ? 0.34 : 0.42) + r4 * 0.28;
+          } else if (t === 'water') {
+            const swell = Math.PI / 2 + Math.sin(wy * 0.025 + wx * 0.01) * 0.42;
+            ang = curlAngle(wx, wy, 0.022, 17, swell) + (r1 - 0.5) * 0.30;
+            len = (pass === 0 ? 24 : 15) + r2 * 20;
+            wid = (pass === 0 ? 9.0 : 5.5) + r3 * 5.2;
+            alpha = (pass === 0 ? 0.42 : 0.48) + r4 * 0.30;
+          } else if (t === 'sand') {
+            const dune = Math.PI / 2 + 0.25 + Math.sin(wy * 0.018) * 0.3;
+            ang = curlAngle(wx, wy, 0.015, 23, dune) + (r1 - 0.5) * 0.38;
+            len = (pass === 0 ? 18 : 11) + r2 * 13;
+            wid = (pass === 0 ? 8.5 : 5.4) + r3 * 4.5;
+            alpha = 0.30 + r4 * 0.30;
+          } else if (t === 'grass') {
+            ang = curlAngle(wx, wy, 0.026, 31, fbm(wx * 0.015, wy * 0.015, 4, 2) * Math.PI * 3);
+            len = 10 + r2 * 11;
+            wid = (pass === 0 ? 8.0 : 5.0) + r3 * 4.5;
+            alpha = 0.45 + r4 * 0.35;
+          } else if (t === 'promenade') {
+            ang = (r1 - 0.5) * 0.16;
+            len = (pass === 0 ? 18 : 12) + r2 * 12;
+            wid = (pass === 0 ? 7.5 : 4.8) + r3 * 3.8;
+            alpha = 0.34 + r4 * 0.28;
+          } else {
+            ang = curlAngle(wx, wy, 0.018, 19, fbm(wx * 0.01, wy * 0.01, 6, 2) * Math.PI * 3) + (r1 - 0.5) * 0.35;
+            len = (pass === 0 ? 18 : 11) + r2 * 12;
+            wid = (pass === 0 ? 8.5 : 5.5) + r3 * 4.6;
+            alpha = 0.30 + r4 * 0.28;
+          }
+          const col = p.dabs[(r5 * p.dabs.length) | 0];
+          const cxs = Math.cos(ang) * len / 2, sys = Math.sin(ang) * len / 2;
+          const bend = (r6 - 0.5) * 0.36;
+          if (pass === 1 && r4 > 0.35) {
+            g.strokeStyle = 'rgba(28, 22, 62, 0.11)';
+            g.globalAlpha = alpha * 0.55;
+            g.lineWidth = wid + 1.0;
+            g.beginPath();
+            g.moveTo(px - cxs + 1.3, py - sys + 1.0);
+            g.quadraticCurveTo(px - sys * bend + 1.3, py + cxs * bend + 1.0, px + cxs + 1.3, py + sys + 1.0);
+            g.stroke();
+          }
+          g.strokeStyle = col;
+          g.globalAlpha = alpha;
+          g.lineWidth = wid;
+          g.beginPath();
+          g.moveTo(px - cxs, py - sys);
+          g.quadraticCurveTo(px - sys * bend, py + cxs * bend, px + cxs, py + sys);
+          g.stroke();
+          if (pass === 1 && r4 > 0.74) {
+            g.strokeStyle = t === 'water' ? '#bfefff' : (t === 'road' ? '#a6a8de' : '#fff3ce');
+            g.globalAlpha = 0.26;
+            g.lineWidth = Math.max(1.4, wid * 0.35);
+            g.beginPath();
+            g.moveTo(px - cxs - 0.9, py - sys - 0.7);
+            g.quadraticCurveTo(px - sys * bend - 0.9, py + cxs * bend - 0.7, px + cxs - 0.9, py + sys - 0.7);
+            g.stroke();
+          }
         }
-        if (px < -20 || py < -20 || px > CPX + 20 || py > CPX + 20) continue;
-        g.strokeStyle = p.dabs[(r5 * p.dabs.length) | 0];
-        g.globalAlpha = alpha;
-        g.lineWidth = wid;
-        const cxs = Math.cos(ang) * len / 2, sys = Math.sin(ang) * len / 2;
-        const bend = (r6 - 0.5) * 0.3;
-        g.beginPath();
-        g.moveTo(px - cxs, py - sys);
-        g.quadraticCurveTo(px - sys * bend, py + cxs * bend, px + cxs, py + sys);
-        g.stroke();
       }
     }
     g.globalAlpha = 1;
@@ -157,14 +216,14 @@ export class GroundPainter {
     const edgeWalk = (fn) => {
       for (const [x0, y0, x1, y1] of W.segs) {
         const L = Math.hypot(x1 - x0, y1 - y0), ux = (x1 - x0) / L, uy = (y1 - y0) / L;
-        for (let s = 0; s <= L; s += 3) {
+        for (let s = 0; s <= L; s += 2.5) {
           const x = x0 + ux * s, y = y0 + uy * s;
           if (inChunk(x, y)) fn(x, y, ux, uy, s);
         }
       }
       for (const a of W.arcs) {
         const L = a.r * (a.a1 - a.a0);
-        for (let s = 0; s <= L; s += 3) {
+        for (let s = 0; s <= L; s += 2.5) {
           const an = a.a0 + s / a.r;
           const x = a.cx + Math.cos(an) * a.r, y = a.cy + Math.sin(an) * a.r;
           if (inChunk(x, y)) fn(x, y, -Math.sin(an), Math.cos(an), s);
@@ -172,35 +231,35 @@ export class GroundPainter {
       }
     };
 
-    // curb lip on both sides (only where the far side is not road, i.e. not inside an intersection)
-    edgeWalk((x, y, ux, uy, s) => {
+    // Curbs with warm sunlit highlight & deep indigo gutter crease
+    edgeWalk((x, y, ux, uy) => {
       for (const side of [-1, 1]) {
         const nx = -uy * side, ny = ux * side;
         const ex = x + nx * hr, ey = y + ny * hr;
         if (W.roadInfo(ex + nx * 3, ey + ny * 3).d < hr - 1) continue;
-        g.globalAlpha = 0.55;
-        g.fillStyle = '#e9d4bc';
-        g.fillRect(ex + nx * 1.2 - 1.6, ey + ny * 1.2 - 1.6, 3.2, 3.2);
-        g.globalAlpha = 0.28;
-        g.fillStyle = '#2c2440';
-        g.fillRect(ex - nx * 1.6 - 1.4, ey - ny * 1.6 - 1.4, 2.8, 2.8);
+        g.globalAlpha = 0.72;
+        g.fillStyle = '#f2dbb8';
+        g.fillRect(ex + nx * 1.3 - 1.7, ey + ny * 1.3 - 1.7, 3.4, 3.4);
+        g.globalAlpha = 0.45;
+        g.fillStyle = '#201a42';
+        g.fillRect(ex - nx * 1.8 - 1.6, ey - ny * 1.8 - 1.6, 3.2, 3.2);
       }
     });
 
-    // Lane paint: dashed warm-white centre line, slightly irregular like it was painted by hand.
+    // Hand-painted golden-cream dashed lane lines
     edgeWalk((x, y, ux, uy, s) => {
       if (W.roadInfo(x - uy * (hr + 6), y + ux * (hr + 6)).d < hr - 2 &&
           W.roadInfo(x + uy * (hr + 6), y - ux * (hr + 6)).d < hr - 2) return; // inside a junction
       if (s % 36 < 18) {
-        g.globalAlpha = 0.5 + vnoise(x * 0.3, y * 0.3, 3) * 0.35;
-        g.fillStyle = '#f1dfa8';
+        g.globalAlpha = 0.65 + vnoise(x * 0.3, y * 0.3, 3) * 0.3;
+        g.fillStyle = '#f8e3a4';
         g.save(); g.translate(x, y); g.rotate(Math.atan2(uy, ux));
-        g.fillRect(-1.8, -1.2 + (rnd() - 0.5) * 0.3, 3.6, 2.4);
+        g.fillRect(-1.8, -1.35 + (rnd() - 0.5) * 0.35, 3.6, 2.7);
         g.restore();
       }
     });
 
-    // Sidewalk joints: loose painted lines across the walk every ~14 units.
+    // Sidewalk slab joints
     const sw = W.L.roads.sidewalk;
     edgeWalk((x, y, ux, uy, s) => {
       if (Math.round(s) % 14 > 2) return;
@@ -208,45 +267,55 @@ export class GroundPainter {
         const nx = -uy * side, ny = ux * side;
         const ax = x + nx * (hr + 2), ay = y + ny * (hr + 2);
         if (W.surfaceAt(ax + nx * 6, ay + ny * 6) !== 'sidewalk') continue;
-        g.globalAlpha = 0.16;
-        g.strokeStyle = '#6a3c48';
-        g.lineWidth = 0.7;
+        g.globalAlpha = 0.22;
+        g.strokeStyle = '#683846';
+        g.lineWidth = 0.85;
         g.beginPath(); g.moveTo(ax, ay); g.lineTo(ax + nx * (sw - 3) + (rnd() - 0.5), ay + ny * (sw - 3)); g.stroke();
       }
     });
 
-    // Distinct surfaces: plaza gets laid pavers in a running bond; sand gets wind ripples + shells;
-    // the promenade gets boardwalk planks.
+    // Plaza & paving terracotta mosaic, promenade boardwalk planks
     const sample = (x, y) => typeAt((x - ox) * P, (y - oy) * P);
     for (let y = oy - 8; y < oy + CHUNK + 8; y += 8) {
       const row = Math.round(y / 8);
       for (let x = ox - 12 + (row % 2) * 6; x < ox + CHUNK + 12; x += 12) {
         const t = sample(x, y);
-        if (t === 'plaza') {
-          g.globalAlpha = 0.22; g.strokeStyle = '#8a5a4a'; g.lineWidth = 0.6;
+        if (t === 'plaza' || t === 'paving') {
+          g.globalAlpha = 0.28; g.strokeStyle = '#7c483a'; g.lineWidth = 0.75;
           g.strokeRect(x + (rnd() - 0.5) * 0.6, y, 12, 8);
-          if (rnd() < 0.18) { g.globalAlpha = 0.18; g.fillStyle = rnd() < 0.5 ? '#fff0d0' : '#c47a62'; g.fillRect(x + 0.6, y + 0.6, 10.8, 6.8); }
-        } else if (t === 'promenade' && (Math.round(x) % 2 === 0)) {
-          g.globalAlpha = 0.2; g.strokeStyle = '#6a4030'; g.lineWidth = 0.6;
+          if (rnd() < 0.32) {
+            g.globalAlpha = 0.28;
+            g.fillStyle = rnd() < 0.45 ? '#ffeac2' : (rnd() < 0.5 ? '#d06c52' : '#eaa068');
+            g.fillRect(x + 0.7, y + 0.7, 10.6, 6.6);
+          }
+        } else if (t === 'promenade') {
+          g.globalAlpha = 0.34; g.strokeStyle = '#623626'; g.lineWidth = 0.7;
           g.beginPath(); g.moveTo(x, y); g.lineTo(x + 12, y); g.stroke();
+          if (rnd() < 0.28) {
+            g.globalAlpha = 0.24;
+            g.fillStyle = rnd() < 0.5 ? '#f2b87e' : '#a85e40';
+            g.fillRect(x + 0.5, y + 0.5, 11.0, 3.2);
+          }
         }
       }
     }
-    for (let n = 0; n < 60; n++) {
+
+    // Beach sand wind-carved Van Gogh contour swirls & shells
+    for (let n = 0; n < 48; n++) {
       const x = ox + rnd() * CHUNK, y = oy + rnd() * CHUNK;
       if (sample(x, y) !== 'sand') continue;
-      g.globalAlpha = 0.25; g.strokeStyle = '#c99868'; g.lineWidth = 1;
-      g.beginPath(); g.arc(x, y + 20, 22 + rnd() * 10, -Math.PI / 2 - 0.5, -Math.PI / 2 + 0.5); g.stroke();
-      if (rnd() < 0.2) { g.globalAlpha = 0.8; g.fillStyle = '#fff4e4'; g.beginPath(); g.arc(x, y, 1.2, 0, 7); g.fill(); }
+      g.globalAlpha = 0.32; g.strokeStyle = rnd() < 0.5 ? '#c68a58' : '#ffe8b8'; g.lineWidth = 1.3;
+      g.beginPath(); g.arc(x, y + 22, 20 + rnd() * 14, -Math.PI / 2 - 0.65, -Math.PI / 2 + 0.65); g.stroke();
+      if (rnd() < 0.18) { g.globalAlpha = 0.85; g.fillStyle = '#fff5e2'; g.beginPath(); g.arc(x, y, 1.3, 0, 7); g.fill(); }
     }
 
     // Parking stalls: painted lines in parking rects.
     for (const q of W.L.ground) {
       if (q.type !== 'parking' || !inChunk(q.x + q.w / 2, q.y + q.h / 2, Math.max(q.w, q.h))) continue;
-      g.strokeStyle = '#f2e2c0';
-      g.lineWidth = 1.4;
+      g.strokeStyle = '#f6e4bc';
+      g.lineWidth = 1.6;
       for (let x = q.x + 4; x < q.x + q.w; x += 28) {
-        g.globalAlpha = 0.45 + rnd() * 0.2;
+        g.globalAlpha = 0.55 + rnd() * 0.2;
         g.beginPath(); g.moveTo(x, q.y + 2); g.lineTo(x + (rnd() - 0.5), q.y + Math.min(q.h - 2, 46)); g.stroke();
       }
     }
@@ -262,20 +331,20 @@ export class GroundPainter {
       const len = Math.hypot(dx, dy), ux = dx / len, uy = dy / len;
       const cx = jx + ux * (hr + 18), cy = jy + uy * (hr + 18);
       if (!inChunk(cx, cy, 80)) continue;
-      g.fillStyle = '#efe2c4';
+      g.fillStyle = '#f5e6c4';
       for (let k = -hr + 6; k < hr - 4; k += 11) {
         const px = cx - uy * k, py = cy + ux * k;
-        g.globalAlpha = 0.5 + rnd() * 0.25;
+        g.globalAlpha = 0.62 + rnd() * 0.25;
         g.save(); g.translate(px, py); g.rotate(Math.atan2(uy, ux));
-        g.beginPath(); g.roundRect(-9, -3, 18, 6, 2); g.fill();
+        g.beginPath(); g.roundRect(-9, -3.2, 18, 6.4, 2); g.fill();
         g.restore();
       }
     }
 
-    // Sidewalk paving joints, oil stains, cracks, manholes, wet patches.
+    // Oil stains, cracks, manholes, grass flowers.
     for (let n = 0; n < 70; n++) {
       const x = ox + rnd() * CHUNK, y = oy + rnd() * CHUNK;
-      const t = typeAt((x - ox) * P, (y - oy) * P);
+      const t = sample(x, y);
       if (t === 'road') {
         const k = rnd();
         if (k < 0.2) { // oil stain
@@ -302,29 +371,39 @@ export class GroundPainter {
       }
     }
 
-    // Wet patches along the gutters: darker, cooler, glossy — neon reflects here later.
+    // Deep wet-asphalt reflection troughs & gutter sheen on roads
     const wr = mulberry32(((ox * 31) ^ (oy * 17)) >>> 0);
-    for (let n = 0; n < 6; n++) {
+    for (let n = 0; n < 16; n++) {
       const x = ox + wr() * CHUNK, y = oy + wr() * CHUNK;
       const r = W.roadInfo(x, y);
-      if (r.d > hr - 4 || r.d < hr - 22) continue;
-      g.globalAlpha = 0.28;
-      g.fillStyle = '#2b2a4a';
-      g.beginPath(); g.ellipse(x, y, 14 + wr() * 14, 5 + wr() * 5, Math.atan2(r.dy, r.dx), 0, 7); g.fill();
-      g.globalAlpha = 0.18;
-      g.fillStyle = '#9aa8d8';
-      g.beginPath(); g.ellipse(x - 2, y - 1, 8, 1.6, Math.atan2(r.dy, r.dx), 0, 7); g.fill();
+      if (r.d > hr - 3) continue;
+      const isGutter = r.d > hr - 24;
+      g.globalAlpha = isGutter ? 0.36 : 0.20;
+      g.fillStyle = isGutter ? '#22214c' : '#2f2d5e';
+      g.beginPath(); g.ellipse(x, y, 16 + wr() * 18, 5 + wr() * 6, Math.atan2(r.dy, r.dx), 0, 7); g.fill();
+      if (isGutter) {
+        g.globalAlpha = 0.24;
+        g.fillStyle = '#8fa0de';
+        g.beginPath(); g.ellipse(x - 2, y - 1, 9, 1.8, Math.atan2(r.dy, r.dx), 0, 7); g.fill();
+      }
     }
 
-    // Shoreline foam
-    for (let y = Math.max(0, oy - 4); y < oy + CHUNK + 4; y += 2.5) {
+    // Broken foamy scalloped surf along shoreX
+    for (let y = Math.max(0, oy - 4); y < oy + CHUNK + 4; y += 3.8) {
       const sx = W.shoreX(y);
       if (sx < ox - 20 || sx > ox + CHUNK + 20) continue;
-      g.globalAlpha = 0.35 + vnoise(y * 0.1, 0, 4) * 0.4;
-      g.fillStyle = '#f4ead2';
-      g.beginPath(); g.ellipse(sx + vnoise(y * 0.05, 1, 5) * 6, y, 3.5, 1.6, 1.4, 0, 7); g.fill();
-      g.globalAlpha = 0.25; g.fillStyle = '#c9a774';
-      g.beginPath(); g.ellipse(sx - 6, y, 4, 1.4, 1.5, 0, 7); g.fill();
+      const n = vnoise(y * 0.14, 0, 4);
+      if (n > 0.22) {
+        g.globalAlpha = 0.32 + n * 0.42;
+        g.fillStyle = '#fbf0d8';
+        g.beginPath(); g.ellipse(sx + vnoise(y * 0.05, 1, 5) * 7, y, 2.8 + n * 2.5, 1.8 + n * 1.4, 1.35 + (rnd() - 0.5) * 0.3, 0, 7); g.fill();
+      }
+      if (n > 0.45) {
+        g.globalAlpha = 0.22; g.fillStyle = '#5ab8cf';
+        g.beginPath(); g.ellipse(sx + 6 + rnd() * 5, y, 3.8, 1.6, 1.45, 0, 7); g.fill();
+      }
+      g.globalAlpha = 0.26; g.fillStyle = '#be8d58';
+      g.beginPath(); g.ellipse(sx - 6, y, 5.0, 1.9, 1.48, 0, 7); g.fill();
     }
     g.restore();
     g.globalAlpha = 1;

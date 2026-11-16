@@ -15,26 +15,36 @@ const clamp01 = (x) => x < 0 ? 0 : x > 1 ? 1 : x;
 const smooth = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
 
 // Grade keyframes over time of day t (0 = golden hour, 1 = blue dusk).
+// Golden hour stays warm & sunlit with warm-brown shadows and passes through a warm sunset middle
+// before plunging into deep ultramarine at dusk. roofMul preserves upper-structure chroma while
+// ground mul plunges streets into midnight indigo at dusk.
 const KEYS = [
-  { t: 0.00, mul: [255, 238, 214], warm: 0.55, glow: 0.42, shadow: 0.92 },
-  { t: 0.40, mul: [250, 214, 196], warm: 0.50, glow: 0.34, shadow: 0.86 },
-  { t: 0.65, mul: [200, 160, 196], warm: 0.30, glow: 0.18, shadow: 0.62 },
-  { t: 0.85, mul: [112, 106, 182], warm: 0.12, glow: 0.06, shadow: 0.36 },
-  { t: 1.00, mul: [74, 80, 162],   warm: 0.04, glow: 0.00, shadow: 0.24 },
+  { t: 0.00, mul: [255, 246, 224], roofMul: [255, 248, 228], warm: 0.62, glow: 0.48, shadow: 0.68, shadowCol: [108, 68, 56], vigCol: [62, 34, 24], vigAlpha: 0.18, eastGlow: [248, 162, 112] },
+  { t: 0.35, mul: [255, 236, 200], roofMul: [255, 240, 208], warm: 0.64, glow: 0.46, shadow: 0.66, shadowCol: [104, 62, 58], vigCol: [58, 32, 26], vigAlpha: 0.22, eastGlow: [244, 152, 116] },
+  { t: 0.55, mul: [242, 186, 152], roofMul: [248, 198, 166], warm: 0.50, glow: 0.34, shadow: 0.60, shadowCol: [88, 52, 74],  vigCol: [48, 26, 42], vigAlpha: 0.32, eastGlow: [220, 128, 138] },
+  { t: 0.72, mul: [162, 118, 174], roofMul: [204, 160, 208], warm: 0.24, glow: 0.14, shadow: 0.52, shadowCol: [46, 38, 108], vigCol: [24, 18, 58], vigAlpha: 0.48, eastGlow: [158, 94, 200] },
+  { t: 0.86, mul: [52, 68, 148],   roofMul: [128, 132, 206], warm: 0.05, glow: 0.04, shadow: 0.44, shadowCol: [22, 26, 78],  vigCol: [10, 14, 42], vigAlpha: 0.62, eastGlow: [150, 90, 200] },
+  { t: 1.00, mul: [24, 38, 108],   roofMul: [108, 120, 198], warm: 0.02, glow: 0.00, shadow: 0.42, shadowCol: [20, 25, 74],  vigCol: [8, 12, 38],  vigAlpha: 0.70, eastGlow: [150, 90, 200] },
 ];
 export function grade(t) {
   let i = 0;
   while (i < KEYS.length - 2 && t > KEYS[i + 1].t) i++;
   const a = KEYS[i], b = KEYS[i + 1], u = clamp01((t - a.t) / (b.t - a.t));
+  const mix3 = (ka, kb) => ka.map((v, k) => Math.round(lerp(v, kb[k], u)));
   return {
-    mul: a.mul.map((v, k) => Math.round(lerp(v, b.mul[k], u))),
+    mul: mix3(a.mul, b.mul),
+    roofMul: mix3(a.roofMul, b.roofMul),
+    shadowCol: mix3(a.shadowCol, b.shadowCol),
+    vigCol: mix3(a.vigCol, b.vigCol),
+    eastGlow: mix3(a.eastGlow, b.eastGlow),
+    vigAlpha: lerp(a.vigAlpha, b.vigAlpha, u),
     glow: lerp(a.glow, b.glow, u),
     warm: lerp(a.warm, b.warm, u),
     shadow: lerp(a.shadow, b.shadow, u),
-    windows: smooth(0.22, 0.8, t),   // windows warm up first
-    lamps: smooth(0.45, 0.92, t),    // street lamps after
-    neon: 0.25 + 0.75 * smooth(0.3, 0.85, t),
-    heads: smooth(0.4, 0.85, t),
+    windows: smooth(0.26, 0.82, t),  // windows warm up first
+    lamps: smooth(0.48, 0.92, t),    // street lamps after
+    neon: 0.10 + 0.90 * smooth(0.35, 0.85, t),
+    heads: smooth(0.45, 0.85, t),
   };
 }
 
@@ -62,10 +72,10 @@ export class Renderer {
     g.fillStyle = 'rgb(128,128,128)';
     g.fillRect(0, 0, 256, 256);
     g.lineCap = 'round';
-    for (let i = 0; i < 900; i++) {
-      const x = r() * 256, y = r() * 256, a = r() * Math.PI, L = 4 + r() * 10, v = r() < 0.5 ? 70 + r() * 40 : 170 + r() * 50;
-      g.strokeStyle = `rgba(${v},${v},${v},${0.25 + r() * 0.35})`;
-      g.lineWidth = 1.5 + r() * 2.5;
+    for (let i = 0; i < 1400; i++) {
+      const x = r() * 256, y = r() * 256, a = r() * Math.PI, L = 6 + r() * 12, v = r() < 0.5 ? 60 + r() * 44 : 176 + r() * 54;
+      g.strokeStyle = `rgba(${v},${v},${v},${0.30 + r() * 0.35})`;
+      g.lineWidth = 2.0 + r() * 3.0;
       for (const ox of [-256, 0, 256]) for (const oy of [-256, 0, 256]) {
         g.beginPath(); g.moveTo(x + ox - Math.cos(a) * L, y + oy - Math.sin(a) * L); g.lineTo(x + ox + Math.cos(a) * L, y + oy + Math.sin(a) * L); g.stroke();
       }
@@ -237,12 +247,19 @@ export class Renderer {
     }
     sg.setTransform(1, 0, 0, 1, 0, 0);
     sg.globalCompositeOperation = 'source-in';
-    sg.fillStyle = '#3e3488';
+    sg.fillStyle = `rgb(${G.shadowCol[0]},${G.shadowCol[1]},${G.shadowCol[2]})`;
     sg.fillRect(0, 0, this.shadowCv.width, this.shadowCv.height);
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.globalCompositeOperation = 'multiply';
     g.globalAlpha = G.shadow;
     g.drawImage(this.shadowCv, 0, 0);
+    // Ground-only pre-darken ratio (M_ground / M_roof) so streets hit midnight [24,38,108] at dusk while roofs retain chroma
+    const preMul = G.mul.map((v, k) => Math.min(255, Math.round((v / Math.max(1, G.roofMul[k])) * 255)));
+    if (preMul[0] < 252 || preMul[1] < 252 || preMul[2] < 252) {
+      g.globalAlpha = 1;
+      g.fillStyle = `rgb(${preMul[0]},${preMul[1]},${preMul[2]})`;
+      g.fillRect(0, 0, vw * dpr, vh * dpr);
+    }
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
 
@@ -283,7 +300,7 @@ export class Renderer {
     P && P('sprites');
     // painted surface grain (world-anchored)
     g.globalCompositeOperation = 'soft-light';
-    g.globalAlpha = 0.22;
+    g.globalAlpha = 0.30;
     g.fillStyle = this.grain;
     g.fillRect(vx0, vy0, vx1 - vx0, vy1 - vy0);
     g.globalAlpha = 1;
@@ -293,16 +310,16 @@ export class Renderer {
     // ---------------- 4. grade
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.globalCompositeOperation = 'multiply';
-    g.fillStyle = `rgb(${G.mul[0]},${G.mul[1]},${G.mul[2]})`;
+    g.fillStyle = `rgb(${G.roofMul[0]},${G.roofMul[1]},${G.roofMul[2]})`;
     g.fillRect(0, 0, vw, vh);
     // low-sun warmth + glow from the west, one soft-light pass: pushes lit surfaces toward gold,
-    // deepens contrast, and cools toward the east
+    // deepens contrast, and transitions east stop from warm peach/coral in golden hour to violet at twilight
     if (G.warm + G.glow > 0.01) {
       g.globalCompositeOperation = 'soft-light';
       const gr = g.createLinearGradient(0, vh * 0.3, vw, vh * 0.8);
-      gr.addColorStop(0, `rgba(255,170,70,${Math.min(1, G.warm + G.glow * 1.4)})`);
-      gr.addColorStop(0.6, `rgba(255,135,90,${Math.min(1, G.warm * 0.9 + G.glow * 0.5)})`);
-      gr.addColorStop(1, `rgba(150,90,200,${Math.min(1, G.warm * 0.5 + G.glow * 0.8)})`);
+      gr.addColorStop(0, `rgba(255,190,82,${Math.min(1, G.warm + G.glow * 1.4)})`);
+      gr.addColorStop(0.6, `rgba(255,152,96,${Math.min(1, G.warm * 0.9 + G.glow * 0.5)})`);
+      gr.addColorStop(1, `rgba(${G.eastGlow[0]},${G.eastGlow[1]},${G.eastGlow[2]},${Math.min(1, G.warm * 0.45 + G.glow * 0.7)})`);
       g.fillStyle = gr;
       g.fillRect(0, 0, vw, vh);
     }
@@ -319,7 +336,7 @@ export class Renderer {
     lg.globalCompositeOperation = 'lighter';
     for (const s of this.statics) {
       if (!s.e.night || !inView(s.bb)) continue;
-      lg.globalAlpha = s.kind === 'lamp' ? G.lamps * 0.7 : s.kind === 'building' ? G.windows * 0.8 : Math.max(G.windows, G.lamps) * 0.8;
+      lg.globalAlpha = s.kind === 'lamp' ? Math.min(1, G.lamps * 0.78) : s.kind === 'building' ? Math.min(1, G.windows * 1.05) : Math.max(G.windows, G.lamps) * 0.8;
       if (lg.globalAlpha > 0.01) this.drawEntry(lg, s.e.night, s.x, s.y);
     }
     this.drawNeonPuddles(lg, G, time, vx0, vy0, vx1, vy1);
@@ -352,9 +369,10 @@ export class Renderer {
     bb.globalCompositeOperation = 'copy';
     bb.drawImage(this.bloomA, 0, 0, this.bloomB.width, this.bloomB.height);
     g.imageSmoothingEnabled = true;
-    g.globalAlpha = 0.2;
+    g.globalCompositeOperation = 'screen';
+    g.globalAlpha = 0.24;
     g.drawImage(this.bloomA, 0, 0, this.bloomA.width, this.bloomA.height, 0, 0, this.lightCv.width, this.lightCv.height);
-    g.globalAlpha = 0.32;
+    g.globalAlpha = 0.22;
     g.drawImage(this.bloomB, 0, 0, this.bloomB.width, this.bloomB.height, 0, 0, this.lightCv.width, this.lightCv.height);
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
@@ -363,8 +381,8 @@ export class Renderer {
     // vignette
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     const vg = g.createRadialGradient(vw / 2, vh / 2, vh * 0.32, vw / 2, vh / 2, vh * 0.72);
-    vg.addColorStop(0, 'rgba(20,10,40,0)');
-    vg.addColorStop(1, `rgba(20,10,40,${0.35 + 0.2 * t})`);
+    vg.addColorStop(0, `rgba(${G.vigCol[0]},${G.vigCol[1]},${G.vigCol[2]},0)`);
+    vg.addColorStop(1, `rgba(${G.vigCol[0]},${G.vigCol[1]},${G.vigCol[2]},${G.vigAlpha})`);
     g.fillStyle = vg;
     g.fillRect(0, 0, vw, vh);
     P && P('end');
@@ -380,8 +398,10 @@ export class Renderer {
     // brighter offshore (open sky), deeper near the shore (land shadow)
     const sx = W.shoreX((vy0 + vy1) / 2);
     const sky = g.createLinearGradient(sx, 0, sx + 380, 0);
-    const c1 = t < 0.5 ? [255, 176, 110] : t < 0.8 ? [236, 120, 170] : [140, 110, 210];
-    const c2 = t < 0.5 ? [120, 210, 230] : t < 0.8 ? [255, 170, 150] : [90, 130, 220];
+    const u1 = clamp01(t / 0.6), u2 = clamp01((t - 0.6) / 0.4);
+    const mix3 = (a, b, u) => a.map((v, k) => Math.round(lerp(v, b[k], u)));
+    const c1 = t < 0.6 ? mix3([255, 190, 115], [244, 138, 148], u1) : mix3([244, 138, 148], [140, 110, 210], u2);
+    const c2 = t < 0.6 ? mix3([130, 216, 234], [255, 172, 140], u1) : mix3([255, 172, 140], [90, 130, 220], u2);
     sky.addColorStop(0, `rgba(30,70,120,0.25)`);
     sky.addColorStop(0.35, `rgba(${c1[0]},${c1[1]},${c1[2]},0.30)`);
     sky.addColorStop(1, `rgba(${c2[0]},${c2[1]},${c2[2]},0.42)`);
@@ -404,7 +424,10 @@ export class Renderer {
       g.stroke();
     }
     // glints
-    const gc = t < 0.45 ? [255, 222, 150] : t < 0.75 ? [255, 170, 205] : [190, 220, 255];
+    const ug1 = clamp01(t / 0.55), ug2 = clamp01((t - 0.55) / 0.45);
+    const gc = t < 0.55
+      ? [255, 226, 152].map((v, k) => Math.round(lerp(v, [255, 182, 185][k], ug1)))
+      : [255, 182, 185].map((v, k) => Math.round(lerp(v, [190, 220, 255][k], ug2)));
     for (const p of this.glints) {
       if (p.x < vx0 || p.x > vx1 || p.y < vy0 || p.y > vy1) continue;
       const s = Math.sin(time * p.f + p.ph);
@@ -431,63 +454,70 @@ export class Renderer {
   drawNeonPuddles(lg, G, time, vx0, vy0, vx1, vy1) {
     for (const p of this.L.neonPuddles) {
       if (p.x + p.r < vx0 || p.x - p.r > vx1 || p.y + p.r < vy0 || p.y - p.r > vy1) continue;
-      lg.globalAlpha = G.neon * 0.85;
-      // vertical smeared reflection streaks on wet asphalt, shimmering
-      for (let i = 0; i < 9; i++) {
-        const ox = (i - 4) * p.r * 0.16 + Math.sin(time * 1.3 + i * 1.7) * 2;
-        const len = p.r * (0.5 + 0.4 * Math.sin(i * 2.1 + time * 0.7) ** 2);
-        const gr = lg.createLinearGradient(0, p.y - len, 0, p.y + len);
-        gr.addColorStop(0, 'rgba(0,0,0,0)');
-        gr.addColorStop(0.5, p.color);
-        gr.addColorStop(1, 'rgba(0,0,0,0)');
-        lg.fillStyle = gr;
-        lg.beginPath();
-        lg.ellipse(p.x + ox, p.y, 2 + (i % 3), len, 0, 0, 7);
-        lg.fill();
-      }
-      const rg = lg.createRadialGradient(p.x, p.y, 2, p.x, p.y, p.r);
+      // Soft ambient neon bounce on wet pavement (drawWetReflections supplies the mirror ribbons)
+      const rg = lg.createRadialGradient(p.x, p.y, 4, p.x, p.y, p.r * 1.15);
       rg.addColorStop(0, p.color);
+      rg.addColorStop(0.45, p.color);
       rg.addColorStop(1, 'rgba(0,0,0,0)');
-      lg.globalAlpha = G.neon * 0.35;
+      lg.globalAlpha = G.neon * 0.24;
       lg.fillStyle = rg;
-      lg.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+      lg.beginPath();
+      lg.ellipse(p.x, p.y, p.r * 1.15, p.r * 0.65, 0, 0, 7);
+      lg.fill();
     }
     lg.globalAlpha = 1;
   }
 
-  // Signature move from the neon anchor: every lamp and sign throws a broken vertical streak of its
-  // colour across the wet asphalt toward the viewer, rippling.
+  // Signature move from the neon anchor: every lamp and sign throws a smooth rippled vertical mirror
+  // streak of its colour across the wet asphalt toward the viewer.
   buildReflectors() {
     const L = this.L, W = this.world, out = [];
     const NEON = { SOLANA: '#ff4fa8', TACOS: '#ff8a3c', DINER: '#3fe0ff', MOTEL: '#ff3f6a', NOVA: '#b45cff' };
-    for (const [x, y] of L.lamps) out.push({ x: x + 13, y: y + 6, col: [255, 170, 90], len: 70, lamp: true });
+    for (const [x, y] of L.lamps) out.push({ x: x + 13, y: y + 6, col: [255, 178, 86], len: 120, lamp: true, w0: 3.4 });
     for (const b of L.buildings) if (b.sign) {
-      // reflect onto the nearest road edge below / beside the building
       let best = null;
-      for (const [px, py] of [[b.x + b.w / 2, b.y + b.d + 40], [b.x + b.w / 2, b.y - 40], [b.x - 40, b.y + b.d / 2], [b.x + b.w + 40, b.y + b.d / 2]]) {
+      for (const [px, py] of [[b.x + b.w / 2, b.y + b.d + 36], [b.x + b.w / 2, b.y - 36], [b.x - 36, b.y + b.d / 2], [b.x + b.w + 36, b.y + b.d / 2]]) {
         const d = W.roadInfo(px, py).d; if (!best || d < best.d) best = { x: px, y: py, d };
       }
       const h = NEON[b.sign].slice(1);
-      out.push({ x: best.x, y: best.y, col: [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)), len: 95 });
+      const baseCol = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16));
+      if (b.sign === 'NOVA') {
+        out.push({ x: best.x - 52, y: b.y + b.d + 34, col: [255, 79, 216], len: 125, w0: 6.5 });
+        out.push({ x: best.x,      y: b.y + b.d + 34, col: [255, 191, 92], len: 135, w0: 7.5 });
+        out.push({ x: best.x + 52, y: b.y + b.d + 34, col: [63, 224, 255], len: 125, w0: 6.5 });
+      } else {
+        out.push({ x: best.x, y: best.y, col: baseCol, len: 130, w0: 6.0 });
+      }
     }
     return out;
   }
 
   drawWetReflections(lg, G, time, vx0, vy0, vx1, vy1) {
     if (!this.reflectors) this.reflectors = this.buildReflectors();
+    const W = this.world, half = W.halfRoad - 2;
+    lg.lineCap = 'round';
     for (const r of this.reflectors) {
-      const a = r.lamp ? G.lamps * 0.5 : G.neon * 0.55;
-      if (a < 0.02 || r.x < vx0 - 40 || r.x > vx1 + 40 || r.y < vy0 - 120 || r.y > vy1 + 20) continue;
-      // falloff: brightest at the source, fading in broken dashes
-      for (let k = 0; k < 7; k++) {
-        const y = r.y + k * r.len / 7 + 4;
-        const w = (r.lamp ? 3 : 5) * (1 - k / 9) + Math.sin(time * 2.4 + k * 1.9 + r.x) * 1.4;
-        const fade = a * Math.pow(1 - k / 7, 1.6);
-        lg.globalAlpha = Math.max(0, fade);
-        lg.fillStyle = `rgb(${r.col[0]},${r.col[1]},${r.col[2]})`;
-        lg.beginPath();
-        lg.ellipse(r.x + Math.sin(time * 1.7 + k) * 2, y, Math.max(0.5, w), r.len / 9, 0, 0, 7);
-        lg.fill();
+      const peak = r.lamp ? G.lamps * 0.44 : G.neon * 0.50;
+      if (peak < 0.02 || r.x < vx0 - 40 || r.x > vx1 + 40 || r.y < vy0 - 150 || r.y > vy1 + 20) continue;
+      const phase = r.x * 0.13 + r.y * 0.07;
+      const gr = lg.createLinearGradient(0, r.y, 0, r.y + r.len);
+      gr.addColorStop(0, `rgba(${r.col[0]},${r.col[1]},${r.col[2]},${peak * 0.85})`);
+      gr.addColorStop(0.35, `rgba(${r.col[0]},${r.col[1]},${r.col[2]},${peak * 0.52})`);
+      gr.addColorStop(1, `rgba(${r.col[0]},${r.col[1]},${r.col[2]},0)`);
+      lg.fillStyle = gr;
+      for (let dy = 2; dy < r.len; dy += 2.2) {
+        const wy = r.y + dy;
+        const rd = W.roadInfo(r.x, wy).d;
+        if (rd > half) continue;
+        const u = dy / r.len;
+        const amp = (r.lamp ? 2.4 : 3.8) * (0.3 + 0.7 * u);
+        const dx = amp * Math.sin(dy * 0.24 + phase + time * 2.2) + 0.45 * amp * Math.sin(dy * 0.55 - time * 1.5);
+        const mod = 0.52 + 0.48 * Math.pow(Math.sin(dy * 0.21 + phase), 2);
+        const rx = Math.max(1.0, r.w0 * mod * (1 - 0.48 * u));
+        lg.globalAlpha = 0.36;
+        lg.beginPath(); lg.ellipse(r.x + dx, wy, rx * 1.8, 2.6, 0, 0, 7); lg.fill();
+        lg.globalAlpha = 0.62;
+        lg.beginPath(); lg.ellipse(r.x + dx, wy, rx * 0.72, 2.2, 0, 0, 7); lg.fill();
       }
     }
     lg.globalAlpha = 1;
