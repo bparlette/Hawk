@@ -385,3 +385,26 @@ facing). **The map is LIVE**: the game keeps running under it and the stick stil
 `CHROME=… node tools/map_check.mjs`: 26 rules — POIs present and inside the frame, the marker
 tracking a scripted walk, and in the real page a touch opening it, a live walk under it, a touch
 closing it — and writes shots/map-{spawn,motel}.png.
+
+## 7D — the A button is TURBO in a car (Nov 16 2026)
+
+`src/controls.js` is the one place that decides what the smaller round button (A) is: `buttonA(sim)`
+returns PUNCH on foot and in the siege; in a car the armed job or event action if there is one
+(START TAXI, HOOK, DECOY…), otherwise TURBO; nothing in a wreck or on the board. The HUD, the touch
+layer (`input.fightOn`) and the checks all read it, so the button can never show a dead action.
+The big button (B) is unchanged in a car: EXIT below 60 u/s.
+
+Turbo is hold-to-boost (`stepTurbo`): top speed ×1.4 (290 → 405 u/s) and acceleration ×1.6 while
+held, eased in over 0.2 s and back out over ~0.6 s so speed never snaps. Limit, to keep chases a
+contest: 3 s of boost, then a 2 s lockout (the button reads COOLING); letting go early recovers at
+the same rate. There is no separate meter — the ring round the button burns down and refills. The
+press has to start on TURBO, so the tap that starts a job does not also fire the boost. Sold by:
+engine note up 32 % with the filter opened, a whoosh, painted speed streaks and a tail glow under
+the car (`render.js`), a camera kick and 5 % extra zoom-out. Bust rules untouched. Keyboard: hold
+F / X / J.
+
+Proof: `node tools/turbo_check.mjs` (13 rules: label flips on enter/exit through the real action
+button, job action wins, wreck shows nothing, 289 → 405 u/s, burn/lockout/recovery, no snap);
+`CHROME=… node tools/turbo_shots.mjs` → `shots/turbo-foot-punch.png`, `shots/turbo-car-turbo.png`
+(A held with a real touch). `sh tools/check_all.sh` runs every check in one go.
+

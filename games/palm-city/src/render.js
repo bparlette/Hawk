@@ -554,6 +554,24 @@ export class Renderer {
         this.drawCell(g, m.color, idx, m.cols, rows, 0, 0); g.restore();
       } else this.drawCell(g, m.color, idx, m.cols, rows, p.x, p.y);
     }
+    { // turbo: painted speed streaks torn back off the car, and a hot glow at the tail
+      const c = S.player.mode === 'car' ? S.player.car : null, tb = c ? c.turbo || 0 : 0;
+      if (tb > 0.03) {
+        const ca = Math.cos(c.h), sa = Math.sin(c.h);
+        g.lineCap = 'round';
+        for (let i = 0; i < 9; i++) {
+          const ph = (time * (2.6 + (i % 3) * 0.7) + i * 0.37) % 1;            // each streak slides back and fades
+          const side = ((i * 7) % 9 - 4) / 4 * (c.wid / 2 + 7), back = c.len * 0.2 + ph * 70, len = (16 + (i % 4) * 9) * tb;
+          const x = c.x - ca * back - sa * side, y = c.y - sa * back + ca * side;
+          g.globalAlpha = tb * (1 - ph) * 0.75;
+          g.strokeStyle = i % 3 ? '#fff1cf' : '#ffc46a'; g.lineWidth = 2.6 - (i % 3) * 0.6;
+          g.beginPath(); g.moveTo(x, y); g.lineTo(x - ca * len, y - sa * len); g.stroke();
+        }
+        g.globalAlpha = 0.5 * tb; g.fillStyle = '#ffb45a';
+        g.beginPath(); g.ellipse(c.x - ca * (c.len / 2 + 5), c.y - sa * (c.len / 2 + 5), 9, 5, c.h, 0, 7); g.fill();
+        g.globalAlpha = 1;
+      }
+    }
     for (const c of S.cars) {
       if (c.x < vx0 - 50 || c.x > vx1 + 50 || c.y < vy0 - 50 || c.y > vy1 + 50) continue;
       const { m, k, rows } = this.carCell(c);

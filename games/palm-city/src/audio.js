@@ -62,10 +62,11 @@ export class Audio {
     const c = this.ctx, t = c.currentTime;
     const car = sim.player.mode === 'car' ? sim.player.car : null;
     const sp = car ? Math.abs(car.v) : 0;
-    const rpm = 38 + (sp % 110) * 0.55 + sp * 0.12;
+    const tb = car ? car.turbo || 0 : 0;
+    const rpm = (38 + (sp % 110) * 0.55 + sp * 0.12) * (1 + 0.32 * tb);   // turbo: the engine note climbs
     for (let i = 0; i < 3; i++) this.engO[i].frequency.setTargetAtTime(rpm * (i === 2 ? 0.5 : 1), t, 0.05);
-    this.engF.frequency.setTargetAtTime(300 + sp * 4, t, 0.08);
-    this.engG.gain.setTargetAtTime(car ? 0.05 + sp / 290 * 0.07 : 0, t, 0.1);
+    this.engF.frequency.setTargetAtTime(300 + sp * 4 + tb * 900, t, 0.08);
+    this.engG.gain.setTargetAtTime(car ? 0.05 + sp / 290 * 0.07 + tb * 0.03 : 0, t, 0.1);
     const shore = world.shoreX(cam.y);
     this.seaG.gain.setTargetAtTime(Math.max(0, 1 - Math.abs(shore - cam.x) / 600) * 0.22, t, 0.3);
     const bs = sim.player.mode === 'board' && !sim.board.air && !sim.board.grind ? Math.hypot(sim.board.vx, sim.board.vy) : 0;
@@ -123,6 +124,8 @@ export class Audio {
     if (name === 'jack' || name === 'door') { this.burst(180, 1, 0.5, 0.18); this.burst(1200, 4, 0.12, 0.05, 'bandpass'); }
     if (name === 'jack') { this.note(523, t + 0.12, 0.12, 0.08, 'triangle'); this.note(784, t + 0.2, 0.2, 0.08, 'triangle'); }
     if (name === 'crash') this.burst(700, 0.6, Math.min(0.6, (v || 100) / 400), 0.35);
+    if (name === 'turbo') { this.burst(1400, 1.2, 0.3, 0.45, 'bandpass'); this.burst(200, 1, 0.3, 0.2); }
+    if (name === 'turbo_out') this.burst(700, 2, 0.2, 0.3, 'bandpass');
     if (name === 'hit') this.burst(400, 1, 0.3, 0.15);
     if (name === 'swing') this.burst(900, 1.5, 0.14, 0.09, 'bandpass');
     if (name === 'punch') { this.burst(900, 1.5, 0.1, 0.06, 'bandpass'); this.burst(260, 1, 0.45, 0.11); this.burst(1900, 3, 0.16, 0.04, 'bandpass'); }

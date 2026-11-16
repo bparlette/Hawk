@@ -22,6 +22,7 @@ export function clockText(t) {
 
 import { siegeAction } from './siege.js';
 import { jobButton, JOBS } from './jobs.js';
+import { buttonA } from './controls.js';
 import { drawEventHud } from './events_render.js';
 
 export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
@@ -152,6 +153,23 @@ export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
     g.lineWidth = 3; g.strokeStyle = 'rgba(110,226,255,0.95)'; g.stroke();
     g.fillStyle = 'rgba(190,240,255,0.95)'; g.font = font(20, 900); g.textAlign = 'center'; g.fillText('$', f.x, f.y + 1);
     g.font = font(12, 800); g.fillStyle = '#d8f6ff'; g.fillText(jb.label, f.x, f.y - f.r - 11);
+  }
+  const ba = buttonA(sim);
+  if (ba && ba.kind === 'turbo') {                         // in a car with no job action armed: TURBO (hold)
+    const f = input.fight(), c = P.car, hot = (c.turbo || 0) > 0.05;
+    g.globalAlpha = ba.cooling ? 0.5 : 1;
+    g.beginPath(); g.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+    g.fillStyle = hot ? 'rgba(255,170,60,0.6)' : 'rgba(255,240,220,0.16)'; g.fill();
+    g.lineWidth = 3; g.strokeStyle = 'rgba(255,196,90,0.95)'; g.stroke();
+    // twin chevrons: go faster
+    g.strokeStyle = 'rgba(255,226,150,0.98)'; g.lineWidth = 4; g.lineCap = 'round'; g.lineJoin = 'round';
+    for (const dx of [-7, 5]) { g.beginPath(); g.moveTo(f.x + dx - 5, f.y - 10); g.lineTo(f.x + dx + 5, f.y); g.lineTo(f.x + dx - 5, f.y + 10); g.stroke(); }
+    // the ring burns down while you hold it and refills while it cools — the button is its own gauge
+    const left = ba.cooling ? 1 - c.turboLock / 2 : 1 - ba.heat;
+    g.strokeStyle = ba.cooling ? 'rgba(255,240,220,0.8)' : 'rgba(255,120,60,0.95)'; g.lineWidth = 3.5;
+    g.beginPath(); g.arc(f.x, f.y, f.r + 5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0, Math.min(1, left))); g.stroke();
+    g.globalAlpha = 1;
+    g.font = font(12, 800); g.textAlign = 'center'; g.fillStyle = '#ffe9b8'; g.fillText(ba.label, f.x, f.y - f.r - 13);
   }
   drawEventHud(g, vw, vh, top, sim, font);                  // city events: card, chain pill, bay progress, result
   // the job card: title, clock, what it wants, and an arrow to it
