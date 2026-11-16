@@ -1,80 +1,474 @@
 // DUSTLINE — renderers for the three looks. One simulation, three paint jobs.
+// v2 BASE REBUILD: the ground is a baked SCENE, not a field. A distance field
+// over the centreline makes the ROAD a real surface — pale worn dirt with twin
+// wheel bands and corner wear, soft shoulders blending into textured scrub —
+// with a banked river, sand traps, a corrugated rib section, rocks, bushes,
+// scenery tire stacks and a start gantry. Each look re-renders that same rich
+// base in its own medium:
 // A "REPLICA": 4 px/m chunky buffer, Amiga palette, Bayer-dithered terrain, flat pixel trucks.
 // B "PAINTED": 12 px/m, big brush strokes + broken colour, warm storybook grade, painted trucks.
 // C "SPRITE PIXEL": 6 px/m crunched world, cooler darker grade, voxel-shaded 16-dir truck sprites.
 'use strict';
 
 const LOOK_CONF = {
-  A: { ppm: 4,  smooth: false, spriteSpan: 6.8, name: 'REPLICA' },
-  C: { ppm: 6,  smooth: false, spriteSpan: 6.4, name: 'SPRITE PIXEL' },
-  B: { ppm: 12, smooth: true,  spriteSpan: 7.0, name: 'PAINTED' }
+  A: { ppm: 4,  smooth: false, spriteSpan: 7.7, name: 'REPLICA' },
+  C: { ppm: 6,  smooth: false, spriteSpan: 7.3, name: 'SPRITE PIXEL' },
+  B: { ppm: 12, smooth: true,  spriteSpan: 7.9, name: 'PAINTED' }
 };
 
 const PALETTES = {
   A: {
-    dirt: ['#a05c26', '#8f4f1e', '#b26a30'], sand: ['#e0bd76', '#d9b96e'], mud: ['#5e3c1e', '#533417', '#6d4a26'],
+    dirt: ['#a05c26', '#8f4f1e', '#b26a30', '#7e451a'], sand: ['#e0bd76', '#d9b96e'], mud: ['#5e3c1e', '#533417', '#6d4a26'],
     gravel: ['#8a7d6a', '#7f7260'], rock: ['#6e685f', '#625c53'], water: ['#2456d8', '#173a9e'],
+    road: ['#c9a15e', '#bd9753', '#d4ad68'], roadDark: '#6e4c22', shoulder: '#b08247',
     shore: '#69b7e8', tapeRed: '#d42a1e', tapeWhite: '#ece7da', dark: '#2a1a0e'
   },
   C: {
-    dirt: ['#8a5a2e', '#7c4f27', '#96652f'], sand: ['#d8ba7c', '#cdb071'], mud: ['#5f3f20', '#54371b', '#71502c'],
+    dirt: ['#8a5a2e', '#7c4f27', '#96652f', '#6e4522'], sand: ['#d8ba7c', '#cdb071'], mud: ['#5f3f20', '#54371b', '#71502c'],
     gravel: ['#847768', '#796c5c'], rock: ['#6b6257', '#5f574c'], water: ['#1e46b8', '#122c78'],
+    road: ['#bb975a', '#af8c50', '#c6a261'], roadDark: '#63451f', shoulder: '#a37f47',
     shore: '#5aa2d8', tapeRed: '#c22e20', tapeWhite: '#e6e1d2', dark: '#241a10'
   },
   B: {
-    dirt: ['#bb8a54', '#b3814b', '#c2915c'], sand: ['#ecd096', '#e6c78a'], mud: ['#6e4a28', '#654324', '#7d5730'],
+    dirt: ['#bb8a54', '#b3814b', '#c2915c', '#a3743f'], sand: ['#ecd096', '#e6c78a'], mud: ['#6e4a28', '#654324', '#7d5730'],
     gravel: ['#9a8a72', '#91805f'], rock: ['#7d7468', '#726a5e'], water: ['#2f6fd0', '#2a66c2'],
+    road: ['#dcbc7d', '#d2b26f', '#e6c98b'], roadDark: '#8a6132', shoulder: '#c8a668',
     shore: '#8ec9ec', tapeRed: '#c8402a', tapeWhite: '#f3e6c8', dark: '#3a2318'
   }
 };
 const SURF_KEYS = ['dirt', 'sand', 'mud', 'gravel', 'rock', 'water', 'dirt']; // index by SURF (ribs -> dirt base)
 
 function hash2(x, y) { let h = (x * 374761393 + y * 668265263) ^ 0x5bf03635; h = (h ^ (h >> 13)) * 1274126177; return ((h ^ (h >> 16)) >>> 0) / 4294967296; }
+function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+function toRGB(col) {
+  if (col[0] === '#') { const n = parseInt(col.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+  const m = col.match(/\d+/g); return [+m[0], +m[1], +m[2]];
+}
+function mixHex(a, b, t) {
+  const pa = toRGB(a), pb = toRGB(b);
+  const r = Math.round(pa[0] + (pb[0] - pa[0]) * t);
+  const g = Math.round(pa[1] + (pb[1] - pa[1]) * t);
+  const bl = Math.round(pa[2] + (pb[2] - pa[2]) * t);
+  return `rgb(${r},${g},${bl})`;
+}
+function shadeCol(col, f) {
+  const [r, g, b] = toRGB(col);
+  const cl = v => Math.max(0, Math.min(255, Math.round(v * f)));
+  return `rgb(${cl(r)},${cl(g)},${cl(b)})`;
+}
 
-// Low-res surface layer: 1 px per grid cell. Low-frequency noise gives the terrain
-// large tonal patches (like the reference); look A quantises it through a Bayer
-// dither, gravel/mud are broken up with dirt speckle so they never read as blobs.
+// ---------- shared scene fields (built once, used by every look) ----------
+// Per surface-grid cell: distance to the centreline, corridor half width,
+// signed lateral offset, corner wear (from centreline curvature), heading.
+const FIELD = (() => {
+  const { gw, gh, cell } = TRACK.surf;
+  const n = gw * gh;
+  const dist = new Float32Array(n).fill(1e9);
+  const halfW = new Float32Array(n).fill(5.5);
+  const lat = new Float32Array(n);
+  const wear = new Float32Array(n);
+  const ang = new Float32Array(n);
+  const S = TRACK.samples;
+  for (let i = 0; i < S.length; i++) {
+    const s = S[i];
+    const R = s.w / 2 + 3.4;
+    const gx0 = Math.max(0, Math.floor((s.x - R) / cell)), gx1 = Math.min(gw - 1, Math.ceil((s.x + R) / cell));
+    const gy0 = Math.max(0, Math.floor((s.y - R) / cell)), gy1 = Math.min(gh - 1, Math.ceil((s.y + R) / cell));
+    const nx = -Math.sin(s.ang), ny = Math.cos(s.ang);
+    for (let gy = gy0; gy <= gy1; gy++) {
+      for (let gx = gx0; gx <= gx1; gx++) {
+        const cx = (gx + 0.5) * cell, cy = (gy + 0.5) * cell;
+        const dx = cx - s.x, dy = cy - s.y;
+        const d = Math.hypot(dx, dy);
+        const idx = gy * gw + gx;
+        if (d < dist[idx]) {
+          dist[idx] = d; halfW[idx] = s.w / 2;
+          lat[idx] = dx * nx + dy * ny;
+          wear[idx] = s.curv; ang[idx] = s.ang;
+        }
+      }
+    }
+  }
+  // smooth the wear field so corner darkening pools naturally (2 box passes)
+  for (let pass = 0; pass < 2; pass++) {
+    const src = Float32Array.from(wear);
+    for (let gy = 0; gy < gh; gy++) {
+      for (let gx = 0; gx < gw; gx++) {
+        let sum = 0, cnt = 0;
+        for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
+          const x = gx + ox, y = gy + oy;
+          if (x < 0 || y < 0 || x >= gw || y >= gh) continue;
+          sum += src[y * gw + x]; cnt++;
+        }
+        wear[gy * gw + gx] = sum / cnt;
+      }
+    }
+  }
+  // water distance (in cells): two-pass chamfer — drives shallows + sandy banks
+  const grid = TRACK.surf.grid;
+  const wd = new Float32Array(n).fill(99);
+  for (let i = 0; i < n; i++) if (grid[i] === SURF.WATER) wd[i] = 0;
+  for (let gy = 0; gy < gh; gy++) for (let gx = 0; gx < gw; gx++) {
+    const i = gy * gw + gx; if (!wd[i]) continue;
+    let m = wd[i];
+    if (gx > 0) m = Math.min(m, wd[i - 1] + 1);
+    if (gy > 0) m = Math.min(m, wd[i - gw] + 1);
+    wd[i] = m;
+  }
+  for (let gy = gh - 1; gy >= 0; gy--) for (let gx = gw - 1; gx >= 0; gx--) {
+    const i = gy * gw + gx; if (!wd[i]) continue;
+    let m = wd[i];
+    if (gx < gw - 1) m = Math.min(m, wd[i + 1] + 1);
+    if (gy < gh - 1) m = Math.min(m, wd[i + gw] + 1);
+    wd[i] = m;
+  }
+  // water depth (cells to nearest non-water), for shallows/deep split
+  const wdepth = new Float32Array(n).fill(99);
+  for (let i = 0; i < n; i++) if (grid[i] !== SURF.WATER) wdepth[i] = 0;
+  for (let gy = 0; gy < gh; gy++) for (let gx = 0; gx < gw; gx++) {
+    const i = gy * gw + gx; if (!wdepth[i]) continue;
+    let m = wdepth[i];
+    if (gx > 0) m = Math.min(m, wdepth[i - 1] + 1);
+    if (gy > 0) m = Math.min(m, wdepth[i - gw] + 1);
+    wdepth[i] = m;
+  }
+  for (let gy = gh - 1; gy >= 0; gy--) for (let gx = gw - 1; gx >= 0; gx--) {
+    const i = gy * gw + gx; if (!wdepth[i]) continue;
+    let m = wdepth[i];
+    if (gx < gw - 1) m = Math.min(m, wdepth[i + 1] + 1);
+    if (gy < gh - 1) m = Math.min(m, wdepth[i + gw] + 1);
+    wdepth[i] = m;
+  }
+  return { dist, halfW, lat, wear, ang, wd, wdepth, gw, gh, cell };
+})();
+
+function fieldIdx(x, y) {
+  const gx = Math.max(0, Math.min(FIELD.gw - 1, Math.floor(x / FIELD.cell)));
+  const gy = Math.max(0, Math.min(FIELD.gh - 1, Math.floor(y / FIELD.cell)));
+  return gy * FIELD.gw + gx;
+}
+// What is the ground at (x,y)? zone 'road' inside the corridor, else 'scrub'.
+function groundAt(x, y) {
+  const i = fieldIdx(x, y);
+  const surf = TRACK.surf.grid[i];
+  const d = FIELD.dist[i], hw = FIELD.halfW[i];
+  return {
+    surf, d, hw, lat: FIELD.lat[i], wear: FIELD.wear[i], ang: FIELD.ang[i],
+    zone: surf === SURF.WATER ? 'water' : (d < hw + 0.9 ? 'road' : 'scrub')
+  };
+}
+
+// Scenery spots shared by all looks: bushes/rocks/tufts + extra tire stacks
+// placed just outside the corridor at corners (same world in every look).
+const SCENERY = (() => {
+  const rng = mulberry32(777);
+  const nearWater = (x, y) => TRACK.surfaceAt(x + 1.4, y) === SURF.WATER || TRACK.surfaceAt(x - 1.4, y) === SURF.WATER ||
+                               TRACK.surfaceAt(x, y + 1.4) === SURF.WATER || TRACK.surfaceAt(x, y - 1.4) === SURF.WATER;
+  const bushes = [], rocks = [], tufts = [];
+  let guard = 0;
+  while (bushes.length < 26 && guard++ < 900) {
+    const x = 2 + rng() * 102, y = 2 + rng() * 70;
+    const gr = groundAt(x, y);
+    if (gr.zone !== 'scrub' || gr.d < gr.hw + 2.0 || nearWater(x, y)) continue;
+    if (gr.surf !== SURF.DIRT && gr.surf !== SURF.GRAVEL) continue;
+    bushes.push({ x, y, r: 0.55 + rng() * 0.6, seed: rng() * 100 });
+  }
+  guard = 0;
+  while (rocks.length < 15 && guard++ < 900) {
+    const x = 2 + rng() * 102, y = 2 + rng() * 70;
+    const gr = groundAt(x, y);
+    if (gr.zone !== 'scrub' || gr.d < gr.hw + 1.7 || nearWater(x, y)) continue;
+    rocks.push({ x, y, r: 0.6 + rng() * 0.8, seed: rng() * 100 });
+  }
+  guard = 0;
+  while (tufts.length < 110 && guard++ < 3000) {
+    const x = 1 + rng() * 104, y = 1 + rng() * 72;
+    const gr = groundAt(x, y);
+    if (gr.zone !== 'scrub' || nearWater(x, y)) continue;
+    tufts.push({ x, y, seed: rng() * 100 });
+  }
+  // scenery stacks: outside of four corners, pushed out along the normal
+  const S = TRACK.samples;
+  const stacks = [];
+  for (const target of [[91, 22], [12, 27], [37, 46], [93, 52]]) {
+    let bi = 0, bd = 1e9;
+    for (let i = 0; i < S.length; i++) { const d = Math.hypot(S[i].x - target[0], S[i].y - target[1]); if (d < bd) { bd = d; bi = i; } }
+    const s = S[bi], nx = -Math.sin(s.ang), ny = Math.cos(s.ang);
+    let best = null;
+    for (const sgn of [1, -1]) {
+      const px = s.x + nx * sgn * (s.w / 2 + 1.8), py = s.y + ny * sgn * (s.w / 2 + 1.8);
+      let md = 1e9;
+      for (let i = 0; i < S.length; i++) {
+        if (Math.abs(i - bi) < 24 || Math.abs(i - bi) > S.length - 24) continue;
+        md = Math.min(md, Math.hypot(S[i].x - px, S[i].y - py));
+      }
+      if (!best || md > best.md) best = { x: px, y: py, md };
+    }
+    if (best && best.x > 2 && best.x < 104 && best.y > 2 && best.y < 72) stacks.push({ x: best.x, y: best.y });
+  }
+  return { bushes, rocks, tufts, stacks };
+})();
+
+// ---------- low-res surface layer (A/C base, B's smoothed underlay) ----------
+// 1 px per grid cell. This is where the ROAD lives: pale worn dirt with twin
+// wheel bands + corner wear inside the corridor; textured scrub outside it;
+// banked river with shallows; patch edges broken up with dirt speckle.
 const BAYER = [0, 2, 3, 1];
 function surfaceLayer(look) {
   const pal = PALETTES[look];
   const { grid, gw, gh } = TRACK.surf;
   const c = mkCanvas(gw, gh), g = c.getContext('2d');
-  const isWater = (x, y) => x >= 0 && y >= 0 && x < gw && y < gh && grid[y * gw + x] === SURF.WATER;
   for (let gy = 0; gy < gh; gy++) {
     for (let gx = 0; gx < gw; gx++) {
-      const s = grid[gy * gw + gx];
+      const i = gy * gw + gx;
+      const s = grid[i];
       const h = hash2(gx, gy);
+      const h2 = hash2(gx * 3 + 7, gy * 3 + 1);
       const ln = 0.5 + 0.30 * Math.sin(gx * 0.052 + 1.3) * Math.sin(gy * 0.068 + 4.1)
                    + 0.20 * Math.sin(gx * 0.13 + 5.2) * Math.sin(gy * 0.11 + 0.6); // 0..1 terrain tone
+      const d = FIELD.dist[i], hw = FIELD.halfW[i];
+      const wearN = clamp01(FIELD.wear[i] * 2.4);
       let col;
       if (s === SURF.WATER) {
-        const shore = !isWater(gx - 1, gy) || !isWater(gx + 1, gy) || !isWater(gx, gy - 1) || !isWater(gx, gy + 1);
-        const deep = isWater(gx - 1, gy) && isWater(gx + 1, gy) && isWater(gx, gy - 1) && isWater(gx, gy + 1) &&
-                     isWater(gx - 2, gy) && isWater(gx + 2, gy) && isWater(gx, gy - 2) && isWater(gx, gy + 2);
-        if (shore) col = pal.shore;
-        else if (deep) col = pal.water[1];
+        const dep = FIELD.wdepth[i] + (h2 - 0.5) * 1.1; // jittered depth breaks the bank line
+        const shoreT = look === 'B' ? 0.6 : 1.1, deepT = look === 'B' ? 2.8 : 4.2; // B's blur spreads pale shore — keep its river blue
+        if (dep < shoreT) col = pal.shore;
+        else if (dep > deepT) col = pal.water[1];
         else if (look === 'A') col = pal.water[(BAYER[(gx & 1) + (gy & 1) * 2] + (h < 0.5 ? 0 : 1)) % 2 === 0 ? 0 : 1];
         else col = pal.water[h < 0.6 ? 0 : 1];
-      } else if (s === SURF.DIRT || s === SURF.RIBS) {
-        if (look === 'A') {
-          const v = ln * 2.2 + (h - 0.5) * 0.35 + BAYER[(gx & 1) + (gy & 1) * 2] * 0.28;
-          col = pal.dirt[Math.max(0, Math.min(2, Math.floor(v)))];
-        } else {
-          col = pal.dirt[ln > 0.62 ? 2 : ln > 0.38 ? 0 : 1];
-          if (h < 0.16) col = pal.dirt[1];
+      } else if (d < hw + 1.6) {
+        // ----- ROAD corridor (surface flavour still shows through) -----
+        const edgeJitter = (h2 - 0.5) * 0.8;
+        const t = clamp01((d + edgeJitter) / hw); // 0 centre -> 1 edge
+        let base = pal.road[ln > 0.66 ? 2 : ln > 0.36 ? 0 : 1];
+        if (s === SURF.SAND) base = pal.sand[0];
+        else if (s === SURF.MUD) base = mixHex(pal.road[1], pal.mud[0], 0.45);
+        else if (s === SURF.GRAVEL) base = mixHex(pal.road[1], pal.gravel[0], 0.4);
+        // worn centre + twin wheel bands: a brightness multiplier, so dark
+        // flavour surfaces (mud, gravel) keep their hue instead of crushing
+        const centre = Math.pow(1 - t, 1.6) * (0.26 + 0.48 * wearN);
+        const band = Math.exp(-Math.pow((Math.abs(FIELD.lat[i]) - 0.95) / 0.42, 2)) * (0.13 + 0.30 * wearN);
+        let dk = Math.min(0.72, centre + band);
+        if (h < 0.10) dk += 0.08; // grit speckle
+        col = dk > 0.02 ? shadeCol(base, 1 - dk * 0.40) : base;
+        // dusty shoulder blend into scrub at the very edge
+        if (d > hw) {
+          const f = clamp01((d - hw) / 1.6);
+          const scrub = pal.dirt[ln > 0.62 ? 2 : ln > 0.38 ? 0 : 1];
+          col = mixHex(f < 0.5 ? pal.shoulder : col, scrub, f * f);
+          if (h < f * 0.5) col = scrub;
         }
-      } else if (s === SURF.GRAVEL) {
-        col = h < 0.42 ? pal.dirt[1] : pal.gravel[Math.floor(h * pal.gravel.length) % pal.gravel.length];
-      } else if (s === SURF.MUD) {
-        col = h < 0.2 ? pal.mud[2] : pal.mud[Math.floor(h * 2) % 2];
       } else {
-        const arr = pal[SURF_KEYS[s]];
-        col = arr[Math.floor(h * arr.length)];
+        // ----- off-track scrub / features -----
+        // sandy bank rim hugging the river
+        const bank = FIELD.wd[i] + (h2 - 0.5) * 1.3;
+        if (s === SURF.DIRT && bank < 2.6) {
+          col = mixHex(pal.sand[1], pal.dirt[0], clamp01((bank - 0.4) / 2.2));
+        } else if (s === SURF.DIRT || s === SURF.RIBS) {
+          if (look === 'A') {
+            const v = ln * 2.6 + (h - 0.5) * 0.35 + BAYER[(gx & 1) + (gy & 1) * 2] * 0.28;
+            col = pal.dirt[Math.max(0, Math.min(3, Math.floor(v)))];
+          } else {
+            col = pal.dirt[ln > 0.68 ? 2 : ln > 0.42 ? 0 : ln > 0.2 ? 1 : 3];
+            if (h < 0.16) col = pal.dirt[1];
+          }
+          if (h < 0.045) col = pal.dirt[3]; // scrub shadow speckle
+        } else if (s === SURF.GRAVEL) {
+          col = h < 0.42 ? pal.dirt[1] : pal.gravel[Math.floor(h * pal.gravel.length) % pal.gravel.length];
+        } else if (s === SURF.MUD) {
+          col = h < 0.2 ? pal.mud[2] : pal.mud[Math.floor(h * 2) % 2];
+          if (h > 0.93) col = pal.mud[1]; // wet sheen flecks
+        } else {
+          const arr = pal[SURF_KEYS[s]];
+          col = arr[Math.floor(h * arr.length)];
+        }
+        // break hard patch outlines with dirt speckle at borders
+        if (s === SURF.SAND || s === SURF.MUD || s === SURF.ROCK) {
+          const nb = [grid[i - 1], grid[i + 1], grid[i - gw], grid[i + gw]];
+          if (nb.some(v => v !== s) && h < 0.30) col = pal.dirt[1];
+        }
       }
       g.fillStyle = col; g.fillRect(gx, gy, 1, 1);
     }
   }
   return c;
+}
+
+// ---------- baked ground detail (shared scene, per-look medium) ----------
+function duneShade(g, W, H) {
+  const blobs = [
+    [0.28, 0.25, 0.62, 'rgba(255,230,180,0.07)'], [0.68, 0.10, 0.5, 'rgba(255,230,180,0.05)'],
+    [0.86, 0.82, 0.6, 'rgba(40,18,4,0.10)'], [0.08, 0.92, 0.5, 'rgba(40,18,4,0.08)'],
+    [0.55, 0.55, 0.75, 'rgba(60,28,6,0.05)']
+  ];
+  for (const [fx, fy, fr, col] of blobs) {
+    const gr = g.createRadialGradient(W * fx, H * fy, 4, W * fx, H * fy, H * fr);
+    gr.addColorStop(0, col); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  }
+}
+
+// Static wear: twin wheel lines that darken where the corner bites (curvature),
+// plus sand-bowl arcs in the hairpin. The dynamic track layer adds live marks.
+function drawWearArcs(g, ppm, look) {
+  const S = TRACK.samples;
+  const dark = look === 'B' ? '74,44,20' : '43,26,12';
+  for (const pass of [{ alpha: 0.045, wMul: 1, thresh: 0 }, { alpha: 0.15, wMul: 1, thresh: 0.05 }]) {
+    for (const off of [-0.95, 0.95]) {
+      g.lineCap = 'round';
+      for (let i = 0; i < S.length; i += 2) {
+        const a = S[i], b = S[(i + 2) % S.length];
+        if (TRACK.surfaceAt((a.x + b.x) / 2, (a.y + b.y) / 2) === SURF.WATER) continue; // no baked lines on water
+        const wN = clamp01(a.curv * 2.4);
+        if (wN < pass.thresh) continue;
+        const alpha = pass.alpha * (pass.thresh ? wN : 0.8);
+        if (alpha < 0.01) continue;
+        const anx = -Math.sin(a.ang), anyy = Math.cos(a.ang);
+        const bnx = -Math.sin(b.ang), bny = Math.cos(b.ang);
+        g.strokeStyle = `rgba(${dark},${alpha.toFixed(3)})`;
+        g.lineWidth = 0.55 * ppm * pass.wMul;
+        g.beginPath();
+        g.moveTo((a.x + anx * off) * ppm, (a.y + anyy * off) * ppm);
+        g.lineTo((b.x + bnx * off) * ppm, (b.y + bny * off) * ppm);
+        g.stroke();
+      }
+    }
+  }
+  // carved arcs across the hairpin sand bowl
+  g.strokeStyle = look === 'B' ? 'rgba(120,84,40,0.20)' : 'rgba(90,58,24,0.20)';
+  for (const [cx, cy, r, a0, a1] of [[30, 45.5, 3.2, 2.6, 5.6], [30, 45.5, 4.6, 2.7, 5.5], [30, 45.5, 6.0, 2.8, 5.4], [29, 46, 7.4, 2.9, 5.2]]) {
+    g.lineWidth = 0.4 * ppm;
+    g.beginPath(); g.arc(cx * ppm, cy * ppm, r * ppm, a0, a1); g.stroke();
+  }
+}
+
+// Corrugated rib section: ridge stripes across the road with light/shadow
+// pairs and ramp shading at both ends — a place, not a striped rectangle.
+function drawRibs(g, ppm, look) {
+  const { grid, gw, gh, cell } = TRACK.surf;
+  for (let gy = 0; gy < gh; gy++) {
+    for (let gx = 0; gx < gw; gx++) {
+      if (grid[gy * gw + gx] !== SURF.RIBS) continue;
+      const x = gx * cell, y = gy * cell;
+      const ph = Math.floor(x / 0.85) % 2;
+      g.fillStyle = ph ? 'rgba(255,240,200,0.17)' : 'rgba(30,16,6,0.22)';
+      g.fillRect(x * ppm, y * ppm, cell * ppm + 0.6, cell * ppm + 0.6);
+      if (x < 57.6 || x > 68.4) { g.fillStyle = 'rgba(20,10,4,0.10)'; g.fillRect(x * ppm, y * ppm, cell * ppm + 0.6, cell * ppm + 0.6); }
+    }
+  }
+  if (look === 'B') { // painted ridge highlights
+    g.strokeStyle = 'rgba(255,244,214,0.20)'; g.lineWidth = Math.max(1.4, ppm * 0.09);
+    for (let x = 56.4; x < 70; x += 0.85) {
+      g.beginPath(); g.moveTo(x * ppm, 35.6 * ppm); g.lineTo(x * ppm, 40.8 * ppm); g.stroke();
+    }
+  }
+}
+
+// Scenery: rocks, bushes, scrub tufts, extra tire stacks, start gantry + grid.
+function drawScenery(g, ppm, look, pal) {
+  const rng = mulberry32(look === 'A' ? 41 : look === 'C' ? 42 : 43);
+  // tufts: tiny dark scrub marks
+  for (const t of SCENERY.tufts) {
+    const x = t.x * ppm, y = t.y * ppm;
+    if (look === 'B') {
+      g.strokeStyle = 'rgba(84,58,26,0.55)'; g.lineWidth = Math.max(1.2, ppm * 0.09); g.lineCap = 'round';
+      for (let k = 0; k < 3; k++) {
+        const a = -0.5 + k * 0.5 + (hash2(t.seed, k) - 0.5) * 0.4;
+        g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.sin(a) * 0.5 * ppm, y - Math.cos(a) * 0.5 * ppm); g.stroke();
+      }
+    } else {
+      g.fillStyle = 'rgba(52,36,16,0.65)';
+      const sz = Math.max(1.6, ppm * 0.16);
+      g.fillRect(x, y, sz, sz); g.fillRect(x + sz * 1.4, y - sz * 0.6, sz, sz); g.fillRect(x - sz * 1.2, y - sz * 0.3, sz, sz);
+    }
+  }
+  // bushes: dark scrub mounds with a lit top
+  for (const b of SCENERY.bushes) {
+    const x = b.x * ppm, y = b.y * ppm, r = b.r * ppm;
+    g.fillStyle = 'rgba(20,12,4,0.30)';
+    g.beginPath(); g.ellipse(x, y + r * 0.42, r * 1.05, r * 0.5, 0, 0, 7); g.fill();
+    if (look === 'B') {
+      g.fillStyle = '#5d4520';
+      g.beginPath(); g.ellipse(x, y, r, r * 0.78, 0, 0, 7); g.fill();
+      g.fillStyle = '#77592a';
+      g.beginPath(); g.ellipse(x - r * 0.25, y - r * 0.28, r * 0.55, r * 0.36, -0.4, 0, 7); g.fill();
+      g.strokeStyle = 'rgba(58,35,24,0.5)'; g.lineWidth = Math.max(1.2, ppm * 0.1);
+      g.beginPath(); g.ellipse(x, y, r, r * 0.78, 0, 0, 7); g.stroke();
+    } else {
+      g.fillStyle = look === 'A' ? '#54401c' : '#4c3c20';
+      g.beginPath(); g.ellipse(x, y, r, r * 0.76, 0, 0, 7); g.fill();
+      g.fillStyle = look === 'A' ? '#6e5626' : '#635026';
+      g.beginPath(); g.ellipse(x - r * 0.22, y - r * 0.26, r * 0.52, r * 0.34, -0.4, 0, 7); g.fill();
+      g.fillStyle = 'rgba(30,20,8,0.8)';
+      const sz = Math.max(1.4, ppm * 0.13);
+      for (let k = 0; k < 4; k++) g.fillRect(x + (hash2(b.seed, k) - 0.5) * r * 1.4, y + (hash2(k, b.seed) - 0.5) * r, sz, sz);
+    }
+  }
+  // rocks: grey forms, lit top-left, shadowed base
+  for (const rk of SCENERY.rocks) {
+    const x = rk.x * ppm, y = rk.y * ppm, r = rk.r * ppm;
+    g.fillStyle = 'rgba(20,12,4,0.28)';
+    g.beginPath(); g.ellipse(x + r * 0.15, y + r * 0.4, r * 1.05, r * 0.45, 0, 0, 7); g.fill();
+    g.fillStyle = pal.rock[1];
+    g.beginPath();
+    const pts = 6;
+    for (let k = 0; k < pts; k++) {
+      const a = (k / pts) * Math.PI * 2 + rk.seed;
+      const rr = r * (0.75 + hash2(rk.seed, k) * 0.4);
+      const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr * 0.72;
+      k ? g.lineTo(px, py) : g.moveTo(px, py);
+    }
+    g.closePath(); g.fill();
+    g.fillStyle = pal.rock[0];
+    g.beginPath(); g.ellipse(x - r * 0.24, y - r * 0.24, r * 0.5, r * 0.3, -0.5, 0, 7); g.fill();
+    if (look === 'B') {
+      g.strokeStyle = 'rgba(58,35,24,0.45)'; g.lineWidth = Math.max(1.2, ppm * 0.1);
+      g.beginPath(); g.ellipse(x - r * 0.24, y - r * 0.24, r * 0.5, r * 0.3, -0.5, 0, 7); g.stroke();
+    }
+  }
+  // scenery tire stacks at corners (the breakable ones are dynamic props)
+  for (const s of SCENERY.stacks) drawStack(g, s, ppm, look);
+  drawGantry(g, ppm, look, pal);
+}
+
+function drawGantry(g, ppm, look, pal) {
+  const p = TRACK.samples[0];
+  const nx = -Math.sin(p.ang), ny = Math.cos(p.ang);
+  const fx = Math.cos(p.ang), fy = Math.sin(p.ang);
+  const off = p.w / 2 + 0.4;
+  const P = (latOff, sOff) => [(p.x + nx * latOff + fx * sOff) * ppm, (p.y + ny * latOff + fy * sOff) * ppm];
+  // banner shadow, then the banner band across the road
+  const [ax, ay] = P(-off, 0.35), [bx, by] = P(off, 0.35);
+  g.strokeStyle = 'rgba(20,10,4,0.35)'; g.lineWidth = 1.0 * ppm; g.lineCap = 'butt';
+  g.beginPath(); g.moveTo(ax, ay); g.lineTo(bx, by); g.stroke();
+  const [cx, cy] = P(-off, 0), [dx, dy] = P(off, 0);
+  g.strokeStyle = pal.tapeWhite; g.lineWidth = 1.0 * ppm;
+  g.beginPath(); g.moveTo(cx, cy); g.lineTo(dx, dy); g.stroke();
+  g.strokeStyle = pal.tapeRed; g.lineWidth = 1.0 * ppm;
+  const segs = 9;
+  for (let i = 0; i < segs; i += 2) {
+    g.beginPath();
+    g.moveTo(cx + (dx - cx) * (i / segs), cy + (dy - cy) * (i / segs));
+    g.lineTo(cx + (dx - cx) * ((i + 1) / segs), cy + (dy - cy) * ((i + 1) / segs));
+    g.stroke();
+  }
+  // posts
+  for (const sgn of [-1, 1]) {
+    const [px, py] = P(sgn * off, 0);
+    g.fillStyle = 'rgba(20,10,4,0.35)';
+    g.fillRect(px - 0.32 * ppm + 2, py - 0.32 * ppm + 3, 0.64 * ppm, 0.64 * ppm);
+    g.fillStyle = look === 'B' ? '#4a3826' : '#2c2622';
+    g.fillRect(px - 0.32 * ppm, py - 0.32 * ppm, 0.64 * ppm, 0.64 * ppm);
+    g.fillStyle = pal.tapeRed;
+    g.fillRect(px - 0.32 * ppm, py - 0.32 * ppm, 0.64 * ppm, 0.2 * ppm);
+  }
+  // start grid slots behind the line (travel heads -x, so slots sit at +s)
+  g.strokeStyle = look === 'B' ? 'rgba(243,230,200,0.35)' : 'rgba(240,234,216,0.30)';
+  g.lineWidth = Math.max(1.2, ppm * 0.14);
+  for (const [latOff, s0] of [[-2.9, 1.6], [2.9, 4.4], [-2.9, 7.2], [2.9, 10.0]]) {
+    const c1 = P(latOff - 1.9, s0), c2 = P(latOff + 1.9, s0), c3 = P(latOff + 1.9, s0 + 4.6), c4 = P(latOff - 1.9, s0 + 4.6);
+    g.beginPath(); g.moveTo(c1[0], c1[1]); g.lineTo(c2[0], c2[1]); g.lineTo(c3[0], c3[1]); g.lineTo(c4[0], c4[1]); g.closePath(); g.stroke();
+  }
 }
 
 // Offset polylines for the tape barriers.
@@ -98,11 +492,11 @@ function drawTape(g, ppm, pal, painted, crispShadow) {
         g.strokeStyle = 'rgba(58,35,24,0.45)'; g.lineWidth = 0.62 * ppm; g.lineCap = 'round';
         g.beginPath(); g.moveTo(a[0] * ppm, a[1] * ppm + 0.22 * ppm); g.lineTo(b[0] * ppm, b[1] * ppm + 0.22 * ppm); g.stroke();
       } else if (crispShadow) {
-        g.strokeStyle = 'rgba(16,10,5,0.42)'; g.lineWidth = 0.6 * ppm; g.lineCap = 'butt';
+        g.strokeStyle = 'rgba(16,10,5,0.42)'; g.lineWidth = 0.62 * ppm; g.lineCap = 'butt';
         g.beginPath(); g.moveTo(a[0] * ppm, a[1] * ppm + 0.15 * ppm); g.lineTo(b[0] * ppm, b[1] * ppm + 0.15 * ppm); g.stroke();
       }
       g.strokeStyle = i % 2 ? pal.tapeWhite : pal.tapeRed;
-      g.lineWidth = (painted ? 0.5 : 0.55) * ppm; g.lineCap = 'butt';
+      g.lineWidth = (painted ? 0.5 : 0.58) * ppm; g.lineCap = 'butt';
       g.beginPath(); g.moveTo(a[0] * ppm, a[1] * ppm); g.lineTo(b[0] * ppm, b[1] * ppm); g.stroke();
     }
   }
@@ -127,16 +521,27 @@ function drawStartLine(g, ppm, pal) {
     }
   }
 }
-function drawRibs(g, ppm) {
-  g.fillStyle = 'rgba(40,22,10,0.35)';
-  const { grid, gw, gh, cell } = TRACK.surf;
-  for (let gy = 0; gy < gh; gy++) {
-    for (let gx = 0; gx < gw; gx++) {
-      if (grid[gy * gw + gx] !== SURF.RIBS) continue;
-      const x = gx * cell;
-      if (Math.floor(x * 1.5) % 2 === 0) g.fillRect(gx * cell * ppm, gy * cell * ppm, cell * ppm + 0.6, cell * ppm + 0.6);
+
+// Look B only: paint the road as layered strokes along the centreline so the
+// painted world has a road body, not just an underlay tint.
+function paintRoadB(g, ppm, pal) {
+  const S = TRACK.samples;
+  g.lineCap = 'round';
+  const passes = [
+    { extra: 2.6, col: pal.shoulder, alpha: 0.45, wMul: 1 },
+    { extra: 0, col: pal.road[1], alpha: 0.80, wMul: 1 },
+    { extra: 0, col: pal.roadDark, alpha: 0.16, wMul: 0.55 }
+  ];
+  for (const ps of passes) {
+    g.globalAlpha = ps.alpha; g.strokeStyle = ps.col;
+    for (let i = 0; i < S.length; i += 2) {
+      const a = S[i], b = S[(i + 2) % S.length];
+      if (TRACK.surfaceAt((a.x + b.x) / 2, (a.y + b.y) / 2) === SURF.WATER) continue; // the river stays water — no road paint over the crossing
+      g.lineWidth = (a.w * ps.wMul + ps.extra) * ppm;
+      g.beginPath(); g.moveTo(a.x * ppm, a.y * ppm); g.lineTo(b.x * ppm, b.y * ppm); g.stroke();
     }
   }
+  g.globalAlpha = 1;
 }
 
 function buildBackground(look) {
@@ -147,15 +552,16 @@ function buildBackground(look) {
   const layer = surfaceLayer(look);
   g.imageSmoothingEnabled = look === 'B';
   g.drawImage(layer, 0, 0, W, H);
+  duneShade(g, W, H);
   const rng = mulberry32(look === 'A' ? 11 : look === 'C' ? 22 : 33);
   if (look === 'B') {
-    // ---- painterly pass: big broken-colour blotches, then thousands of visible strokes ----
-    const surfNames = SURF_KEYS;
+    paintRoadB(g, ppm, pal);
+    // ---- painterly pass: blotches + strokes, coloured by the ground class ----
     for (let i = 0; i < 300; i++) { // large soft patches of warm/cool variation
       const x = rng() * WORLD.w, y = rng() * WORLD.h;
-      const s = TRACK.surfaceAt(x, y);
-      if (s === SURF.WATER) continue;
-      const base = PALETTES.B[surfNames[s]][0];
+      const gr = groundAt(x, y);
+      if (gr.zone === 'water') continue;
+      const base = gr.zone === 'road' ? pal.road[0] : PALETTES.B[SURF_KEYS[gr.surf]][0];
       g.fillStyle = shade(base, rng() < 0.5 ? 0.88 + rng() * 0.06 : 1.08 + rng() * 0.1);
       g.globalAlpha = 0.05 + rng() * 0.06;
       g.beginPath();
@@ -164,10 +570,10 @@ function buildBackground(look) {
     }
     for (let i = 0; i < 6200; i++) {
       const x = rng() * WORLD.w, y = rng() * WORLD.h;
-      const s = TRACK.surfaceAt(x, y);
-      const base = PALETTES.B[surfNames[s]][0];
-      const isWater = s === SURF.WATER;
-      const ang = isWater ? (rng() - 0.5) * 0.3 : rng() * Math.PI;
+      const gr = groundAt(x, y);
+      const isWater = gr.zone === 'water';
+      const base = gr.zone === 'road' ? pal.road[0] : PALETTES.B[SURF_KEYS[gr.surf]][0];
+      const ang = isWater ? (rng() - 0.5) * 0.3 : gr.zone === 'road' ? gr.ang + (rng() - 0.5) * 0.5 : rng() * Math.PI;
       const len = (isWater ? 16 : 10) + rng() * 20;
       g.strokeStyle = isWater && rng() < 0.3 ? '#bcd9f5' : shade(base, 0.88 + rng() * 0.3);
       g.globalAlpha = (isWater ? 0.10 : 0.06) + rng() * 0.10;
@@ -187,7 +593,9 @@ function buildBackground(look) {
       g.beginPath(); g.moveTo(x * ppm, y * ppm); g.lineTo(x * ppm + 5 + rng() * 8, y * ppm + (rng() - 0.5) * 3); g.stroke();
     }
     g.globalAlpha = 1;
-    drawRibs(g, ppm);
+    drawWearArcs(g, ppm, look);
+    drawRibs(g, ppm, look);
+    drawScenery(g, ppm, look, pal);
     drawTape(g, ppm, pal, true);
     drawStartLine(g, ppm, pal);
     // warm sun wash + vignette
@@ -198,7 +606,10 @@ function buildBackground(look) {
     vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(46,22,8,0.28)');
     g.fillStyle = vg; g.fillRect(0, 0, W, H);
   } else {
-    // ---- pixel pass: speckle, stones, water sparkle ----
+    // ---- pixel pass: wear, ribs, scenery, speckle, water sparkle ----
+    drawWearArcs(g, ppm, look);
+    drawRibs(g, ppm, look);
+    drawScenery(g, ppm, look, pal);
     const dots = look === 'A' ? 1500 : 2400;
     for (let i = 0; i < dots; i++) {
       const x = rng() * W, y = rng() * H;
@@ -211,8 +622,7 @@ function buildBackground(look) {
         g.fillRect(x, y, sz, sz);
       }
     }
-    drawRibs(g, ppm);
-    drawTape(g, ppm, pal, false, look === 'C');
+    drawTape(g, ppm, pal, false, true);
     drawStartLine(g, ppm, pal);
     if (look === 'C') { // cool grade + grain + vignette: reads as its own world, not A's twin
       for (let i = 0; i < 2600; i++) {
@@ -220,10 +630,10 @@ function buildBackground(look) {
         g.fillRect(rng() * W, rng() * H, 1.6, 1.6);
       }
       g.fillStyle = 'rgba(28,44,104,0.07)'; g.fillRect(0, 0, W, H);
-      const vg = g.createRadialGradient(W / 2, H / 2, H * 0.45, W / 2, H / 2, H * 0.98);
-      vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(8,10,26,0.16)');
-      g.fillStyle = vg; g.fillRect(0, 0, W, H);
     }
+    const vg = g.createRadialGradient(W / 2, H / 2, H * 0.45, W / 2, H / 2, H * 0.98);
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, look === 'A' ? 'rgba(10,6,2,0.20)' : 'rgba(8,10,26,0.16)');
+    g.fillStyle = vg; g.fillRect(0, 0, W, H);
   }
   return c;
 }
@@ -332,7 +742,7 @@ class Renderer {
       const x = tr.x * ppm, y = tr.y * ppm;
       // sun shadow
       g.fillStyle = 'rgba(20,10,4,0.34)';
-      g.beginPath(); g.ellipse(x + 0.38 * ppm, y + 0.55 * ppm, 1.55 * ppm, 0.95 * ppm, tr.ang, 0, 7); g.fill();
+      g.beginPath(); g.ellipse(x + 0.38 * ppm, y + 0.55 * ppm, 1.72 * ppm, 1.02 * ppm, tr.ang, 0, 7); g.fill();
       const spr = sprites[tr.color][dirIndex(tr.ang, count)];
       const span = conf.spriteSpan * ppm;
       if (look === 'C') g.imageSmoothingEnabled = true;

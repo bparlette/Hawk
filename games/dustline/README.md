@@ -43,7 +43,17 @@ there are no binary assets.
 laps increment, overtakes happen, nitro pickup works, water slows the truck
 vs dirt (7.0 vs ~19 m/s coast-down), and the tire-track layer accumulates;
 captures menu / mid-race ×3 looks / water crossing / portrait screenshots
-into `shots/`.
+into `shots/`. `node tools/shots2.mjs` captures the v2 set into `shots2/`.
+
+**v2 base rebuild (Nov 16):** v1's base — tape lines on a flat uniform field —
+was rejected by the owner ("the base is bad so all the others are bad"). The
+ground is now a baked scene built on a centreline distance field: the road is
+a real surface (pale worn dirt, twin wheel bands, corner wear pooled by
+curvature, dusty shoulders) carved through textured scrub, with a banked
+river (shallows, sandy rims), sand traps, a corrugated rib section, rocks,
+bushes, scenery tire stacks, a start gantry + grid slots, and slightly larger
+trucks. All three looks re-render that same base in their own medium. Engine,
+physics, AI and track data are unchanged from v1; verify still passes 10/10.
 
 **Honest approximations:** the thread's fluid simulation and global
 illumination are approximated (splash particles + wakes; consistent fixed
