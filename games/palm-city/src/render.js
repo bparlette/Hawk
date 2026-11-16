@@ -772,9 +772,10 @@ export class Renderer {
     let k = Math.round(c.h / (Math.PI * 2) * n) % n; if (k < 0) k += n;
     const cw = e.img.width / e.cols, ch = e.img.height / Math.ceil(n / e.cols);
     const bob = Math.sin(time * 2.1) * 1.5;
-    g.drawImage(e.img, (k % e.cols) * cw, ((k / e.cols) | 0) * ch, cw, ch, c.x + e.ox, c.y + e.oy + bob, e.w, e.h);
+    const Z = 1.7;                                    // it flies well above the roofs: drawn larger than ground scale
+    g.drawImage(e.img, (k % e.cols) * cw, ((k / e.cols) | 0) * ch, cw, ch, c.x + e.ox * Z, c.y + e.oy * Z + bob, e.w * Z, e.h * Z);
     const r = dusk ? P.rotorDusk : P.rotor;
-    g.save(); g.translate(c.x + Math.cos(c.h) * 2.5, c.y + Math.sin(c.h) * 2.5 + bob); g.rotate(time * 18);
+    g.save(); g.translate(c.x + Math.cos(c.h) * 2.5, c.y + Math.sin(c.h) * 2.5 + bob); g.rotate(time * 18); g.scale(Z, Z);
     g.drawImage(r.img, r.ox, r.oy, r.w, r.h); g.restore();
   }
 
@@ -783,17 +784,22 @@ export class Renderer {
   // Drawn into the additive light layer, so it blooms; brighter as it gets dark.
   drawSearchlight(lg, c, t, time, stars) {
     const dusk = t >= 0.55, dark = clamp01((t - 0.3) / 0.6);
-    const a0 = (0.32 + 0.5 * dark) * (c.leaving ? 0.4 : 1);
-    const nx = c.x + Math.cos(c.h) * 22, ny = c.y + Math.sin(c.h) * 22;
+    const a0 = (0.62 + 0.24 * dark) * (c.leaving ? 0.4 : 1);   // additive light shows less on a sunlit street: day beam runs hot
+    const nx = c.x + Math.cos(c.h) * 34, ny = c.y + Math.sin(c.h) * 34;
     const dx = c.bx - nx, dy = c.by - ny, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, px = -uy, py = ux;
     const R = CHOPPER.POOL_R;
     const col = dusk ? '200,236,255' : '255,234,180';
     // cone body
     const gr = lg.createLinearGradient(nx, ny, c.bx, c.by);
     gr.addColorStop(0, `rgba(${col},${0.55 * a0})`); gr.addColorStop(1, `rgba(${col},${0.14 * a0})`);
-    lg.globalAlpha = 1; lg.fillStyle = gr;
-    lg.beginPath(); lg.moveTo(nx + px * 4, ny + py * 4); lg.lineTo(c.bx + px * R * 0.9, c.by + py * R * 0.9);
-    lg.lineTo(c.bx - px * R * 0.9, c.by - py * R * 0.9); lg.lineTo(nx - px * 4, ny - py * 4); lg.closePath(); lg.fill();
+    lg.fillStyle = gr;
+    for (let i = 0; i < 4; i++) {                       // nested cones: a feathered edge, no hard outline
+      const w = R * (0.95 - i * 0.2);
+      lg.globalAlpha = 0.3;
+      lg.beginPath(); lg.moveTo(nx + px * 4, ny + py * 4); lg.lineTo(c.bx + px * w, c.by + py * w);
+      lg.lineTo(c.bx - px * w, c.by - py * w); lg.lineTo(nx - px * 4, ny - py * 4); lg.closePath(); lg.fill();
+    }
+    lg.globalAlpha = 1;
     // the lagging ghost of the beam when it swings fast (4-5 stars)
     if (stars >= 4) {
       const ga = c.ghostA - 0.17, gx = nx + Math.cos(ga) * L, gy = ny + Math.sin(ga) * L;
@@ -802,7 +808,8 @@ export class Renderer {
     }
     // the pool
     const pool = lg.createRadialGradient(c.bx, c.by, 0, c.bx, c.by, R * 1.15);
-    pool.addColorStop(0, `rgba(${col},${0.85 * a0})`); pool.addColorStop(0.55, `rgba(${col},${0.45 * a0})`); pool.addColorStop(1, `rgba(${col},0)`);
+    // bright, but the player stays readable in it
+    pool.addColorStop(0, `rgba(${col},${0.42 * a0})`); pool.addColorStop(0.6, `rgba(${col},${0.3 * a0})`); pool.addColorStop(1, `rgba(${col},0)`);
     lg.fillStyle = pool;
     lg.save(); lg.translate(c.bx, c.by); lg.scale(1, 0.78); lg.translate(-c.bx, -c.by);
     lg.fillRect(c.bx - R * 1.2, c.by - R * 1.2, R * 2.4, R * 2.4); lg.restore();
