@@ -3,10 +3,12 @@
 > **Design + look target proposal** (Task 2 of `bparlette/tasking/gemini.md`; builder Fable implements later against this spec — no game code or asset changes in this delivery).  
 > Anchored to the real Motel block in [layout.json](../layout.json) (`id: "motel"`, `x: 444, y: 1140, w: 252, d: 196, h: 7, sign: "MOTEL"`) and the main game's golden-hour and dusk lighting grades ([src/render.js](../src/render.js)).
 
-## Visual Look Targets
+## Visual Look Targets *(Updated Nov 16, 2026 — Full-Frame Redo)*
 
-1. [siege-target-golden.png](siege-target-golden.png) — `840x1720` (`420x860 @ 2x`) portrait cutaway at golden hour (`6:45 PM`), showing warm sunlight streaming into the 3-floor interior, sunlit teal stucco & apricot parapet, painterly brushwork (`paint_finish()`), and full East Fire Escape → Skateboard escape line.
-2. [siege-target-dusk.png](siege-target-dusk.png) — Same framing at deep indigo dusk (`7:45 PM`), with midnight exterior asphalt/sky, glowing pink-magenta `MOTEL` neon sign + police red/blue lightbar `'screen'` bloom, and warm saffron room lights (`#ffae48` / `#ffa844`).
+> **Framing Redo Note (Nov 16, 2026):** Replaced the original mid-frame plates with full-bleed `840x1720` (`420x860 @ 2x`) street-level cutaway plates filling every edge with zero empty sky/curb bands: Palm City skyline & chopper spotlight above, dressed 3-floor interior rooms + grounded stairwells + zig-zag fire escape centered, and active street siege (`2` police cruisers, sawhorse barricades, SWAT/patrol units, AC crush impact) across the lower asphalt foreground.
+
+1. [siege-target-golden.png](siege-target-golden.png) — `840x1720` (`420x860 @ 2x`) full-frame portrait cutaway at golden hour (`6:45 PM`, `★3`), showing warm afternoon shafts streaming across all 3 dressed floors, Reception Desk barricade, `VEND` soda crush, Queen Mattress + falling CRT TV + Rolling Linen Cart, Fuse Box sparks, hero climbing Roof Hatch ladder, East Fire Escape -> Skateboard ramp, and street police cordon.
+2. [siege-target-dusk.png](siege-target-dusk.png) — Same full-frame density at deep indigo dusk (`7:45 PM`, `★5`), adding hovering police chopper searchlight cone + SWAT roof rappel, pink-magenta `MOTEL / VACANCY` neon bloom, dropped Window AC caving in the East cruiser roof with smoke, hero bailing down East Awning onto escape Skateboard, wet neon asphalt reflections, and red/blue cruiser strobe washes.
 3. [siege-target-layout.png](siege-target-layout.png) — Annotated engineering schematic calling out every room, breach point, barricade slot, physics trap trigger, vertical stairwell, and escape path.
 
 ---
