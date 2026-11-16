@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>DUSTLINE — Off-Road Arcade</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#0b0906; }
+  body { font-family:"Courier New",monospace; -webkit-user-select:none; user-select:none; }
+  #wrap { position:fixed; inset:0; }
+  canvas#game { display:block; }
+  /* ---------- overlays / panels ---------- */
+  .overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:1300; padding:12px; }
+  .panel { text-align:center; padding:20px 26px 16px; max-width:min(92vw,560px); max-height:94vh; overflow:auto; }
+  .panel h1 { font-size:clamp(34px,8vw,58px); letter-spacing:2px; line-height:0.95; }
+  .panel .sub { margin:6px 0 14px; font-size:clamp(10px,2.4vw,13px); letter-spacing:2.5px; opacity:0.85; }
+  .segrow { display:flex; gap:6px; justify-content:center; align-items:center; flex-wrap:wrap; margin:8px 0; }
+  .segrow .lab { font-size:11px; letter-spacing:2px; opacity:0.7; width:44px; text-align:right; }
+  .segrow button, #playBtn, .fbtn {
+    font:inherit; cursor:pointer; padding:8px 12px; font-size:clamp(11px,2.6vw,14px); letter-spacing:1px;
+  }
+  #playBtn { margin-top:12px; font-size:clamp(16px,4vw,21px); padding:11px 34px; font-weight:700; }
+  .lookdesc { font-size:clamp(10px,2.4vw,12.5px); opacity:0.85; min-height:1.2em; margin-top:2px; }
+  .help { margin-top:13px; font-size:clamp(9.5px,2.2vw,11.5px); line-height:1.55; opacity:0.75; }
+  .frow { display:flex; justify-content:space-between; gap:18px; padding:5px 4px; font-size:clamp(13px,3vw,16px); border-bottom:1px dashed rgba(255,255,255,0.18); }
+  .frow.me { font-weight:700; }
+  .frow .dim { opacity:0.65; font-size:0.85em; }
+  /* LOOK A theme — Amiga: navy box, orange/white pixel type */
+  body.look-a .panel { background:rgba(14,12,34,0.93); border:3px solid #ece7da; color:#f2ead8; box-shadow:0 0 0 3px #14102a, 0 14px 44px rgba(0,0,0,0.6); }
+  body.look-a h1 { color:#d42a1e; text-shadow:3px 3px 0 #14102a; } body.look-a h1 span { color:#f2ead8; }
+  body.look-a .segrow button, body.look-a .fbtn { background:#1c1838; color:#ffb03a; border:2px solid #4a4470; }
+  body.look-a .segrow button.sel { background:#ffb03a; color:#14102a; border-color:#ffb03a; }
+  body.look-a #playBtn { background:#d42a1e; color:#fff; border:2px solid #ff8a70; }
+  /* LOOK B theme — Painted: warm storybook panel */
+  body.look-b { font-family:"Trebuchet MS",Verdana,sans-serif; }
+  body.look-b .panel { background:rgba(46,29,15,0.94); border:3px solid #d8a860; border-radius:16px; color:#ffe9bd; box-shadow:0 14px 44px rgba(0,0,0,0.55), inset 0 0 42px rgba(255,176,58,0.10); }
+  body.look-b h1 { color:#ffb03a; text-shadow:2px 3px 0 #5a2c10; font-family:Georgia,serif; } body.look-b h1 span { color:#ffe9bd; }
+  body.look-b .segrow button, body.look-b .fbtn { background:#5a3a1e; color:#ffe9bd; border:2px solid #a1743a; border-radius:9px; }
+  body.look-b .segrow button.sel { background:#ffb03a; color:#3a2310; border-color:#ffe9bd; }
+  body.look-b #playBtn { background:#c8402a; color:#ffe9bd; border:2px solid #ffb03a; border-radius:11px; }
+  /* LOOK C theme — Sprite pixel: dark slate + cyan */
+  body.look-c .panel { background:rgba(7,11,19,0.94); border:3px solid #57a7d8; color:#dcecf5; box-shadow:0 0 0 3px #0a1420, 0 14px 44px rgba(0,0,0,0.6); }
+  body.look-c h1 { color:#57a7d8; text-shadow:3px 3px 0 #0a1420; } body.look-c h1 span { color:#f2f5f7; }
+  body.look-c .segrow button, body.look-c .fbtn { background:#101c2a; color:#8ec9ec; border:2px solid #2c4a63; }
+  body.look-c .segrow button.sel { background:#57a7d8; color:#08131d; border-color:#57a7d8; }
+  body.look-c #playBtn { background:#c22e20; color:#fff; border:2px solid #57a7d8; }
+  /* ---------- in-race chrome ---------- */
+  #topBtns { position:absolute; top:8px; right:8px; z-index:1200; display:none; gap:6px; align-items:flex-start; }
+  body.racing #topBtns { display:flex; }
+  #topBtns button {
+    font:inherit; font-weight:700; cursor:pointer; min-width:38px; height:38px; padding:0 8px;
+    background:rgba(10,8,6,0.72); color:#fff; border:2px solid rgba(255,255,255,0.5); border-radius:8px; font-size:14px;
+  }
+  #topBtns button.sel { background:#ffb03a; color:#14102a; border-color:#ffb03a; }
+  #lookBtns { display:flex; gap:4px; }
+  #touchUI button {
+    position:absolute; z-index:1200; width:66px; height:66px; border-radius:50%;
+    font:inherit; font-weight:700; font-size:12px; letter-spacing:0.5px; cursor:pointer;
+    background:rgba(10,8,6,0.55); color:#fff; border:2.5px solid rgba(255,255,255,0.65); display:none;
+  }
+  body.racing #touchUI button { display:block; }
+  #btnA { right:18px; bottom:22px; border-color:#ffb03a !important; color:#ffb03a !important; }
+  #btnB { right:96px; bottom:22px; }
+  #touchUI button.on { background:rgba(255,176,58,0.75); color:#14102a !important; }
+  #stickBase, #stickKnob { position:absolute; z-index:1150; border-radius:50%; pointer-events:none; display:none; }
+  #stickBase { width:110px; height:110px; border:2px solid rgba(255,255,255,0.4); background:rgba(255,255,255,0.07); }
+  #stickKnob { width:52px; height:52px; background:rgba(255,255,255,0.35); border:2px solid rgba(255,255,255,0.55); }
+  #rotateHint {
+    position:absolute; left:50%; bottom:150px; transform:translateX(-50%); z-index:1100; pointer-events:none; white-space:nowrap;
+    background:rgba(10,8,6,0.72); color:#ffd9a0; font-size:11px; letter-spacing:1.5px; padding:6px 12px; border-radius:20px; display:none;
+  }
+  @media (orientation: portrait) { #rotateHint { display:block; } }
+  #err {
+    position:absolute; top:10px; left:50%; transform:translateX(-50%); z-index:2000; display:none;
+    background:#7a1610; color:#fff; padding:10px 16px; font-size:13px; border:2px solid #fff; max-width:92vw;
+  }
+</style>
+<style id="moth-game-guard">
+html,body{touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{touch-action:none}
+</style>
+</head>
+<body class="look-a">
+<div id="wrap">
+  <canvas id="game"></canvas>
+  <div id="err"></div>
+  <div id="topBtns">
+    <div id="lookBtns">
+      <button data-look="A" class="sel">A</button><button data-look="B">B</button><button data-look="C">C</button>
+    </div>
+    <button id="pauseBtn">❚❚</button>
+  </div>
+  <div id="touchUI">
+    <div id="stickBase"></div><div id="stickKnob"></div>
+    <button id="btnB">BRKE</button>
+    <button id="btnA">NITRO</button>
+  </div>
+  <div id="rotateHint">↻ ROTATE FOR FULL TRACK</div>
+
+  <div id="menu" class="overlay">
+    <div class="panel">
+      <h1>DUST<span>LINE</span></h1>
+      <div class="sub">OFF-ROAD ARCADE · GREYBOX LOOP · 4 TRUCKS · 4 LAPS</div>
+      <div class="segrow"><span class="lab">MODE</span>
+        <button data-mode="race" class="sel">RACE</button><button data-mode="ta">TIME ATTACK</button>
+      </div>
+      <div class="segrow"><span class="lab">LOOK</span>
+        <button data-look="A" class="sel">A · REPLICA</button><button data-look="B">B · PAINTED</button><button data-look="C">C · SPRITE</button>
+      </div>
+      <div class="lookdesc" id="lookDesc">Amiga-500 palette pixel art — their look, faithfully crunched.</div>
+      <button id="playBtn">▶ PLAY</button>
+      <div class="help">
+        DRIVE: ←→↑↓ / WASD · NITRO: SPACE · BRAKE: SHIFT · LOOKS: 1 / 2 / 3 (mid-race too)<br>
+        TOUCH: left thumb = floating stick (steer + throttle), NITRO / BRKE buttons right.<br>
+        Water slows you down. Sand drags. Mud slides. Grab nitro + repair pickups on the line.
+      </div>
+    </div>
+  </div>
+
+  <div id="finish" class="overlay" style="display:none">
+    <div class="panel">
+      <h1 id="finishTitle" style="font-size:clamp(24px,6vw,38px)">RACE OVER</h1>
+      <div class="sub">GREYBOX LOOP</div>
+      <div id="finishRows"></div>
+      <div class="segrow" style="margin-top:14px">
+        <button id="againBtn" class="fbtn">↻ RACE AGAIN</button>
+        <button id="menuBtn" class="fbtn">MENU</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="track.js"></script>
+<script src="audio.js"></script>
+<script src="sprites.js"></script>
+<script src="render.js"></script>
+<script src="game.js"></script>
+<script id="moth-game-guard-js">
+(function(){
+  var lastEnd=0;
+  function onUi(t){return t&&t.closest&&t.closest('button,a,input,select,textarea,[data-scroll]');}
+  document.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(!onUi(e.target)&&now-lastEnd<=300&&e.cancelable)e.preventDefault();
+    lastEnd=now;
+  },{passive:false});
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){
+    document.addEventListener(n,function(e){e.preventDefault();});
+  });
+  document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('touchmove',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('[data-scroll]'))return;
+    if(e.cancelable)e.preventDefault();
+  },{passive:false});
+})();
+</script>
+</body>
+</html>
