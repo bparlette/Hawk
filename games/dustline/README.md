@@ -77,6 +77,23 @@ flecks + flow glints over a bright shallow lip. Look B gets a wider shade
 swing so the relief survives its smoothed upscale. `node tools/shots4.mjs`
 captures the v4 set into `shots4/`. Render-only again; verify still 10/10.
 
+**v5 (round 5, owner: "at this rate just keep making it better"):**
+a technique change, not another tune — the ground texture goes HAND-PAINTED.
+For looks A and B the surface layer no longer picks colours per cell from
+hash noise: every colour is mixed from smooth fields (broad ~11 m tonal
+regions, ~3 m variation, smooth boundary wobble) across luminance-ordered
+palette ramps — dirt, road, mud, gravel, sand, rock — with a whisper of
+contour banding off the heightfield on slopes and directional streaks on
+the flats. All speckle, grit and border-break hash picks are gone from A/B
+(A's ground speckle pass is thinned to sparse faint pebbles); the
+heightfield hillshade still multiplies over the top. The water deepens
+toward his saturated royal blue (A `#2456d8/#173a9e` → `#1d47c6/#122e86`,
+B likewise) with the round-4 sparkle, shallow lip, deep channel and ford
+foam kept; B's mid-water is now a painted depth gradient. C is untouched —
+it keeps its crunch (pixel-diffed against v4: ~identical).
+`node tools/shots5.mjs` captures the v5 set into `shots5/`. Render-only
+again; verify still 10/10.
+
 **Honest approximations:** the thread's fluid simulation and global
 illumination are approximated (splash particles + wakes; consistent fixed
 sun shading). Phone feel is unverified — the owner's phone is the real gate.
