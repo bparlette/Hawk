@@ -7,6 +7,7 @@ import { initPressure, stepPressure } from './pressure.js';
 import { initJobs, stepJobs } from './jobs.js';
 import { stepTurbo, TURBO } from './controls.js';
 import { initSkid, layMarks } from './skid.js';
+import { chaseArmed, startChase } from './chase.js';
 import { initActivities, jump } from './activities.js';
 import { initEvents, stepEvents } from './events.js';
 import { initSkate, stepBoard, stepCombo, nearBoard, mount, boardSpeed } from './skate.js';
@@ -195,7 +196,10 @@ export class Sim {
     // --- player
     if (P.stunT > 0) { P.stunT -= dt; input = { ...input, jm: 0, action: false, keys: {} }; }
     if (P.mode === 'foot') this.stepPlayerFoot(dt, input);
-    else if (P.mode === 'board') stepBoard(this, dt, input);
+    else if (P.mode === 'board') {
+      if (input.punch && chaseArmed(this)) { startChase(this); input = { ...input, punch: false }; }   // A at the pier marker: START BOARD CHASE
+      stepBoard(this, dt, input);
+    }
     else if (P.mode === 'siege') stepSiege(this, dt, input);
     else this.stepPlayerCar(dt, input);
     stepJobs(this, dt, input);

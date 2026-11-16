@@ -497,3 +497,30 @@ running job, refused mid-siege, a run with a jump re-simulates identically).
 JUMP in the page → `shots/help-start-page.png`, `help-panel.png`, `help-jump-tow.png`.
 `tools/touch_check.mjs` now taps PLAY first, as a player must.
 
+## 7H — BOARD CHASE (Nov 16 2026)
+
+A third city event, on the skateboard (`src/chase.js`). It reuses the existing board and its
+physics unchanged, runs in the same `sim.event` slot as WRECK IT! and VALET, and pays through the
+same `pay()` / result card.
+
+- **Start**: a green ring + BOARD CHASE plaque on the promenade at the foot of the pier
+  (`CHASE.site`, 1296,1035). On the board there, the A button reads START BOARD CHASE
+  (`buttonA` → `chaseArmed`); pressing it starts the event instead of an ollie. Registered in the
+  activity registry, so it is on the map and has a HELP / start-page row whose JUMP puts you on the
+  board at the marker with START armed.
+- **Play**: the wanted level goes straight to three stars. Checkpoints in order — PLAZA → NOVA →
+  VILLAS → SAFEHOUSE, the game's own named places (jobs.js `PLACES` and `SAFEHOUSE`). Each one fills
+  a quarter of the escape meter, pays 400, and re-points the lit ring, the HUD card and the arrow.
+  Out-of-order checkpoints do not count. 2:30 on the clock.
+- **Win**: the safehouse with the meter full (1200 + 15 per second under 100 s; the heat drops to
+  zero), or shaking the cops entirely before that (800).
+- **Bust**: the 7C on-foot rule, unchanged — the meter only fills while the rider is not moving at
+  arrest range (1.5 s). One change to make "moving play never busts" true on a board: officers on
+  foot now only grab a board below 45 u/s; a faster board shoulders past (the officer stumbles, you
+  lose 10 % speed). Before, any touch pulled you off.
+
+Proof: `node tools/chase_check.mjs` (16 rules: starts from the marker with A; ordered checkpoints
+at 25 % each; win at the safehouse with exact score; win by shaking; a pinned board busted in
+1.53 s; 10 s moving alongside an officer with the meter at 0 and the rider never pulled off).
+`CHROME=… node tools/chase_shots.mjs` → `shots/chase-start.png`, `shots/chase-mid.png`.
+

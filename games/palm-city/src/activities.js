@@ -10,7 +10,8 @@
 // HELP row. To add an activity, push one more entry in build() — nothing else needs touching.
 import { EVENTS, quitEvent } from './events.js';
 import { quitJob } from './jobs.js';
-import { dismount } from './skate.js';
+import { dismount, mount } from './skate.js';
+import { CHASE } from './chase.js';
 
 const JOB = {
   taxi:    { name: 'TAXI',    how: 'Get in the yellow cab and press START. Fares pay more when they stay happy.' },
@@ -42,6 +43,11 @@ export function initActivities(sim) {
     id: s.kind, group: 'event', name: EVENTS[s.kind].name.replace(' — ', ': '), tag: s.kind === 'wreck' ? 'WRECK IT!' : 'VALET', color: s.kind === 'wreck' ? '#ff7a4a' : '#6ee2ff',
     how: EVENT_HOW[s.kind] || 'Drive onto the ring and press START.',
     live: () => !sim.event && !sim.job, pos: () => (sim.event ? null : s.p), site: s,
+  });
+  if (sim.chaseSite) list.push({
+    id: 'chase', group: 'event', name: 'BOARD CHASE', tag: 'BOARD CHASE', color: '#7dffa8', board: true,
+    how: 'Ride the skateboard to the pier marker and press START. Hit every checkpoint to the safehouse.',
+    live: () => !sim.event && !sim.job, pos: () => (sim.event ? null : sim.chaseSite.p), site: sim.chaseSite,
   });
   const g = L.buildings.find(b => b.id === 'garage');
   if (g) list.push({ id: 'jobs', group: 'hub', name: 'JOBS', tag: 'JOBS', color: '#ffd45c', how: '', live: () => true, pos: () => [g.x + g.w / 2, g.y + g.d * 0.45], big: true });
@@ -76,6 +82,11 @@ export function jump(sim, id) {
     const c = a.car();
     if (!c || c.wreck) return false;
     seat(c);
+  } else if (a.board) {
+    // the board chase: standing on the board at the pier marker, START armed
+    leave();
+    const b = sim.board; b.x = CHASE.site[0]; b.y = CHASE.site[1]; b.vx = b.vy = 0; p.x = b.x; p.y = b.y; p.h = -Math.PI / 2; p.hidden = false;
+    mount(sim);
   } else {
     // an event wants a car: keep the one you are in, else borrow the nearest one that still runs
     let c = P.mode === 'car' && !P.car.wreck && !P.car.job ? P.car : null;

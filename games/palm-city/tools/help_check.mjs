@@ -18,7 +18,7 @@ const world = new World(layout);
 let fails = 0; const check = (ok, n, i = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${n} ${i}`); if (!ok) fails++; };
 const DT = 1 / 60, inp = (o = {}) => ({ jx: 0, jy: 0, jm: 0, action: false, punch: false, turbo: false, keys: {}, ...o });
 const fresh = () => { const s = new Sim(world, M, 7, () => {}); s.spawnTraffic = () => null; return s; };
-const WANT = ['motel', 'taxi', 'tow', 'bus', 'getaway', 'wreck', 'valet'];
+const WANT = ['motel', 'taxi', 'tow', 'bus', 'getaway', 'wreck', 'valet', 'chase'];
 
 { const s = fresh(), rows = helpRows(s);
   check(rows.map(a => a.id).join() === WANT.join(), 'the panel lists every registered activity, in order', rows.map(a => a.name).join(' · '));
@@ -42,6 +42,7 @@ for (const id of WANT) {
   let armed = false, where = '';
   if (id === 'motel') { armed = P.mode === 'foot' && s.nearMotelDoor(); where = `on foot ${Math.round(P.ped.x)},${Math.round(P.ped.y)}`; }
   else if (a.group === 'job') { armed = P.mode === 'car' && P.car.job === id && jb && jb.kind === 'start' && A.label === 'START ' + a.name; where = `in the ${P.car && P.car.model}, A = ${A && A.label}`; }
+  else if (a.board) { armed = P.mode === 'board' && A && A.label === 'START BOARD CHASE'; where = `on the board at ${Math.round(s.board.x)},${Math.round(s.board.y)}, A = ${A && A.label}`; }
   else { armed = P.mode === 'car' && jb && jb.kind === 'evstart' && jb.ev === id; where = `in the ${P.car && P.car.model} at ${Math.round(P.car.x)},${Math.round(P.car.y)}, A = ${A && A.label}`; }
   check(armed, `JUMP ${a.name}: you are there with it armed`, where);
   check(s.score === 1234 && s.stars === stars, `JUMP ${a.name}: free — no score or wanted change`);
@@ -57,7 +58,7 @@ for (const id of WANT) {
   const x = s.player.ped.x; let threw = false;
   try { s.step(DT, inp({ jump: 'taxi' })); } catch (e) { threw = true; }
   check(s.player.mode === 'siege' && s.player.ped.x === x, 'mid-siege a jump is refused');
-  const L = helpLayout(420, 860, 7, 'help', 0);
+  const L = helpLayout(420, 860, WANT.length, 'help', 0);
   check(helpHit({ x: L.rows[1].jump.x + 30, y: L.rows[1].jump.y + 16 }, 420, 860, s, 'help', 0) === null, '…and the JUMP buttons are dead in the panel');
 }
 { const run = () => { const s = fresh(); for (let i = 0; i < 240; i++) s.step(DT, inp(i === 60 ? { jump: 'valet' } : i > 80 ? { keys: { up: true, left: i % 40 < 20 } } : {})); return [s.player.car.x, s.player.car.y, s.player.car.h]; };
