@@ -59,6 +59,8 @@ export class World {
     ].map(a => ({ ...a, r: l.r }));
     this.loopPath = this.buildLoopPath();
     this.solids = layout.buildings.map(b => ({ x: b.x, y: b.y, w: b.w, h: b.d, id: b.id }));
+    // palm trunks: solid for everyone. `sc` is the palm's drawn scale (the renderer reads it from here).
+    this.trunks = layout.palms.map(([x, y], i) => { const sc = 0.8 + ((i * 37) % 10) / 22; return { x, y, i, sc, r: 5.5 * sc }; });
   }
 
   shoreX(y) {
@@ -114,6 +116,15 @@ export class World {
   hitSolid(x, y, pad) {
     for (const s of this.solids) {
       if (x > s.x - pad && x < s.x + s.w + pad && y > s.y - pad && y < s.y + s.h + pad) return s;
+    }
+    return null;
+  }
+
+  // Palm trunk within `pad` of a point, or null.
+  hitTrunk(x, y, pad = 0) {
+    for (const t of this.trunks) {
+      const dx = x - t.x, dy = y - t.y, r = t.r + pad;
+      if (dx * dx + dy * dy < r * r) return t;
     }
     return null;
   }
