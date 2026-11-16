@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Wrecked TV — AR Damage Overlay</title>
+<link rel="stylesheet" href="vendor/fonts/fonts-local.css">
+<link rel="stylesheet" href="ar.css">
+<style>
+  #crackimg{position:absolute;inset:0;width:1280px;height:720px;opacity:0;transition:opacity .25s}
+  .deadpatch{position:absolute;border-radius:10px;opacity:0;transition:opacity .4s;
+    background:radial-gradient(ellipse at 40% 40%, rgba(2,2,6,.88), rgba(6,4,14,.96));
+    box-shadow:inset 0 0 0 2px rgba(120,40,160,.25), inset 0 0 34px rgba(0,0,0,.9), 0 0 22px rgba(0,0,0,.5)}
+  #dp1{left:120px;top:430px;width:300px;height:170px}
+  #dp2{right:90px;top:80px;width:230px;height:130px}
+  #dp3{left:520px;top:250px;width:180px;height:110px}
+  body[data-stage="2"] #dp1, body[data-stage="3"] #dp1, body[data-stage="4"] #dp1, body[data-stage="5"] #dp1{opacity:1}
+  body[data-stage="3"] #dp2, body[data-stage="4"] #dp2, body[data-stage="5"] #dp2{opacity:1}
+  body[data-stage="5"] #dp3{opacity:1}
+  #dim{position:absolute;inset:0;opacity:0;transition:opacity .6s;
+    background:radial-gradient(ellipse at 50% 46%, rgba(0,0,0,.12) 30%, rgba(0,0,0,.55) 100%)}
+  #flick{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none}
+  body[data-stage="3"] #flick{animation:flickA 7s steps(1) infinite}
+  body[data-stage="4"] #flick{animation:flickA 4.2s steps(1) infinite}
+  body[data-stage="5"] #flick{animation:flickB 2.6s steps(1) infinite}
+  @keyframes flickA{0%,91.9%,94.1%,100%{opacity:0}92%,93%{opacity:.28}96%,96.7%{opacity:.16}}
+  @keyframes flickB{0%,84.9%,88.1%,93.9%,100%{opacity:0}85%,87%{opacity:.45}90%,92%{opacity:.3}95%,96%{opacity:.55}}
+  #tear{position:absolute;left:0;right:0;top:38%;height:9px;opacity:0;
+    background:linear-gradient(90deg,rgba(255,0,90,.5),rgba(0,255,220,.5),rgba(255,0,90,.5));
+    mix-blend-mode:screen;filter:blur(1px)}
+  body[data-stage="4"] #tear, body[data-stage="5"] #tear{animation:tear 5.5s steps(1) infinite}
+  @keyframes tear{0%,88.9%,92.1%,100%{opacity:0;transform:none}89%,92%{opacity:.85;transform:translateY(120px) skewX(-8deg)}}
+  .smokevid{position:absolute;width:380px;height:214px;object-fit:cover;mix-blend-mode:screen;
+    opacity:0;transition:opacity .9s;pointer-events:none}
+  #smokeBL{left:-80px;top:512px}
+  #smokeBR{right:-80px;top:512px;transform:scaleX(-1)}
+  #smokeTL{left:-80px;top:-36px;transform:scaleY(-1)}
+  #smokeTR{right:-80px;top:-36px;transform:scale(-1,-1)}
+  body[data-stage="4"] #smokeBL, body[data-stage="4"] #smokeBR{opacity:.5}
+  body[data-stage="5"] #smokeBL, body[data-stage="5"] #smokeBR{opacity:.65}
+  body[data-stage="5"] #smokeTL, body[data-stage="5"] #smokeTR{opacity:.5}
+  #gleam{position:absolute;top:-10%;bottom:-10%;width:340px;left:-420px;opacity:0;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.55) 45%,rgba(190,230,255,.85) 50%,rgba(255,255,255,.55) 55%,transparent);
+    transform:skewX(-14deg)}
+  #gleam.go{animation:gleam 1.05s ease-in-out}
+  @keyframes gleam{from{left:-420px;opacity:1}to{left:1340px;opacity:1}}
+  #cond{position:absolute;left:22px;bottom:20px;background:rgba(6,8,12,.8);border:1px solid rgba(255,255,255,.25);
+    border-radius:999px;padding:7px 18px;font:600 21px 'Barlow Condensed';letter-spacing:.16em}
+  #cond b{color:#7ee787}
+  body[data-stage="3"] #cond b, body[data-stage="4"] #cond b{color:#ffb02e}
+  body[data-stage="5"] #cond b{color:#ff5a4d}
+</style>
+</head>
+<body data-app="wrecked-tv" data-stage="0">
+<video id="cam" playsinline muted autoplay></video>
+<div id="fallback"><div class="tv"></div><div class="lamp" style="left:3%"></div><div class="lamp" style="right:3%"></div><div class="sofa"></div></div>
+
+<div id="stage">
+  <img id="crackimg" alt="" draggable="false">
+  <video class="smokevid" id="smokeBL" src="assets/smoke-drift.mp4" muted loop playsinline autoplay preload="auto"></video>
+  <video class="smokevid" id="smokeBR" src="assets/smoke-drift.mp4" muted loop playsinline autoplay preload="auto"></video>
+  <video class="smokevid" id="smokeTL" src="assets/smoke-drift.mp4" muted loop playsinline autoplay preload="auto"></video>
+  <video class="smokevid" id="smokeTR" src="assets/smoke-drift.mp4" muted loop playsinline autoplay preload="auto"></video>
+  <div class="deadpatch" id="dp1"></div><div class="deadpatch" id="dp2"></div><div class="deadpatch" id="dp3"></div>
+  <div id="tear"></div>
+  <div id="dim"></div>
+  <div id="flick"></div>
+  <div id="gleam"></div>
+  <div id="cond">TV CONDITION: <b>PRISTINE</b></div>
+</div>
+
+<canvas id="fx"></canvas>
+<div id="topbar"><div><span class="ttl">💥 WRECKED TV</span> <span class="sub">AR damage overlay</span></div></div>
+<div id="bar">
+  <button class="act primary" id="btn-crash">💥 Crash!</button>
+  <button class="act gold" id="btn-repair">✨ Repair</button>
+</div>
+
+<script src="scaffold.js"></script>
+<script>
+AR.init();
+/* ===== THEME PACK: "leonida" — condition copy + per-stage dimming ===== */
+var THEME = {
+  name: 'leonida',
+  smokeVideo: 'assets/smoke-drift.mp4',   /* owner-supplied smoke loop (Nov 16) — stage 4-5 edge smoke */
+  conditions: ['PRISTINE','CRACKED','BATTERED','ON LIFE SUPPORT','TOTALLED','💀 IT\'S DEAD'],
+  dims: [0, .05, .1, .18, .3, .48],
+  deadToast: '💀 IT\'S DEAD', alreadyDeadToast: 'IT\'S ALREADY DEAD 💀',
+  repairedToast: 'BRAND NEW TV ✨', pristineToast: 'ALREADY BRAND NEW'
+};
+var NAMES = THEME.conditions;
+var DIMS = THEME.dims;
+/* Edge smoke at stages 4-5: 'video' = owner-supplied smoke loop (screen-blended
+   <video> in the stage, see CSS); 'particles' = the original procedural puffs.
+   ?smoke=particles forces the old look for A/B. */
+var SMOKE_MODE = new URLSearchParams(location.search).get('smoke') === 'particles' ? 'particles' : 'video';
+window.__smokeMode = SMOKE_MODE;
+var smokeVids = Array.prototype.slice.call(document.querySelectorAll('.smokevid'));
+smokeVids.forEach(function(v, i){
+  v.addEventListener('loadedmetadata', function(){ try { v.currentTime = [0, 3.9, 2.1, 5.8][i]; } catch(e){} });
+  if (SMOKE_MODE !== 'video') v.style.display = 'none';
+});
+document.addEventListener('pointerdown', function(){
+  smokeVids.forEach(function(v){ if (v.paused) v.play().catch(function(){}); });
+});
+var IMPACTS = [[880,470],[330,250],[1010,180],[520,540],[700,330]]; // matches crack texture generator
+var stage = 0;
+try { stage = parseInt(localStorage.getItem('wreck5.stage') || '0', 10) || 0; } catch(e){}
+var crackImg = document.getElementById('crackimg'), dimEl = document.getElementById('dim'),
+    condEl = document.querySelector('#cond b');
+var smokeTimer = null;
+function render(){
+  document.body.dataset.stage = stage;
+  if (stage > 0){ crackImg.src = 'assets/crack' + stage + '.png'; crackImg.style.opacity = .96; }
+  else crackImg.style.opacity = 0;
+  dimEl.style.opacity = DIMS[stage];
+  condEl.textContent = NAMES[stage];
+  try { localStorage.setItem('wreck5.stage', String(stage)); } catch(e){}
+  clearInterval(smokeTimer); smokeTimer = null;
+  if (stage >= 4 && SMOKE_MODE === 'particles'){
+    smokeTimer = setInterval(function(){
+      var top = stage >= 5;
+      var x = Math.random() < .5 ? 70 : 1210;
+      var p = AR.mapPoint(x + (Math.random()*80-40), top ? 6 : 712);
+      AR.burst.smoke(p.x, p.y, 3, 40);
+    }, 750);
+  }
+}
+document.getElementById('btn-crash').addEventListener('click', function(){
+  if (stage >= 5){ AR.toast(THEME.alreadyDeadToast, 1200); return; }
+  stage++;
+  var imp = IMPACTS[stage-1], p = AR.mapPoint(imp[0], imp[1]);
+  AR.burst.sparks(p.x, p.y, 34);
+  AR.sfx.noise(0.16, 5200, 0.32); AR.sfx.tone(2400, 0.2, 'triangle', 0.10, 900);
+  AR.sfx.noise(0.3, 500, 0.2, 0.02);
+  if (stage === 5) setTimeout(function(){ AR.toast(THEME.deadToast, 1700); AR.sfx.thud(); }, 250);
+  render();
+});
+document.getElementById('btn-repair').addEventListener('click', function(){
+  if (stage === 0){ AR.toast(THEME.pristineToast, 1000); return; }
+  stage = 0; render();
+  var g = document.getElementById('gleam');
+  g.classList.remove('go'); void g.offsetWidth; g.classList.add('go');
+  AR.sfx.coin(8); AR.toast(THEME.repairedToast, 1400);
+});
+render();
+</script>
+
+<style id="universal-offsets">#ci-root.ci-tl{top:12px!important}#ar-mark-root{bottom:134px!important}</style>
+<script src="mark-button.js"></script>
+<script src="clip-import.js"></script>
+<script>
+/* ---- universal kit wiring (integration pass 2026-11-16) ---- */
+window.ArMark = window.MarkButton;
+ClipImport.attach({
+    position: 'tl',
+    videoEl: document.getElementById('cam'),
+    startCamera: function (v) { return window.AR.startCamera(); }, canvas: document.getElementById('fx')
+  });
+</script>
+</body>
+</html>
