@@ -78,6 +78,13 @@ export class Audio {
     let near = 1e9;
     for (const p of sim.cars) if (p.siren) near = Math.min(near, Math.hypot(p.x - f.x, p.y - f.y));
     this.sirG.gain.setTargetAtTime(near < 1200 ? 0.05 * (1 - near / 1300) : 0, t, 0.2);
+    // the chopper: a low rotor thump (~11 blade passes a second), louder overhead
+    const ch = sim.chopper;
+    if (ch && t >= (this.rotorT || 0)) {
+      const d = Math.hypot(ch.x - f.x, ch.y - f.y), k = Math.max(0, 1 - d / 900);
+      if (k > 0.02) { this.burst(70, 0.9, 0.22 * k, 0.07); this.burst(240, 1.4, 0.05 * k, 0.05); }
+      this.rotorT = t + 0.09;
+    }
   }
 
   env(node, a, peak, d, t0) {
@@ -111,6 +118,8 @@ export class Audio {
   play(name, v) {
     if (!this.on) return;
     const t = this.ctx.currentTime;
+    if (name === 'chopper') { for (let i = 0; i < 6; i++) this.burst(70, 0.9, 0.08 + i * 0.03, 0.07); }
+    if (name === 'lock') { this.note(1568, t, 0.07, 0.05, 'square', 3500); this.note(1568, t + 0.12, 0.07, 0.05, 'square', 3500); }
     if (name === 'jack' || name === 'door') { this.burst(180, 1, 0.5, 0.18); this.burst(1200, 4, 0.12, 0.05, 'bandpass'); }
     if (name === 'jack') { this.note(523, t + 0.12, 0.12, 0.08, 'triangle'); this.note(784, t + 0.2, 0.2, 0.08, 'triangle'); }
     if (name === 'crash') this.burst(700, 0.6, Math.min(0.6, (v || 100) / 400), 0.35);

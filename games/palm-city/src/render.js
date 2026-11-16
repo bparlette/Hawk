@@ -9,6 +9,7 @@
 
 import { CHUNK } from './ground.js';
 import { mulberry32 } from './world.js';
+import { CHOPPER } from './pressure.js';
 import { DEBRIS_CAP, SMOKE_CAP, STAGES, stageOf, FALL_T, palmReach } from './destruct.js';
 
 // procedural debris colours (index = destruct.js D kind) for the kinds with no sprite
@@ -469,6 +470,11 @@ export class Renderer {
       sg.save(); sg.translate(b.x + b.z * 9, b.y - b.z * 3); sg.rotate(b.h + Math.PI / 2);
       sg.drawImage(f.img, f.ox, f.oy, f.w, f.h); sg.restore();
     }
+    if (S.chopper) {                                   // the chopper's soft altitude shadow, cast down-sun
+      const c = S.chopper, e = this.M.pressure.chopper.shadow;
+      sg.save(); sg.globalAlpha = 0.45; sg.translate(c.x + CHOPPER.ALT * 0.8, c.y - CHOPPER.ALT * 0.3); sg.rotate(c.h + Math.PI / 2);
+      sg.drawImage(e.img, e.ox, e.oy, e.w, e.h); sg.restore();
+    }
     sg.setTransform(1, 0, 0, 1, 0, 0);
     sg.globalCompositeOperation = 'source-in';
     sg.fillStyle = G.shadowStyle;
@@ -565,6 +571,7 @@ export class Renderer {
       }
       g.globalAlpha = 1;
     }
+    if (S.chopper) this.drawChopper(g, S.chopper, t, time);    // above roofs and palms
 
     P && P('sprites');
     // painted surface grain (world-anchored)
@@ -606,6 +613,7 @@ export class Renderer {
     }
     this.drawNeonPuddles(lg, G, time, vx0, vy0, vx1, vy1);
     this.drawWetReflections(lg, G, time, vx0, vy0, vx1, vy1, S);
+    if (S.chopper) this.drawSearchlight(lg, S.chopper, t, time, S.stars);
     for (const c of S.cars) {
       if (c.x < vx0 - 250 || c.x > vx1 + 250 || c.y < vy0 - 250 || c.y > vy1 + 250) continue;
       const m = this.M.cars[c.model];
@@ -755,6 +763,60 @@ export class Renderer {
       deep: make(41, 70, ['#2482ba', '#38a6cc', '#165a96', '#56bed6', '#124686', '#2a6cb4'], 5, 9, 16, 34, 0.45, 0.8),
       light: make(42, 38, ['#bfefff', '#7ad0dc', '#9fe2ea', '#f0c890'], 1.6, 3.4, 10, 24, 0.5, 0.9),
     };
+  }
+
+  // ---- Sky pressure (pressure.js): the police chopper and its searchlight
+  drawChopper(g, c, t, time) {
+    const P = this.M.pressure.chopper, dusk = t >= 0.55;
+    const e = dusk ? P.bodyDusk : P.body, n = e.angles;
+    let k = Math.round(c.h / (Math.PI * 2) * n) % n; if (k < 0) k += n;
+    const cw = e.img.width / e.cols, ch = e.img.height / Math.ceil(n / e.cols);
+    const bob = Math.sin(time * 2.1) * 1.5;
+    g.drawImage(e.img, (k % e.cols) * cw, ((k / e.cols) | 0) * ch, cw, ch, c.x + e.ox, c.y + e.oy + bob, e.w, e.h);
+    const r = dusk ? P.rotorDusk : P.rotor;
+    g.save(); g.translate(c.x + Math.cos(c.h) * 2.5, c.y + Math.sin(c.h) * 2.5 + bob); g.rotate(time * 18);
+    g.drawImage(r.img, r.ox, r.oy, r.w, r.h); g.restore();
+  }
+
+  // The beam: a feathered cone from the nose turret to a soft pool on the ground, champagne by day,
+  // xenon ice-cyan after dusk, with dust motes drifting inside it (procedural, no allocation per mote).
+  // Drawn into the additive light layer, so it blooms; brighter as it gets dark.
+  drawSearchlight(lg, c, t, time, stars) {
+    const dusk = t >= 0.55, dark = clamp01((t - 0.3) / 0.6);
+    const a0 = (0.32 + 0.5 * dark) * (c.leaving ? 0.4 : 1);
+    const nx = c.x + Math.cos(c.h) * 22, ny = c.y + Math.sin(c.h) * 22;
+    const dx = c.bx - nx, dy = c.by - ny, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, px = -uy, py = ux;
+    const R = CHOPPER.POOL_R;
+    const col = dusk ? '200,236,255' : '255,234,180';
+    // cone body
+    const gr = lg.createLinearGradient(nx, ny, c.bx, c.by);
+    gr.addColorStop(0, `rgba(${col},${0.55 * a0})`); gr.addColorStop(1, `rgba(${col},${0.14 * a0})`);
+    lg.globalAlpha = 1; lg.fillStyle = gr;
+    lg.beginPath(); lg.moveTo(nx + px * 4, ny + py * 4); lg.lineTo(c.bx + px * R * 0.9, c.by + py * R * 0.9);
+    lg.lineTo(c.bx - px * R * 0.9, c.by - py * R * 0.9); lg.lineTo(nx - px * 4, ny - py * 4); lg.closePath(); lg.fill();
+    // the lagging ghost of the beam when it swings fast (4-5 stars)
+    if (stars >= 4) {
+      const ga = c.ghostA - 0.17, gx = nx + Math.cos(ga) * L, gy = ny + Math.sin(ga) * L;
+      lg.globalAlpha = 0.35; lg.beginPath(); lg.moveTo(nx, ny); lg.lineTo(gx + px * R * 0.6, gy + py * R * 0.6); lg.lineTo(gx - px * R * 0.6, gy - py * R * 0.6); lg.closePath(); lg.fill();
+      lg.globalAlpha = 1;
+    }
+    // the pool
+    const pool = lg.createRadialGradient(c.bx, c.by, 0, c.bx, c.by, R * 1.15);
+    pool.addColorStop(0, `rgba(${col},${0.85 * a0})`); pool.addColorStop(0.55, `rgba(${col},${0.45 * a0})`); pool.addColorStop(1, `rgba(${col},0)`);
+    lg.fillStyle = pool;
+    lg.save(); lg.translate(c.bx, c.by); lg.scale(1, 0.78); lg.translate(-c.bx, -c.by);
+    lg.fillRect(c.bx - R * 1.2, c.by - R * 1.2, R * 2.4, R * 2.4); lg.restore();
+    // motes: hashed positions along the cone, drifting toward the ground
+    lg.fillStyle = `rgba(${col},1)`;
+    for (let i = 0; i < 170; i++) {
+      const h1 = Math.sin(i * 12.9898) * 43758.5453, h2 = Math.sin(i * 78.233) * 12345.678;
+      const f1 = h1 - Math.floor(h1), f2 = h2 - Math.floor(h2);
+      const u = (f1 + time * (0.05 + 0.08 * f2)) % 1, w = (f2 * 2 - 1) * (4 + R * 0.85 * u);
+      const x = nx + dx * u + px * w, y = ny + dy * u + py * w;
+      lg.globalAlpha = a0 * (0.35 + 0.65 * f1) * Math.sin(Math.PI * u);
+      lg.fillRect(x - 0.7, y - 0.7, 1.4, 1.4);
+    }
+    lg.globalAlpha = 1;
   }
 
   drawOcean(g, G, t, time, vx0, vy0, vx1, vy1) {

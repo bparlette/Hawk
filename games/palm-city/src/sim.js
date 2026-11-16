@@ -3,6 +3,7 @@
 
 import { mulberry32 } from './world.js';
 import { enterSiege, stepSiege } from './siege.js';
+import { initPressure, stepPressure } from './pressure.js';
 import { initSkate, stepBoard, stepCombo, nearBoard, mount, boardSpeed } from './skate.js';
 import { initDestruct, stepDestruct, punchWorld, carState, carImpact, carsCollide, hitThing, palmImpact, initProps, propImpact } from './destruct.js';
 
@@ -48,6 +49,7 @@ export class Sim {
     for (const b of this.benches) for (const k of [-11, 0, 11]) this.obst.push({ x: b.x + Math.cos(b.a) * k, y: b.y + Math.sin(b.a) * k, r: 5.5, kind: 'bench' });
     for (const p of world.L.props) this.obst.push({ x: p.x, y: p.y, r: p.type === 'fountain' ? 30 : 12, kind: p.type });
     initProps(this);                                     // benches, lamps, lifeguard towers can be broken (destruct.js)
+    initPressure(this);                                  // the chopper, roadblocks, spikes (pressure.js)
     // two people strolling the pier, out to the end and back
     const PR = world.L.pier;
     for (const [fx, dir, outfit, dy] of [[0.3, 1, 'ped_straw', -5], [0.75, -1, 'ped_blue', 5]]) {
@@ -216,6 +218,7 @@ export class Sim {
     const walkers = this.peds.filter(p => p.mode !== 'cop' && p !== P.ped).length;
     if (walkers < 40 && this.rnd() < dt * 3) this.spawnPed(false);
 
+    stepPressure(this, dt);
     this.stepWanted(dt);
   }
 
@@ -653,7 +656,7 @@ export class Sim {
       for (const c of police) { c.driver = 'ai'; c.siren = false; c.cruise = 120; c.copOut = false; this.syncS(c); }
     }
     // losing the heat
-    const near = police.some(c => dist(c, f) < 460);
+    const near = police.some(c => dist(c, f) < 460) || (this.chopper && this.chopper.lock);   // in the searchlight = seen
     if (this.stars > 0 && !near) {
       this.lostT += dt;
       if (this.lostT > 14) { this.stars--; this.lostT = 0; if (this.stars === 0) this.say('LOST THEM'); }

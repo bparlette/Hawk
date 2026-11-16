@@ -1,0 +1,150 @@
+{
+ "chopper": {
+  "body": {
+   "file": "pressure/chopper_body.webp",
+   "w": 96,
+   "h": 96,
+   "ox": -48,
+   "oy": -48,
+   "angles": 32,
+   "cols": 8
+  },
+  "bodyDusk": {
+   "file": "pressure/chopper_body_dusk.webp",
+   "w": 96,
+   "h": 96,
+   "ox": -48,
+   "oy": -48,
+   "angles": 32,
+   "cols": 8
+  },
+  "rotor": {
+   "file": "pressure/chopper_rotor.webp",
+   "w": 96,
+   "h": 96,
+   "ox": -48,
+   "oy": -48
+  },
+  "rotorDusk": {
+   "file": "pressure/chopper_rotor_dusk.webp",
+   "w": 96,
+   "h": 96,
+   "ox": -48,
+   "oy": -48
+  },
+  "shadow": {
+   "file": "pressure/chopper_shadow.webp",
+   "w": 128,
+   "h": 128,
+   "ox": -64,
+   "oy": -64
+  }
+ },
+ "swatVan": {
+  "color": {
+   "file": "pressure/car_swat_van.webp",
+   "w": 64,
+   "h": 64,
+   "ox": -32,
+   "oy": -32,
+   "angles": 32,
+   "cols": 8
+  },
+  "dusk": {
+   "file": "pressure/car_swat_van_dusk.webp",
+   "w": 64,
+   "h": 64,
+   "ox": -32,
+   "oy": -32,
+   "angles": 32,
+   "cols": 8
+  },
+  "shadow": {
+   "file": "pressure/car_swat_van_sh.webp",
+   "w": 96,
+   "h": 96,
+   "ox": -36.41,
+   "oy": -51.11,
+   "angles": 32,
+   "cols": 8
+  },
+  "light": {
+   "file": "pressure/car_swat_van_light.webp",
+   "w": 70,
+   "h": 220,
+   "ox": -35,
+   "oy": -160
+  }
+ },
+ "sawhorse": {
+  "color": {
+   "file": "pressure/prop_sawhorse.webp",
+   "w": 40,
+   "h": 40,
+   "ox": -20,
+   "oy": -20
+  },
+  "dusk": {
+   "file": "pressure/prop_sawhorse_dusk.webp",
+   "w": 40,
+   "h": 40,
+   "ox": -20,
+   "oy": -20
+  },
+  "shadow": {
+   "file": "pressure/prop_sawhorse_sh.webp",
+   "w": 52,
+   "h": 52,
+   "ox": -26,
+   "oy": -26
+  },
+  "night": {
+   "file": "pressure/prop_sawhorse_night.webp",
+   "w": 48,
+   "h": 48,
+   "ox": -24,
+   "oy": -24
+  }
+ },
+ "spikes": {
+  "color": {
+   "file": "pressure/prop_spike_strip.webp",
+   "w": 48,
+   "h": 24,
+   "ox": -24,
+   "oy": -12
+  },
+  "dusk": {
+   "file": "pressure/prop_spike_strip_dusk.webp",
+   "w": 48,
+   "h": 24,
+   "ox": -24,
+   "oy": -12
+  },
+  "shadow": {
+   "file": "pressure/prop_spike_strip_sh.webp",
+   "w": 48,
+   "h": 24,
+   "ox": -24,
+   "oy": -12
+  }
+ },
+ "lightbar": {
+  "phases": {
+   "file": "pressure/cruiser_lightbar_phases.webp",
+   "w": 64,
+   "h": 64,
+   "ox": -32,
+   "oy": -32,
+   "cols": 3
+  },
+  "phasesDusk": {
+   "file": "pressure/cruiser_lightbar_phases_dusk.webp",
+   "w": 64,
+   "h": 64,
+   "ox": -32,
+   "oy": -32,
+   "cols": 3
+  }
+ }
+}
