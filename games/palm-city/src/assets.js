@@ -5,6 +5,10 @@ export async function loadAssets(onProgress) {
   const res = await fetch('assets/manifest.json');
   if (!res.ok) throw new Error('assets/manifest.json failed to load (' + res.status + ')');
   const M = await res.json();
+  // destruction stage sprites live in their own manifest so a re-bake of manifest.json never drops them
+  const dres = await fetch('assets/destruct.json');
+  if (!dres.ok) throw new Error('assets/destruct.json failed to load (' + dres.status + ')');
+  M.destruct = await dres.json();
   const files = new Set();
   const walk = (o) => {
     if (!o || typeof o !== 'object') return;

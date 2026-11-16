@@ -9,6 +9,11 @@
 
 import { CHUNK } from './ground.js';
 import { mulberry32 } from './world.js';
+import { DEBRIS_CAP, SMOKE_CAP, STAGES, stageOf } from './destruct.js';
+
+// procedural debris colours (index = destruct.js D kind) for the kinds with no sprite
+const DEBRIS_COL = ['#d8f0ff', '#8a8f9c', '#b97a50', '#e0a878', '#6fa844', '#7a5232', '#523420', '#b8b0a4', '#222', '#6fa844', '#ff6494'];
+const PETALS = ['#ff6494', '#ffd44c', '#fff4e8'];
 
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp01 = (x) => x < 0 ? 0 : x > 1 ? 1 : x;
@@ -62,6 +67,22 @@ export class Renderer {
     this.glints = this.buildGlints();
     this.waterPath = this.buildWaterPath();
     this.grain = this.buildGrain();
+    this.buildDestructSprites();
+  }
+
+  // Destruction sprites (assets/destruct.json): per-model car stages and pooled debris variants.
+  buildDestructSprites() {
+    const X = this.M.destruct || {};
+    this.carStage = {};
+    for (const model in this.M.cars) this.carStage[model] = [null, X[`car_${model}_s1`], X[`car_${model}_s2`], X[`car_${model}_s3`]];
+    const v = (...k) => k.map(n => X[n]).filter(Boolean);
+    // index = destruct.js D kind; each kind lists its sprite variants (empty = drawn procedurally)
+    this.debrisSprites = [
+      v('debris_glass_1', 'debris_glass_2', 'debris_glass_3'), v('debris_metal_1', 'debris_metal_2', 'debris_metal_2'),
+      v('debris_wood_1'), v('debris_wood_3'), [], v('debris_wood_3'), [], [], v('debris_tire_1', 'debris_tire_2'), v('debris_wood_2'), [],
+    ];
+    this.policeShard = X.debris_metal_3;
+    this.scorch = X.debris_ash_scorch;
   }
 
   // A 256px tile of loose brush marks, laid over the whole frame in world space with soft-light,
@@ -291,11 +312,16 @@ export class Renderer {
     worldTf(g);
     for (const s of this.statics) if (s.kind === 'pier' || s.kind === 'fountain' || s.kind === 'lifeguard') if (inView(s.bb)) this.drawEntry(g, s.e.color, s.x, s.y);
     this.drawSkatePark(g, S);
+    this.drawDebris(g, S, vx0, vy0, vx1, vy1);
     if (S.board) {
       const b = S.board, f = this.M.props.board.color, k = 1 + b.z * 0.35;
       g.save(); g.translate(b.x, b.y); g.rotate(b.h + Math.PI / 2); g.scale(k, k);
       if (b.grind) { g.shadowColor = 'rgba(255,220,140,0.9)'; g.shadowBlur = 8; }
       g.drawImage(f.img, f.ox, f.oy, f.w, f.h); g.restore();
+    }
+    if (this.scorch) for (const c of S.cars) {          // soot stain under every wreck
+      if (!c.wreck || c.x < vx0 - 40 || c.x > vx1 + 40 || c.y < vy0 - 40 || c.y > vy1 + 40) continue;
+      const e = this.scorch; g.globalAlpha = 0.85; g.drawImage(e.img, c.x + e.ox, c.y + e.oy, e.w, e.h); g.globalAlpha = 1;
     }
     for (const p of S.peds) {
       if (p.hidden || p.x < vx0 - 30 || p.x > vx1 + 30 || p.y < vy0 - 30 || p.y > vy1 + 30) continue;
@@ -322,13 +348,21 @@ export class Renderer {
     for (const c of S.cars) {
       if (c.x < vx0 - 50 || c.x > vx1 + 50 || c.y < vy0 - 50 || c.y > vy1 + 50) continue;
       const { m, k, rows } = this.carCell(c);
-      this.drawCell(g, m.color, k, m.cols, rows, c.x, c.y);
+      const st = c.dmg >= STAGES.car[0] ? stageOf(c.dmg, 'car') : 0, e = st ? this.carStage[c.model][st] : null;
+      if (e) {                                          // the damage-stage sprite replaces the baked cell
+        g.save(); g.translate(c.x, c.y); g.rotate(c.h + Math.PI / 2);
+        g.drawImage(e.img, e.ox, e.oy, e.w, e.h); g.restore();
+      } else {
+        this.drawCell(g, m.color, k, m.cols, rows, c.x, c.y);
+        if (c.dmg > 0.01) this.drawCarDamage(g, c);     // scuffs and first dents, before stage 1
+      }
     }
     for (const s of this.statics) {
       if (s.kind === 'pier' || s.kind === 'fountain' || s.kind === 'lifeguard') continue;
       if (inView(s.bb)) this.drawStatic(g, s, s.e.color, S);
     }
     this.drawLeaves(g, S);
+    this.drawSmoke(g, S, vx0, vy0, vx1, vy1);
     for (const f of S.fx || []) {                         // hit flash: a burst of short rays
       const u = Math.min(1, f.t / 0.36), r0 = 4 + u * 9, r1 = 9 + u * 16;
       g.globalAlpha = 1 - u; g.lineCap = 'round';
@@ -397,6 +431,12 @@ export class Renderer {
         }
       }
       if (c.siren) this.drawSiren(lg, c, time);
+      if (c.wreck) {                                    // the engine ember under the crumpled hood
+        const ca = Math.cos(c.h), sa = Math.sin(c.h), ex = c.x + ca * c.len * 0.3, ey = c.y + sa * c.len * 0.3;
+        lg.globalAlpha = 0.35 + 0.5 * Math.max(G.lamps, 0.3) * (0.75 + 0.25 * Math.sin(time * 9 + c.id));
+        lg.fillStyle = this.ember || (this.ember = (() => { const r = lg.createRadialGradient(0, 0, 0, 0, 0, 22); r.addColorStop(0, 'rgba(255,207,92,1)'); r.addColorStop(0.35, 'rgba(255,118,28,0.6)'); r.addColorStop(1, 'rgba(0,0,0,0)'); return r; })());
+        lg.save(); lg.translate(ex, ey); lg.fillRect(-22, -22, 44, 44); lg.restore();
+      }
     }
     lg.globalAlpha = 1;
     P && P('lights');
@@ -429,6 +469,81 @@ export class Renderer {
     g.fillStyle = vg;
     g.fillRect(0, 0, vw, vh);
     P && P('end');
+  }
+
+  // Scuffs and first dents below stage 1, painted over the baked cell in the car's own frame (the
+  // stage sprites take over from 0.25). Positions come from the car id, so each car's marks stay put.
+  drawCarDamage(g, c) {
+    const L = c.len / 2, Wd = c.wid / 2;
+    g.save(); g.translate(c.x, c.y); g.rotate(c.h);
+    let seed = c.dentSeed;
+    const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+    for (let p = 0; p < 4; p++) {
+      const k = c.dent[p];
+      if (k < 0.03) { rnd(); rnd(); continue; }
+      const n = 1 + Math.floor(k * 4);
+      for (let i = 0; i < n; i++) {
+        const a = rnd() * 2 - 1, b = rnd();
+        const x = p === 0 ? L - b * 5 * k : p === 1 ? -L + b * 5 * k : a * L * 0.8;
+        const y = p === 2 ? -Wd + b * 3 * k : p === 3 ? Wd - b * 3 * k : a * Wd * 0.8;
+        const r = 1.6 + k * 4;
+        g.globalAlpha = 0.3 + k * 0.4; g.fillStyle = '#210f2e';
+        g.beginPath(); g.ellipse(x, y, r * (p < 2 ? 0.6 : 1.3), r * (p < 2 ? 1.3 : 0.6), 0, 0, 7); g.fill();
+        g.globalAlpha = 0.55; g.strokeStyle = '#d7d0cc'; g.lineWidth = 0.7;   // primer scrape
+        g.beginPath(); g.moveTo(x - r * 0.7, y - r * 0.2); g.lineTo(x + r * 0.6, y + r * 0.3); g.stroke();
+      }
+    }
+    for (let w = 0; w < 2; w++) {                       // a hairline crack in the glass
+      const k = c.glass[w];
+      if (k < 0.05) continue;
+      const gx = w === 0 ? L * 0.28 : -L * 0.42;
+      g.globalAlpha = 0.78; g.strokeStyle = 'rgb(235,244,255)'; g.lineWidth = 0.6;
+      g.beginPath(); g.moveTo(gx - 1, -Wd * 0.5); g.lineTo(gx + 1.5, 0); g.lineTo(gx, Wd * 0.45); g.stroke();
+    }
+    g.globalAlpha = 1;
+    g.restore();
+  }
+
+  // Debris on the ground: shards, planks, fronds, wheels (pooled sprites), petals and leaves. They
+  // slide, settle and stay.
+  drawDebris(g, S, vx0, vy0, vx1, vy1) {
+    const D = S.debris;
+    if (!D) return;
+    for (let i = 0; i < DEBRIS_CAP; i++) {
+      const d = D[i];
+      if (!d.on || d.x < vx0 - 12 || d.x > vx1 + 12 || d.y < vy0 - 12 || d.y > vy1 + 12) continue;
+      const set = this.debrisSprites[d.kind];
+      if (set && set.length) {
+        let e = set[d.v % set.length];
+        if (d.kind === 1 && d.c === -1 && this.policeShard) e = this.policeShard;   // a lightbar lens
+        const k = 0.45 * d.s;
+        g.save(); g.translate(d.x, d.y); g.rotate(d.rot);
+        g.drawImage(e.img, e.ox * k, e.oy * k, e.w * k, e.h * k); g.restore();
+        continue;
+      }
+      g.fillStyle = d.kind === 10 ? PETALS[d.v % 3] : DEBRIS_COL[d.kind];
+      g.beginPath();
+      if (d.kind === 4 || d.kind === 10) g.ellipse(d.x, d.y, (d.kind === 4 ? 3.2 : 1.6) * d.s, (d.kind === 4 ? 1.4 : 1.1) * d.s, d.rot, 0, 7);
+      else g.ellipse(d.x, d.y, 2 * d.s, 1.5 * d.s, d.rot, 0, 7);
+      g.fill();
+    }
+  }
+
+  // Smoke (look spec): dark puffs off a bent car's hood, pale grey wisps trailing a wreck.
+  drawSmoke(g, S, vx0, vy0, vx1, vy1) {
+    const P = S.smoke;
+    if (!P) return;
+    for (let i = 0; i < SMOKE_CAP; i++) {
+      const p = P[i];
+      if (!p.on || p.x < vx0 - 40 || p.x > vx1 + 40 || p.y < vy0 - 40 || p.y > vy1 + 40) continue;
+      const u = p.t / p.life, r = (4 + u * 15) * p.s;
+      g.globalAlpha = (1 - u) * (p.dark ? 0.42 : 0.3);
+      g.fillStyle = p.dark ? '#2c2430' : 'rgb(192,188,200)';
+      g.beginPath(); g.arc(p.x, p.y, r, 0, 7); g.fill();
+      g.globalAlpha *= 0.7; g.fillStyle = p.dark ? '#4a3e48' : 'rgb(222,218,228)';
+      g.beginPath(); g.arc(p.x - r * 0.3, p.y - r * 0.3, r * 0.55, 0, 7); g.fill();
+    }
+    g.globalAlpha = 1;
   }
 
   // Two tileable sheets of loose brush strokes (transparent ground) that slide over the painted sea
