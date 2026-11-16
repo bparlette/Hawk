@@ -10,6 +10,7 @@
 import { CHUNK } from './ground.js';
 import { mulberry32 } from './world.js';
 import { TrackLayer } from './skid.js';
+import { markers } from './activities.js';
 import { CHOPPER } from './pressure.js';
 import { JOBS } from './jobs.js';
 import { drawEventsGround } from './events_render.js';
@@ -515,6 +516,7 @@ export class Renderer {
     this.drawStreetPressure(g, S, t, time, vx0, vy0, vx1, vy1);
     this.drawJobsGround(g, S, time);
     drawEventsGround(g, S, time);
+    this.drawMotelDoor(g, S, time);
     this.drawDebris(g, S, vx0, vy0, vx1, vy1);
     if (S.board) {
       const b = S.board, f = this.M.props.board.color, k = 1 + b.z * 0.35;
@@ -606,6 +608,7 @@ export class Renderer {
       g.globalAlpha = 1;
     }
     this.drawJobsTop(g, S, time);
+    this.drawActivityMarkers(g, S, time, vx0, vy0, vx1, vy1);   // painted tags over everything you can start
     if (S.chopper) this.drawChopper(g, S.chopper, t, time);    // above roofs and palms
 
     P && P('sprites');
@@ -649,6 +652,18 @@ export class Renderer {
     this.drawNeonPuddles(lg, G, time, vx0, vy0, vx1, vy1);
     this.drawWetReflections(lg, G, time, vx0, vy0, vx1, vy1, S);
     if (S.chopper) this.drawSearchlight(lg, S.chopper, t, time, S.stars);
+    { // activity markers carry their own light, so the plaques still read after dark
+      const list = this.mk || [], al = Math.max(G.lamps, G.windows) * 0.55;
+      if (al > 0.02) for (let i = 0; i < list.length; i++) {
+        const m = list[i], y = m.y - (m.a.group === 'hub' ? 6 : m.a.group === 'job' ? 38 : 46);
+        if (m.x < vx0 - 80 || m.x > vx1 + 80 || y < vy0 - 60 || y > vy1 + 60) continue;
+        lg.globalAlpha = al; lg.fillStyle = '#ffe9c4';
+        lg.beginPath(); lg.roundRect(m.x - 30, y - 11, 60, 22, 8); lg.fill();
+        lg.globalAlpha = al * 0.9; lg.fillStyle = m.a.door ? '#ffb08a' : '#ffd9a0';
+        if (m.a.door) { lg.beginPath(); lg.ellipse(m.x + 10, m.y, 40, 26, 0, 0, 7); lg.fill(); }
+      }
+      lg.globalAlpha = 1;
+    }
     for (const h of S.sawhorses) {                       // amber beacons on the barricades
       if (h.broken || h.x < vx0 - 40 || h.x > vx1 + 40 || h.y < vy0 - 40 || h.y > vy1 + 40) continue;
       const e = this.M.pressure.sawhorse.night;
@@ -827,6 +842,50 @@ export class Renderer {
   }
 
   // ---- Jobs (jobs.js). Ground layer: the pulsing halo at the job's target, the waiting fare / riders / crew.
+  // The motel door reads ENTERABLE from the street: a warm painted glow spilling out of the doorway
+  // and chevrons walking toward it on the pavement.
+  drawMotelDoor(g, S, time) {
+    if (S.player.mode === 'siege') return;
+    const d = this.L.motelDoor, pulse = 0.5 + 0.5 * Math.sin(time * 2.4);
+    const rg = g.createRadialGradient(d[0], d[1], 2, d[0], d[1], 46);
+    rg.addColorStop(0, `rgba(255,214,150,${0.55 + pulse * 0.2})`); rg.addColorStop(0.5, 'rgba(255,120,130,0.28)'); rg.addColorStop(1, 'rgba(255,120,130,0)');
+    g.fillStyle = rg; g.beginPath(); g.ellipse(d[0] + 10, d[1], 46, 30, 0, 0, 7); g.fill();
+    g.lineCap = 'round'; g.lineJoin = 'round'; g.lineWidth = 3;
+    for (let i = 0; i < 3; i++) {                       // chevrons marching west, into the door
+      const ph = (time * 0.9 + i / 3) % 1, x = d[0] + 44 - ph * 34;
+      g.globalAlpha = Math.sin(ph * Math.PI) * 0.85; g.strokeStyle = '#fff1cf';
+      g.beginPath(); g.moveTo(x + 5, d[1] - 6); g.lineTo(x, d[1]); g.lineTo(x + 5, d[1] + 6); g.stroke();
+    }
+    g.globalAlpha = 1;
+  }
+
+  // One marker language for every activity: a cream painted plaque with the plum ink line, a
+  // colour band for its kind, a stem down to the spot, a gentle bob. World-anchored (no HUD
+  // furniture); sized to read at phone size while driving past.
+  drawActivityMarkers(g, S, time, vx0, vy0, vx1, vy1) {
+    const list = markers(S, this.mk || (this.mk = []));
+    for (let i = 0; i < list.length; i++) {
+      const m = list[i], a = m.a;
+      if (m.x < vx0 - 80 || m.x > vx1 + 80 || m.y < vy0 - 40 || m.y > vy1 + 110) continue;
+      const bob = Math.sin(time * 2.2 + i * 1.3) * 2.5, big = a.big ? 1.25 : 1;
+      const fs = 13 * big, lift = (a.group === 'hub' ? 6 : a.group === 'job' ? 38 : 46);
+      g.font = `900 ${fs}px "Avenir Next", "Futura", "Trebuchet MS", system-ui, sans-serif`;
+      const tw = a.tw || (a.tw = g.measureText(a.tag).width), w = tw + 18 * big, h = 20 * big;
+      const cx = m.x, cy = m.y - lift + bob, x = cx - w / 2, y = cy - h / 2;
+      if (a.group !== 'hub') {                           // stem + ground dot: this marker belongs to THAT thing
+        g.strokeStyle = 'rgba(33,15,46,0.85)'; g.lineWidth = 2.4; g.lineCap = 'round';
+        g.beginPath(); g.moveTo(cx, y + h); g.lineTo(m.x, m.y - (a.group === 'job' ? 14 : 8)); g.stroke();
+      }
+      g.fillStyle = 'rgba(33,15,46,0.35)'; g.beginPath(); g.roundRect(x + 2, y + 3, w, h, 6); g.fill();      // painted drop shadow
+      g.fillStyle = '#fff1d8'; g.beginPath(); g.roundRect(x, y, w, h, 6); g.fill();
+      g.fillStyle = a.color; g.beginPath(); g.roundRect(x, y + h - 5 * big, w, 5 * big, [0, 0, 6, 6]); g.fill();
+      g.lineWidth = 2; g.strokeStyle = '#210f2e'; g.beginPath(); g.roundRect(x, y, w, h, 6); g.stroke();
+      g.fillStyle = '#210f2e'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(a.tag, cx, cy - 2 * big);
+    }
+    g.textBaseline = 'alphabetic';
+  }
+
   drawJobsGround(g, S, time) {
     const j = S.job;
     if (!j || !j.spot) return;
