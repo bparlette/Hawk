@@ -20,6 +20,7 @@ export class Sim {
     this.rnd = mulberry32(seed);
     this.fxr = mulberry32(seed * 7 + 11);   // cosmetic randomness only, so effects never disturb the seeded run
     this.shakes = {}; this.leaves = [];     // palm index -> { t, amp, ax, ay }; falling leaves
+    this.fx = [];                           // short-lived hit flashes { kind, x, y, t }
     this.cars = []; this.peds = [];
     this.time = 0;
     this.stars = 0; this.starDecay = 0; this.lostT = 0;
@@ -49,6 +50,9 @@ export class Sim {
       const q = this.makePed(PR.x + PR.w * fx, PR.y + PR.h / 2 + dy, outfit, { type: 'pier', y: PR.y + PR.h / 2 + dy, dir, wait: 0 }, 22);
       q.keep = true; this.peds.push(q);
     }
+    // one patrol car cruises the loop, so there can be a cop to see you even at zero stars
+    { const s = world.loopPath.len * 0.55, q = world.loopAt(s, LANE);
+      const c = this.addCar(q.x, q.y, Math.atan2(q.ty, q.tx), 'police', 'ai', { s, dir: 1, cruise: 105, patrol: true }); c.v = 80; }
     for (let i = 0; i < 10; i++) this.spawnTraffic(true);
     for (let i = 0; i < 40; i++) this.spawnPed(true);
   }
@@ -165,6 +169,9 @@ export class Sim {
     if (this.leaves.length) this.leaves = this.leaves.filter(l => l.t < l.life);
     if (P.slowT > 0) P.slowT -= dt;
     if (P.ped.hopT > 0) P.ped.hopT -= dt;
+    if (P.punchCd > 0) P.punchCd -= dt;
+    for (const f of this.fx) f.t += dt;
+    if (this.fx.length) this.fx = this.fx.filter(f => f.t < 0.36);
 
     // --- player
     if (P.stunT > 0) { P.stunT -= dt; input = { ...input, jm: 0, action: false, keys: {} }; }
@@ -193,7 +200,7 @@ export class Sim {
       if (c.driver === 'player' || c === P.car) return true;
       const d = Math.hypot(c.x - f.x, c.y - f.y);
       if (c.driver === 'police') return d < 1500 || this.stars > 0;
-      if (c.parked && c.fixed !== false) return true;
+      if ((c.parked && c.fixed !== false) || c.patrol) return true;
       return d < 1250;
     });
     const traffic = this.cars.filter(c => c.driver === 'ai').length;
@@ -207,7 +214,7 @@ export class Sim {
 
   // ------------------------------------------------------------------ player
   stepPlayerFoot(dt, inp) {
-    const p = this.player.ped;
+    const p = this.player.ped, P0 = this.player;
     let jx = inp.jx, jy = inp.jy, jm = inp.jm;
     const k = inp.keys || {};
     if (k.up || k.down || k.left || k.right) {
@@ -235,6 +242,9 @@ export class Sim {
       p.walk += sp * dt;
       p.pose = [0, 1, 2, 1][Math.floor(p.walk / 9) % 4];
     } else p.pose = 1;
+    // the fight button: a punch with a short lunge
+    if (P0.punchT > 0) { P0.punchT -= dt; if (P0.punchT > 0.14) this.walkMove(p, Math.cos(p.h) * 100 * dt, Math.sin(p.h) * 100 * dt); }
+    if (inp.punch && !(P0.punchCd > 0)) this.punch();
     if (inp.action) {
       // the board wins if it's right at your feet and nearer than any car
       const p2 = this.player.ped, b = this.board;
@@ -242,6 +252,56 @@ export class Sim {
       const cd = Math.min(...this.cars.map(c => Math.hypot(c.x - p2.x, c.y - p2.y)));
       if (nearBoard(this) && bd < cd) mount(this);
       else this.tryEnterCar();
+    }
+  }
+
+  // Is there a cop who can see this spot? A patrol or pursuit car, or an officer on foot, in range
+  // with nothing solid in between.
+  copSees(x, y) {
+    const W = this.W;
+    const los = (ax, ay) => { for (let i = 1; i < 8; i++) if (W.hitSolid(ax + (x - ax) * i / 8, ay + (y - ay) * i / 8, 0)) return false; return true; };
+    for (const c of this.cars) if (c.kind === 'police' && c.driver && c.driver !== 'player' && Math.hypot(c.x - x, c.y - y) < 300 && los(c.x, c.y)) return true;
+    for (const o of this.peds) if (o.mode === 'cop' && Math.hypot(o.x - x, o.y - y) < 240 && los(o.x, o.y)) return true;
+    return false;
+  }
+
+  // Throw a punch. Snaps to whoever is in front, lunges, and the hit lands at once: first hit
+  // staggers, a second (or one on someone already reeling) puts them on the ground. Bystanders
+  // run or stop and stare. Do it where a cop can see and the wanted level goes up.
+  punch() {
+    const P = this.player, p = P.ped;
+    P.punchT = 0.26; P.punchCd = 0.42; P.punchN = (P.punchN || 0) + 1;
+    let best = null, bd = 34;
+    for (const o of this.peds) {
+      if (o === p || o.hidden || o.mode === 'down') continue;
+      const dx = o.x - p.x, dy = o.y - p.y, d = Math.hypot(dx, dy);
+      if (d >= bd) continue;
+      if (d > 13 && Math.abs(wrap(Math.atan2(dy, dx) - p.h)) > 1.25) continue;   // has to be roughly in front
+      bd = d; best = o;
+    }
+    if (!best) { this.ev('swing'); return; }
+    const o = best, d = Math.max(0.01, bd), nx = (o.x - p.x) / d, ny = (o.y - p.y) / d;
+    p.h = Math.atan2(ny, nx);
+    P.punchHit = (P.punchHit || 0) + 1;
+    this.fx.push({ kind: 'pow', x: p.x + nx * Math.min(d, 14), y: p.y + ny * Math.min(d, 14), t: 0 });
+    this.ev('punch');
+    const reeling = o.mode === 'stumble';
+    o.hp = (o.hp ?? 2) - 1;
+    o.from = { x: p.x, y: p.y };
+    if (o.mode === 'cop') { o.mode = 'cop'; this.stumble(o, nx, ny, 70); }
+    else if (reeling || o.hp <= 0) { o.mode = 'walk'; this.knockDown(o, nx * 90, ny * 90, 2.6); o.hp = 1; }
+    else { this.stumble(o, nx, ny, 70); if (this.fxr() < 0.65) o.after = 'flee'; }
+    // witnesses: most run, some stop and stare
+    for (const w of this.peds) {
+      if (w === o || w === p || w.mode !== 'walk' || dist(w, p) > 150) continue;
+      if (this.fxr() < 0.6) { w.mode = 'flee'; w.fleeT = 3; w.from = { x: p.x, y: p.y }; }
+      else w.gawkT = 1.4 + this.fxr();
+    }
+    const hitCop = o.outfit === 'cop';
+    if ((hitCop || this.copSees(p.x, p.y)) && !this.busted && this.time - (this.lastPunchStar || -9) > 2.5) {
+      this.lastPunchStar = this.time;
+      this.addStars(1, 'assault');
+      this.say(hitCop ? 'ASSAULTING AN OFFICER' : 'A COP SAW THAT', 1.8);
     }
   }
 
@@ -319,13 +379,14 @@ export class Sim {
     if (!best) return;
     const c = best;
     let stars = 1;
+    const copCar = c.kind === 'police' && !!c.driver;
     if (c.driver === 'ai' || c.driver === 'police') {
       // pull the driver out; they run
       const side = { x: c.x - Math.sin(c.h) * -18, y: c.y + Math.cos(c.h) * -18 };
-      const d = this.makePed(side.x, side.y, c.driver === 'police' ? 'cop' : PED_OUTFITS[(this.rnd() * PED_OUTFITS.length) | 0], null);
+      const d = this.makePed(side.x, side.y, copCar ? 'cop' : PED_OUTFITS[(this.rnd() * PED_OUTFITS.length) | 0], null);
       d.mode = 'flee'; d.fleeT = 4; d.from = { x: p.x, y: p.y };
       this.peds.push(d);
-      if (c.driver === 'police') stars = 2;
+      if (copCar) stars = 2;
     }
     if (c.driver === 'police') { c.siren = false; c.kind = 'police'; }
     c.driver = 'player'; c.parked = false; c.fixed = false;
@@ -530,6 +591,8 @@ export class Sim {
     this.playerS = bs;
     W.loopNearestFast = () => this.playerS;
 
+    // a patrol car close by joins the chase the moment you're wanted
+    if (this.stars > 0 && !this.busted) for (const c of this.cars) if (c.patrol && c.driver === 'ai' && dist(c, f) < 520) c.driver = 'police';
     const police = this.cars.filter(c => c.driver === 'police');
     const want = this.stars > 0 && !this.busted ? Math.min(4, this.stars + 1) : 0;
     if (police.length < want && this.rnd() < dt * 0.6) {
@@ -659,6 +722,7 @@ export class Sim {
       const pc = this.player.car;
       if (pc && Math.abs(pc.v) > 150 && dist(pc, p) < 70) { p.mode = 'flee'; p.fleeT = 2; p.from = { x: pc.x, y: pc.y }; }
       if (!p.path) { p.gone = true; return; }
+      if (p.gawkT > 0) { p.gawkT -= dt; const t = this.player.ped; p.h = Math.atan2(t.y - p.y, t.x - p.x); p.pose = 1; return; }   // stopped to stare
       if (p.path.type === 'loop') {
         if (p.mode === 'return') {
           p.path.s = W.loopNearest(p.x, p.y); p.mode = 'walk';

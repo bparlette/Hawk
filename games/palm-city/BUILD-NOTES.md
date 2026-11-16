@@ -92,6 +92,53 @@ when nearly stopped.
 - `node tools/skate_check.mjs` — 9 headless rule checks (pickup, push, momentum, rail grind, combo,
   cop hood, near-miss, wall bail, drop).
 
+## Feel pass (Nov 16 2026 — owner's phone notes)
+
+Five fixes from hands-on play of the merged build. Rules are checked by `tools/feel_check.mjs`
+(38 headless checks); captures are `shots/feel-before-*.png` / `shots/feel-after-*.png`.
+
+1. **No player ring.** The yellow marker ring is gone in every mode.
+2. **Bump physics** — nothing ghosts through people or palms.
+   - *People.* On foot: walking nudges a pedestrian aside, running into one makes them stumble and
+     costs you a beat (0.25 s at 35 % speed). Car: under 45 u/s a bumper shoves them stumbling and
+     the car loses 20 %; faster is a knockdown (slide, lie, get up over the last half second, run)
+     that sheds 12 % of the car's speed and feeds wanted exactly as before. Board: 25–110 u/s
+     staggers them (you keep 75 %), faster knocks them down (you keep 55 %); an ollie clears them.
+   - *Palms.* `world.trunks` (radius 5.5 × the palm's scale) are solid for walkers, the board —
+     in the air too — and every car. A hit calls `sim.shakeTree`: the trunk jolts along the
+     impact, the crown twists, leaves fall (`sim.leaves`), all dying away in about a second.
+     Skater above 90 u/s bails and the board bounces back; a car stops dead (and crashes above 60).
+   - Cosmetic randomness uses its own generator (`sim.fxr`) so effects never disturb the seeded run.
+3. **Living water** (`Renderer.drawOcean` / `drawSurf`).
+   - *Shoreline:* each wave runs up the sand fast (first 32 % of a 6.4 s cycle) and drains back
+     slowly; the cycle travels down the beach, so different stretches are at different points.
+     Scalloped foam lip, paler leading edge, lace left at the high-water mark, and a wet-sand band
+     that darkens as the wave reaches it and dries until the next. Drawn as 5-unit strips.
+   - *Open water:* two tileable 256 px brush-stroke sheets slide shoreward at different speeds
+     over the painted sea; shore-parallel crest lines roll in and sharpen near the sand; glints.
+   - Cost: the ground + ocean render section went from 0.4 ms to about 1.4 ms in headless Chrome's
+     software rasteriser (`tools/profile.mjs`, 420×860 @2x) with the shore in view, and is skipped
+     entirely when the sea is off screen. No new view-sized canvases. Not yet measured on a phone.
+4. **Walkable pier, and the audit of things you expect to use.**
+   - *Pier:* `world.onPier` makes the deck standable — walk or roll out to the very end. Side rails
+     and an end rail hold you in (drawn with posts); the side rails grind; two people stroll it
+     (`path.type === 'pier'`); cars cannot drive on it.
+   - *Benches:* solid slats on foot (walk round); still an ollie target, and a wall for a slow board.
+   - *Fountain basin, lifeguard towers:* solid for walkers, a grounded board and cars.
+   - *Promenade and plaza rails:* low rails — on foot you hop them (a short vault and a beat of
+     slowdown), so the beach stays one step away; still grindable.
+   - *Loose board:* never rolls off into the sea or through a rail.
+   - *Reads as scenery, on purpose:* bushes (walk through), lamp posts, the moored boats, roofs.
+5. **Fight button.** A second round button left of the action button, shown on foot (`PUNCH`).
+   One tap = one punch: snaps to whoever is roughly in front within reach, short lunge, hit flash.
+   First hit staggers (most then run), a second — or one on someone already reeling — puts them
+   down; they get up and run. Bystanders within 150 units run (60 %) or stop and stare. If a cop
+   can see it (`sim.copSees`: a patrol or pursuit car within 300, or an officer on foot within
+   240, with no building between) wanted goes up a star; punching an officer always does. One
+   patrol car now cruises the loop so that can happen at zero stars, and it joins the chase when
+   you become wanted nearby. On the board the same key/button is the ollie; in a car it does
+   nothing. Desktop: **F / X / J**.
+
 ## Layout (`layout.json`)
 
 1 world unit = 10 cm. World 1800 × 2200. One drivable loop (rounded rectangle, 96 wide) with three
@@ -109,7 +156,7 @@ spawn points live here and are read by **both** the game and the Blender baker.
 | `assets.js` | loads `assets/manifest.json` + every sprite; hard error on failure |
 | `render.js` | the lighting system above |
 | `sim.js` | player on foot / in car, arcade car physics, traffic AI on the loop, pedestrians on the sidewalks/promenade (flee, get knocked down), police (spawn behind you, follow the loop, ram, cops jump out for foot chases), wanted stars (jack +1, cop car +2, hit ped +1, ram police +1; lose a star per 14 s out of sight), busted + respawn |
-| `input.js` | floating joystick (left half, base follows the thumb), round action button bottom-right, keyboard for desktop |
+| `input.js` | floating joystick (left half, base follows the thumb), round action button bottom-right, fight button beside it (on foot), keyboard for desktop |
 | `hud.js` | stars, clock (6:38 → 7:48 PM), messages, BUSTED card + fade, controls |
 | `audio.js` | WebAudio only: engine (detuned saws through a speed-driven lowpass), city hum + ocean swell (brown noise), siren, jack/door thunk, crash, star ping, busted sting |
 | `demo.js` | `?demo` autopilot that drives the real input path: walk to a parked convertible, jack it, drive north along the ocean and round the loop (weaving round traffic), pull over, get boxed in, busted, respawn — then it restarts |
@@ -117,7 +164,7 @@ spawn points live here and are read by **both** the game and the Blender baker.
 Touch controls on foot: the stick direction is where you walk (run past 65 %). In a car: point
 the stick where you want to go — the car steers toward it, throttle = stick distance; pull the
 stick opposite your heading at low speed to reverse. Action button: JACK near a car, EXIT when
-slow. Keyboard: arrows/WASD, Space/E.
+slow. Fight button (on foot): PUNCH. Keyboard: arrows/WASD, Space/E for action, F/X/J to punch.
 
 ## Scripts
 
@@ -129,9 +176,11 @@ All run from `games/palm-city/`:
 | `blender -b -P tools/bake_sprites.py -- buildings hotel` | one group / one asset (`cars`, `peds`, `buildings`, `props`); `--quick` for low samples |
 | `node tools/sim_run.mjs 34` | runs the real sim + demo autopilot headless; exits 0 only if the demo jacks a car and gets busted |
 | `node tools/shot.mjs out.png "demo" --seq 8 --every 4000` | phone-size (420×860, touch, iPhone-like) screenshots in real Chrome; non-zero exit on any page error |
-| `node tools/touch_check.mjs [prefix]` | drives the controls with real CDP touch events: joystick walk → button jack → stick drive → button exit |
+| `node tools/touch_check.mjs [prefix]` | drives the controls with real CDP touch events: fight button punch → joystick walk → button jack → stick drive → button exit |
+| `node tools/feel_check.mjs` | 38 headless rule checks for the feel pass: bumps (people, palms), the pier and other interactables, the punch |
+| `node tools/feel_shots.mjs [pier bump punch]` | staged phone-size captures of those, driven through the real touch path → `shots/feel-after-*.png` |
 | `node tools/profile.mjs` | CPU ms per render section (`?prof`) and per ground-chunk paint |
-| `cd tools && npm install` | installs `playwright-core` for `shot.mjs` (uses the system Chrome) |
+| `cd tools && npm install` | installs `playwright-core` for the browser tools (they use the system Chrome, or the binary named by the `CHROME` env var) |
 
 `tools/reference_frames.jpg` is the art-direction anchor the screenshots were judged against.
 

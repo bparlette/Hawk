@@ -156,5 +156,67 @@ const PR = layout.pier;
   for (let i = 0; i < 60 * 40; i++) { t.step(STEP, idle()); reached ||= q.some(p => p.x > PR.x + PR.w - 20); }
   check('people stroll the pier out to the end', q.length === 2 && reached && q.every(p => t.canStand(p.x, p.y)));
 }
+// ---------------------------------------------------------------- the punch
+{
+  const { s, ev } = fresh();
+  place(s, 1310, 900); s.player.ped.h = N;
+  const o = ped(s, 1310, 884), w1 = ped(s, 1300, 800), w2 = ped(s, 1318, 960), w3 = ped(s, 1305, 1010), far = ped(s, 1310, 500);
+  const y0 = s.player.ped.y;
+  run(s, 1, idle({ punch: true }));
+  check('punch: a hit staggers them', o.mode === 'stumble' && ev.includes('punch') && s.fx.length === 1);
+  run(s, 12, idle());
+  check('…with a short lunge', y0 - s.player.ped.y > 4 && y0 - s.player.ped.y < 20, `lunged ${(y0 - s.player.ped.y).toFixed(1)}`);
+  const react = [w1, w2, w3].filter(w => w.mode === 'flee' || w.gawkT > 0).length;
+  check('…witnesses react (run or stare), people far away do not', react === 3 && far.mode === 'walk' && !(far.gawkT > 0), `reacted ${react}/3`);
+  run(s, 16, idle());
+  s.player.ped.x = o.x; s.player.ped.y = o.y + 12; s.player.ped.h = N;
+  run(s, 1, idle({ punch: true }));
+  check('…a second hit puts them down', o.mode === 'down', o.mode);
+  run(s, 200, idle());
+  check('…and they get up and run', o.mode === 'flee' || o.gone, o.mode);
+  check('…no cop watching: no stars', s.stars === 0);
+}
+{
+  const { s, ev } = fresh();
+  place(s, 1310, 900); s.player.ped.h = N;
+  run(s, 1, idle({ punch: true }));
+  check('punching thin air is just a swing', ev.includes('swing') && !ev.includes('punch') && s.player.punchN === 1);
+  run(s, 5, idle({ punch: true }));
+  check('…with a cooldown', s.player.punchN === 1);
+}
+{
+  const { s } = fresh();
+  place(s, 1310, 900); s.player.ped.h = N; ped(s, 1310, 884);
+  s.addCar(1224, 1000, N, 'police', 'ai', { s: 0, dir: 1, cruise: 0 });       // a patrol car down the road, in sight
+  run(s, 1, idle({ punch: true }));
+  check('punching someone in a cop\'s view raises wanted', s.stars === 1, `stars ${s.stars}`);
+}
+{
+  const { s } = fresh();
+  place(s, 480, 1380); s.player.ped.h = N; ped(s, 480, 1364);                  // south side of the motel
+  s.addCar(480, 1100, N, 'police', 'ai', { s: 0, dir: 1, cruise: 0 });         // patrol car north of it: the building is in the way
+  run(s, 1, idle({ punch: true }));
+  check('…but not when a building blocks the view', s.stars === 0, `stars ${s.stars}`);
+}
+{
+  const { s } = fresh();
+  place(s, 1310, 900); s.player.ped.h = N;
+  const cop = s.makePed(1310, 884, 'cop', null, 0); cop.mode = 'cop'; s.peds.push(cop);
+  run(s, 1, idle({ punch: true }));
+  check('punching an officer is a star', s.stars === 1 && cop.mode === 'stumble', `stars ${s.stars} ${cop.mode}`);
+}
+{
+  const { s } = fresh();
+  Object.assign(s.board, { x: 1310, y: 900, h: N, vx: 0, vy: -150, ridden: true }); s.player.mode = 'board';
+  run(s, 1, idle({ punch: true }));
+  check('on the board the fight button is the ollie', s.board.air > 0 && !(s.player.punchN > 0));
+}
+{
+  const { s } = fresh();
+  place(s, 100, 100);
+  const c = s.addCar(800, 800, E, 'sedan_teal', 'player'); s.player.mode = 'car'; s.player.car = c;
+  run(s, 1, idle({ punch: true }));
+  check('in a car the fight button does nothing', s.player.mode === 'car' && !(s.player.punchN > 0));
+}
 console.log(fails ? `FEEL FAIL (${fails})` : 'FEEL OK');
 process.exit(fails ? 1 : 0);
