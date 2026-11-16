@@ -1010,8 +1010,8 @@ def facade_windows(W, D, floors, rnd, lit=0.8, shop=False, floor_h=3.2):
         quads_mesh('windows', quads, win)
 
 
-def skylights(cx, cy, W, D, z, nx, ny, rnd, glow=1.35):
-    glass = mat('skylight', srgb('#5c6f96'), rough=0.16, spec=0.85, emit=(1.0, 0.78, 0.30), night=glow, day=0.0, noise=0)
+def skylights(cx, cy, W, D, z, nx, ny, rnd, glow=0.92):
+    glass = mat('skylight', srgb('#465a84'), rough=0.16, spec=0.85, emit=(1.0, 0.44, 0.03), night=glow, day=0.0, noise=0)
     frame_m = mat('skyframe', srgb('#d4c8b4'), rough=0.55, noise=0)
     for i in range(nx):
         for j in range(ny):
@@ -1122,7 +1122,7 @@ def build_slice_building(b):
         # Bottom-right (+W/4, -D/4): Cafe terrace paving + umbrellas + hot 3x3 saffron skylight grid + HVAC
         pave = mat('pave', srgb('#dcc6a6'), rough=0.75, noise=0.15, noise_scale=8)
         cube((W / 4, -D / 4, H + 0.1), (W / 2 - 1.4, D / 2 - 1.6, 0.16), pave, bevel=0.04)
-        skylights(W / 4 + 0.5, -D / 4 + 1.4, W / 3.1, D / 3.4, H + 0.16, 3, 3, rnd, glow=1.35)
+        skylights(W / 4 + 0.5, -D / 4 + 1.4, W / 3.1, D / 3.4, H + 0.16, 3, 3, rnd, glow=0.92)
         cafe_umbrella(W / 4 + 2.4, -D / 4 - 2.6, H + 0.16, '#e89668', dark)
         cafe_umbrella(W / 4 - 2.2, -D / 4 - 2.2, H + 0.16, '#f4cf6a', dark)
         patio_set(W / 4 + 0.2, -D / 4 - 3.0, H + 0.16, wood, '#c28050', table_r=0.7)
@@ -1130,7 +1130,7 @@ def build_slice_building(b):
             ac_unit(W / 2 - 3.2 - i * 2.2, -D / 2 + 1.8, H + 0.16, metal, dark)
 
         # Bottom-left (-W/4, -D/4): Lit glass atrium + lush courtyard garden
-        glassroof = mat('atrium', srgb('#465a84'), rough=0.16, spec=0.85, emit=(1.0, 0.72, 0.28), night=1.4, day=0.0, noise=0)
+        glassroof = mat('atrium', srgb('#465a84'), rough=0.16, spec=0.85, emit=(1.0, 0.42, 0.03), night=0.95, day=0.0, noise=0)
         cube((-W / 4, -D / 4, H + 0.8), (W / 2.8, D / 2.8, 1.5), wall)
         cube((-W / 4, -D / 4, H + 1.6), (W / 2.8 - 0.3, D / 2.8 - 0.3, 0.45), glassroof, taper=(0.45, 1.0))
         garden_bed(-W / 2 + 2.1, -D / 4, 2.0, D / 2 - 3.6, H, rnd, night_lit=True)
