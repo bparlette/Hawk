@@ -408,3 +408,34 @@ button, job action wins, wreck shows nothing, 289 → 405 u/s, burn/lockout/reco
 `CHROME=… node tools/turbo_shots.mjs` → `shots/turbo-foot-punch.png`, `shots/turbo-car-turbo.png`
 (A held with a real touch). `sh tools/check_all.sh` runs every check in one go.
 
+## 7E — skid marks (Nov 16 2026)
+
+One system, `src/skid.js`, in two halves.
+
+**Sim half (headless).** `slipOf()` decides how hard the tyres are slipping from what the car is
+actually doing: cornering load (speed × yaw rate above 430 u/s², all four tyres above 600), hard
+braking above 90 u/s (all four), a hard launch (throttle > 0.7 below 70 u/s), a burnout / donut
+(full lock under power between 12 and 130 u/s), and soft ground (sand, grass) above 60 u/s. Calm
+straight driving — at any speed — returns 0. `layMarks()` runs from `Sim.driveCar` for the player
+and for police cars: it remembers each wheel's last position on the car and writes one segment per
+slipping wheel per step into a fixed ring of 2048 segments (`sim.skid.buf`, a Float32Array;
+x0,y0,x1,y1,width,strength,surface), so marks follow the car's real path. A coarse coverage grid
+(8-unit cells) is kept alongside for the checks.
+
+**Render half.** `TrackLayer` owns a fixed pool of **24 tiles of 256×256 px** (1 px per world unit,
+6.3 MB total, least-recently-touched tile reused). Each new segment is stamped ONCE as a wide soft
+pass under a darker core — dark rubber on pavement, carved brown ruts with a pale lip on sand,
+dirt on grass. Per frame the layer only blits the tiles in view, right after the ground and before
+shadows, so marks sit under cars, people and their shadows. One tile is faded 3.5 % every 0.12 s in
+rotation (each tile every ~2.9 s), so a mark is down to about a quarter after two minutes. A new
+run starts with clean ground.
+
+Cost: the ground + ocean + tracks section measured 0.73 → 0.86 ms in `tools/profile.mjs` (headless
+software raster, 420×860 @2x). No per-frame allocation: segments and tiles are both fixed pools.
+
+Proof: `node tools/skid_check.mjs` (10 rules — donut ring with all 12 directions covered and a
+hollow middle, drift marks that turn with the car, zero marks in 10 s of straight driving up to
+289 u/s, short launch marks, four-tyre braking, sand ruts, both caps).
+`CHROME=… node tools/skid_shots.mjs [donut drift sand]` → `shots/skid-*.png`, driven with the
+keyboard in the real page.
+

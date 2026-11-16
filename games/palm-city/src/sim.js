@@ -6,6 +6,7 @@ import { enterSiege, stepSiege } from './siege.js';
 import { initPressure, stepPressure } from './pressure.js';
 import { initJobs, stepJobs } from './jobs.js';
 import { stepTurbo, TURBO } from './controls.js';
+import { initSkid, layMarks } from './skid.js';
 import { initEvents, stepEvents } from './events.js';
 import { initSkate, stepBoard, stepCombo, nearBoard, mount, boardSpeed } from './skate.js';
 import { initDestruct, stepDestruct, punchWorld, carState, carImpact, carsCollide, hitThing, palmImpact, initProps, propImpact } from './destruct.js';
@@ -47,6 +48,7 @@ export class Sim {
     ];
     for (const [x, y, h, model] of parked) this.addCar(x, y, h, model, null, { parked: true });
     initSkate(this);
+    initSkid(this);
     // things you'd expect to be solid are: bench slats, the fountain basin, the lifeguard towers
     this.obst = [];
     for (const b of this.benches) for (const k of [-11, 0, 11]) this.obst.push({ x: b.x + Math.cos(b.a) * k, y: b.y + Math.sin(b.a) * k, r: 5.5, kind: 'bench' });
@@ -475,6 +477,7 @@ export class Sim {
     const grip = Math.min(1, Math.abs(c.v) / 70);
     c.h = wrap(c.h + steer * 2.7 * grip * Math.sign(c.v) * dt);
     this.moveCar(c, dt);
+    if (c.driver === 'player' || c.driver === 'police') layMarks(this, c, throttle, steer, grip, dt);   // slipping tyres leave marks
   }
 
   carBlocked(c, x, y, h) {

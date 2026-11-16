@@ -9,6 +9,7 @@
 
 import { CHUNK } from './ground.js';
 import { mulberry32 } from './world.js';
+import { TrackLayer } from './skid.js';
 import { CHOPPER } from './pressure.js';
 import { JOBS } from './jobs.js';
 import { drawEventsGround } from './events_render.js';
@@ -73,6 +74,8 @@ export class Renderer {
     this.waterPath = this.buildWaterPath();
     this.grain = this.buildGrain();
     this.buildDestructSprites();
+    this.tracks = new TrackLayer(layer);          // tyre marks: stamped once, under everything that moves
+    this.lastTime = 0;
   }
 
   // Destruction sprites (assets/destruct.json): per-model car stages and pooled debris variants.
@@ -453,6 +456,8 @@ export class Renderer {
       g.drawImage(G0.get(cx, cy), cx * CHUNK, cy * CHUNK, CHUNK + 0.6, CHUNK + 0.6);
     }
     this.drawOcean(g, G, t, time, vx0, vy0, vx1, vy1);
+    this.tracks.draw(g, S, Math.max(0, Math.min(0.1, time - this.lastTime)), vx0, vy0, vx1, vy1);
+    this.lastTime = time;
 
     P && P('ocean');
     // ---------------- 2. shadows -> one layer, tinted, multiplied once (no double-dark overlaps)
