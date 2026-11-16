@@ -1,0 +1,723 @@
+{
+ "name": "Coral Strand",
+ "version": 1,
+ "tile_m": 4,
+ "w": 26,
+ "h": 62,
+ "legend": {
+  "~": "lagoon",
+  "o": "ocean",
+  "r": "road",
+  "s": "sidewalk",
+  "l": "paved lot",
+  "g": "grass",
+  "d": "pool deck / plaza",
+  "p": "pool",
+  "m": "promenade",
+  "b": "beach",
+  "B": "building",
+  "c": "causeway bridge"
+ },
+ "ground": [
+  "~~rrrrrrrrrrrrrrrrmmbbbooo",
+  "~~rrrrrrrrrrrrrrrrmmbbbooo",
+  "~~BBBBBBsrrsBBBBddmmbbbooo",
+  "~~BBBBBBsrrsBBBBddmmbbbooo",
+  "~~BBBBBBsrrsBBBBpdmmbbbooo",
+  "~~BBBBBBsrrsBBBBpdmmbbbooo",
+  "~~ggggggsrrsBBBBpdmmbbbooo",
+  "~~lddddlsrrsBBBBpdmmbbbooo",
+  "~~ldppdlsrrsBBBBddmmbbbooo",
+  "~~ldppdlsrrsBBBBddmmbbbooo",
+  "~~lddddlsrrsBBBBddmmbbbooo",
+  "~~llllllsrrsBBBBddmmbbbooo",
+  "~~rrrrrrrrrrrrrrrrmmbbbooo",
+  "~~rrrrrrrrrrrrrrrrmmbbbooo",
+  "~~llllllsrrsBBBBBBmmbbbooo",
+  "~~llllllsrrsBBBBBBmmbbbooo",
+  "~~llllllsrrsBBBBBBmmbbbooo",
+  "~~llllllsrrsddddddmmbbbooo",
+  "~~llllllsrrsddddddmmbbbooo",
+  "~~llllllsrrsdppppdmmbbbooo",
+  "~~lBBBBlsrrsdppppdmmbbbooo",
+  "~~lBBBBlsrrsdppppdmmbbbooo",
+  "~~lBBBBlsrrsddddddmmbbbooo",
+  "~~llllllsrrsddddddmmbbbooo",
+  "~~rrrrrrrrrrrrrrrrmmbbbooo",
+  "~~rrrrrrrrrrrrrrrrmmbbbooo",
+  "~~BBBBggsrrsBBBdddmmbbbooo",
+  "~~BBBBggsrrsBBBdddmmbbbooo",
+  "~~BBBBggsrrsBBBdddmmbbbooo",
+  "~~BBBBggsrrsBBBdddmmbbbooo",
+  "~~BBBBggsrrsBBBdpdmmbbbooo",
+  "~~BBBBggsrrsddddpdmmbbbooo",
+  "~~BBBBggsrrsBBBdddmmbbbooo",
+  "~~BBBBggsrrsBBBdddmmbbbooo",
+  "~~BBBBggsrrsBBBdddmmbbbooo",
+  "~~BBBBggsrrsBBBdddmmbbbooo",
+  "~~rrrrrrrrrrrrrrrrmmbbbooo",
+  "~~rrrrrrrrrrrrrrrrmmbbbooo",
+  "~~ddddddsrrsgBBBBgmmbbbooo",
+  "~~dpppddsrrsgBBBBgmmbbbooo",
+  "~~dpppddsrrsgBBBBgmmbbbooo",
+  "~~dpppddsrrsgBBBBgmmbbbooo",
+  "~~ddddddsrrsggggggmmbbbooo",
+  "~~ddddddsrrsggggggmmbbbooo",
+  "~~BBBBBBsrrsgBBgggmmbbbooo",
+  "~~BBBBBBsrrsgBBgggmmbbbooo",
+  "~~BBBBBBsrrsgBBgggmmbbbooo",
+  "~~BBBBBBsrrsggggggmmbbbooo",
+  "~~rrrrrrrrrrrrrrrrmmbbbooo",
+  "~~rrrrrrrrrrrrrrrrmmbbbooo",
+  "~~BBBBllsrrsddddddmmbbbooo",
+  "~~BBBBllsrrsdpppddmmbbbooo",
+  "~~BBBBllsrrsdpppddmmbbbooo",
+  "~~BBBBllsrrsdpppddmmbbbooo",
+  "~~BBBBllsrrsddddddmmbbbooo",
+  "~~BBBBllsrrsddddddmmbbbooo",
+  "~~llllllsrrsBBBBBBmmbbbooo",
+  "~~llllllsrrsBBBBBBmmbbbooo",
+  "~~llllllsrrsBBBBBBmmbbbooo",
+  "~~llllllsrrsBBBBBBmmbbbooo",
+  "ccrrrrrrrrrrrrrrrrmmbbbooo",
+  "ccrrrrrrrrrrrrrrrrmmbbbooo"
+ ],
+ "avenue": {
+  "name": "Strand Avenue",
+  "x0": 9,
+  "x1": 10,
+  "southbound_x": 9,
+  "northbound_x": 10
+ },
+ "streets": [
+  {
+   "name": "Heron St",
+   "y0": 0,
+   "y1": 1,
+   "westbound_y": 0,
+   "eastbound_y": 1
+  },
+  {
+   "name": "Gull St",
+   "y0": 12,
+   "y1": 13,
+   "westbound_y": 12,
+   "eastbound_y": 13
+  },
+  {
+   "name": "Pelican St",
+   "y0": 24,
+   "y1": 25,
+   "westbound_y": 24,
+   "eastbound_y": 25
+  },
+  {
+   "name": "Tern St",
+   "y0": 36,
+   "y1": 37,
+   "westbound_y": 36,
+   "eastbound_y": 37
+  },
+  {
+   "name": "Egret St",
+   "y0": 48,
+   "y1": 49,
+   "westbound_y": 48,
+   "eastbound_y": 49
+  },
+  {
+   "name": "Causeway Rd",
+   "y0": 60,
+   "y1": 61,
+   "westbound_y": 60,
+   "eastbound_y": 61
+  }
+ ],
+ "blocks": [
+  {
+   "id": "A",
+   "y0": 2,
+   "y1": 11
+  },
+  {
+   "id": "B",
+   "y0": 14,
+   "y1": 23
+  },
+  {
+   "id": "C",
+   "y0": 26,
+   "y1": 35
+  },
+  {
+   "id": "D",
+   "y0": 38,
+   "y1": 47
+  },
+  {
+   "id": "E",
+   "y0": 50,
+   "y1": 59
+  }
+ ],
+ "buildings": [
+  {
+   "id": "A-W1",
+   "name": "Hotel Marisol",
+   "x": 2,
+   "y": 2,
+   "w": 6,
+   "h": 4,
+   "floors": 6,
+   "use": "hotel"
+  },
+  {
+   "id": "A-E1",
+   "name": "The Tidewater",
+   "x": 12,
+   "y": 2,
+   "w": 4,
+   "h": 10,
+   "floors": 9,
+   "use": "hotel"
+  },
+  {
+   "id": "B-W1",
+   "name": "Sol Diner",
+   "x": 3,
+   "y": 20,
+   "w": 4,
+   "h": 3,
+   "floors": 1,
+   "use": "diner"
+  },
+  {
+   "id": "B-E1",
+   "name": "Casa Coral",
+   "x": 12,
+   "y": 14,
+   "w": 6,
+   "h": 3,
+   "floors": 4,
+   "use": "hotel"
+  },
+  {
+   "id": "C-W1",
+   "name": "Neon Palms Hotel",
+   "x": 2,
+   "y": 26,
+   "w": 4,
+   "h": 10,
+   "floors": 12,
+   "use": "hotel"
+  },
+  {
+   "id": "C-E1",
+   "name": "Strand Arcade",
+   "x": 12,
+   "y": 26,
+   "w": 3,
+   "h": 5,
+   "floors": 2,
+   "use": "shop"
+  },
+  {
+   "id": "C-E2",
+   "name": "Bayline Records",
+   "x": 12,
+   "y": 32,
+   "w": 3,
+   "h": 4,
+   "floors": 2,
+   "use": "shop"
+  },
+  {
+   "id": "D-W1",
+   "name": "Hotel Azul",
+   "x": 2,
+   "y": 44,
+   "w": 6,
+   "h": 4,
+   "floors": 7,
+   "use": "hotel"
+  },
+  {
+   "id": "D-E1",
+   "name": "Seabreeze Apartments",
+   "x": 13,
+   "y": 38,
+   "w": 4,
+   "h": 4,
+   "floors": 5,
+   "use": "apartments"
+  },
+  {
+   "id": "D-E2",
+   "name": "Surf Shack",
+   "x": 13,
+   "y": 44,
+   "w": 2,
+   "h": 3,
+   "floors": 1,
+   "use": "shop"
+  },
+  {
+   "id": "E-W1",
+   "name": "Causeway Garage",
+   "x": 2,
+   "y": 50,
+   "w": 4,
+   "h": 6,
+   "floors": 3,
+   "use": "garage"
+  },
+  {
+   "id": "E-E1",
+   "name": "The Pelican",
+   "x": 12,
+   "y": 56,
+   "w": 6,
+   "h": 4,
+   "floors": 8,
+   "use": "hotel"
+  }
+ ],
+ "pools": [
+  {
+   "id": "A-W",
+   "x": 4,
+   "y": 8,
+   "w": 2,
+   "h": 2
+  },
+  {
+   "id": "A-E",
+   "x": 16,
+   "y": 4,
+   "w": 1,
+   "h": 4
+  },
+  {
+   "id": "B-E",
+   "x": 13,
+   "y": 19,
+   "w": 4,
+   "h": 3
+  },
+  {
+   "id": "C-E",
+   "x": 16,
+   "y": 30,
+   "w": 1,
+   "h": 2
+  },
+  {
+   "id": "D-W",
+   "x": 3,
+   "y": 39,
+   "w": 3,
+   "h": 3
+  },
+  {
+   "id": "E-E",
+   "x": 13,
+   "y": 51,
+   "w": 3,
+   "h": 3
+  }
+ ],
+ "palms": [
+  [
+   2,
+   7
+  ],
+  [
+   7,
+   10
+  ],
+  [
+   17,
+   2
+  ],
+  [
+   17,
+   11
+  ],
+  [
+   2,
+   19
+  ],
+  [
+   7,
+   19
+  ],
+  [
+   12,
+   18
+  ],
+  [
+   17,
+   18
+  ],
+  [
+   12,
+   23
+  ],
+  [
+   17,
+   23
+  ],
+  [
+   6,
+   27
+  ],
+  [
+   6,
+   30
+  ],
+  [
+   6,
+   33
+  ],
+  [
+   15,
+   27
+  ],
+  [
+   15,
+   34
+  ],
+  [
+   2,
+   38
+  ],
+  [
+   7,
+   38
+  ],
+  [
+   7,
+   43
+  ],
+  [
+   12,
+   42
+  ],
+  [
+   17,
+   42
+  ],
+  [
+   17,
+   47
+  ],
+  [
+   12,
+   50
+  ],
+  [
+   17,
+   50
+  ],
+  [
+   17,
+   55
+  ],
+  [
+   18,
+   3
+  ],
+  [
+   18,
+   9
+  ],
+  [
+   18,
+   15
+  ],
+  [
+   18,
+   21
+  ],
+  [
+   18,
+   27
+  ],
+  [
+   18,
+   33
+  ],
+  [
+   18,
+   39
+  ],
+  [
+   18,
+   45
+  ],
+  [
+   18,
+   51
+  ],
+  [
+   18,
+   57
+  ]
+ ],
+ "props": [
+  {
+   "type": "lifeguard_tower",
+   "x": 21,
+   "y": 8
+  },
+  {
+   "type": "lifeguard_tower",
+   "x": 21,
+   "y": 31
+  },
+  {
+   "type": "lifeguard_tower",
+   "x": 21,
+   "y": 54
+  },
+  {
+   "type": "bench",
+   "x": 19,
+   "y": 5
+  },
+  {
+   "type": "bench",
+   "x": 19,
+   "y": 13
+  },
+  {
+   "type": "bench",
+   "x": 19,
+   "y": 21
+  },
+  {
+   "type": "bench",
+   "x": 19,
+   "y": 29
+  },
+  {
+   "type": "bench",
+   "x": 19,
+   "y": 37
+  },
+  {
+   "type": "bench",
+   "x": 19,
+   "y": 45
+  },
+  {
+   "type": "bench",
+   "x": 19,
+   "y": 53
+  },
+  {
+   "type": "lamp",
+   "x": 19,
+   "y": 1
+  },
+  {
+   "type": "lamp",
+   "x": 19,
+   "y": 9
+  },
+  {
+   "type": "lamp",
+   "x": 19,
+   "y": 17
+  },
+  {
+   "type": "lamp",
+   "x": 19,
+   "y": 25
+  },
+  {
+   "type": "lamp",
+   "x": 19,
+   "y": 33
+  },
+  {
+   "type": "lamp",
+   "x": 19,
+   "y": 41
+  },
+  {
+   "type": "lamp",
+   "x": 19,
+   "y": 49
+  },
+  {
+   "type": "lamp",
+   "x": 19,
+   "y": 57
+  },
+  {
+   "type": "umbrella",
+   "x": 20,
+   "y": 2
+  },
+  {
+   "type": "umbrella",
+   "x": 21,
+   "y": 7
+  },
+  {
+   "type": "umbrella",
+   "x": 22,
+   "y": 12
+  },
+  {
+   "type": "umbrella",
+   "x": 20,
+   "y": 17
+  },
+  {
+   "type": "umbrella",
+   "x": 21,
+   "y": 22
+  },
+  {
+   "type": "umbrella",
+   "x": 22,
+   "y": 27
+  },
+  {
+   "type": "umbrella",
+   "x": 20,
+   "y": 32
+  },
+  {
+   "type": "umbrella",
+   "x": 21,
+   "y": 37
+  },
+  {
+   "type": "umbrella",
+   "x": 22,
+   "y": 42
+  },
+  {
+   "type": "umbrella",
+   "x": 20,
+   "y": 47
+  },
+  {
+   "type": "umbrella",
+   "x": 21,
+   "y": 52
+  },
+  {
+   "type": "umbrella",
+   "x": 22,
+   "y": 57
+  },
+  {
+   "type": "parked_car",
+   "x": 3,
+   "y": 15
+  },
+  {
+   "type": "parked_car",
+   "x": 5,
+   "y": 15
+  },
+  {
+   "type": "parked_car",
+   "x": 7,
+   "y": 15
+  },
+  {
+   "type": "parked_car",
+   "x": 6,
+   "y": 57
+  },
+  {
+   "type": "parked_car",
+   "x": 7,
+   "y": 52
+  }
+ ],
+ "route": {
+  "name": "The Run",
+  "spawn": {
+   "x": 11.5,
+   "y": 57.5,
+   "heading_deg": 0
+  },
+  "car": {
+   "x": 10.5,
+   "y": 53.5,
+   "heading_deg": 0
+  },
+  "legs": [
+   {
+    "mode": "foot",
+    "to": [
+     [
+      11.5,
+      53.5
+     ],
+     [
+      10.9,
+      53.5
+     ]
+    ],
+    "then": "enter"
+   },
+   {
+    "mode": "drive",
+    "to": [
+     [
+      10.5,
+      40.0
+     ],
+     [
+      10.5,
+      20.0
+     ],
+     [
+      10.5,
+      3.2
+     ],
+     [
+      11.6,
+      1.6
+     ],
+     [
+      16.4,
+      1.5
+     ]
+    ],
+    "then": "exit"
+   },
+   {
+    "mode": "foot",
+    "to": [
+     [
+      18.5,
+      2.0
+     ],
+     [
+      19.5,
+      5.0
+     ],
+     [
+      20.5,
+      7.5
+     ]
+    ],
+    "then": "finish"
+   }
+  ],
+  "finish": {
+   "x": 20.5,
+   "y": 7.5,
+   "what": "north lifeguard tower"
+  }
+ },
+ "ground_sha1": "c6e6a95d12f048f79e382ff542cea02bb68e2478"
+}
