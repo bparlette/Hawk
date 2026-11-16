@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>WANTED ROOM — GTA VI AR Overlay</title>
+<link rel="stylesheet" href="ar-scaffold.css">
+<style>
+  #washRed, #washBlue {
+    position: fixed; inset: -12%; z-index: 20; pointer-events: none;
+    mix-blend-mode: screen; opacity: 0;
+  }
+  #washRed  { background: radial-gradient(58% 62% at 16% 42%, rgba(var(--wash-r,255,36,36),.95), rgba(var(--wash-r,255,36,36),0) 70%); }
+  #washBlue { background: radial-gradient(58% 62% at 84% 42%, rgba(var(--wash-b,46,96,255),.95), rgba(var(--wash-b,46,96,255),0) 70%); }
+  #edgeGlow { position: fixed; inset: 0; z-index: 22; pointer-events: none; }
+  #fx { position: fixed; inset: 0; z-index: 30; pointer-events: none; }
+  #spotVid {
+    position: fixed; left: 50%; top: -4%; width: 205vw; z-index: 29; pointer-events: none;
+    mix-blend-mode: screen; opacity: 0; transform: translateX(-50%);
+  }
+  #heat {
+    position: fixed; inset: 0; z-index: 35; pointer-events: none; opacity: 0;
+    background: radial-gradient(88% 88% at 50% 46%, transparent 52%, rgba(var(--heat-a,255,44,0),.28) 82%, rgba(var(--heat-b,200,10,0),.6) 100%);
+  }
+  #strobe { position: fixed; inset: 0; z-index: 45; pointer-events: none; background: #fff; opacity: 0; }
+  #stars { position: fixed; inset: 0; z-index: 40; pointer-events: none; }
+  .star {
+    position: absolute; left: 0; top: 0; font-size: 40px; line-height: 1;
+    color: rgba(255,255,255,.22); text-shadow: 0 2px 6px rgba(0,0,0,.6);
+    transform: translate(-50%,-50%); transition: color .25s;
+    font-family: "Arial Black", Arial, sans-serif;
+  }
+  .star.lit {
+    color: var(--star,#ffd94d);
+    text-shadow: 0 0 14px rgba(var(--star-glow,255,190,30),.95), 0 0 34px rgba(var(--star-glow2,255,150,0),.6), 0 2px 4px rgba(0,0,0,.55);
+  }
+  #busted {
+    position: fixed; inset: 0; z-index: 900; display: none;
+    align-items: center; justify-content: center; flex-direction: column;
+    background: radial-gradient(100% 100% at 50% 50%, rgba(90,0,0,.25), rgba(40,0,0,.78));
+    pointer-events: none;
+  }
+  #busted.show { display: flex; }
+  #busted .word {
+    font-family: "Arial Black", "Segoe UI", sans-serif; font-weight: 900;
+    font-size: min(19vw, 92px); letter-spacing: .14em; color: #f2f2f2;
+    text-shadow: 0 0 26px rgba(255,0,0,.65), 0 6px 0 rgba(0,0,0,.45);
+    animation: bustedIn .38s cubic-bezier(.2,2.2,.4,1) both;
+  }
+  #busted .sub { color: #ffb3b3; font-weight: 800; letter-spacing: .3em; font-size: 13px; margin-top: 10px; }
+  @keyframes bustedIn { from { transform: scale(2.1); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  #lvlReadout { color: var(--star,#ffd94d); font-weight: 900; font-size: 15px; text-shadow: 0 2px 8px #000; min-width: 74px; text-align: center; }
+</style>
+</head>
+<body class="nocam">
+<video id="cam" autoplay playsinline muted></video>
+<div class="fallback">
+  <div class="note">CAMERA OFF — FALLBACK ROOM (grant camera for the real thing)</div>
+  <div class="tv"></div><div class="lamp l"></div><div class="lamp r"></div><div class="sofa"></div>
+</div>
+
+<div id="washRed"></div><div id="washBlue"></div>
+<div id="edgeGlow"></div>
+<video id="spotVid" src="assets/spotlight-sweep.mp4" muted loop playsinline autoplay preload="auto"></video>
+<canvas id="fx"></canvas>
+<div id="heat"></div>
+<div id="stars"></div>
+<div id="strobe"></div>
+<div id="busted"><div class="word">BUSTED</div><div class="sub">RUN OVER — RAISE THE STARS AGAIN</div></div>
+<div id="toast"></div>
+
+<div class="bar top">
+  <div class="title">🚨 WANTED ROOM</div>
+  <div id="lvlReadout">LEVEL 0</div>
+  <button class="btn small" id="autoBtn">🤖 AUTO</button>
+  <button class="btn small on" id="soundBtn">🔊 SOUND</button>
+  <button class="btn small" id="alignBtn">📐 ALIGN TV</button>
+</div>
+<div class="bar bottom">
+  <button class="btn" id="starMinus">⭐ −<br>STAR</button>
+  <button class="btn" id="starPlus" style="border-color:var(--star,#ffd94d);color:var(--star,#ffd94d)">⭐ +<br>STAR</button>
+  <button class="btn warn" id="bustedBtn">🚔<br>BUSTED</button>
+</div>
+
+<script src="ar-scaffold.js"></script>
+<script src="app.js"></script>
+
+<style id="universal-offsets">#ci-root.ci-tl{top:60px!important}#ar-mark-root{bottom:74px!important}</style>
+<script src="mark-button.js"></script>
+<script src="mic-trigger.js"></script>
+<script src="clip-import.js"></script>
+<script>
+/* ---- universal kit wiring (integration pass 2026-11-16) ---- */
+window.ArMark = window.MarkButton;
+var __cbs = { onSpike: function () { var b = document.getElementById('starPlus'); if (b) b.click(); } };
+var __micStarted = false;
+document.addEventListener('pointerdown', function () { if (!__micStarted && window.MicTrigger) { __micStarted = true; MicTrigger.start(__cbs).catch(function () {}); } }, false);
+ClipImport.attach({
+    position: 'tl',
+    videoEl: document.getElementById('cam'),
+    startCamera: function (v) { return window.AR.startCamera(v); }, canvas: document.getElementById('fx'), onSource: function (info) {
+      if (info.mode === 'import') { if (window.MicTrigger) MicTrigger.stop(); ClipImport.startTriggers(__cbs); }
+      if (info.mode === 'camera') { ClipImport.stopTriggers(); __micStarted = false; }
+    }
+  });
+</script>
+</body>
+</html>

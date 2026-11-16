@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>WASTED SLAM — AR Clip Studio</title>
+<style>
+  @font-face{ font-family:'Anton'; src:url('assets/anton.woff2') format('woff2'); font-display:swap; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; overflow:hidden; background:#000; touch-action:none; overscroll-behavior:none;
+    font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; }
+  /* ---------- stage (camera / fallback) : this is what gets desaturated ---------- */
+  #stage{ position:fixed; inset:0; z-index:1; transition:filter .12s linear; }
+  #stage.slammed{ filter:grayscale(1) contrast(1.06) brightness(.82); }
+  #cam{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  body.nocam #cam{ display:none; }
+  .room{ position:absolute; inset:0; display:none;
+    background:linear-gradient(#262a36 0%, #2e3342 54%, #14151a 54.2%, #0c0c10 100%); }
+  body.nocam .room{ display:block; }
+  .fake-tv{ position:absolute; left:6%; top:19%; width:88%; height:41%; border-radius:6px; overflow:hidden;
+    box-shadow:0 0 0 6px #050507, 0 24px 60px rgba(0,0,0,.7); }
+  .fake-tv .feed{ position:absolute; inset:0;
+    background:linear-gradient(115deg,#0d3b5e,#8a2050 32%,#0d5c48 58%,#c96a1e 82%,#0d3b5e);
+    background-size:300% 100%; animation:feedslide 9s linear infinite; }
+  .fake-tv .feed::after{ content:''; position:absolute; inset:0;
+    background:repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 2px, transparent 2px 5px); }
+  @keyframes feedslide{ from{ background-position:0% 0; } to{ background-position:300% 0; } }
+  .fake-tv .tag{ position:absolute; left:10px; bottom:8px; color:#fff; font-size:11px; letter-spacing:.14em;
+    background:rgba(0,0,0,.55); padding:3px 8px; border-radius:4px; }
+  .couch{ position:absolute; left:9%; right:9%; bottom:6%; height:11%; border-radius:18px 18px 0 0;
+    background:linear-gradient(#23242c,#131318); box-shadow:0 -6px 24px rgba(0,0,0,.5) inset; }
+  /* ---------- vignette ---------- */
+  #vignette{ position:fixed; inset:0; z-index:800; pointer-events:none; opacity:0;
+    background:radial-gradient(ellipse at center, transparent 34%, rgba(0,0,0,.55) 72%, rgba(0,0,0,.96) 100%);
+    transition:opacity 1.5s ease; }
+  #vignette.on{ opacity:1; transition:opacity .9s ease; }
+  /* ---------- falling-cash video loop (owner-supplied, luma-keyed) ---------- */
+  #cashVid{ position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-index:850;
+    mix-blend-mode:screen; opacity:0; transition:opacity .5s ease; pointer-events:none; }
+  #cashVid.on{ opacity:.92; }
+  /* ---------- flutter bills ---------- */
+  #bills{ position:fixed; inset:0; z-index:900; pointer-events:none; overflow:hidden; }
+  .bill{ position:absolute; top:-12vh; background-image:url('assets/bill100.png'); background-size:cover;
+    border-radius:2px; box-shadow:0 4px 14px rgba(0,0,0,.45); will-change:transform,opacity; }
+  /* ---------- banner ---------- */
+  #bannerWrap{ position:fixed; inset:0; z-index:1000; display:flex; align-items:center; justify-content:center;
+    pointer-events:none; }
+  #banner{ font-family:'Anton',sans-serif; font-size:24vw; letter-spacing:.045em; line-height:1;
+    opacity:0; transform:scale(3.4); white-space:nowrap;
+    -webkit-text-stroke:2px rgba(0,0,0,.65); }
+  #banner.wasted{ color:#d8dbe0; -webkit-text-stroke:3px rgba(0,0,0,.8);
+    text-shadow:0 0 3px #000, 0 6px 0 rgba(0,0,0,.6), 0 0 34px rgba(0,0,0,.85), 0 22px 60px rgba(0,0,0,.9); }
+  #banner.busted{ color:#8fc1ff; text-shadow:0 0 2px #001233, 0 6px 0 rgba(2,16,48,.6), 0 22px 60px rgba(0,0,40,.9); }
+  #banner.slam{ animation:slamIn .30s cubic-bezier(.16,1.35,.3,1) forwards; }
+  #banner.fade{ transition:opacity .45s ease; opacity:0 !important; }
+  @keyframes slamIn{
+    0%{ opacity:0; transform:scale(3.4) rotate(-2deg); }
+    55%{ opacity:1; transform:scale(.93) rotate(.4deg); }
+    72%{ transform:scale(1.04) rotate(0deg); }
+    100%{ opacity:1; transform:scale(1) rotate(0deg); }
+  }
+  #shakeWrap{ position:fixed; inset:0; z-index:2; pointer-events:none; }
+  .shaking{ animation:shk .45s ease-out; }
+  @keyframes shk{
+    0%{ transform:translate(0,0); } 12%{ transform:translate(-9px,5px); } 26%{ transform:translate(8px,-6px); }
+    42%{ transform:translate(-6px,-3px); } 58%{ transform:translate(5px,4px); } 74%{ transform:translate(-3px,2px); }
+    100%{ transform:translate(0,0); }
+  }
+  #tapClear{ position:fixed; inset:0; z-index:1050; display:none; }
+  #tapClear.on{ display:block; }
+  /* ---------- quad align ---------- */
+  #quadSvg{ position:fixed; inset:0; z-index:1060; pointer-events:none; display:none; }
+  body.aligning #quadSvg{ display:block; }
+  .handle{ position:fixed; width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%; z-index:1200;
+    background:rgba(255,46,136,.85); border:3px solid #fff; display:none; touch-action:none; }
+  body.aligning .handle{ display:block; }
+  /* ---------- UI ---------- */
+  .chip{ position:fixed; z-index:1100; background:rgba(12,12,18,.78); color:#fff; border:1px solid rgba(255,255,255,.28);
+    border-radius:999px; padding:9px 14px; font-size:13px; letter-spacing:.08em; backdrop-filter:blur(6px); }
+  #titleChip{ top:calc(10px + env(safe-area-inset-top)); left:12px; font-family:'Anton'; font-size:15px; }
+  #alignBtn{ top:calc(10px + env(safe-area-inset-top)); right:12px; }
+  .bar{ position:fixed; left:0; right:0; bottom:0; z-index:1100; display:flex; gap:12px;
+    padding:14px 14px calc(14px + env(safe-area-inset-bottom)); }
+  .btn{ flex:1; min-height:64px; border-radius:16px; border:1px solid rgba(255,255,255,.35);
+    font-family:'Anton'; font-size:24px; letter-spacing:.06em; color:#fff;
+    background:rgba(14,14,20,.85); backdrop-filter:blur(8px); touch-action:manipulation; }
+  .btn:active{ transform:scale(.965); }
+  #btnWasted{ color:#e8eaee; box-shadow:0 0 0 1px rgba(255,255,255,.12), 0 10px 30px rgba(0,0,0,.5); }
+  #btnBusted{ color:#8fc1ff; box-shadow:0 0 24px rgba(40,110,255,.35), 0 10px 30px rgba(0,0,0,.5); }
+  #hint{ position:fixed; z-index:1100; left:0; right:0; bottom:calc(104px + env(safe-area-inset-bottom));
+    text-align:center; color:rgba(255,255,255,.75); font-size:12.5px; letter-spacing:.05em; pointer-events:none;
+    text-shadow:0 1px 6px #000; }
+</style>
+</head>
+<body>
+  <div id="stage">
+    <video id="cam" autoplay playsinline muted></video>
+    <div class="room">
+      <div class="fake-tv"><div class="feed"></div><div class="tag">SAMPLE FEED — CAMERA OFF</div></div>
+      <div class="couch"></div>
+    </div>
+  </div>
+  <div id="shakeWrap"></div>
+  <div id="vignette"></div>
+  <video id="cashVid" src="assets/falling-cash.mp4" muted loop playsinline autoplay preload="auto"></video>
+  <div id="bills"></div>
+  <div id="bannerWrap"><div id="banner"></div></div>
+  <div id="tapClear"></div>
+
+  <svg id="quadSvg"><polygon id="quadPoly" fill="rgba(255,46,136,.10)" stroke="#ff2e88" stroke-width="2"/></svg>
+  <div class="handle" data-i="0"></div><div class="handle" data-i="1"></div>
+  <div class="handle" data-i="2"></div><div class="handle" data-i="3"></div>
+
+  <div class="chip" id="titleChip">WASTED&nbsp;SLAM</div>
+  <button class="chip" id="alignBtn">ALIGN&nbsp;TV</button>
+  <div id="hint">Frame the TV, then hit a button the moment it happens.</div>
+  <div class="bar">
+    <button class="btn" id="btnWasted">WASTED</button>
+    <button class="btn" id="btnBusted">BUSTED</button>
+  </div>
+
+<script>
+'use strict';
+/* ================= THEME (skin-pack config — swap this object to reskin) ================= */
+const THEME = {
+  pack: 'leonida-default',
+  bannerFont: "'Anton',sans-serif",
+  cashVideo: 'assets/falling-cash.mp4',   /* owner-supplied falling-cash loop (Nov 16), screen-blended */
+  flutter: false,                          /* DOM bill flutter — retired: the video loop carries the money rain (see ASSETS.md) */
+  states: {
+    wasted: { label: 'WASTED', color: '#d8dbe0', glow: 'rgba(0,0,0,.9)',  bill: 'assets/bill100.png', thudHz: [56, 26], bills: 22 },
+    busted: { label: 'BUSTED', color: '#8fc1ff', glow: 'rgba(0,0,40,.9)', bill: 'assets/bill100.png', thudHz: [64, 30], bills: 14 }
+  },
+  holdMs: 3500,
+  vignetteMs: 900
+};
+if (new URLSearchParams(location.search).get('flutter') === '1') THEME.flutter = true;  /* A/B test hook */
+/* ================= shared scaffold ================= */
+const $ = s => document.querySelector(s);
+const stage = $('#stage'), banner = $('#banner'), vignette = $('#vignette');
+let AC = null;
+function audio(){ try{ if (navigator.audioSession) navigator.audioSession.type = 'playback'; }catch(e){}
+  if (!AC) { try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  if (AC && AC.state === 'suspended') AC.resume(); return AC; }
+document.addEventListener('pointerdown', audio, { once:false });
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('dblclick', e => e.preventDefault());
+
+async function startCam(){
+  const v = $('#cam');
+  try{
+    const s = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false });
+    v.srcObject = s; await v.play(); window.__camLive = true;
+  }catch(e){ document.body.classList.add('nocam'); window.__fallback = true; }
+}
+/* quad anchor */
+const QKEY = 'arquad-wasted-slam';
+let quad = [[.07,.21],[.93,.21],[.93,.60],[.07,.60]];
+try{ const q = JSON.parse(localStorage.getItem(QKEY)); if (Array.isArray(q) && q.length===4) quad = q; }catch(e){}
+const handles = [...document.querySelectorAll('.handle')];
+function applyQuad(){
+  const W = innerWidth, H = innerHeight;
+  handles.forEach((h,i)=>{ h.style.left = quad[i][0]*W+'px'; h.style.top = quad[i][1]*H+'px'; });
+  $('#quadPoly').setAttribute('points', quad.map(p=> (p[0]*W)+','+(p[1]*H)).join(' '));
+  if (window.onQuad) window.onQuad(quad);
+}
+handles.forEach(h=>{
+  h.addEventListener('pointerdown', e=>{
+    h.setPointerCapture(e.pointerId);
+    const move = ev=>{ const i = +h.dataset.i;
+      quad[i] = [ Math.min(.98, Math.max(.02, ev.clientX/innerWidth)), Math.min(.98, Math.max(.02, ev.clientY/innerHeight)) ];
+      applyQuad(); };
+    const up = ()=>{ h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up);
+      try{ localStorage.setItem(QKEY, JSON.stringify(quad)); }catch(e){} };
+    h.addEventListener('pointermove', move); h.addEventListener('pointerup', up);
+    e.preventDefault();
+  });
+});
+$('#alignBtn').addEventListener('click', ()=> document.body.classList.toggle('aligning'));
+addEventListener('resize', applyQuad);
+
+/* ================= the slam ================= */
+let slamming = false, holdTimer = null;
+function thud(hi, lo){
+  const ac = audio(); if (!ac) return;
+  const t = ac.currentTime;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(hi, t); o.frequency.exponentialRampToValueAtTime(lo, t+.42);
+  g.gain.setValueAtTime(.95, t); g.gain.exponentialRampToValueAtTime(.001, t+.55);
+  o.connect(g).connect(ac.destination); o.start(t); o.stop(t+.6);
+  const len = ac.sampleRate * .3, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+  for (let i=0;i<len;i++) d[i] = (Math.random()*2-1) * (1 - i/len);
+  const n = ac.createBufferSource(); n.buffer = buf;
+  const f = ac.createBiquadFilter(); f.type='lowpass'; f.frequency.value = 260;
+  const ng = ac.createGain(); ng.gain.setValueAtTime(.5, t); ng.gain.exponentialRampToValueAtTime(.001, t+.3);
+  n.connect(f).connect(ng).connect(ac.destination); n.start(t);
+}
+function flutterBills(cfg){
+  const box = $('#bills');
+  for (let i=0;i<cfg.bills;i++){
+    const b = document.createElement('div'); b.className = 'bill';
+    const w = 62 + Math.random()*56; b.style.width = w+'px'; b.style.height = (w*.437)+'px';
+    b.style.backgroundImage = `url('${cfg.bill}')`;
+    b.style.left = (Math.random()*96)+'vw';
+    box.appendChild(b);
+    const sway = 30 + Math.random()*70, dur = 2500 + Math.random()*1900;
+    const rot = (Math.random()*160-80);
+    const anim = b.animate([
+      { transform:`translate(0,-14vh) rotate(0deg)`, opacity:0 },
+      { transform:`translate(${sway*.3}px, 22vh) rotate(${rot*.4}deg)`, opacity:1, offset:.18 },
+      { transform:`translate(${-sway}px, 58vh) rotate(${rot}deg)`, opacity:1, offset:.62 },
+      { transform:`translate(${sway*.6}px, 108vh) rotate(${rot*1.7}deg)`, opacity:.9 }
+    ], { duration:dur, delay: Math.random()*420, easing:'cubic-bezier(.3,.5,.6,1)', fill:'forwards' });
+    anim.onfinish = ()=> b.remove();
+  }
+}
+function slam(kind){
+  if (slamming) clearSlam(true);
+  const cfg = THEME.states[kind]; if (!cfg) return;
+  slamming = true;
+  audio();
+  stage.classList.add('slammed');
+  vignette.classList.add('on');
+  banner.className = ''; banner.id = 'banner';
+  banner.textContent = cfg.label; banner.classList.add(kind);
+  void banner.offsetWidth;
+  banner.classList.add('slam');
+  const sw = $('#shakeWrap'); sw.classList.remove('shaking'); void sw.offsetWidth; sw.classList.add('shaking');
+  thud(cfg.thudHz[0], cfg.thudHz[1]);
+  const cv = $('#cashVid');
+  cv.classList.add('on');
+  if (cv.paused) cv.play().catch(()=>{});
+  if (THEME.flutter) flutterBills(cfg);
+  $('#tapClear').classList.add('on');
+  clearTimeout(holdTimer);
+  holdTimer = setTimeout(()=> clearSlam(false), THEME.holdMs);
+}
+function clearSlam(instant){
+  if (!slamming) return;
+  slamming = false; clearTimeout(holdTimer);
+  banner.classList.add('fade');
+  $('#cashVid').classList.remove('on');
+  vignette.classList.remove('on');
+  $('#tapClear').classList.remove('on');
+  setTimeout(()=>{ stage.classList.remove('slammed'); banner.className=''; banner.textContent=''; }, instant?60:420);
+}
+$('#btnWasted').addEventListener('click', ()=> slam('wasted'));
+$('#btnBusted').addEventListener('click', ()=> slam('busted'));
+$('#tapClear').addEventListener('click', ()=> clearSlam(false));
+
+applyQuad();
+startCam();
+</script>
+
+<style id="universal-offsets">#ci-root.ci-tl{top:53px!important}#ar-mark-root{bottom:86px!important}</style>
+<script src="mark-button.js"></script>
+<script src="clip-import.js"></script>
+<script>
+/* ---- universal kit wiring (integration pass 2026-11-16) ---- */
+window.ArMark = window.MarkButton;
+ClipImport.attach({
+    position: 'tl',
+    videoEl: document.getElementById('cam'),
+    startCamera: function (v) { return window.startCam(); }
+  });
+</script>
+</body>
+</html>
