@@ -524,3 +524,23 @@ at 25 % each; win at the safehouse with exact score; win by shaking; a pinned bo
 1.53 s; 10 s moving alongside an officer with the meter at 0 and the rider never pulled off).
 `CHROME=… node tools/chase_shots.mjs` → `shots/chase-start.png`, `shots/chase-mid.png`.
 
+## 7B — the siege bake-off pick is live (Nov 16 2026)
+
+The owner picked Gemini's AFTER interiors. `node tools/siege_pick.mjs after` copied the eight
+sheets in `shots/siege-interiors-bakeoff/after/` over the files of the same name in
+`assets/siege/` — `motel_color.webp`, `motel_night.webp` (both 1664×1105), `barricade_desk_intact`,
+`barricade_desk_damaged`, `barricade_dresser`, `barricade_mattress`, `prop_roof_hatch_closed`,
+`prop_roof_hatch_open`. A filename-level swap: `assets/siege.json`, the character and trap sheets
+and all code are untouched. `prop_ext_ladder` and `prop_neon_motel_sign` had no AFTER candidate and
+stay as shipped. The script refuses any sheet whose pixel size differs from the live one, because
+the cutaway's geometry is pixel-locked to these sheets.
+
+Revert: `node tools/siege_pick.mjs before` (the shipped originals are kept byte-identical in
+`shots/siege-interiors-bakeoff/before/`). `node tools/siege_pick.mjs status` shows which set each
+live file matches. Round 2 (the character overhaul) may change frame counts: that needs
+`assets/siege.json` updated to its SIEGE-OVERHAUL.md layout as well as the files dropped in.
+
+Proof: `node tools/siege_check.mjs` green on the new sheets;
+`CHROME=… node tools/siege_pick_shots.mjs <label>` → `shots/siege-pick-{before,after}-{golden,dusk}.png`
+(entered through the JUMP + a real touch on ENTER, t = 0.25 and 0.68).
+
