@@ -167,7 +167,7 @@ function payloadHits(sim, j, t, sp, dt) {
     c.v += (ux * Math.cos(c.h) + uy * Math.sin(c.h)) * sp * 0.6;
     j.pvx *= 0.45; j.pvy *= 0.45;
     sim.ev('crash', sp * 1.5); sim.ev('vox_tow_hit'); sim.punchZoom = 1;
-    if (c.kind === 'police' && !c.towPaid) { c.towPaid = true; pay(sim, j.flying > 0 ? 400 : 250, j.flying > 0 ? 'SLINGSHOT TAKEDOWN' : 'WRECKING BALL'); }
+    if (c.kind === 'police' && !c.towPaid) { c.towPaid = true; pay(sim, j.flying > 0 ? 400 : 250, j.flying > 0 ? 'SLINGSHOT TAKEDOWN' : 'WRECKING BALL'); sim.ev('vox_tow_cop'); sim.ev('vox_dsp_towcop'); }
   }
   for (const p of sim.peds) {
     if (p.hidden || p.mode === 'down' || p === sim.player.ped || dist(p, t) > t.len / 2) continue;
