@@ -3,6 +3,7 @@
 
 import { mulberry32 } from './world.js';
 import { initSkate, stepBoard, stepCombo, nearBoard, mount, boardSpeed } from './skate.js';
+import { initDestruct, stepDestruct, punchWorld, carState, carImpact, carsCollide } from './destruct.js';
 
 const TAU = Math.PI * 2;
 const wrap = (a) => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
@@ -21,6 +22,7 @@ export class Sim {
     this.fxr = mulberry32(seed * 7 + 11);   // cosmetic randomness only, so effects never disturb the seeded run
     this.shakes = {}; this.leaves = [];     // palm index -> { t, amp, ax, ay }; falling leaves
     this.fx = [];                           // short-lived hit flashes { kind, x, y, t }
+    initDestruct(this);                     // debris + smoke pools, breakable things (destruct.js)
     this.cars = []; this.peds = [];
     this.time = 0;
     this.stars = 0; this.starDecay = 0; this.lostT = 0;
@@ -61,6 +63,7 @@ export class Sim {
   addCar(x, y, h, model, driver, extra = {}) {
     const m = this.M.cars[model];
     const c = { id: this.nextId++, x, y, h, v: 0, model, kind: m.kind, driver, len: m.length, wid: m.width, parked: false, s: 0, dir: 1, siren: false, stuck: 0, ...extra };
+    carState(c);                              // dents, glass, wreck (destruct.js)
     this.cars.push(c);
     return c;
   }
@@ -172,6 +175,7 @@ export class Sim {
     if (P.punchCd > 0) P.punchCd -= dt;
     for (const f of this.fx) f.t += dt;
     if (this.fx.length) this.fx = this.fx.filter(f => f.t < 0.36);
+    stepDestruct(this, dt);
 
     // --- player
     if (P.stunT > 0) { P.stunT -= dt; input = { ...input, jm: 0, action: false, keys: {} }; }
@@ -279,7 +283,10 @@ export class Sim {
       if (d > 13 && Math.abs(wrap(Math.atan2(dy, dx) - p.h)) > 1.25) continue;   // has to be roughly in front
       bd = d; best = o;
     }
-    if (!best) { this.ev('swing'); return; }
+    if (!best) {                                         // no one in reach: the world takes it (destruct.js)
+      if (punchWorld(this, p)) P.punchHit = (P.punchHit || 0) + 1; else this.ev('swing');
+      return;
+    }
     const o = best, d = Math.max(0.01, bd), nx = (o.x - p.x) / d, ny = (o.y - p.y) / d;
     p.h = Math.atan2(ny, nx);
     P.punchHit = (P.punchHit || 0) + 1;
@@ -373,6 +380,7 @@ export class Sim {
     const p = this.player.ped;
     let best = null, bd = 40;
     for (const c of this.cars) {
+      if (c.wreck) continue;                            // a wreck goes nowhere
       const d = dist(c, p);
       if (d < bd) { bd = d; best = c; }
     }
@@ -415,6 +423,7 @@ export class Sim {
         steer = clamp(diff * 2.4, -1, 1);
       }
     }
+    if (c.wreck) { throttle = 0; steer = 0; }            // dead: all you can do is get out
     this.driveCar(c, throttle, steer, dt, 290);
     if (inp.action && Math.abs(c.v) < 60) this.exitCar();
   }
@@ -436,6 +445,7 @@ export class Sim {
     const accel = throttle > 0 ? (c.v < 0 ? 520 : 240) : throttle < 0 ? (c.v > 0 ? 520 : 200) : 0;
     c.v += throttle * accel * dt;
     if (throttle === 0) c.v *= Math.pow(0.35, dt);
+    vmax *= 1 - 0.4 * c.dmg;                           // a battered car is slower
     c.v = clamp(c.v, -100, vmax);
     c.v *= Math.pow(0.9, dt);
     const grip = Math.min(1, Math.abs(c.v) / 70);
@@ -459,14 +469,17 @@ export class Sim {
     const dx = Math.cos(c.h) * c.v * dt, dy = Math.sin(c.h) * c.v * dt;
     this.hitTree = null;
     if (!this.carBlocked(c, c.x + dx, c.y + dy, c.h)) { c.x += dx; c.y += dy; return; }
+    const cause = c.driver === 'player' ? 'player' : 'world';
     if (this.hitTree) {                                   // a palm: solid stop, and the tree answers
       const tr = this.hitTree, sp = Math.abs(c.v);
       if (sp > 20) this.shakeTree(tr, Math.min(1, 0.25 + sp / 220), dx, dy);
       if (sp > 60 && c.driver === 'player') this.crash(sp);
+      carImpact(this, c, sp, cause);
       c.v *= -0.15;
       return;
     }
     if (Math.abs(c.v) > 120 && c.driver === 'player') this.crash(Math.abs(c.v));
+    carImpact(this, c, Math.abs(c.v), cause);           // walls dent the leading panel, scaled by speed
     if (!this.carBlocked(c, c.x + dx, c.y, c.h)) { c.x += dx; c.v *= 0.8; }
     else if (!this.carBlocked(c, c.x, c.y + dy, c.h)) { c.y += dy; c.v *= 0.8; }
     else c.v *= -0.25;
@@ -493,6 +506,7 @@ export class Sim {
         const other = a.driver === 'player' ? b : a;
         if (other.driver === 'police' && !this.busted && this.time - (this.lastRam || -9) > 4) { this.addStars(1, 'ram'); this.lastRam = this.time; }
       }
+      if (closing < -45) carsCollide(this, a, b, -closing, nx, ny, ma, mb);   // both take damage (destruct.js)
       // damp speeds only while closing, so cars that touch don't stay glued at a crawl
       if (closing < 0) { a.v *= ma > mb ? 0.92 : ma < mb ? 0.6 : 0.75; b.v *= mb > ma ? 0.92 : mb < ma ? 0.6 : 0.75; }
     }

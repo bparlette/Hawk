@@ -133,6 +133,10 @@ export class Audio {
     if (name === 'hood') { this.burst(160, 1, 0.5, 0.18); if (v) this.note(1320, t + 0.05, 0.15, 0.06, 'square', 3000); }
     if (name === 'bail') { this.burst(500, 0.8, 0.5, 0.35); this.burst(2600, 3, 0.15, 0.2, 'bandpass'); }
     if (name === 'trick') this.note(988 + Math.random() * 200, t, 0.06, 0.035, 'triangle', 4000);
+    // destruction (destruct.js): a metal crunch scaled by the blow, glass, the final wreck
+    if (name === 'dent') { const k = Math.min(1, (v || 0.1) * 2.5); this.burst(320, 1.2, 0.18 + 0.3 * k, 0.12 + 0.1 * k); this.burst(2200, 4, 0.08 + 0.1 * k, 0.06, 'bandpass'); }
+    if (name === 'glass') { this.burst(6200, 2, 0.16, 0.25, 'highpass'); this.burst(3800, 9, 0.1, 0.18, 'bandpass'); }
+    if (name === 'wreck') { this.burst(140, 0.8, 0.6, 0.6); this.burst(900, 1.2, 0.35, 0.4); this.burst(5200, 2, 0.12, 0.5, 'highpass'); }
     if (name === 'respawn') { this.note(659, t, 0.18, 0.06, 'triangle'); this.note(988, t + 0.15, 0.3, 0.06, 'triangle'); }
   }
 }

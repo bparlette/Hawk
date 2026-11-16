@@ -1,0 +1,444 @@
+{
+ "_doc": "Destruction stage sprites (Gemini, shots/destruction-sprites/SPRITES.md). 2 px per world unit; w/h/ox/oy in world units. Loaded by src/assets.js into M.destruct.",
+ "bench_s0": {
+  "file": "destruct/bench_s0.webp",
+  "w": 48.0,
+  "h": 32.0,
+  "ox": -24.0,
+  "oy": -16.0
+ },
+ "bench_s1": {
+  "file": "destruct/bench_s1.webp",
+  "w": 48.0,
+  "h": 32.0,
+  "ox": -24.0,
+  "oy": -16.0
+ },
+ "bench_s2": {
+  "file": "destruct/bench_s2.webp",
+  "w": 48.0,
+  "h": 32.0,
+  "ox": -24.0,
+  "oy": -16.0
+ },
+ "bench_s3": {
+  "file": "destruct/bench_s3.webp",
+  "w": 48.0,
+  "h": 32.0,
+  "ox": -24.0,
+  "oy": -16.0
+ },
+ "car_conv_mint_s0": {
+  "file": "destruct/car_conv_mint_s0.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_conv_mint_s1": {
+  "file": "destruct/car_conv_mint_s1.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_conv_mint_s2": {
+  "file": "destruct/car_conv_mint_s2.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_conv_mint_s3": {
+  "file": "destruct/car_conv_mint_s3.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_conv_rose_s0": {
+  "file": "destruct/car_conv_rose_s0.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_conv_rose_s1": {
+  "file": "destruct/car_conv_rose_s1.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_conv_rose_s2": {
+  "file": "destruct/car_conv_rose_s2.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_conv_rose_s3": {
+  "file": "destruct/car_conv_rose_s3.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_police_s0": {
+  "file": "destruct/car_police_s0.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_police_s1": {
+  "file": "destruct/car_police_s1.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_police_s2": {
+  "file": "destruct/car_police_s2.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_police_s3": {
+  "file": "destruct/car_police_s3.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_sedan_coral_s0": {
+  "file": "destruct/car_sedan_coral_s0.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_sedan_coral_s1": {
+  "file": "destruct/car_sedan_coral_s1.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_sedan_coral_s2": {
+  "file": "destruct/car_sedan_coral_s2.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_sedan_coral_s3": {
+  "file": "destruct/car_sedan_coral_s3.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_sedan_cream_s0": {
+  "file": "destruct/car_sedan_cream_s0.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_sedan_cream_s1": {
+  "file": "destruct/car_sedan_cream_s1.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_sedan_cream_s2": {
+  "file": "destruct/car_sedan_cream_s2.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_sedan_cream_s3": {
+  "file": "destruct/car_sedan_cream_s3.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_sedan_plum_s0": {
+  "file": "destruct/car_sedan_plum_s0.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_sedan_plum_s1": {
+  "file": "destruct/car_sedan_plum_s1.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_sedan_plum_s2": {
+  "file": "destruct/car_sedan_plum_s2.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_sedan_plum_s3": {
+  "file": "destruct/car_sedan_plum_s3.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_sedan_teal_s0": {
+  "file": "destruct/car_sedan_teal_s0.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_sedan_teal_s1": {
+  "file": "destruct/car_sedan_teal_s1.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_sedan_teal_s2": {
+  "file": "destruct/car_sedan_teal_s2.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_sedan_teal_s3": {
+  "file": "destruct/car_sedan_teal_s3.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_taxi_s0": {
+  "file": "destruct/car_taxi_s0.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_taxi_s1": {
+  "file": "destruct/car_taxi_s1.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_taxi_s2": {
+  "file": "destruct/car_taxi_s2.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_taxi_s3": {
+  "file": "destruct/car_taxi_s3.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_van_sky_s0": {
+  "file": "destruct/car_van_sky_s0.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_van_sky_s1": {
+  "file": "destruct/car_van_sky_s1.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_van_sky_s2": {
+  "file": "destruct/car_van_sky_s2.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_van_sky_s3": {
+  "file": "destruct/car_van_sky_s3.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_van_sun_s0": {
+  "file": "destruct/car_van_sun_s0.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_van_sun_s1": {
+  "file": "destruct/car_van_sun_s1.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_van_sun_s2": {
+  "file": "destruct/car_van_sun_s2.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "car_van_sun_s3": {
+  "file": "destruct/car_van_sun_s3.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "debris_ash_scorch": {
+  "file": "destruct/debris_ash_scorch.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "debris_glass_1": {
+  "file": "destruct/debris_glass_1.webp",
+  "w": 16.0,
+  "h": 16.0,
+  "ox": -8.0,
+  "oy": -8.0
+ },
+ "debris_glass_2": {
+  "file": "destruct/debris_glass_2.webp",
+  "w": 16.0,
+  "h": 16.0,
+  "ox": -8.0,
+  "oy": -8.0
+ },
+ "debris_glass_3": {
+  "file": "destruct/debris_glass_3.webp",
+  "w": 16.0,
+  "h": 16.0,
+  "ox": -8.0,
+  "oy": -8.0
+ },
+ "debris_metal_1": {
+  "file": "destruct/debris_metal_1.webp",
+  "w": 24.0,
+  "h": 16.0,
+  "ox": -12.0,
+  "oy": -8.0
+ },
+ "debris_metal_2": {
+  "file": "destruct/debris_metal_2.webp",
+  "w": 16.0,
+  "h": 16.0,
+  "ox": -8.0,
+  "oy": -8.0
+ },
+ "debris_metal_3": {
+  "file": "destruct/debris_metal_3.webp",
+  "w": 16.0,
+  "h": 16.0,
+  "ox": -8.0,
+  "oy": -8.0
+ },
+ "debris_tire_1": {
+  "file": "destruct/debris_tire_1.webp",
+  "w": 16.0,
+  "h": 16.0,
+  "ox": -8.0,
+  "oy": -8.0
+ },
+ "debris_tire_2": {
+  "file": "destruct/debris_tire_2.webp",
+  "w": 16.0,
+  "h": 16.0,
+  "ox": -8.0,
+  "oy": -8.0
+ },
+ "debris_wood_1": {
+  "file": "destruct/debris_wood_1.webp",
+  "w": 24.0,
+  "h": 16.0,
+  "ox": -12.0,
+  "oy": -8.0
+ },
+ "debris_wood_2": {
+  "file": "destruct/debris_wood_2.webp",
+  "w": 24.0,
+  "h": 16.0,
+  "ox": -12.0,
+  "oy": -8.0
+ },
+ "debris_wood_3": {
+  "file": "destruct/debris_wood_3.webp",
+  "w": 16.0,
+  "h": 16.0,
+  "ox": -8.0,
+  "oy": -8.0
+ },
+ "palm_s1": {
+  "file": "destruct/palm_s1.webp",
+  "w": 92.0,
+  "h": 92.0,
+  "ox": -46.0,
+  "oy": -46.0
+ },
+ "palm_s2": {
+  "file": "destruct/palm_s2.webp",
+  "w": 128.0,
+  "h": 92.0,
+  "ox": -18,
+  "oy": -46
+ },
+ "palm_s3_stump": {
+  "file": "destruct/palm_s3_stump.webp",
+  "w": 64.0,
+  "h": 64.0,
+  "ox": -32.0,
+  "oy": -32.0
+ },
+ "rail_s0": {
+  "file": "destruct/rail_s0.webp",
+  "w": 80.0,
+  "h": 32.0,
+  "ox": -40.0,
+  "oy": -16.0
+ },
+ "rail_s1": {
+  "file": "destruct/rail_s1.webp",
+  "w": 80.0,
+  "h": 32.0,
+  "ox": -40.0,
+  "oy": -16.0
+ },
+ "rail_s2": {
+  "file": "destruct/rail_s2.webp",
+  "w": 80.0,
+  "h": 32.0,
+  "ox": -40.0,
+  "oy": -16.0
+ },
+ "rail_s3": {
+  "file": "destruct/rail_s3.webp",
+  "w": 80.0,
+  "h": 32.0,
+  "ox": -40.0,
+  "oy": -16.0
+ }
+}
