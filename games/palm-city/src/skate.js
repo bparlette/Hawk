@@ -190,6 +190,7 @@ export function stepBoard(sim, dt, inp) {
     }
     // obstacles cleared in the air score
     for (const be of sim.benches) {
+      if (be.broken) continue;                              // a smashed bench (destruct.js) is a plank pile
       if (Math.hypot(be.x - b.x, be.y - b.y) < 16 && sim.time - (be.t || -9) > 1) { be.t = sim.time; trick(sim, 'BENCH OLLIE', TRICK.bench); }
     }
     if (b.air <= 0) {
@@ -245,7 +246,7 @@ export function stepBoard(sim, dt, inp) {
     // curb hop: crossing the kerb line fast without ollie = bail; with air = points (handled by curb trick)
     const rd = W.roadInfo(b.x, b.y).d, prevRd = b.prevRd ?? rd;
     b.prevRd = rd;
-    for (const be of sim.benches) if (Math.hypot(be.x - b.x, be.y - b.y) < 11 && sp > 70) { bail(sim, 'bench'); return; }
+    for (const be of sim.benches) if (!be.broken && Math.hypot(be.x - b.x, be.y - b.y) < 11 && sp > 70) { bail(sim, 'bench'); return; }
     // people: clip one slowly and they stumble, hit one at speed and they go down; either way you lose speed
     for (const o of sim.peds) {
       if (o === p || o.hidden || o.mode === 'down' || o.mode === 'cop') continue;

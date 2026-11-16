@@ -3,7 +3,7 @@
 // (touch for the fight button, the keyboard for driving), and captured mid-destruction.
 // Usage: CHROME=/path/to/chrome node tools/destruct_shots.mjs <before|after> [scene ...]
 //   -> shots/destruct-<before|after>-<scene>.png
-//   scenes: car-punch, car-ram, palm-ram, palm-fall, bush-plow, bench-ram, lamp-ram
+//   scenes: car-punch, car-ram, palm-ram, palm-fall, bush-plow, bench-ram, lamp-ram, tower-ram
 import { chromium } from 'playwright-core';
 import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -88,7 +88,14 @@ await scene('bush-plow', inCar(34, 1771, 0, 60), async (page) => {
 // bench-ram: cross the promenade into the side of a bench
 await scene('bench-ram', inCar(1150, 1420, 0, 0), drive('false', 0, 300));
 // lamp-ram: run down a street lamp
-await scene('lamp-ram', inCar(1230, 930, Math.PI / 2, 0), drive('c.y > 1120', 0, 300));
+await scene('lamp-ram', inCar(1230, 930, Math.PI / 2, 0), async (page) => {
+  await page.keyboard.down('ArrowUp');           // freeze once the car is clear of the felled lamp
+  await page.waitForFunction(() => { const s = window.__palm.sim, c = s.player.car; if (c && c.y > 1150) { s.step = () => {}; return true; } return false; }, null, { timeout: 15000, polling: 'raf' });
+  await page.keyboard.up('ArrowUp'); await page.waitForTimeout(400);
+}, '1230,1110,1.6');                                 // fixed camera on the lamp
+
+// tower-ram: drive into a lifeguard tower on the beach
+await scene('tower-ram', inCar(1190, 640, 0, 0), drive('false', 0, 400));
 
 await browser.close(); server.close();
 if (errors.length) { console.error('PAGE ERRORS:\n' + errors.join('\n')); process.exit(1); }

@@ -35,7 +35,7 @@ const clearCops = (s) => { s.cars = s.cars.filter(c => c.kind !== 'police'); };
   check('enough punches make a smoking wreck', c.wreck && c.dmg >= 1);
   run(s, 1);
   check('a wreck smokes (pooled puffs)', s.smoke.some(q => q.on));
-  check('debris settles and stays', (run(s, 3), s.debris.filter(d => d.on).every(d => d.rest)), `${s.debris.filter(d => d.on).length} pieces`);
+  check('debris settles and stays', (run(s, 3), s.debris.filter(d => d.on && d.born < s.time - 2).every(d => d.rest)), `${s.debris.filter(d => d.on).length} pieces`);
   check('punching cars scores', s.score > 0, `score ${s.score}`);
   p.x = c.x + 12; s.step(1 / 60, { ...none, action: true });
   check('a wreck cannot be jacked', s.player.mode === 'foot');
@@ -170,6 +170,50 @@ const clearCops = (s) => { s.cars = s.cars.filter(c => c.kind !== 'police'); };
   check('a car ploughs through a cluster without stopping', c.x > 230, `x ${c.x.toFixed(0)}`);
   check('the bushes it ran over are flattened or torn out', near.filter(b => b.stage >= 2).length >= 2, near.map(b => b.stage).join(','));
   check('nothing breaks below walking pace', (() => { const s2 = fresh(); const b = s2.bushes[0]; const c2 = s2.addCar(b.x - 30, b.y, 0, 'sedan_teal', null); c2.v = 20; run(s2, 1); return b.dmg === 0; })());
+}
+// ---- benches and street props
+{
+  const s = fresh(); clearCops(s);
+  const bt = s.benches[2].thing;                          // promenade bench at 1300,1420 (along y)
+  const p = s.player.ped; p.x = bt.x - 22; p.y = bt.y; p.h = 0;
+  for (const o of s.peds) if (o !== p && Math.hypot(o.x - p.x, o.y - p.y) < 80) o.x += 400;
+  const stages = new Set();
+  for (let i = 0; i < 8 && bt.stage < 3; i++) { punchN(s, 1); stages.add(bt.stage); }
+  check('punched bench cracks, snaps in half, collapses', stages.has(1) && stages.has(2) && stages.has(3), [...stages].join(','));
+  check('a collapsed bench no longer blocks (or counts for ollies)', !s.obst.some(o => o.thing === bt) && s.benches[2].broken);
+}
+{
+  const s = fresh(); clearCops(s);
+  const bt = s.benches[2].thing;
+  const mk = (x, v) => { const c = s.addCar(x, bt.y, 0, 'sedan_teal', 'player'); s.player.mode = 'car'; s.player.car = c; s.player.ped.hidden = true; c.v = v; return c; };
+  const slow = mk(bt.x - 34, 40); run(s, 1.5);
+  check('a slow nudge only scuffs a bench, and the car stops', bt.stage <= 1 && slow.x < bt.x, `bench dmg ${bt.dmg.toFixed(2)} car x ${slow.x.toFixed(0)}`);
+  s.cars = s.cars.filter(c => c !== slow);
+  const fast = mk(1150, 160); run(s, 1.4, { ...none, keys: { up: true } });
+  check('a fast car smashes through the bench and carries on', bt.stage >= 3 && fast.x > bt.x, `bench ${bt.stage} car x ${fast.x.toFixed(0)}`);
+  check('the car pays for it', fast.dmg > 0.05, `car dmg ${fast.dmg.toFixed(2)}`);
+}
+{
+  const s = fresh(); clearCops(s);
+  const L = s.lamps[6];                                   // 1230,1100
+  const c = s.addCar(L.x, L.y - 150, Math.PI / 2, 'sedan_teal', 'player'); s.player.mode = 'car'; s.player.car = c; s.player.ped.hidden = true; c.v = 120;
+  run(s, 1.5, { ...none, keys: { up: true } });
+  check('a car clips a street lamp: it goes down', L.stage >= 2, `lamp ${L.stage} dmg ${L.dmg.toFixed(2)}`);
+  check('the car takes a dent and a jolt', c.dmg > 0, `car dmg ${c.dmg.toFixed(3)}`);
+  const s2 = fresh(); clearCops(s2);
+  const L2 = s2.lamps[6], p = s2.player.ped; p.x = L2.x - 12; p.y = L2.y; p.h = 0;
+  for (const o of s2.peds) if (o !== p && Math.hypot(o.x - p.x, o.y - p.y) < 80) o.x += 400;
+  const st = new Set(); for (let i = 0; i < 10 && L2.stage < 3; i++) { punchN(s2, 1); st.add(L2.stage); }
+  check('punched lamp skews, bends, falls', st.has(1) && st.has(2) && st.has(3), [...st].join(','));
+}
+{
+  const s = fresh(); clearCops(s);
+  const T = s.towers.find(Boolean);                       // lifeguard tower at 1354,640
+  const c = s.addCar(1190, T.y, 0, 'sedan_teal', 'player'); s.player.mode = 'car'; s.player.car = c; s.player.ped.hidden = true; c.v = 200;
+  run(s, 1.5, { ...none, keys: { up: true } });
+  check('a fast car wrecks a lifeguard tower', T.stage >= 2, `tower ${T.stage} dmg ${T.dmg.toFixed(2)}`);
+  const n0 = s.score;
+  check('smashing street props scores', n0 > 0, `score ${n0}`);
 }
 console.log(fails ? `DESTRUCT FAIL (${fails})` : 'DESTRUCT OK');
 process.exit(fails ? 1 : 0);

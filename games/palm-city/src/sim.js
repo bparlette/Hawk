@@ -3,7 +3,7 @@
 
 import { mulberry32 } from './world.js';
 import { initSkate, stepBoard, stepCombo, nearBoard, mount, boardSpeed } from './skate.js';
-import { initDestruct, stepDestruct, punchWorld, carState, carImpact, carsCollide, hitThing, palmImpact } from './destruct.js';
+import { initDestruct, stepDestruct, punchWorld, carState, carImpact, carsCollide, hitThing, palmImpact, initProps, propImpact } from './destruct.js';
 
 const TAU = Math.PI * 2;
 const wrap = (a) => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
@@ -46,6 +46,7 @@ export class Sim {
     this.obst = [];
     for (const b of this.benches) for (const k of [-11, 0, 11]) this.obst.push({ x: b.x + Math.cos(b.a) * k, y: b.y + Math.sin(b.a) * k, r: 5.5, kind: 'bench' });
     for (const p of world.L.props) this.obst.push({ x: p.x, y: p.y, r: p.type === 'fountain' ? 30 : 12, kind: p.type });
+    initProps(this);                                     // benches, lamps, lifeguard towers can be broken (destruct.js)
     // two people strolling the pier, out to the end and back
     const PR = world.L.pier;
     for (const [fx, dir, outfit, dy] of [[0.3, 1, 'ped_straw', -5], [0.75, -1, 'ped_blue', 5]]) {
@@ -458,7 +459,7 @@ export class Sim {
     for (const [u, v] of [[c.len / 2, c.wid / 2], [c.len / 2, -c.wid / 2], [-c.len / 2, c.wid / 2], [-c.len / 2, -c.wid / 2], [c.len / 2, 0]]) {
       const px = x + ca * u - sa * v, py = y + sa * u + ca * v;
       if (!W.isDrivable(px, py)) return true;
-      for (const o of this.obst) if ((px - o.x) ** 2 + (py - o.y) ** 2 < o.r * o.r) return true;
+      for (const o of this.obst) if ((px - o.x) ** 2 + (py - o.y) ** 2 < o.r * o.r) { this.hitObst = o; return true; }
       const tr = W.hitTrunk(px, py, 1);
       if (tr) { this.hitTree = tr; return true; }
     }
@@ -467,7 +468,7 @@ export class Sim {
 
   moveCar(c, dt) {
     const dx = Math.cos(c.h) * c.v * dt, dy = Math.sin(c.h) * c.v * dt;
-    this.hitTree = null;
+    this.hitTree = null; this.hitObst = null;
     if (!this.carBlocked(c, c.x + dx, c.y + dy, c.h)) { c.x += dx; c.y += dy; return; }
     const cause = c.driver === 'player' ? 'player' : 'world';
     if (this.hitTree) {                                   // a palm: the tree answers, scaled by speed
@@ -482,6 +483,12 @@ export class Sim {
     }
     if (Math.abs(c.v) > 120 && c.driver === 'player') this.crash(Math.abs(c.v));
     carImpact(this, c, Math.abs(c.v), cause);           // walls dent the leading panel, scaled by speed
+    const prop = this.hitObst && this.hitObst.thing;
+    if (prop) {                                           // a bench or a tower: it breaks by speed
+      const sp = Math.abs(c.v);
+      if (this.time - prop.hitT > 0.3) hitThing(this, prop, propImpact(prop.kind, sp), dx, dy, cause, sp);
+      if (prop.stage >= 3) { c.v *= 0.7; return; }      // smashed through: plough on
+    }
     if (!this.carBlocked(c, c.x + dx, c.y, c.h)) { c.x += dx; c.v *= 0.8; }
     else if (!this.carBlocked(c, c.x, c.y + dy, c.h)) { c.y += dy; c.v *= 0.8; }
     else c.v *= -0.25;
