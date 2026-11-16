@@ -415,12 +415,47 @@ export class Renderer {
     P && P('end');
   }
 
+  // Two tileable sheets of loose brush strokes (transparent ground) that slide over the painted sea
+  // at different speeds, so the whole surface is always moving. Built once, 256 px each.
+  buildWaterStrokes() {
+    const make = (seed, n, cols, wMin, wMax, lMin, lMax, aMin, aMax) => {
+      const c = layer(256, 256), g = c.getContext('2d'), r = mulberry32(seed);
+      g.lineCap = 'round';
+      for (let i = 0; i < n; i++) {
+        const x = r() * 256, y = r() * 256, a = Math.PI / 2 + (r() - 0.5) * 1.1, L = lMin + r() * (lMax - lMin), bend = (r() - 0.5) * 0.5;
+        g.strokeStyle = cols[(r() * cols.length) | 0];
+        g.globalAlpha = aMin + r() * (aMax - aMin);
+        g.lineWidth = wMin + r() * (wMax - wMin);
+        const cx = Math.cos(a) * L / 2, sy = Math.sin(a) * L / 2;
+        for (const ox of [-256, 0, 256]) for (const oy of [-256, 0, 256]) {
+          g.beginPath(); g.moveTo(x + ox - cx, y + oy - sy);
+          g.quadraticCurveTo(x + ox - sy * bend, y + oy + cx * bend, x + ox + cx, y + oy + sy); g.stroke();
+        }
+      }
+      return this.ctx.createPattern(c, 'repeat');
+    };
+    return {
+      deep: make(41, 70, ['#2482ba', '#38a6cc', '#165a96', '#56bed6', '#124686', '#2a6cb4'], 5, 9, 16, 34, 0.45, 0.8),
+      light: make(42, 38, ['#bfefff', '#7ad0dc', '#9fe2ea', '#f0c890'], 1.6, 3.4, 10, 24, 0.5, 0.9),
+    };
+  }
+
   drawOcean(g, G, t, time, vx0, vy0, vx1, vy1) {
     const W = this.world;
-    if (W.shoreX(cam_mid(vy0, vy1)) > vx1 + 40 && W.shoreX(vy0) > vx1 + 40 && W.shoreX(vy1) > vx1 + 40) return;
-    // sky reflection drifts from gold to rose to violet as the sun goes
+    if (W.shoreX(cam_mid(vy0, vy1)) - 60 > vx1 && W.shoreX(vy0) - 60 > vx1 && W.shoreX(vy1) - 60 > vx1) return;
+    if (!this.waterStrokes) this.waterStrokes = this.buildWaterStrokes();
     g.save();
     g.clip(this.waterPath);
+    // drifting paint: two stroke sheets sliding shoreward at different speeds over the painted base
+    const slide = (pat, ox, oy, sc, alpha) => {
+      g.save();
+      g.translate(ox, oy); g.scale(sc, sc);
+      g.globalAlpha = alpha; g.fillStyle = pat;
+      g.fillRect((vx0 - ox) / sc, (vy0 - oy) / sc, (vx1 - vx0) / sc, (vy1 - vy0) / sc);
+      g.restore();
+    };
+    slide(this.waterStrokes.deep, -time * 5.5, time * 3.2 + Math.sin(time * 0.31) * 6, 1.25, 0.36 + Math.sin(time * 0.4) * 0.05);
+    slide(this.waterStrokes.light, -time * 10, -time * 2.6 + Math.sin(time * 0.47 + 1) * 5, 1, 0.42 + Math.sin(time * 0.53 + 2) * 0.08);
     // sky reflection: a gradient across the water that drifts gold -> rose -> violet as the sun goes;
     // brighter offshore (open sky), deeper near the shore (land shadow)
     const sx = W.shoreX((vy0 + vy1) / 2);
@@ -436,20 +471,23 @@ export class Renderer {
     g.fillStyle = sky;
     g.fillRect(vx0, vy0, vx1 - vx0, vy1 - vy0);
     g.globalCompositeOperation = 'source-over';
-    // slow swell bands
+    // swell: crest lines parallel to the shore, rolling in and sharpening as they near the sand
     g.lineCap = 'round';
-    for (let y = Math.floor(vy0 / 22) * 22; y < vy1; y += 22) {
-      const x0 = Math.max(vx0, W.shoreX(y));
-      const off = Math.sin(time * 0.6 + y * 0.05) * 18;
-      g.strokeStyle = 'rgba(210,240,250,0.16)';
-      g.lineWidth = 3.5;
+    const SPAN = 440, GAP = 88;
+    for (let k = 0; k < SPAN / GAP; k++) {
+      const d = ((k * GAP - time * 11) % SPAN + SPAN) % SPAN;
+      const a = Math.pow(Math.sin(Math.PI * Math.min(1, (d + 30) / (SPAN + 30))), 0.8) * 0.42;
+      g.strokeStyle = `rgba(214,244,250,${a})`;
+      g.lineWidth = d < 70 ? 4.2 - d * 0.02 : 2.6;
+      g.setLineDash([36 + k * 7, 14 + k * 5]); g.lineDashOffset = k * 31 + time * 3;
       g.beginPath();
-      for (let x = x0; x < vx1 + 30; x += 30) {
-        const yy = y + Math.sin(x * 0.03 + time * 0.9) * 3 + off * 0.1;
-        if (x === x0) g.moveTo(x, yy); else g.lineTo(x, yy);
+      for (let y = vy0 - 30; y <= vy1 + 30; y += 22) {
+        const x = W.shoreX(y) + d + Math.sin(y * 0.021 + k * 1.7) * 10 + Math.sin(y * 0.05 + time * 0.5 + k) * 4;
+        if (y === vy0 - 30) g.moveTo(x, y); else g.lineTo(x, y);
       }
       g.stroke();
     }
+    g.setLineDash([]);
     // glints
     const ug1 = clamp01(t / 0.55), ug2 = clamp01((t - 0.55) / 0.45);
     const gc = t < 0.55
@@ -465,17 +503,53 @@ export class Renderer {
       g.ellipse(p.x + Math.sin(time * 0.5 + p.ph) * 3, p.y, p.w / 2, 1.3, 0, 0, 7);
       g.fill();
     }
-    // foam pulse along the shore
     g.restore();
-    g.strokeStyle = 'rgba(250,244,230,0.45)';
-    g.lineWidth = 2.5;
-    g.beginPath();
-    const pulse = (Math.sin(time * 0.8) * 0.5 + 0.5) * 7;
-    for (let y = vy0 - 10; y < vy1 + 10; y += 8) {
-      const x = W.shoreX(y) + 4 + pulse + Math.sin(y * 0.08 + time) * 2;
-      if (y === vy0 - 10) g.moveTo(x, y); else g.lineTo(x, y);
+    this.drawSurf(g, time, vx0, vy0, vx1, vy1);
+  }
+
+  // The breathing shoreline. Each wave runs up the sand fast and drains back slowly on a ~6.4 s
+  // cycle that travels down the beach; the sand it reaches goes dark and wet, then dries until
+  // the next one. Drawn as short strips so every stretch of beach is at its own point in the cycle.
+  drawSurf(g, time, vx0, vy0, vx1, vy1) {
+    const W = this.world, STEP = 5, T = 6.4, UP = 0.32;
+    const y0 = Math.floor((vy0 - 10) / STEP) * STEP;
+    for (let pass = 0; pass < 3; pass++) {
+      for (let y = y0; y < vy1 + 10; y += STEP) {
+        const sx = W.shoreX(y);
+        if (sx + 8 < vx0 || sx - 60 > vx1) continue;
+        const k = y / STEP, n1 = 0.5 + 0.5 * Math.sin(y * 0.031) * Math.sin(y * 0.0113 + 1.7), n2 = 0.5 + 0.5 * Math.sin(y * 0.0071 + 4);
+        let u = time / T - y / 1500 + n2 * 0.16; u -= Math.floor(u);
+        const reach = 26 + 20 * n1;                                  // how far up the sand this stretch gets
+        const run = u < UP ? 1 - Math.pow(1 - u / UP, 3) : 1 - smooth(0, 1, (u - UP) / (1 - UP));
+        const front = sx + 3 - reach * run;
+        if (pass === 0) {
+          // wet sand: last wave's stain drying out, and the fresh one spreading under the new wave
+          const dry = u < UP ? 0.3 * (1 - u / UP) : lerp(0.72, 0.3, Math.pow((u - UP) / (1 - UP), 0.8));
+          g.fillStyle = `rgba(92,50,40,${dry})`;
+          g.fillRect(sx + 3 - reach, y, reach + 2, STEP);
+          if (u < UP) { g.fillStyle = `rgba(92,50,40,${0.72 - 0.3 * (1 - u / UP)})`; g.fillRect(front - 2, y, sx + 5 - front, STEP); }
+          else if (u < UP + 0.3) {                                   // glassy sheen while the water drains off
+            g.fillStyle = `rgba(255,232,196,${0.22 * (1 - (u - UP) / 0.3)})`;
+            g.fillRect(sx + 3 - reach, y, front - (sx + 3 - reach), STEP);
+          }
+        } else if (pass === 1) {
+          // the sheet of water itself, paler toward its leading edge
+          g.fillStyle = 'rgba(52,140,188,0.8)'; g.fillRect(front + 6, y, sx + 6 - (front + 6), STEP);
+          g.fillStyle = 'rgba(150,218,230,0.72)'; g.fillRect(front, y, Math.min(8, sx + 6 - front), STEP);
+        } else {
+          // foam: a scalloped lip on the leading edge, bright running in, thinning as it drains;
+          // plus the lace it leaves at the high-water mark
+          const fa = u < UP ? 0.92 : 0.75 * (1 - smooth(0, 0.8, (u - UP) / (1 - UP))) + 0.12;
+          g.fillStyle = `rgba(252,246,232,${fa})`;
+          g.beginPath(); g.ellipse(front + Math.sin(k * 1.9) * 1.6, y + STEP / 2, 3.2 + n1 * 2.2, STEP * 0.72, 0, 0, 7); g.fill();
+          if (u < UP) { g.fillStyle = 'rgba(252,246,232,0.4)'; g.beginPath(); g.ellipse(front + 7 + Math.sin(k * 2.7) * 2, y + STEP / 2, 2.2, STEP * 0.5, 0, 0, 7); g.fill(); }
+          else if (u < UP + 0.42 && (Math.floor(k) % 2 === 0)) {
+            g.fillStyle = `rgba(252,246,232,${0.5 * (1 - (u - UP) / 0.42)})`;
+            g.beginPath(); g.ellipse(sx + 3 - reach + Math.sin(k * 3.1) * 1.5, y + STEP / 2, 1.6, 2.4, 0, 0, 7); g.fill();
+          }
+        }
+      }
     }
-    g.stroke();
   }
 
   drawNeonPuddles(lg, G, time, vx0, vy0, vx1, vy1) {
