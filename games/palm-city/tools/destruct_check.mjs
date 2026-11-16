@@ -37,6 +37,7 @@ const clearCops = (s) => { s.cars = s.cars.filter(c => c.kind !== 'police'); };
   check('a wreck smokes (pooled puffs)', s.smoke.some(q => q.on));
   check('debris settles and stays', (run(s, 3), s.debris.filter(d => d.on && d.born < s.time - 2).every(d => d.rest)), `${s.debris.filter(d => d.on).length} pieces`);
   check('punching cars scores', s.score > 0, `score ${s.score}`);
+  clearCops(s);
   p.x = c.x + 12; s.step(1 / 60, { ...none, action: true });
   check('a wreck cannot be jacked', s.player.mode === 'foot');
 }
