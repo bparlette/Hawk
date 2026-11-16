@@ -348,7 +348,7 @@
  },
  "cars": {
   "conv_mint": {
-   "angles": 32,
+   "angles": 16,
    "color": {
     "file": "car_conv_mint.webp",
     "h": 64.0,
@@ -376,7 +376,7 @@
    "width": 19.0
   },
   "conv_rose": {
-   "angles": 32,
+   "angles": 16,
    "color": {
     "file": "car_conv_rose.webp",
     "h": 64.0,
@@ -404,7 +404,7 @@
    "width": 19.0
   },
   "police": {
-   "angles": 32,
+   "angles": 16,
    "color": {
     "file": "car_police.webp",
     "h": 64.0,
@@ -432,7 +432,7 @@
    "width": 19.0
   },
   "sedan_coral": {
-   "angles": 32,
+   "angles": 16,
    "color": {
     "file": "car_sedan_coral.webp",
     "h": 64.0,
@@ -460,7 +460,7 @@
    "width": 19.0
   },
   "sedan_cream": {
-   "angles": 32,
+   "angles": 16,
    "color": {
     "file": "car_sedan_cream.webp",
     "h": 64.0,
@@ -488,7 +488,7 @@
    "width": 19.0
   },
   "sedan_plum": {
-   "angles": 32,
+   "angles": 16,
    "color": {
     "file": "car_sedan_plum.webp",
     "h": 64.0,
@@ -516,7 +516,7 @@
    "width": 19.0
   },
   "sedan_teal": {
-   "angles": 32,
+   "angles": 16,
    "color": {
     "file": "car_sedan_teal.webp",
     "h": 64.0,
@@ -544,7 +544,7 @@
    "width": 19.0
   },
   "taxi": {
-   "angles": 32,
+   "angles": 16,
    "color": {
     "file": "car_taxi.webp",
     "h": 64.0,
@@ -572,7 +572,7 @@
    "width": 19.0
   },
   "van_sky": {
-   "angles": 32,
+   "angles": 16,
    "color": {
     "file": "car_van_sky.webp",
     "h": 64.0,
@@ -600,7 +600,7 @@
    "width": 20.0
   },
   "van_sun": {
-   "angles": 32,
+   "angles": 16,
    "color": {
     "file": "car_van_sun.webp",
     "h": 64.0,
