@@ -5,6 +5,7 @@
 // live marker for the player (position + facing). The map is LIVE: the game keeps running under it
 // and the joystick still drives, so you can watch yourself move. Tap MAP / the X (or M) to close.
 import { PLACES } from './jobs.js';
+import { markers } from './activities.js';
 
 const SURF = {                       // painted palette, by surface type
   road: [112, 92, 104], sidewalk: [226, 196, 150], paving: [214, 178, 132], plaza: [222, 168, 120], parking: [150, 128, 132],
@@ -29,17 +30,17 @@ export function mapPOIs(world, sim) {
   const b = (id) => L.buildings.find(q => q.id === id);
   const mid = (q) => [q.x + q.w / 2, q.y + q.d / 2];
   for (const q of L.buildings) if (q.sign && q.id !== 'motel') out.push({ name: q.sign, kind: 'place', p: mid(q) });
-  out.push({ name: 'MOTEL', kind: 'door', p: [L.motelDoor[0], L.motelDoor[1]] });         // the siege entrance
   out.push({ name: 'GARAGE', kind: 'place', p: mid(b('garage')) });
   out.push({ name: 'POLICE', kind: 'place', p: mid(b('police')) });
   out.push({ name: 'PIER', kind: 'place', p: [L.pier.x + L.pier.w * 0.5, L.pier.y + L.pier.h / 2] });
   out.push({ name: 'BEACH', kind: 'area', p: [L.shore.x - 40, 620] });
   out.push({ name: 'SKATE PARK', kind: 'area', p: sim && sim.benches && sim.benches[0] ? [sim.benches[0].x, sim.benches[0].y] : [1330, 1300] });
+  if (!sim) out.push({ name: 'MOTEL', kind: 'door', p: [L.motelDoor[0], L.motelDoor[1]] });
   if (sim) {
-    for (const c of sim.cars) if (c.job && c.driver !== 'player') out.push({ name: { taxi: 'TAXI', tow: 'TOW', bus: 'BUS', getaway: 'GETAWAY' }[c.job], kind: 'job', p: [c.x, c.y] });
     if (sim.job && sim.job.spot) out.push({ name: sim.job.spotName || 'JOB', kind: 'target', p: [sim.job.spot[0], sim.job.spot[1]] });
     if (sim.event && sim.event.spot) out.push({ name: sim.event.name, kind: 'target', p: sim.event.spot });
-    for (const e of sim.eventSites || []) out.push({ name: e.name, kind: 'job', p: e.p });
+    // every activity in the registry (activities.js): the motel door, the four jobs, the events
+    for (const m of markers(sim)) if (m.a.group !== 'hub') out.push({ name: m.a.group === 'siege' ? 'MOTEL' : m.a.group === 'event' ? m.a.site.name : m.a.tag, kind: m.a.door ? 'door' : 'job', p: [m.x, m.y], activity: m.a.id });
   }
   void PLACES;
   return out;

@@ -7,6 +7,7 @@ import { initPressure, stepPressure } from './pressure.js';
 import { initJobs, stepJobs } from './jobs.js';
 import { stepTurbo, TURBO } from './controls.js';
 import { initSkid, layMarks } from './skid.js';
+import { initActivities } from './activities.js';
 import { initEvents, stepEvents } from './events.js';
 import { initSkate, stepBoard, stepCombo, nearBoard, mount, boardSpeed } from './skate.js';
 import { initDestruct, stepDestruct, punchWorld, carState, carImpact, carsCollide, hitThing, palmImpact, initProps, propImpact } from './destruct.js';
@@ -57,6 +58,7 @@ export class Sim {
     initPressure(this);                                  // the chopper, roadblocks, spikes (pressure.js)
     initJobs(this);                                      // job vehicles + the one job slot (jobs.js)
     initEvents(this);                                    // WRECK IT! + VALET sites and the one event slot (events.js)
+    initActivities(this);                    // the registry the markers, map and HELP read
     // two people strolling the pier, out to the end and back
     const PR = world.L.pier;
     for (const [fx, dir, outfit, dy] of [[0.3, 1, 'ped_straw', -5], [0.75, -1, 'ped_blue', 5]]) {

@@ -439,3 +439,29 @@ hollow middle, drift marks that turn with the car, zero marks in 10 s of straigh
 `CHROME=… node tools/skid_shots.mjs [donut drift sand]` → `shots/skid-*.png`, driven with the
 keyboard in the real page.
 
+## 7F — activity indicators (Nov 16 2026)
+
+`src/activities.js` is the one registry of things to do: `initActivities(sim)` builds
+`sim.activities` — MOTEL SIEGE, TAXI, TOW, BUS, GETAWAY, WRECK IT!, VALET, plus the Garage's JOBS
+signpost (group `hub`: a marker, not a startable row). Each entry carries `name`, `tag`, a one-line
+`how`, `live()` and `pos()`. Adding an activity is one more entry there; markers, map and (7G) HELP
+pick it up.
+
+- **Street markers** (`Renderer.drawActivityMarkers`): one painted language — cream plaque, plum ink
+  line, a colour band per kind, a stem down to the thing, a gentle bob. World-anchored, no HUD
+  furniture. Job tags ride on the parked vehicle and step aside while you drive it or work the job;
+  event tags sit over the existing rings and hide while an event runs. After dark each plaque
+  carries its own glow in the light layer.
+- **Motel door** (`Renderer.drawMotelDoor`): warm glow spilling from the doorway and chevrons
+  marching into it on the pavement, so it reads ENTERABLE from the street. The ENTER prompt is
+  unchanged (the confirmation).
+- **Map**: `mapPOIs` takes its motel, job and event POIs from the same registry.
+
+Note: the brief says the four job vehicles sit at the Garage kerb. In the game as built only the
+tow truck and the bus do; the taxi and the getaway van are parked on the cross streets (jobs.js),
+and their tags follow them there.
+
+Proof: `node tools/activities_check.mjs` (27 rules — a marker, how-to and map POI for all seven);
+`CHROME=… node tools/activity_shots.mjs [motel motel-dusk garage events]` → `shots/activity-*.png`,
+keyboard-driven, frozen on the exact step the car passes.
+
