@@ -178,8 +178,8 @@ export class Renderer {
       if (l.t < 0) continue;
       const u = l.t / l.life;
       g.globalAlpha = Math.min(1, (1 - u) * 2.2);
-      g.fillStyle = (l.rot * 10 | 0) % 2 ? '#7fb24a' : '#4f8f3a';
-      g.beginPath(); g.ellipse(l.x, l.y, 4.2 * (1 - u * 0.35), 1.7, l.rot, 0, 7); g.fill();
+      g.fillStyle = (l.rot * 10 | 0) % 2 ? '#9ccf52' : '#5f9f3c';
+      g.beginPath(); g.ellipse(l.x, l.y, 5.4 * (1 - u * 0.3), 2.1, l.rot, 0, 7); g.fill();
     }
     g.globalAlpha = 1;
   }
@@ -308,7 +308,7 @@ export class Renderer {
         g.save(); g.translate(p.x, p.y); g.rotate(Math.sin(p.stT * 26) * 0.45 * Math.min(1, p.stT / 0.3));
         this.drawCell(g, m.color, idx, m.cols, rows, 0, 0); g.restore();
       } else if (p.outfit === 'player') {  // the hero is drawn a touch larger so you never lose them
-        const z = S.board && S.board.ridden ? S.board.z : 0;
+        const z = S.board && S.board.ridden ? S.board.z : p.hopT > 0 ? Math.sin(Math.PI * p.hopT / 0.26) * 0.7 : 0;
         g.save(); g.translate(p.x, p.y); g.scale(1.2 + z * 0.4, 1.2 + z * 0.4);
         this.drawCell(g, m.color, idx, m.cols, rows, 0, 0); g.restore();
       } else this.drawCell(g, m.color, idx, m.cols, rows, p.x, p.y);
@@ -628,6 +628,16 @@ export class Renderer {
   drawSkatePark(g, S) {
     if (!S.rails) return;
     g.lineCap = 'round';
+    const P = this.L.pier;
+    if (P) {                                              // end rail + posts, so the pier reads as railed all round
+      const ex = P.x + P.w - 2;
+      g.strokeStyle = 'rgba(40,24,60,0.35)'; g.lineWidth = 4;
+      g.beginPath(); g.moveTo(ex + 3, P.y + 2); g.lineTo(ex + 3, P.y + P.h - 2); g.stroke();
+      g.strokeStyle = '#d9d4e6'; g.lineWidth = 2.4;
+      g.beginPath(); g.moveTo(ex, P.y + 2); g.lineTo(ex, P.y + P.h - 2); g.stroke();
+      g.fillStyle = '#4a3550';
+      for (let x = P.x + 8; x <= ex + 1; x += (P.w - 10) / 9) for (const y of [P.y + 2, P.y + P.h - 2]) { g.beginPath(); g.arc(x, y, 2.1, 0, 7); g.fill(); }
+    }
     for (const r of S.rails) {
       g.strokeStyle = 'rgba(40,24,60,0.35)'; g.lineWidth = 4;
       g.beginPath(); g.moveTo(r.x0 + 4, r.y0 - 1.5); g.lineTo(r.x1 + 4, r.y1 - 1.5); g.stroke();

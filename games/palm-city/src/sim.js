@@ -39,6 +39,16 @@ export class Sim {
     ];
     for (const [x, y, h, model] of parked) this.addCar(x, y, h, model, null, { parked: true });
     initSkate(this);
+    // things you'd expect to be solid are: bench slats, the fountain basin, the lifeguard towers
+    this.obst = [];
+    for (const b of this.benches) for (const k of [-11, 0, 11]) this.obst.push({ x: b.x + Math.cos(b.a) * k, y: b.y + Math.sin(b.a) * k, r: 5.5, kind: 'bench' });
+    for (const p of world.L.props) this.obst.push({ x: p.x, y: p.y, r: p.type === 'fountain' ? 30 : 12, kind: p.type });
+    // two people strolling the pier, out to the end and back
+    const PR = world.L.pier;
+    for (const [fx, dir, outfit, dy] of [[0.3, 1, 'ped_straw', -5], [0.75, -1, 'ped_blue', 5]]) {
+      const q = this.makePed(PR.x + PR.w * fx, PR.y + PR.h / 2 + dy, outfit, { type: 'pier', y: PR.y + PR.h / 2 + dy, dir, wait: 0 }, 22);
+      q.keep = true; this.peds.push(q);
+    }
     for (let i = 0; i < 10; i++) this.spawnTraffic(true);
     for (let i = 0; i < 40; i++) this.spawnPed(true);
   }
@@ -51,8 +61,8 @@ export class Sim {
     return c;
   }
 
-  makePed(x, y, outfit, path) {
-    return { id: this.nextId++, x, y, h: 0, outfit, pose: 1, walk: 0, path, speed: 20 + this.rnd() * 14, mode: 'walk', downT: 0, fleeT: 0, vx: 0, vy: 0 };
+  makePed(x, y, outfit, path, speed) {
+    return { id: this.nextId++, x, y, h: 0, outfit, pose: 1, walk: 0, path, speed: speed ?? 20 + this.rnd() * 14, mode: 'walk', downT: 0, fleeT: 0, vx: 0, vy: 0 };
   }
 
   focus() { return this.player.mode === 'car' ? this.player.car : this.player.ped; }
@@ -109,8 +119,8 @@ export class Sim {
     this.shakes[tr.i] = { t: 0, amp: Math.min(1, power), ax: ax / l, ay: ay / l };
     const n = 2 + Math.round(power * 5), r = this.fxr;
     for (let i = 0; i < n && this.leaves.length < 60; i++) {
-      const a = r() * TAU, d = (10 + r() * 22) * tr.sc;
-      this.leaves.push({ x: tr.x + Math.cos(a) * d, y: tr.y + Math.sin(a) * d, vx: ax / l * 14 + (r() - 0.5) * 26, vy: ay / l * 14 + (r() - 0.5) * 26, t: -r() * 0.25, life: 1.1 + r() * 0.9, rot: r() * TAU, vr: (r() - 0.5) * 7 });
+      const a = r() * TAU, d = (20 + r() * 22) * tr.sc, out = 16 + r() * 26;   // shaken loose from the crown's rim, drifting outward
+      this.leaves.push({ x: tr.x + Math.cos(a) * d, y: tr.y + Math.sin(a) * d, vx: ax / l * 12 + Math.cos(a) * out, vy: ay / l * 12 + Math.sin(a) * out, t: -r() * 0.25, life: 1.1 + r() * 0.9, rot: r() * TAU, vr: (r() - 0.5) * 7 });
     }
     this.ev('rustle', power);
   }
@@ -154,6 +164,7 @@ export class Sim {
     for (const l of this.leaves) { l.t += dt; if (l.t > 0) { l.x += l.vx * dt; l.y += l.vy * dt; l.vx *= Math.pow(0.2, dt); l.vy *= Math.pow(0.2, dt); l.rot += l.vr * dt; } }
     if (this.leaves.length) this.leaves = this.leaves.filter(l => l.t < l.life);
     if (P.slowT > 0) P.slowT -= dt;
+    if (P.ped.hopT > 0) P.ped.hopT -= dt;
 
     // --- player
     if (P.stunT > 0) { P.stunT -= dt; input = { ...input, jm: 0, action: false, keys: {} }; }
@@ -162,7 +173,7 @@ export class Sim {
     else this.stepPlayerCar(dt, input);
     stepCombo(this, dt);
     // a board left alone rolls to a stop
-    if (!this.board.ridden) { const b = this.board, f = Math.exp(-3 * dt); b.vx *= f; b.vy *= f; const bx = b.x + b.vx * dt, by = b.y + b.vy * dt; if (!this.W.hitSolid(bx, by, 2) && !this.W.hitTrunk(bx, by, 2)) { b.x = bx; b.y = by; } else { b.vx = b.vy = 0; } }
+    if (!this.board.ridden) { const b = this.board, f = Math.exp(-3 * dt); b.vx *= f; b.vy *= f; const bx = b.x + b.vx * dt, by = b.y + b.vy * dt; if (this.canStand(bx, by) && !this.W.hitTrunk(bx, by, 2)) { b.x = bx; b.y = by; } else { b.vx = b.vy = 0; } }   // never rolls off into the sea or through a rail
 
     // --- AI cars
     for (const c of this.cars) {
@@ -187,7 +198,7 @@ export class Sim {
     });
     const traffic = this.cars.filter(c => c.driver === 'ai').length;
     if (traffic < 10 && this.rnd() < dt * 2) this.spawnTraffic(false);
-    this.peds = this.peds.filter(p => p === P.ped || p.mode === 'cop' || Math.hypot(p.x - f.x, p.y - f.y) < 1000);
+    this.peds = this.peds.filter(p => p === P.ped || p.keep || p.mode === 'cop' || Math.hypot(p.x - f.x, p.y - f.y) < 1000);
     const walkers = this.peds.filter(p => p.mode !== 'cop' && p !== P.ped).length;
     if (walkers < 40 && this.rnd() < dt * 3) this.spawnPed(false);
 
@@ -213,6 +224,14 @@ export class Sim {
         this.shakeTree(tr, 0.35, tr.x - p.x, tr.y - p.y); this.ev('bump');
       }
       this.bumpPeds(p, sp);
+      // low rails (promenade, plaza): on foot you hop them
+      for (const r of this.rails) {
+        if (r.pier) continue;
+        const vx = r.x1 - r.x0, vy = r.y1 - r.y0, t = ((p.x - r.x0) * vx + (p.y - r.y0) * vy) / (r.len * r.len);
+        const side = Math.sign(vx * (p.y - r.y0) - vy * (p.x - r.x0));
+        if (t >= 0 && t <= 1 && r.side && side && side !== r.side && !(p.hopT > 0)) { p.hopT = 0.26; this.player.slowT = Math.max(this.player.slowT || 0, 0.16); this.ev('hop'); }
+        r.side = t >= 0 && t <= 1 ? side || r.side : 0;
+      }
       p.walk += sp * dt;
       p.pose = [0, 1, 2, 1][Math.floor(p.walk / 9) % 4];
     } else p.pose = 1;
@@ -244,11 +263,17 @@ export class Sim {
     }
   }
 
+  // Where feet can be: land up to the waterline, or the pier deck between its rails.
+  canStand(x, y) {
+    const W = this.W;
+    return !W.hitSolid(x, y, 3) && x > 4 && y > 4 && x < W.L.world.w - 4 && y < W.L.world.h - 4 && (x < W.shoreX(y) + 6 || W.onPier(x, y, 4));
+  }
+
   // Moves a walker with building, shoreline, car and palm collisions. Returns the palm trunk it
   // pressed against this step (or null) so callers can react.
   walkMove(p, dx, dy) {
     const W = this.W;
-    const ok = (x, y) => !W.hitSolid(x, y, 3) && x > 4 && y > 4 && x < W.L.world.w - 4 && y < W.L.world.h - 4 && x < W.shoreX(y) + 6;
+    const ok = (x, y) => this.canStand(x, y);
     if (ok(p.x + dx, p.y + dy)) { p.x += dx; p.y += dy; }
     else if (ok(p.x + dx, p.y)) p.x += dx;
     else if (ok(p.x, p.y + dy)) p.y += dy;
@@ -270,6 +295,16 @@ export class Sim {
       let nx = p.x - tr.x, ny = p.y - tr.y, d = Math.hypot(nx, ny);
       if (d < 0.01) { nx = 1; ny = 0; d = 1; }
       p.x = tr.x + nx / d * (tr.r + 3); p.y = tr.y + ny / d * (tr.r + 3);
+    }
+    // benches, the fountain, the lifeguard towers: walk round them
+    for (const o of this.obst) {
+      let nx = p.x - o.x, ny = p.y - o.y, d = Math.hypot(nx, ny), r = o.r + 3;
+      if (d >= r) continue;
+      const mv = Math.hypot(dx, dy);
+      if (o.kind !== 'bench' && mv > 0 && d > 0.01 && Math.abs(nx * dy - ny * dx) < 0.05 * d * mv) { nx += -dy / mv; ny += dx / mv; d = Math.hypot(nx, ny); }   // dead-centre on a round thing: pick a side
+      if (d < 0.01) { nx = 1; ny = 0; d = 1; }
+      const qx = o.x + nx / d * r, qy = o.y + ny / d * r;
+      if (this.canStand(qx, qy)) { p.x = qx; p.y = qy; }
     }
     return tr;
   }
@@ -352,6 +387,7 @@ export class Sim {
     for (const [u, v] of [[c.len / 2, c.wid / 2], [c.len / 2, -c.wid / 2], [-c.len / 2, c.wid / 2], [-c.len / 2, -c.wid / 2], [c.len / 2, 0]]) {
       const px = x + ca * u - sa * v, py = y + sa * u + ca * v;
       if (!W.isDrivable(px, py)) return true;
+      for (const o of this.obst) if ((px - o.x) ** 2 + (py - o.y) ** 2 < o.r * o.r) return true;
       const tr = W.hitTrunk(px, py, 1);
       if (tr) { this.hitTree = tr; return true; }
     }
@@ -631,7 +667,14 @@ export class Sim {
         const q = W.loopAt(p.path.s + p.path.dir * 8, p.path.off);
         mx = q.x - p.x; my = q.y - p.y;
       } else {
-        if (p.mode === 'return') { mx = p.path.x - p.x; my = 0; if (Math.abs(mx) < 3) p.mode = 'walk'; }
+        if (p.path.type === 'pier') {
+          // stroll to the end of the pier, look at the sea a while, stroll back to the promenade
+          const PR = W.L.pier, q = p.path;
+          p.mode = 'walk';
+          if (q.wait > 0) { q.wait -= dt; p.h = q.dir > 0 ? Math.PI : 0; p.pose = 1; return; }
+          mx = (q.dir > 0 ? PR.x + PR.w - 12 : PR.x - 60) - p.x; my = q.y - p.y;
+          if (Math.abs(mx) < 4) { q.dir *= -1; q.wait = q.dir < 0 ? 4 : 1; }
+        } else if (p.mode === 'return') { mx = p.path.x - p.x; my = 0; if (Math.abs(mx) < 3) p.mode = 'walk'; }
         else {
           p.path.y += p.path.dir * p.speed * dt;
           if (p.path.y < 30 || p.path.y > W.L.world.h - 30) p.path.dir *= -1;
