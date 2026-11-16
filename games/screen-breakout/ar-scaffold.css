@@ -1,0 +1,105 @@
+/* Shared AR scaffold styles — camera, fallback room, bars, align UI. */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  height: 100%; overflow: hidden; background: #000;
+  touch-action: none; overscroll-behavior: none;
+  -webkit-user-select: none; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+#cam {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; z-index: 0; background: #000;
+}
+body.nocam #cam { display: none; }
+
+/* Fallback room (camera off / headless): a dim living room whose TV tracks the quad. */
+.fallback {
+  position: fixed; inset: 0; z-index: 0; display: none; overflow: hidden;
+  background:
+    linear-gradient(to bottom, #232033 0%, #2e2a44 55%, #17141f 55.2%, #241a12 100%);
+}
+body.nocam .fallback { display: block; }
+.fallback .tv {
+  position: absolute; border-radius: 6px;
+  background:
+    radial-gradient(120% 90% at 30% 20%, rgba(140,220,255,.85), rgba(60,120,220,.55) 45%, rgba(16,24,64,.95) 100%),
+    linear-gradient(160deg, #3a6fd8, #101c44);
+  box-shadow: 0 0 60px 18px rgba(90,150,255,.35), inset 0 0 0 4px #05070d, inset 0 0 42px rgba(0,0,0,.55);
+  overflow: hidden;
+}
+.fallback .tv::after {
+  content: "▶ GAMEPLAY — point the camera at your real TV";
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,.75); font-size: 13px; font-weight: 700; letter-spacing: .12em; text-align: center; padding: 0 10px;
+}
+.fallback .sofa {
+  position: absolute; left: 50%; bottom: -4%; width: 86%; height: 17%;
+  transform: translateX(-50%);
+  background: linear-gradient(to bottom, #3d2b52, #241735);
+  border-radius: 46% 46% 0 0 / 90% 90% 0 0;
+  box-shadow: inset 0 14px 24px rgba(255,255,255,.06);
+}
+.fallback .lamp {
+  position: absolute; bottom: 12%; width: 54px; height: 120px;
+  background: radial-gradient(50% 32% at 50% 18%, rgba(255,205,120,.95), rgba(255,170,60,.25) 55%, transparent 72%);
+}
+.fallback .lamp.l { left: 1%; } .fallback .lamp.r { right: 1%; }
+.fallback .note {
+  position: absolute; top: calc(58px + env(safe-area-inset-top)); left: 0; right: 0; text-align: center;
+  color: rgba(255,255,255,.55); font-size: 12px; letter-spacing: .08em; padding: 0 12px;
+}
+
+/* Top + bottom control bars — always above every effect layer. */
+.bar {
+  position: fixed; left: 0; right: 0; z-index: 1100;
+  display: flex; gap: 8px; align-items: stretch; justify-content: center;
+  padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+.bar.bottom { bottom: 0; }
+.bar.top {
+  top: 0; bottom: auto; justify-content: space-between; align-items: center;
+  padding: calc(8px + env(safe-area-inset-top)) 10px 8px;
+}
+.bar .title {
+  color: #fff; font-weight: 800; font-size: 15px; letter-spacing: .06em;
+  text-shadow: 0 2px 8px rgba(0,0,0,.8); pointer-events: none; white-space: nowrap;
+}
+button.btn {
+  pointer-events: auto; flex: 1 1 0; min-height: 58px; max-width: 150px;
+  border: 2px solid rgba(255,255,255,.35); border-radius: 15px;
+  background: rgba(12,14,24,.82); color: #fff;
+  font-size: 16px; font-weight: 800; letter-spacing: .02em; line-height: 1.05;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 4px 14px rgba(0,0,0,.45);
+  touch-action: none; cursor: pointer;
+}
+button.btn:active { transform: scale(.95); background: rgba(50,60,110,.9); }
+button.btn.small { flex: 0 0 auto; min-height: 44px; padding: 0 14px; font-size: 13px; max-width: none; }
+button.btn.on { border-color: #ffd94d; color: #ffd94d; }
+button.btn.warn { border-color: #ff5a5a; color: #ffb3b3; }
+
+/* Align-mode UI */
+#ar-align-ui { position: fixed; inset: 0; z-index: 1200; display: none; }
+body.aligning #ar-align-ui { display: block; }
+#ar-quad-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+#ar-quad-poly { fill: rgba(255,217,77,.10); stroke: #ffd94d; stroke-width: 2.5; stroke-dasharray: 9 6; }
+.ar-handle {
+  position: absolute; width: 56px; height: 56px; margin: -28px 0 0 -28px;
+  border-radius: 50%; border: 3px solid #ffd94d; background: rgba(255,217,77,.25);
+  z-index: 1300; touch-action: none; pointer-events: auto;
+}
+.ar-handle::after { content: ""; position: absolute; inset: 19px; border-radius: 50%; background: #ffd94d; }
+#ar-align-hint {
+  position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%);
+  background: rgba(0,0,0,.75); color: #ffd94d; font-size: 14px; font-weight: 700;
+  padding: 8px 14px; border-radius: 999px; white-space: nowrap; pointer-events: none;
+}
+#toast {
+  position: fixed; left: 50%; top: 64px; transform: translateX(-50%) translateY(-8px);
+  z-index: 1250; background: rgba(0,0,0,.82); color: #fff; font-size: 14px; font-weight: 700;
+  padding: 9px 16px; border-radius: 999px; opacity: 0; transition: all .25s; pointer-events: none;
+  max-width: 88vw; text-align: center;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }

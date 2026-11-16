@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>LEONIDA LIVE — AR Clip Studio</title>
+<style>
+  @font-face{ font-family:'Anton'; src:url('assets/anton.woff2') format('woff2'); font-display:swap; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; overflow:hidden; background:#000; touch-action:none; overscroll-behavior:none;
+    font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; color:#fff; }
+  #cam{ position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; }
+  body.nocam #cam{ display:none; }
+  .room{ position:fixed; inset:0; z-index:1; display:none;
+    background:linear-gradient(#262a36 0%, #2e3342 54%, #14151a 54.2%, #0c0c10 100%); }
+  body.nocam .room{ display:block; }
+  .fake-tv{ position:absolute; left:6%; top:19%; width:88%; height:41%; border-radius:6px; overflow:hidden;
+    box-shadow:0 0 0 6px #050507, 0 24px 60px rgba(0,0,0,.7); }
+  .fake-tv .feed{ position:absolute; inset:0;
+    background:linear-gradient(115deg,#0d3b5e,#8a2050 32%,#0d5c48 58%,#c96a1e 82%,#0d3b5e);
+    background-size:300% 100%; animation:feedslide 9s linear infinite; }
+  @keyframes feedslide{ from{ background-position:0% 0; } to{ background-position:300% 0; } }
+  .fake-tv .tag{ position:absolute; left:10px; bottom:8px; color:#fff; font-size:11px; letter-spacing:.14em;
+    background:rgba(0,0,0,.55); padding:3px 8px; border-radius:4px; }
+  .couch{ position:absolute; left:9%; right:9%; bottom:6%; height:11%; border-radius:18px 18px 0 0;
+    background:linear-gradient(#23242c,#131318); }
+  /* frame chrome */
+  #frame{ position:fixed; inset:0; z-index:600; pointer-events:none;
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,.10), inset 0 0 90px rgba(0,0,0,.45); }
+  /* top HUD */
+  #hud{ position:fixed; top:calc(10px + env(safe-area-inset-top)); left:12px; right:12px; z-index:1100;
+    display:flex; align-items:flex-start; gap:8px; }
+  #liveBadge{ background:#e8112d; color:#fff; font-family:'Anton'; font-size:16px; letter-spacing:.1em;
+    padding:7px 12px 5px; border-radius:8px; display:flex; align-items:center; gap:7px;
+    box-shadow:0 4px 18px rgba(232,17,45,.5); }
+  #liveBadge .dot{ width:9px; height:9px; border-radius:50%; background:#fff; animation:pulse 1.1s infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.25; } }
+  #viewers{ background:rgba(10,10,16,.72); border:1px solid rgba(255,255,255,.25); border-radius:8px;
+    padding:7px 11px; font-size:14px; font-weight:600; backdrop-filter:blur(6px); }
+  #handle{ margin-left:auto; text-align:right; background:rgba(10,10,16,.72); border:1px solid rgba(255,255,255,.25);
+    border-radius:8px; padding:6px 11px; backdrop-filter:blur(6px); }
+  #handle .name{ font-weight:700; font-size:14px; }
+  #handle .sub{ font-size:11px; color:#ffb3c2; letter-spacing:.06em; }
+  /* toasts */
+  #toast{ position:fixed; top:calc(74px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%) scale(.8);
+    z-index:1150; background:linear-gradient(90deg,#ff2e88,#ff7a3d); color:#fff; font-weight:700; font-size:15px;
+    padding:10px 18px; border-radius:999px; opacity:0; pointer-events:none; white-space:nowrap;
+    box-shadow:0 10px 30px rgba(255,46,136,.45); transition:all .25s cubic-bezier(.2,1.4,.4,1); }
+  #toast.pop{ opacity:1; transform:translateX(-50%) scale(1); }
+  /* comments */
+  #comments{ position:fixed; left:12px; bottom:calc(118px + env(safe-area-inset-bottom)); z-index:700;
+    width:min(74vw,340px); display:flex; flex-direction:column; gap:7px; pointer-events:none;
+    -webkit-mask-image:linear-gradient(180deg,transparent,#000 26%); mask-image:linear-gradient(180deg,transparent,#000 26%); }
+  .cmt{ display:flex; gap:8px; align-items:flex-start; background:rgba(8,8,14,.55); border-radius:12px;
+    padding:7px 10px 7px 7px; backdrop-filter:blur(3px); animation:cmtIn .28s cubic-bezier(.2,1.2,.3,1);
+    text-shadow:0 1px 3px rgba(0,0,0,.8); }
+  .cmt.out{ transition:opacity .5s, transform .5s; opacity:0; transform:translateY(-8px); }
+  @keyframes cmtIn{ from{ opacity:0; transform:translateY(14px) scale(.96); } to{ opacity:1; transform:none; } }
+  .ava{ flex:none; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:800; color:#fff; }
+  .cmt .who{ font-size:12.5px; font-weight:700; }
+  .cmt .what{ font-size:13.5px; line-height:1.25; color:#fff; }
+  /* hearts */
+  #hearts{ position:fixed; right:0; bottom:0; width:110px; height:70vh; z-index:800; pointer-events:none; overflow:visible; }
+  .heart{ position:absolute; bottom:0; will-change:transform,opacity; text-shadow:0 2px 10px rgba(255,46,100,.6); }
+  /* right action rail */
+  #rail{ position:fixed; right:12px; bottom:calc(118px + env(safe-area-inset-bottom)); z-index:1100;
+    display:flex; flex-direction:column; gap:12px; align-items:center; }
+  .railBtn{ width:62px; height:62px; border-radius:50%; border:1px solid rgba(255,255,255,.4);
+    background:rgba(12,12,18,.8); color:#fff; font-size:26px; backdrop-filter:blur(6px); touch-action:manipulation; }
+  .railBtn:active{ transform:scale(.92); }
+  .railLbl{ font-size:10.5px; letter-spacing:.1em; margin-top:-8px; text-shadow:0 1px 4px #000; }
+  /* bottom bar */
+  .bar{ position:fixed; left:0; right:0; bottom:0; z-index:1100; display:flex; gap:12px;
+    padding:14px 14px calc(14px + env(safe-area-inset-bottom)); }
+  .btn{ flex:1; min-height:60px; border-radius:16px; border:1px solid rgba(255,255,255,.35);
+    font-family:'Anton'; font-size:21px; letter-spacing:.06em; color:#fff; background:rgba(14,14,20,.85);
+    backdrop-filter:blur(8px); touch-action:manipulation; }
+  .btn:active{ transform:scale(.965); }
+  #btnChaos{ color:#ffd23d; box-shadow:0 0 24px rgba(255,180,0,.30); }
+  #btnChaos.live{ background:linear-gradient(90deg,#7a1020,#a3122a); color:#fff; }
+  .chip{ position:fixed; z-index:1100; background:rgba(12,12,18,.78); color:#fff; border:1px solid rgba(255,255,255,.28);
+    border-radius:999px; padding:9px 14px; font-size:13px; letter-spacing:.08em; backdrop-filter:blur(6px); }
+  #alignBtn{ top:calc(64px + env(safe-area-inset-top)); right:12px; }
+  #quadSvg{ position:fixed; inset:0; z-index:1060; pointer-events:none; display:none; }
+  body.aligning #quadSvg{ display:block; }
+  .handle{ position:fixed; width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%; z-index:1200;
+    background:rgba(255,46,136,.85); border:3px solid #fff; display:none; touch-action:none; }
+  body.aligning .handle{ display:block; }
+</style>
+</head>
+<body>
+  <video id="cam" autoplay playsinline muted></video>
+  <div class="room">
+    <div class="fake-tv"><div class="feed"></div><div class="tag">SAMPLE FEED — CAMERA OFF</div></div>
+    <div class="couch"></div>
+  </div>
+  <div id="frame"></div>
+
+  <div id="hud">
+    <div id="liveBadge"><span class="dot"></span>LIVE</div>
+    <div id="viewers">👁 <span id="vcount">1,284</span></div>
+    <div id="handle"><div class="name" id="handleName">@leonida.clips</div><div class="sub" id="handleSub">LEONIDA AFTER DARK</div></div>
+  </div>
+  <button class="chip" id="alignBtn">ALIGN&nbsp;TV</button>
+  <div id="toast"></div>
+  <div id="comments"></div>
+  <div id="hearts"></div>
+
+  <div id="rail">
+    <button class="railBtn" id="btnHeart">❤️</button><div class="railLbl">HYPE</div>
+    <button class="railBtn" id="btnGift">🎁</button><div class="railLbl">GIFT</div>
+    <button class="railBtn" id="btnShare">↗️</button><div class="railLbl">SHARE</div>
+  </div>
+  <div class="bar">
+    <button class="btn" id="btnChaos">⚡ CHAOS</button>
+    <button class="btn" id="btnHype">💗 HYPE</button>
+  </div>
+
+  <svg id="quadSvg"><polygon id="quadPoly" fill="rgba(255,46,136,.10)" stroke="#ff2e88" stroke-width="2"/></svg>
+  <div class="handle" data-i="0"></div><div class="handle" data-i="1"></div>
+  <div class="handle" data-i="2"></div><div class="handle" data-i="3"></div>
+
+<script>
+'use strict';
+/* ================= THEME (skin-pack config — swap this object to reskin) ================= */
+const THEME = {
+  pack: 'leonida-default',
+  handle: '@leonida.clips',
+  streamTitle: 'LEONIDA AFTER DARK',
+  startViewers: 1284,
+  heartColors: ['#ff2e63','#ff5e78','#ff8fa3','#ffd23d','#ff2e88'],
+  comments: [
+    ['SunnySideUp_','he really thought that was a parking spot'],
+    ['xXNightDriverXx','THE PALM TREE CAME OUT OF NOWHERE'],
+    ['gator_bait','bro drove it like it was rented. it was not rented. it was stolen'],
+    ['palmfrond_fred','that drift just paid my rent'],
+    ['MrsDashCam','I have seen every episode and the car has never once survived'],
+    ['lowrider_larry',' hydraulics could never'],
+    ['beachcop_fan','the sirens in the background are just the soundtrack now'],
+    ['TurboNana','my grandson drives exactly like this and he is grounded'],
+    ['itsjustrandy','clipped. shipped. zero remorse'],
+    ['ClipItCarl','THIS IS THE ONE. THIS IS THE CLIP'],
+    ['vice.and.virtue','the gps said turn left three businesses ago'],
+    ['sandy.draws','drawing this crash as we speak'],
+    ['TheReverseKing','anyone can go forward. he reverses with CONFIDENCE'],
+    ['donutwatch','cop car doing donuts to assert dominance'],
+    ['FLManEnergy','local man treats red lights as suggestions'],
+    ['coco.mami','the yacht did NOT deserve that'],
+    ['stoplight.sam','green means go. red means content'],
+    ['yachtclub_yuri','rich people watching their boat sink in 4k'],
+    ['neon.nadia','this city glows and so does his wanted level'],
+    ['crash.test.cutie','airbags: deployed. dignity: also deployed'],
+    ['BoardwalkBob','he parked ON the boardwalk. ON it'],
+    ['tidepool_tess','the ocean is right there and he still found a pool'],
+    ['sirensymphony','five stars. FIVE. the orchestra is complete'],
+    ['mallory.moves','that alley was not rated for vehicles'],
+    ['PalmTreePete','another palm tree has fallen. press F'],
+    ['grocerystoregreg','he really took the shopping cart shortcut literally'],
+    ['WetSocksWendy','drove straight into the canal like it owed him money'],
+    ['heli.cam.hank','the helicopter is just a fan with a better seat'],
+    ['bumpercar.bree','traffic laws are more like traffic guidelines'],
+    ['ZeroBrakesZane','brake pedal is decorative in this household'],
+    ['lifeguard.lou','sir this is a beach. SIR THIS IS A BEACH'],
+    ['valet.vic','and that is why the valet keeps the keys now'],
+    ['RoundaboutRosa','he went around the fountain. THROUGH the fountain'],
+    ['tollbooth.tim','paid the toll with the whole car']
+  ],
+  follows: ['NightOwl_99','gator_bait','TurboNana','ClipItCarl','neon.nadia','PalmTreePete','sandy.draws','FLManEnergy','donutwatch','BoardwalkBob'],
+  gifts: ['sent a Beach Ball 🏖','sent a Palm Tree 🌴','sent a Speedboat 🛥','sent Sunglasses 🕶','sent a Flamingo 🦩']
+};
+/* ================= shared scaffold ================= */
+const $ = s => document.querySelector(s);
+let AC = null;
+function audio(){ try{ if (navigator.audioSession) navigator.audioSession.type='playback'; }catch(e){}
+  if (!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  if (AC && AC.state==='suspended') AC.resume(); return AC; }
+document.addEventListener('pointerdown', audio);
+document.addEventListener('gesturestart', e=> e.preventDefault());
+async function startCam(){ const v = $('#cam');
+  try{ const s = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false });
+    v.srcObject = s; await v.play(); window.__camLive = true;
+  }catch(e){ document.body.classList.add('nocam'); window.__fallback = true; } }
+const QKEY = 'arquad-leonida-live';
+let quad = [[.07,.21],[.93,.21],[.93,.60],[.07,.60]];
+try{ const q = JSON.parse(localStorage.getItem(QKEY)); if (Array.isArray(q)&&q.length===4) quad = q; }catch(e){}
+const handles = [...document.querySelectorAll('.handle')];
+function applyQuad(){ const W=innerWidth,H=innerHeight;
+  handles.forEach((h,i)=>{ h.style.left=quad[i][0]*W+'px'; h.style.top=quad[i][1]*H+'px'; });
+  $('#quadPoly').setAttribute('points', quad.map(p=>(p[0]*W)+','+(p[1]*H)).join(' ')); }
+handles.forEach(h=>{ h.addEventListener('pointerdown', e=>{ h.setPointerCapture(e.pointerId);
+  const move = ev=>{ const i=+h.dataset.i;
+    quad[i]=[Math.min(.98,Math.max(.02,ev.clientX/innerWidth)), Math.min(.98,Math.max(.02,ev.clientY/innerHeight))]; applyQuad(); };
+  const up = ()=>{ h.removeEventListener('pointermove',move); h.removeEventListener('pointerup',up);
+    try{ localStorage.setItem(QKEY, JSON.stringify(quad)); }catch(e){} };
+  h.addEventListener('pointermove',move); h.addEventListener('pointerup',up); e.preventDefault(); }); });
+$('#alignBtn').addEventListener('click', ()=> document.body.classList.toggle('aligning'));
+addEventListener('resize', applyQuad);
+
+/* ================= livestream engine ================= */
+$('#handleName').textContent = THEME.handle;
+$('#handleSub').textContent = THEME.streamTitle;
+let viewers = THEME.startViewers, chaos = false, chaosUntil = 0, nextSubAt = 2000;
+const vEl = $('#vcount');
+const fmt = n => n.toLocaleString('en-US');
+function setViewers(n){ viewers = Math.max(37, Math.round(n)); vEl.textContent = fmt(viewers);
+  if (viewers >= nextSubAt){ toast('★ NEW SUBSCRIBER ★'); nextSubAt += 1500 + Math.random()*1500; } }
+function toast(msg, ms=2400){ const t = $('#toast'); t.textContent = msg; t.classList.add('pop');
+  clearTimeout(t._h); t._h = setTimeout(()=> t.classList.remove('pop'), ms); }
+const AVA_COLORS = ['#ff2e88','#22d3ee','#ffd23d','#7c5cff','#2ee66b','#ff7a3d','#e84dff'];
+const cbox = $('#comments');
+function addComment(){
+  const [user, text] = THEME.comments[Math.floor(Math.random()*THEME.comments.length)];
+  const d = document.createElement('div'); d.className = 'cmt';
+  const color = AVA_COLORS[Math.floor(Math.random()*AVA_COLORS.length)];
+  d.innerHTML = `<div class="ava" style="background:${color}">${user[0].toUpperCase()}</div>
+    <div><span class="who" style="color:${color}">${user}</span><br><span class="what">${text}</span></div>`;
+  cbox.appendChild(d);
+  while (cbox.children.length > 6){ const old = cbox.firstChild; old.classList.add('out');
+    setTimeout(()=> old.remove(), 480); cbox.removeChild(old); }
+  d.scrollIntoView({ block:'nearest' });
+}
+function commentLoop(){
+  addComment();
+  const base = chaos ? 420 + Math.random()*380 : 2100 + Math.random()*1900;
+  setTimeout(commentLoop, base);
+}
+function driftLoop(){
+  const gain = chaos ? 30 + Math.random()*130 : 1 + Math.random()*7;
+  setViewers(viewers + gain - (chaos ? 0 : Math.random()*2.2));
+  setTimeout(driftLoop, chaos ? 300 : 1600);
+}
+function followLoop(){
+  const name = THEME.follows[Math.floor(Math.random()*THEME.follows.length)];
+  toast(`${name} started following`);
+  setTimeout(followLoop, 12000 + Math.random()*9000);
+}
+function hearts(n){
+  const box = $('#hearts');
+  for (let i=0;i<n;i++){
+    const h = document.createElement('div'); h.className = 'heart'; h.textContent = '♥';
+    const size = 18 + Math.random()*22;
+    h.style.fontSize = size+'px';
+    h.style.color = THEME.heartColors[Math.floor(Math.random()*THEME.heartColors.length)];
+    h.style.right = (Math.random()*64)+'px';
+    box.appendChild(h);
+    const drift = (Math.random()*70-35), rise = innerHeight*.42 + Math.random()*innerHeight*.2;
+    const a = h.animate([
+      { transform:'translate(0,0) scale(.6)', opacity:0 },
+      { transform:`translate(${drift*.3}px, ${-rise*.35}px) scale(1)`, opacity:1, offset:.22 },
+      { transform:`translate(${drift}px, ${-rise}px) scale(1.08)`, opacity:0 }
+    ], { duration: 2100 + Math.random()*1300, delay: Math.random()*260, easing:'cubic-bezier(.25,.6,.4,1)', fill:'forwards' });
+    a.onfinish = ()=> h.remove();
+  }
+}
+function pop(){ const ac = audio(); if (!ac) return; const t = ac.currentTime;
+  const o = ac.createOscillator(), g = ac.createGain(); o.type='triangle';
+  o.frequency.setValueAtTime(660, t); o.frequency.exponentialRampToValueAtTime(990, t+.09);
+  g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t+.14);
+  o.connect(g).connect(ac.destination); o.start(t); o.stop(t+.15); }
+function setChaos(on){
+  chaos = on;
+  $('#btnChaos').classList.toggle('live', on);
+  $('#btnChaos').textContent = on ? '⚡ CHAOS LIVE' : '⚡ CHAOS';
+  if (on){ chaosUntil = Date.now() + 10000; toast('⚡ CHAOS MODE ⚡');
+    setTimeout(()=>{ if (Date.now() >= chaosUntil - 50) setChaos(false); }, 10050); }
+}
+$('#btnChaos').addEventListener('click', ()=>{ pop(); setChaos(!chaos); });
+$('#btnHype').addEventListener('click', ()=>{ pop(); hearts(16); setViewers(viewers + 12 + Math.random()*30); });
+$('#btnHeart').addEventListener('click', ()=>{ pop(); hearts(9); });
+$('#btnGift').addEventListener('click', ()=>{ pop(); hearts(6);
+  toast(`${THEME.follows[Math.floor(Math.random()*THEME.follows.length)]} ${THEME.gifts[Math.floor(Math.random()*THEME.gifts.length)]}`); });
+$('#btnShare').addEventListener('click', ()=>{ pop(); toast('Link copied — clip it!'); });
+setInterval(()=>{ if (chaos && Math.random()<.8) hearts(3); }, 900);
+
+applyQuad(); startCam();
+setViewers(viewers);
+setTimeout(commentLoop, 700); setTimeout(driftLoop, 1200); setTimeout(followLoop, 6000);
+addComment(); addComment();
+</script>
+
+<style id="universal-offsets">#ci-root.ci-tl{top:107px!important}#ar-mark-root{top:235px!important;bottom:auto!important}</style>
+<script src="mark-button.js"></script>
+<script src="mic-trigger.js"></script>
+<script src="clip-import.js"></script>
+<script>
+/* ---- universal kit wiring (integration pass 2026-11-16) ---- */
+window.ArMark = window.MarkButton;
+var __cbs = { onSpike: function () { if (window.setChaos) window.setChaos(true); } };
+var __micStarted = false;
+document.addEventListener('pointerdown', function () { if (!__micStarted && window.MicTrigger) { __micStarted = true; MicTrigger.start(__cbs).catch(function () {}); } }, false);
+ClipImport.attach({
+    position: 'tl',
+    videoEl: document.getElementById('cam'),
+    startCamera: function (v) { return window.startCam(); }, onSource: function (info) {
+      if (info.mode === 'import') { if (window.MicTrigger) MicTrigger.stop(); ClipImport.startTriggers(__cbs); }
+      if (info.mode === 'camera') { ClipImport.stopTriggers(); __micStarted = false; }
+    }
+  });
+</script>
+</body>
+</html>
