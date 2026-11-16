@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>CASH MOUNTAIN — AR Clip Studio</title>
+<style>
+  @font-face{ font-family:'Anton'; src:url('assets/anton.woff2') format('woff2'); font-display:swap; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; overflow:hidden; background:#000; touch-action:none; overscroll-behavior:none;
+    font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; color:#fff; }
+  #cam{ position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; }
+  body.nocam #cam{ display:none; }
+  .room{ position:fixed; inset:0; z-index:1; display:none;
+    background:linear-gradient(#262a36 0%, #2e3342 54%, #14151a 54.2%, #0c0c10 100%); }
+  body.nocam .room{ display:block; }
+  .fake-tv{ position:absolute; left:6%; top:19%; width:88%; height:41%; border-radius:6px; overflow:hidden;
+    box-shadow:0 0 0 6px #050507, 0 24px 60px rgba(0,0,0,.7); }
+  .fake-tv .feed{ position:absolute; inset:0;
+    background:linear-gradient(115deg,#0d3b5e,#8a2050 32%,#0d5c48 58%,#c96a1e 82%,#0d3b5e);
+    background-size:300% 100%; animation:feedslide 9s linear infinite; }
+  @keyframes feedslide{ from{ background-position:0% 0; } to{ background-position:300% 0; } }
+  .fake-tv .tag{ position:absolute; left:10px; bottom:8px; color:#fff; font-size:11px; letter-spacing:.14em;
+    background:rgba(0,0,0,.55); padding:3px 8px; border-radius:4px; }
+  .couch{ position:absolute; left:9%; right:9%; bottom:6%; height:11%; border-radius:18px 18px 0 0;
+    background:linear-gradient(#23242c,#131318); }
+  #gl{ position:fixed; inset:0; z-index:400; }
+  #placeLayer{ position:fixed; inset:0; z-index:450; display:none; }
+  body.placing #placeLayer{ display:block; }
+  body.placing #placeLayer{ background:rgba(255,210,61,.06); }
+  #anchorDot{ position:fixed; z-index:460; width:44px; height:44px; margin:-22px 0 0 -22px; border-radius:50%;
+    border:3px dashed rgba(255,210,61,.95); background:rgba(255,210,61,.14); touch-action:none; }
+  #anchorDot::after{ content:'TABLE'; position:absolute; top:46px; left:50%; transform:translateX(-50%);
+    font-size:9.5px; letter-spacing:.22em; color:#ffd23d; text-shadow:0 1px 4px #000; }
+  /* HUD */
+  #hud{ position:fixed; top:calc(12px + env(safe-area-inset-top)); left:0; right:0; z-index:1100;
+    display:flex; flex-direction:column; align-items:center; pointer-events:none; }
+  #total{ font-family:'Anton'; font-size:44px; letter-spacing:.03em; color:#8dff6a;
+    text-shadow:0 0 18px rgba(60,255,90,.45), 0 3px 0 rgba(0,60,0,.55), 0 10px 26px rgba(0,0,0,.8); }
+  #tier{ margin-top:2px; font-size:12.5px; font-weight:700; letter-spacing:.34em; color:#ffd23d;
+    background:rgba(10,10,14,.6); padding:4px 12px 4px 15px; border-radius:999px; border:1px solid rgba(255,210,61,.4); }
+  /* stamp */
+  #stamp{ position:fixed; z-index:1050; left:50%; top:38%; transform:translate(-50%,-50%) rotate(-13deg) scale(3);
+    font-family:'Anton'; font-size:52px; letter-spacing:.06em; color:#ff2233; border:7px solid #ff2233;
+    padding:8px 26px 4px; border-radius:10px; opacity:0; pointer-events:none;
+    text-shadow:0 2px 0 rgba(120,0,10,.6); box-shadow:0 0 0 3px rgba(255,34,51,.25), inset 0 0 24px rgba(255,34,51,.18);
+    background:rgba(20,0,4,.25); }
+  #stamp.slam{ animation:stampIn .26s cubic-bezier(.16,1.3,.3,1) forwards; }
+  @keyframes stampIn{ 0%{ opacity:0; transform:translate(-50%,-50%) rotate(-13deg) scale(3); }
+    60%{ opacity:1; transform:translate(-50%,-50%) rotate(-13deg) scale(.94); }
+    100%{ opacity:1; transform:translate(-50%,-50%) rotate(-13deg) scale(1); } }
+  /* UI */
+  .chip{ position:fixed; z-index:1100; background:rgba(12,12,18,.78); color:#fff; border:1px solid rgba(255,255,255,.28);
+    border-radius:999px; padding:9px 14px; font-size:13px; letter-spacing:.08em; backdrop-filter:blur(6px); }
+  #alignBtn{ top:calc(10px + env(safe-area-inset-top)); right:12px; }
+  .bar{ position:fixed; left:0; right:0; bottom:0; z-index:1100; display:flex; gap:10px;
+    padding:14px 14px calc(14px + env(safe-area-inset-bottom)); }
+  .btn{ flex:1; min-height:60px; border-radius:16px; border:1px solid rgba(255,255,255,.35);
+    font-family:'Anton'; font-size:18px; letter-spacing:.04em; color:#fff; background:rgba(14,14,20,.85);
+    backdrop-filter:blur(8px); touch-action:manipulation; }
+  .btn:active{ transform:scale(.965); }
+  #btnEarn{ color:#8dff6a; }
+  #btnConf{ color:#ff5560; flex:.8; }
+  #btnPlace.on{ color:#ffd23d; box-shadow:0 0 20px rgba(255,210,61,.4); }
+  #quadSvg{ position:fixed; inset:0; z-index:1060; pointer-events:none; display:none; }
+  body.aligning #quadSvg{ display:block; }
+  .handle{ position:fixed; width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%; z-index:1200;
+    background:rgba(255,46,136,.85); border:3px solid #fff; display:none; touch-action:none; }
+  body.aligning .handle{ display:block; }
+  #err{ position:fixed; z-index:1150; left:12px; bottom:calc(96px + env(safe-area-inset-bottom)); max-width:80vw;
+    color:#ffb3b3; font-size:12px; display:none; }
+</style>
+</head>
+<body>
+  <video id="cam" autoplay playsinline muted></video>
+  <div class="room">
+    <div class="fake-tv"><div class="feed"></div><div class="tag">SAMPLE FEED — CAMERA OFF</div></div>
+    <div class="couch"></div>
+  </div>
+  <canvas id="gl"></canvas>
+  <div id="placeLayer"></div>
+  <div id="anchorDot"></div>
+
+  <div id="hud"><div id="total">$0</div><div id="tier">POCKET MONEY</div></div>
+  <div id="stamp">CONFISCATED</div>
+  <button class="chip" id="alignBtn">ALIGN&nbsp;TV</button>
+  <div id="err"></div>
+  <div class="bar">
+    <button class="btn" id="btnEarn">💵 EARN</button>
+    <button class="btn" id="btnPlace">📍 PLACE</button>
+    <button class="btn" id="btnConf">🚨 CONFISCATED</button>
+  </div>
+
+  <svg id="quadSvg"><polygon id="quadPoly" fill="rgba(255,46,136,.10)" stroke="#ff2e88" stroke-width="2"/></svg>
+  <div class="handle" data-i="0"></div><div class="handle" data-i="1"></div>
+  <div class="handle" data-i="2"></div><div class="handle" data-i="3"></div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "./vendor/three.module.min.js",
+  "three/addons/": "./vendor/addons/"
+} }
+</script>
+<script>
+'use strict';
+/* ================= THEME (skin-pack config — swap this object to reskin) ================= */
+const THEME = {
+  pack: 'leonida-default',
+  billTexture: 'assets/bill100.png',       /* public-domain $100 obverse */
+  billAltTexture: 'assets/bill1.jpg',      /* public-domain $1 obverse */
+  wrapTexture: 'assets/kraft.png',         /* public-domain kraft paper */
+  /* owner-supplied photoreal props (Nov 16) — alpha cutouts, see ASSETS.md */
+  photoStacks: [                            /* [file, aspect h/w, base width] */
+    ['assets/photo/stack-front-left.png',  .702, .50],
+    ['assets/photo/stack-front-right.png', .611, .50],
+    ['assets/photo/stack-center.png',      1.167, .56],
+    ['assets/photo/stack-back-left.png',   1.222, .54]
+  ],
+  photoCluster: ['assets/photo/cash-stacks.png', .754, 1.12],
+  photoDuffel:  ['assets/photo/duffel.png',      .940, .98],
+  photoBricks:  ['assets/photo/bricks.png',      .991, .80],
+  photoScale:   ['assets/photo/scale.png',       .906, .44],
+  smokeVideo: 'assets/photo/smoke-drift.mp4',  /* black-bg loop, additive */
+  smokeAt: 26,                                 /* stacks where the wisp lights (CRACK HOUSE) */
+  stackValue: 10000,
+  tiers: [                                  /* [minStacks, label] */
+    [0,  'POCKET MONEY'],
+    [4,  'NEAT STACKS'],
+    [12, 'MESSY PILE'],
+    [22, 'THE MOUNTAIN'],
+    [26, 'CRACK HOUSE']
+  ],
+  duffelAt: [6, 14, 24],                    /* stack counts that add a duffel */
+  tableauAt: { bricks: 26, scale: 31, scatter: 36 },  /* prop-spread stages */
+  maxStacks: 40
+};
+window.__THEME = THEME;
+/* ================= shared scaffold ================= */
+const $ = s => document.querySelector(s);
+let AC = null;
+function audio(){ try{ if (navigator.audioSession) navigator.audioSession.type='playback'; }catch(e){}
+  if (!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  if (AC && AC.state==='suspended') AC.resume(); return AC; }
+document.addEventListener('pointerdown', audio);
+document.addEventListener('gesturestart', e=> e.preventDefault());
+async function startCam(){ const v = $('#cam');
+  try{ const s = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false });
+    v.srcObject = s; await v.play(); window.__camLive = true;
+  }catch(e){ document.body.classList.add('nocam'); window.__fallback = true; } }
+const QKEY = 'arquad-cash-mountain';
+let quad = [[.07,.21],[.93,.21],[.93,.60],[.07,.60]];
+try{ const q = JSON.parse(localStorage.getItem(QKEY)); if (Array.isArray(q)&&q.length===4) quad = q; }catch(e){}
+const handles = [...document.querySelectorAll('.handle')];
+function applyQuad(){ const W=innerWidth,H=innerHeight;
+  handles.forEach((h,i)=>{ h.style.left=quad[i][0]*W+'px'; h.style.top=quad[i][1]*H+'px'; });
+  $('#quadPoly').setAttribute('points', quad.map(p=>(p[0]*W)+','+(p[1]*H)).join(' ')); }
+handles.forEach(h=>{ h.addEventListener('pointerdown', e=>{ h.setPointerCapture(e.pointerId);
+  const move = ev=>{ const i=+h.dataset.i;
+    quad[i]=[Math.min(.98,Math.max(.02,ev.clientX/innerWidth)), Math.min(.98,Math.max(.02,ev.clientY/innerHeight))]; applyQuad(); };
+  const up = ()=>{ h.removeEventListener('pointermove',move); h.removeEventListener('pointerup',up);
+    try{ localStorage.setItem(QKEY, JSON.stringify(quad)); }catch(e){} };
+  h.addEventListener('pointermove',move); h.addEventListener('pointerup',up); e.preventDefault(); }); });
+$('#alignBtn').addEventListener('click', ()=> document.body.classList.toggle('aligning'));
+addEventListener('resize', applyQuad);
+function thud(vol){ const ac = audio(); if (!ac) return; const t = ac.currentTime;
+  const o = ac.createOscillator(), g = ac.createGain(); o.type='sine';
+  o.frequency.setValueAtTime(70, t); o.frequency.exponentialRampToValueAtTime(30, t+.3);
+  g.gain.setValueAtTime(vol||.5, t); g.gain.exponentialRampToValueAtTime(.001, t+.4);
+  o.connect(g).connect(ac.destination); o.start(t); o.stop(t+.45); }
+window.__thud = thud;
+applyQuad(); startCam();
+</script>
+<script type="module">
+import * as THREE from 'three';
+const _TH = window.__THEME || {};
+const T = {
+  bill: _TH.billTexture || 'assets/bill100.png',
+  billAlt: _TH.billAltTexture || 'assets/bill1.jpg',
+  wrap: _TH.wrapTexture || 'assets/kraft.png',
+  photoStacks: _TH.photoStacks,
+  photoCluster: _TH.photoCluster,
+  photoDuffel: _TH.photoDuffel,
+  photoBricks: _TH.photoBricks,
+  photoScale: _TH.photoScale,
+  smokeVideo: _TH.smokeVideo || 'assets/photo/smoke-drift.mp4',
+  smokeAt: _TH.smokeAt != null ? _TH.smokeAt : 26,
+  stackValue: _TH.stackValue || 10000,
+  maxStacks: _TH.maxStacks || 40,
+  duffelAt: _TH.duffelAt || [6, 14, 24],
+  tableauAt: _TH.tableauAt || { bricks: 26, scale: 31, scatter: 36 },
+  tiers: _TH.tiers || [[0,'POCKET MONEY'],[4,'NEAT STACKS'],[12,'MESSY PILE'],[22,'THE MOUNTAIN'],[26,'CRACK HOUSE']]
+};
+const err = m => { const e = document.getElementById('err'); e.style.display='block'; e.textContent = m; };
+try{
+  const canvas = document.getElementById('gl');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha:true, antialias:true });
+  renderer.setPixelRatio(Math.min(2, devicePixelRatio||1));
+  renderer.setSize(innerWidth, innerHeight);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, .1, 60);
+  camera.position.set(0, 1.5, 4.7); camera.lookAt(0, .3, 0);
+  scene.add(new THREE.HemisphereLight(0xfff3e0, 0x1c2430, 1.05));
+  const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(2.5, 4.5, 3); scene.add(key);
+  const rim = new THREE.DirectionalLight(0x88bbff, .5); rim.position.set(-3, 2, -2); scene.add(rim);
+
+  const texLoader = new THREE.TextureLoader();
+  const loadTex = (url, srgb=true)=>{ const t = texLoader.load(url); if (srgb) t.colorSpace = THREE.SRGBColorSpace; return t; };
+  const billTex = loadTex(T.bill), billAltTex = loadTex(T.billAlt), kraftTex = loadTex(T.wrap);
+  kraftTex.wrapS = kraftTex.wrapT = THREE.RepeatWrapping;
+
+  /* seeded rng so the pile always art-directs the same way */
+  let seed = 1234567;
+  const rnd = ()=>{ seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+
+  const pile = new THREE.Group(); scene.add(pile);
+  /* soft contact shadow */
+  const shCnv = document.createElement('canvas'); shCnv.width = shCnv.height = 256;
+  const sg = shCnv.getContext('2d'), grd = sg.createRadialGradient(128,128,10,128,128,128);
+  grd.addColorStop(0,'rgba(0,0,0,.5)'); grd.addColorStop(.7,'rgba(0,0,0,.28)'); grd.addColorStop(1,'rgba(0,0,0,0)');
+  sg.fillStyle = grd; sg.fillRect(0,0,256,256);
+  const blob = new THREE.Mesh(new THREE.PlaneGeometry(3.4,3.4),
+    new THREE.MeshBasicMaterial({ map:new THREE.CanvasTexture(shCnv), transparent:true, depthWrite:false }));
+  blob.rotation.x = -Math.PI/2; blob.position.y = .005; pile.add(blob);
+
+  /* ---------- photoreal prop cards (owner-supplied stills, Nov 16) ----------
+     Each prop is a 2.5D card: the alpha cutout on a plane, origin at its base,
+     leaning back a touch, with a soft elliptical contact shadow baked under
+     its footprint (density matched to the look-target composite). A slight
+     warm tint grades the neutral product shots toward tungsten room light. */
+  const shadowTexCard = new THREE.CanvasTexture(shCnv);
+  function makeCard(cfg, wMul){
+    const tex = loadTex(cfg[0]);
+    const ar = cfg[1], w = cfg[2] * (wMul || 1), h = w * ar;
+    const g = new THREE.Group();
+    const geo = new THREE.PlaneGeometry(w, h); geo.translate(0, h/2, 0);
+    const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, alphaTest: .06, side: THREE.DoubleSide });
+    mat.color.setRGB(1.0, .962, .905);            /* tungsten grade */
+    const m = new THREE.Mesh(geo, mat);
+    m.rotation.x = -.13;                          /* lean back, base stays planted */
+    g.add(m);
+    const sh = new THREE.Mesh(new THREE.PlaneGeometry(w*1.22, w*.46),
+      new THREE.MeshBasicMaterial({ map: shadowTexCard, transparent: true, depthWrite: false, opacity: .85 }));
+    sh.rotation.x = -Math.PI/2; sh.position.set(0, .004, .02);
+    g.add(sh);
+    return g;
+  }
+  const stackTexCfgs = T.photoStacks;
+  function makeStackCard(variant, wMul){
+    return makeCard(stackTexCfgs[variant % stackTexCfgs.length], wMul);
+  }
+  /* card layout — one card per 2 stacks, art-directed like the look target:
+     singles up front, tall piles behind, the full cluster as the centrepiece */
+  const CARD_SLOTS = [
+    { x:-.50, z:.34, v:0, w:1.00, rot: .22, y:0 }, { x: .52, z:.36, v:1, w:1.00, rot:-.28, y:0 },
+    { x:-.98, z:.02, v:3, w:1.00, rot: .48, y:0 }, { x: .96, z:.04, v:2, w: .95, rot:-.42, y:0 },
+    { x: .00, z:.55, v:0, w: .94, rot: .04, y:0 }, { x:-.32, z:-.30, v:2, w:1.02, rot: .14, y:.02 },
+    { x: .40, z:-.32, v:3, w:1.00, rot:-.18, y:.02 }, { x:-.82, z:-.38, v:1, w: .96, rot: .58, y:.02 },
+    { x: .84, z:-.40, v:0, w: .96, rot:-.52, y:.02 }, { x:-.14, z:.10, v:2, w:1.06, rot: .08, y:.05 },
+    { x: .18, z:-.06, v:'C', w:1.00, rot:-.05, y:.04 }, { x:-.62, z:.16, v:1, w: .92, rot: .34, y:.05 },
+    { x: .66, z:.18, v:3, w: .92, rot:-.36, y:.05 }, { x: .00, z:-.48, v:2, w: .98, rot: .02, y:.06 },
+    { x:-.44, z:-.14, v:0, w: .90, rot: .20, y:.08 }, { x: .46, z:-.16, v:1, w: .90, rot:-.22, y:.08 },
+    { x:-.24, z:.30, v:3, w: .88, rot: .12, y:.09 }, { x: .26, z:.32, v:2, w: .88, rot:-.10, y:.09 },
+    { x:-.06, z:-.26, v:0, w: .86, rot: .30, y:.11 }, { x: .10, z:.02, v:1, w: .84, rot:-.28, y:.12 }
+  ];
+  /* ---------- duffel (photoreal card) ---------- */
+  function makeDuffel(){
+    return makeCard(T.photoDuffel);
+  }
+  /* ---------- tableau props ---------- */
+  const tableau = new THREE.Group(); pile.add(tableau);
+  function buildBricks(){
+    /* the photo is already a taped 3-brick stack — one card, table-left */
+    const g = new THREE.Group();
+    const card = makeCard(T.photoBricks);
+    card.position.set(.58, 0, .55); card.rotation.y = -.25;
+    g.add(card);
+    return g;
+  }
+  function buildScale(){
+    const card = makeCard(T.photoScale);
+    card.position.set(.18, 0, .74); card.rotation.y = -.35;
+    const g = new THREE.Group(); g.add(card);
+    return g;
+  }
+  function buildBaggies(){
+    const g = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({ color:0xe9e5db, roughness:.55, transparent:true, opacity:.94 });
+    const zipM = new THREE.MeshStandardMaterial({ color:0xc22730, roughness:.5 });
+    for (let i=0;i<7;i++){
+      const p = new THREE.Group();
+      const pouch = new THREE.Mesh(new THREE.SphereGeometry(.05, 12, 10), mat);
+      pouch.scale.set(1, .42, 1.25); p.add(pouch);
+      const zip = new THREE.Mesh(new THREE.BoxGeometry(.075,.01,.014), zipM);
+      zip.position.set(0, .022, .055); p.add(zip);
+      p.position.set(1.18 + (rnd()-.5)*.16, .02 + (i>4?.045:0), .08 + (rnd()-.5)*.16);
+      p.rotation.y = rnd()*Math.PI;
+      g.add(p);
+    }
+    return g;
+  }
+  let smokeSprites = [];
+  function buildScatter(){
+    const g = new THREE.Group();
+    const b2 = makeCard(T.photoBricks, .78);       /* second brick stack joins the spread */
+    b2.position.set(-1.30, 0, .20); b2.rotation.y = .85; g.add(b2);
+    const billMat = new THREE.MeshStandardMaterial({ map: billTex, roughness:.8, side:THREE.DoubleSide });
+    for (let i=0;i<9;i++){
+      const b = new THREE.Mesh(new THREE.PlaneGeometry(.30,.128), billMat);
+      const a = rnd()*Math.PI*2, rr = .55 + rnd()*.75;
+      b.position.set(Math.cos(a)*rr, .012 + i*.0012, .35 + Math.sin(a)*rr*.55);
+      b.rotation.set(-Math.PI/2, 0, rnd()*Math.PI);
+      g.add(b);
+    }
+    const rolled = new THREE.Mesh(new THREE.CylinderGeometry(.014,.014,.17,14),
+      new THREE.MeshStandardMaterial({ map: billAltTex, roughness:.75 }));
+    rolled.rotation.set(0, .7, Math.PI/2); rolled.position.set(.62, .016, .62); g.add(rolled);
+    /* ashtray + cigarette + smoke */
+    const tray = new THREE.Group();
+    const pts = []; for (let i=0;i<=10;i++){ const t=i/10; pts.push(new THREE.Vector2(.012 + Math.sin(t*2.4)*.085, t*.045)); }
+    const glass = new THREE.Mesh(new THREE.LatheGeometry(pts, 26),
+      new THREE.MeshStandardMaterial({ color:0xaeb8bc, roughness:.15, metalness:.1, transparent:true, opacity:.55 }));
+    tray.add(glass);
+    const cig = new THREE.Mesh(new THREE.CylinderGeometry(.0055,.0055,.078,10),
+      new THREE.MeshStandardMaterial({ color:0xf2ede2, roughness:.8 }));
+    cig.rotation.z = Math.PI/2 - .18; cig.position.set(.045, .052, 0); tray.add(cig);
+    const ember = new THREE.Mesh(new THREE.SphereGeometry(.006, 8, 8),
+      new THREE.MeshBasicMaterial({ color:0xff6a22 }));
+    ember.position.set(.082, .058, 0); tray.add(ember);
+    tray.position.set(-.66, 0, .66); g.add(tray);
+    const sc = document.createElement('canvas'); sc.width = sc.height = 128;
+    const sx = sc.getContext('2d');
+    for (let i=0;i<26;i++){ const gx = 34+Math.random()*60, gy = 34+Math.random()*60, r = 12+Math.random()*22;
+      const gr = sx.createRadialGradient(gx,gy,1,gx,gy,r);
+      gr.addColorStop(0,'rgba(255,255,255,.16)'); gr.addColorStop(1,'rgba(255,255,255,0)');
+      sx.fillStyle = gr; sx.beginPath(); sx.arc(gx,gy,r,0,7); sx.fill(); }
+    const smokeTex = new THREE.CanvasTexture(sc);
+    smokeSprites = [];
+    for (let i=0;i<6;i++){
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:smokeTex, transparent:true, opacity:0, depthWrite:false }));
+      sp.position.set(-.66, .1, .66); sp.scale.setScalar(.12); sp.userData.ph = i/6;
+      g.add(sp); smokeSprites.push(sp);
+    }
+    return g;
+  }
+  /* ---------- CRACK HOUSE smoke wisp (owner-supplied video loop) ----------
+     Black-background smoke composited additively (the WebGL twin of CSS
+     mix-blend-mode: screen) on a small plane over the ashtray spot. Subtle:
+     opacity caps at .58 so it reads as atmosphere, not a bonfire. */
+  const smokeVid = document.createElement('video');
+  smokeVid.src = T.smokeVideo; smokeVid.muted = true; smokeVid.loop = true;
+  smokeVid.playsInline = true; smokeVid.preload = 'auto';
+  const smokeTex = new THREE.VideoTexture(smokeVid);
+  smokeTex.colorSpace = THREE.SRGBColorSpace;
+  const smokeMat = new THREE.MeshBasicMaterial({ map: smokeTex, transparent: true,
+    blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0 });
+  const smokePlane = new THREE.Mesh(new THREE.PlaneGeometry(.50, .68), smokeMat);
+  smokePlane.position.set(-.66, .34, .66);
+  smokePlane.renderOrder = 5;
+  tableau.add(smokePlane);
+  let smokeTarget = 0;
+  /* ---------- pile state ---------- */
+  let stackCount = 0, duffelsAdded = 0, bricksG = null, scaleG = null, scatterG = null;
+  const stackMeshes = [], duffelMeshes = [], anims = [];
+  const totalEl = document.getElementById('total'), tierEl = document.getElementById('tier');
+  function refreshHUD(){
+    totalEl.textContent = '$' + (stackCount * T.stackValue).toLocaleString('en-US');
+    let label = T.tiers[0][1]; T.tiers.forEach(t=>{ if (stackCount >= t[0]) label = t[1]; });
+    tierEl.textContent = label;
+    window.__stacks = stackCount; window.__tier = label;
+  }
+  function dropIn(mesh, finalY){
+    mesh.userData.drop = { from: finalY + 1.5, to: finalY, t: 0 };
+    anims.push(mesh);
+  }
+  function earn(){
+    stackCount = Math.min(T.maxStacks, stackCount + 2);
+    const want = Math.min(CARD_SLOTS.length, Math.floor(stackCount/2));
+    while (stackMeshes.length < want){
+      const s = CARD_SLOTS[stackMeshes.length];
+      const m = s.v === 'C' ? makeCard(T.photoCluster, s.w) : makeStackCard(s.v, s.w);
+      m.position.set(s.x, s.y, s.z); m.rotation.y = s.rot;
+      pile.add(m); stackMeshes.push(m); dropIn(m, s.y);
+    }
+    while (duffelsAdded < T.duffelAt.length && stackCount >= T.duffelAt[duffelsAdded]){
+      const d = makeDuffel();
+      const spots = [ [-1.0,.28,.5], [.98,.42,-.65], [.68,-.55,1.9] ];
+      const sp = spots[duffelsAdded];
+      d.position.set(sp[0], 0, sp[1]); d.rotation.y = sp[2];
+      if (duffelsAdded === 1) d.scale.setScalar(.88);      /* slumped */
+      pile.add(d); duffelMeshes.push(d); dropIn(d, 0);
+      duffelsAdded++;
+    }
+    if (!bricksG && stackCount >= T.tableauAt.bricks){ bricksG = buildBricks(); pile.add(bricksG); }
+    if (!scaleG && stackCount >= T.tableauAt.scale){ scaleG = buildScale(); tableau.add(scaleG);
+      const bg = buildBaggies(); tableau.add(bg); scaleG.userData.baggies = bg; }
+    if (!scatterG && stackCount >= T.tableauAt.scatter){ scatterG = buildScatter(); tableau.add(scatterG); }
+    smokeTarget = stackCount >= T.smokeAt ? .58 : 0;
+    if (smokeTarget > 0 && smokeVid.paused) smokeVid.play().catch(()=>{});
+    blob.scale.setScalar(.8 + Math.min(1, stackCount/26)*.55);
+    refreshHUD();
+  }
+  function confiscate(){
+    smokeTarget = 0;
+    const stamp = document.getElementById('stamp');
+    stamp.classList.remove('slam'); void stamp.offsetWidth; stamp.classList.add('slam');
+    if (window.__thud) window.__thud(.7);
+    setTimeout(()=> stamp.classList.remove('slam'), 1500);
+    [...stackMeshes, ...duffelMeshes].forEach((m,i)=>{
+      setTimeout(()=>{ m.userData.sink = true; }, i*22);
+    });
+    setTimeout(()=>{
+      stackMeshes.forEach(m=> pile.remove(m)); duffelMeshes.forEach(m=> pile.remove(m));
+      if (bricksG){ pile.remove(bricksG); bricksG = null; }
+      tableau.children.slice().forEach(c=>{ if (c !== smokePlane) tableau.remove(c); }); scaleG = null; scatterG = null;
+      stackMeshes.length = 0; duffelMeshes.length = 0; anims.length = 0;
+      stackCount = 0; duffelsAdded = 0; smokeSprites = [];
+      blob.scale.setScalar(.8);
+      refreshHUD();
+    }, 620);
+  }
+  document.getElementById('btnEarn').addEventListener('click', earn);
+  document.getElementById('btnConf').addEventListener('click', confiscate);
+  window.__earn = earn; window.__confiscate = confiscate;
+  /* anchor placement */
+  const ray = new THREE.Raycaster(), groundPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
+  const anchorDot = document.getElementById('anchorDot');
+  let anchorFrac = { x:.5, y:.82 };
+  try{ const a = JSON.parse(localStorage.getItem('aranchor-cash-mountain')); if (a && a.x) anchorFrac = a; }catch(e){}
+  function placeAnchor(fx, fy){
+    anchorFrac = { x: fx, y: fy };
+    anchorDot.style.left = (fx*innerWidth)+'px'; anchorDot.style.top = (fy*innerHeight)+'px';
+    const ndc = new THREE.Vector2(fx*2-1, -(fy*2-1));
+    ray.setFromCamera(ndc, camera);
+    const pt = new THREE.Vector3();
+    if (ray.ray.intersectPlane(groundPlane, pt)){
+      pt.x = THREE.MathUtils.clamp(pt.x, -2.1, 2.1); pt.z = THREE.MathUtils.clamp(pt.z, -0.6, 2.4);
+      pile.position.set(pt.x, 0, pt.z);
+    }
+    pile.scale.setScalar(THREE.MathUtils.clamp(.62 + (fy-.5)*.95, .6, 1.3));
+    try{ localStorage.setItem('aranchor-cash-mountain', JSON.stringify(anchorFrac)); }catch(e){}
+  }
+  anchorDot.addEventListener('pointerdown', e=>{
+    anchorDot.setPointerCapture(e.pointerId);
+    const move = ev=> placeAnchor(ev.clientX/innerWidth, ev.clientY/innerHeight);
+    const up = ()=>{ anchorDot.removeEventListener('pointermove', move); anchorDot.removeEventListener('pointerup', up); };
+    anchorDot.addEventListener('pointermove', move); anchorDot.addEventListener('pointerup', up);
+    e.preventDefault(); e.stopPropagation();
+  });
+  const placeBtn = document.getElementById('btnPlace');
+  placeBtn.addEventListener('click', ()=>{
+    const on = document.body.classList.toggle('placing'); placeBtn.classList.toggle('on', on);
+  });
+  document.getElementById('placeLayer').addEventListener('pointerdown', e=>{
+    placeAnchor(e.clientX/innerWidth, e.clientY/innerHeight);
+    document.body.classList.remove('placing'); placeBtn.classList.remove('on');
+  });
+  function onResize(){
+    renderer.setSize(innerWidth, innerHeight);
+    camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+    placeAnchor(anchorFrac.x, anchorFrac.y);
+  }
+  addEventListener('resize', onResize);
+  placeAnchor(anchorFrac.x, anchorFrac.y);
+  refreshHUD();
+  const clock = new THREE.Clock();
+  (function tick(){
+    requestAnimationFrame(tick);
+    const dt = Math.min(.05, clock.getDelta()), t = clock.elapsedTime;
+    for (let i=anims.length-1;i>=0;i--){
+      const m = anims[i], d = m.userData.drop; if (!d) { anims.splice(i,1); continue; }
+      d.t += dt*2.4;
+      if (d.t >= 1){ m.position.y = d.to; delete m.userData.drop; anims.splice(i,1); }
+      else { const e = 1-Math.pow(1-d.t,3); m.position.y = d.from + (d.to-d.from)*e; }
+    }
+    [...stackMeshes, ...duffelMeshes].forEach(m=>{
+      if (m.userData.sink){ m.position.y -= dt*1.4; m.scale.multiplyScalar(1 - dt*2.2); }
+    });
+    smokeSprites.forEach(sp=>{
+      const ph = (t*.14 + sp.userData.ph) % 1;
+      sp.position.y = .08 + ph*.5;
+      sp.position.x = -.66 + Math.sin(ph*7 + sp.userData.ph*9)*.03 + ph*.05;
+      sp.material.opacity = Math.sin(ph*Math.PI) * .5;
+      const sc = .10 + ph*.22; sp.scale.set(sc, sc*1.3, 1);
+    });
+    /* video wisp: fade toward target, gentle sway, keep it fed */
+    smokeMat.opacity += (smokeTarget - smokeMat.opacity) * Math.min(1, dt*1.6);
+    smokePlane.rotation.y = Math.sin(t*.35)*.12;
+    if (smokeMat.opacity > .02 && smokeVid.paused) smokeVid.play().catch(()=>{});
+    renderer.render(scene, camera);
+  })();
+  window.__threeLive = true;
+}catch(e){ err('3D failed: ' + (e && e.message || e)); window.__threeError = String(e && e.message || e); }
+</script>
+
+<style id="universal-offsets">#ci-root.ci-tl{top:53px!important}#ar-mark-root{bottom:82px!important}</style>
+<script src="mark-button.js"></script>
+<script src="clip-import.js"></script>
+<script>
+/* ---- universal kit wiring (integration pass 2026-11-16) ---- */
+window.ArMark = window.MarkButton;
+ClipImport.attach({
+    position: 'tl',
+    videoEl: document.getElementById('cam'),
+    startCamera: function (v) { return window.startCam(); }, canvas: document.getElementById('gl')
+  });
+</script>
+</body>
+</html>

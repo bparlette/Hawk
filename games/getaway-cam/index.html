@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Getaway Cam — AR Rear-View Mirror</title>
+<link rel="stylesheet" href="vendor/fonts/fonts-local.css">
+<link rel="stylesheet" href="ar.css">
+<style>
+  #mount{position:absolute;left:50%;top:-292px;width:54px;height:52px;transform:translateX(-50%);
+    background:linear-gradient(90deg,#17181c,#3c4048 50%,#17181c);border-radius:0 0 10px 10px}
+  #mirror{position:absolute;left:50%;top:-248px;width:640px;height:224px;transform:translateX(-50%);
+    border-radius:118px/96px;padding:13px;
+    background:linear-gradient(160deg,#4a4f58,#191b1f 40%,#33373f 62%,#101216);
+    box-shadow:0 16px 34px rgba(0,0,0,.55), inset 0 2px 3px rgba(255,255,255,.35), inset 0 -3px 6px rgba(0,0,0,.7)}
+  #glass{position:relative;width:100%;height:100%;border-radius:106px/84px;overflow:hidden;background:#1b1035;
+    box-shadow:inset 0 0 42px rgba(0,0,0,.55)}
+  #glass canvas{display:block;width:100%;height:100%}
+  #glass::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(115deg,rgba(255,255,255,.20) 0%,rgba(255,255,255,.05) 26%,transparent 45%),
+               linear-gradient(0deg,rgba(140,180,255,.08),transparent 40%)}
+  #mirror .obj{position:absolute;left:50%;bottom:9px;transform:translateX(-50%);z-index:3;
+    font:600 12.5px 'Barlow Condensed';letter-spacing:.3em;color:rgba(255,255,255,.55);pointer-events:none}
+</style>
+<script type="importmap">
+{"imports":{"three":"./vendor/three.module.min.js","three/addons/":"./vendor/addons/"}}
+</script>
+</head>
+<body data-app="getaway-cam">
+<video id="cam" playsinline muted autoplay></video>
+<div id="fallback"><div class="tv"></div><div class="lamp" style="left:3%"></div><div class="lamp" style="right:3%"></div><div class="sofa"></div></div>
+
+<div id="stage">
+  <div id="mount"></div>
+  <div id="mirror"><div id="glass"><div class="obj">OBJECTS IN MIRROR ARE CLOSER THAN THEY APPEAR</div></div></div>
+</div>
+
+<canvas id="fx"></canvas>
+<div id="topbar"><div><span class="ttl">🚓 GETAWAY CAM</span> <span class="sub">AR rear-view mirror</span></div></div>
+<div id="bar">
+  <button class="act primary" id="btn-closer">🚨 They're Gaining!</button>
+  <button class="act" id="btn-farther">😌 Falling Back</button>
+  <button class="act gold" id="btn-shake">💨 Shake Them</button>
+</div>
+
+<script src="scaffold.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+AR.init();
+/* ===== THEME PACK: "leonida" — sunset palette, models, copy ===== */
+const THEME = {
+  name: 'leonida',
+  sky: ['#160b31', '#4b2158', '#b7432f', '#e88b3a'],
+  fog: 0x3a1c40, ground: 0x2c1a2e,
+  models: { police: 'assets/police-car.glb', palm: 'assets/palm-tree.glb' },
+  bumperToast: "🚨 THEY'RE ON YOUR BUMPER", lostToast: '💨 YOU LOST THEM'
+};
+const glass = document.getElementById('glass');
+const mirrorEl = document.getElementById('mirror');
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+glass.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(THEME.fog, 55, 250);
+const camera = new THREE.PerspectiveCamera(58, 2.9, 0.1, 600);
+camera.position.set(0, 3.1, 9); camera.lookAt(0, 2.2, -40);
+
+/* sky backdrop */
+{
+  const cv = document.createElement('canvas'); cv.width = 32; cv.height = 256;
+  const g = cv.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, 0, 256);
+  gr.addColorStop(0, THEME.sky[0]); gr.addColorStop(0.45, THEME.sky[1]);
+  gr.addColorStop(0.75, THEME.sky[2]); gr.addColorStop(1, THEME.sky[3]);
+  g.fillStyle = gr; g.fillRect(0, 0, 32, 256);
+  const sky = new THREE.Mesh(new THREE.PlaneGeometry(760, 300),
+    new THREE.MeshBasicMaterial({map: new THREE.CanvasTexture(cv), fog: false}));
+  sky.position.set(0, 62, -295); scene.add(sky);
+  const sc = document.createElement('canvas'); sc.width = sc.height = 128;
+  const sg = sc.getContext('2d');
+  const rg = sg.createRadialGradient(64,64,2,64,64,62);
+  rg.addColorStop(0, 'rgba(255,190,90,0.95)'); rg.addColorStop(0.35, 'rgba(255,140,60,0.5)');
+  rg.addColorStop(1, 'rgba(255,120,50,0)');
+  sg.fillStyle = rg; sg.fillRect(0, 0, 128, 128);
+  const sun = new THREE.Sprite(new THREE.SpriteMaterial({map: new THREE.CanvasTexture(sc), fog: false, depthWrite: false}));
+  sun.scale.setScalar(120); sun.position.set(-60, 26, -285); scene.add(sun);
+}
+scene.add(new THREE.HemisphereLight(0xffd9b0, 0x241a33, 1.0));
+const dl = new THREE.DirectionalLight(0xffb37a, 1.1); dl.position.set(-30, 50, -80); scene.add(dl);
+
+/* road */
+const roadTex = (() => {
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 256;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#232227'; g.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 2600; i++){
+    g.fillStyle = 'rgba(255,255,255,' + (Math.random() * 0.05) + ')';
+    g.fillRect(Math.random() * 256, Math.random() * 256, 2, 2);
+  }
+  g.fillStyle = '#e8e6df'; g.fillRect(10, 0, 7, 256); g.fillRect(239, 0, 7, 256);
+  g.fillStyle = '#f7c948'; g.fillRect(124, 8, 8, 108);
+  const t = new THREE.CanvasTexture(cv);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 10);
+  t.anisotropy = 4;
+  return t;
+})();
+const road = new THREE.Mesh(new THREE.PlaneGeometry(17, 330),
+  new THREE.MeshStandardMaterial({map: roadTex, roughness: 0.94}));
+road.rotation.x = -Math.PI / 2; road.position.set(0, 0, -150); scene.add(road);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(760, 330),
+  new THREE.MeshStandardMaterial({color: THEME.ground, roughness: 1}));
+ground.rotation.x = -Math.PI / 2; ground.position.set(0, -0.08, -150); scene.add(ground);
+
+/* glow sprite texture */
+function glowTex(hex){
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+  const g = cv.getContext('2d');
+  const c = new THREE.Color(hex);
+  const rgb = (c.r * 255 | 0) + ',' + (c.g * 255 | 0) + ',' + (c.b * 255 | 0);
+  const gr = g.createRadialGradient(64, 64, 2, 64, 64, 62);
+  gr.addColorStop(0, 'rgba(' + rgb + ',0.95)'); gr.addColorStop(0.4, 'rgba(' + rgb + ',0.4)');
+  gr.addColorStop(1, 'rgba(' + rgb + ',0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(cv);
+}
+const TEX = {red: glowTex(0xff2a22), blue: glowTex(0x2266ff), head: glowTex(0xffe9b0)};
+
+/* models */
+const loader = new GLTFLoader();
+function loadNorm(url, targetW, axis){
+  return new Promise((res, rej) => loader.load(url, (gltf) => {
+    const obj = gltf.scene;
+    const box = new THREE.Box3().setFromObject(obj);
+    const size = box.getSize(new THREE.Vector3());
+    const s = targetW / (size[axis || 'x'] || 1);
+    obj.scale.setScalar(s);
+    const b2 = new THREE.Box3().setFromObject(obj);
+    obj.position.x -= (b2.min.x + b2.max.x) / 2;
+    obj.position.z -= (b2.min.z + b2.max.z) / 2;
+    obj.position.y -= b2.min.y;
+    const wrap = new THREE.Group(); wrap.add(obj);
+    wrap.userData.size = b2.getSize(new THREE.Vector3());
+    res(wrap);
+  }, undefined, rej));
+}
+const COP_FACING = Math.PI; // police model nose is -Z; rotate so the front faces the camera (+Z)
+function makeCop(){
+  const g = new THREE.Group();
+  return loadNorm(THEME.models.police, 6.4).then(car => {
+    car.rotation.y = COP_FACING;
+    g.add(car);
+    const h = car.userData.size.y, len = car.userData.size.z;
+    const bar = new THREE.Group();
+    const mkMat = (c) => new THREE.MeshBasicMaterial({color: c});
+    const red = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.34, 1.5), mkMat(0xff2a22));
+    const blue = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.34, 1.5), mkMat(0x2266ff));
+    red.position.x = -0.72; blue.position.x = 0.72;
+    bar.add(red, blue); bar.position.set(0, h + 0.1, len * 0.06);
+    g.add(bar);
+    const mkGlow = (tex, x, y, z, s) => {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({map: tex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending}));
+      sp.position.set(x, y, z); sp.scale.setScalar(s); g.add(sp); return sp;
+    };
+    const glows = {
+      red: mkGlow(TEX.red, -0.72, h + 0.35, len * 0.06, 4.6),
+      blue: mkGlow(TEX.blue, 0.72, h + 0.35, len * 0.06, 4.6),
+      headL: mkGlow(TEX.head, -1.5, h * 0.42, len * 0.52, 2.6),
+      headR: mkGlow(TEX.head, 1.5, h * 0.42, len * 0.52, 2.6)
+    };
+    const lamp = new THREE.PointLight(0xff3020, 0, 60); lamp.position.set(0, h + 1, 2); g.add(lamp);
+    g.userData = {bar, glows, lamp, red, blue, carH: h};
+    scene.add(g);
+    return g;
+  });
+}
+let copA, copB, palms = [];
+Promise.all([makeCop(), makeCop()]).then(([a, b]) => {
+  copA = a; copB = b;
+  copA.position.set(-1.7, 0, -46);
+  copB.position.set(2.0, 0, -54);
+});
+loadNorm(THEME.models.palm, 26, 'y').then(palm => {
+  for (let i = 0; i < 11; i++){
+    const c = palm.clone();
+    const side = i % 2 ? 1 : -1;
+    c.position.set(side * (13 + Math.random() * 9), 0, -18 - i * 26 - Math.random() * 10);
+    c.rotation.y = Math.random() * 6.3;
+    scene.add(c); palms.push(c);
+  }
+});
+
+/* chase state */
+let d = 0.35;            // 0 far .. 1 bumper-to-bumper
+let peel = 0;            // copB peel-away progress 0..1 (then hold, then reset)
+let peelTimer = null;
+const lerp = (a, b, k) => a + (b - a) * k;
+document.getElementById('btn-closer').addEventListener('click', () => {
+  d = Math.min(1, d + 0.25);
+  AR.sfx.tone(660, 0.16, 'square', 0.10); AR.sfx.tone(520, 0.2, 'square', 0.10, null, 0.17);
+  if (d >= 1) AR.toast(THEME.bumperToast, 1300);
+});
+document.getElementById('btn-farther').addEventListener('click', () => {
+  d = Math.max(0.06, d - 0.25); AR.sfx.tone(420, 0.15, 'sine', 0.08, 300);
+});
+document.getElementById('btn-shake').addEventListener('click', () => {
+  if (peel > 0) return;
+  peel = 0.0001; AR.sfx.pop(); AR.sfx.tone(300, 0.5, 'sawtooth', 0.07, 900);
+  clearTimeout(peelTimer);
+  peelTimer = setTimeout(() => { AR.toast(THEME.lostToast, 1500); }, 1100);
+});
+
+function sizeRenderer(){
+  const w = glass.clientWidth, h = glass.clientHeight;
+  if (w > 4 && h > 4){ renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+}
+new ResizeObserver(sizeRenderer).observe(glass);
+sizeRenderer();
+
+const clock = new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = Math.min(0.05, clock.getDelta()), t = clock.elapsedTime;
+  roadTex.offset.y -= dt * (1.1 + d * 0.9);
+  for (const p of palms){
+    p.position.z += dt * (7 + d * 5);
+    p.rotation.z = Math.sin(t * 0.9 + p.position.x) * 0.025;
+    if (p.position.z > 12) p.position.z -= 290;
+  }
+  const flash = Math.sin(t * 13) > 0;
+  for (const [cop, off] of [[copA, 0], [copB, 2.2]]){
+    if (!cop) continue;
+    const u = cop.userData;
+    u.glows.red.material.opacity = flash ? 0.95 : 0.06;
+    u.glows.blue.material.opacity = flash ? 0.06 : 0.95;
+    u.lamp.color.setHex(flash ? 0xff3020 : 0x2266ff);
+    u.lamp.intensity = 60 + d * 260;
+    const gs = 3.4 + d * 2.6 + (flash ? 0.5 : 0);
+    u.glows.red.scale.setScalar(gs); u.glows.blue.scale.setScalar(gs);
+  }
+  if (copA){
+    copA.position.z = lerp(-72, -1.0, Math.pow(d, 0.6));
+    copA.position.x = -1.7 + Math.sin(t * 0.8) * 0.22;
+  }
+  if (copB){
+    if (peel > 0 && peel < 1){
+      peel = Math.min(1, peel + dt / 1.15);
+      const e = peel * peel;
+      copB.position.x = 2.0 + e * 17;
+      copB.position.z = lerp(-72, -3.0, Math.pow(d, 0.6)) - e * 46;
+      copB.rotation.y = -e * 0.85;
+      copB.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = 1 - e * 0.85; } });
+      if (peel >= 1){
+        d = Math.max(0.1, d - 0.45);
+        setTimeout(() => {
+          copB.traverse(o => { if (o.material) { o.material.transparent = false; o.material.opacity = 1; } });
+          copB.rotation.y = 0; copB.position.x = 2.0; peel = 0;
+        }, 2600);
+      }
+    } else if (peel === 0){
+      copB.position.z = lerp(-80, -4.5, Math.pow(d, 0.6));
+      copB.position.x = 2.0 + Math.sin(t * 0.7 + 2) * 0.25;
+    }
+  }
+  const amp = d * d * 4.2;
+  mirrorEl.style.translate = (Math.random() - .5) * amp + 'px ' + (Math.random() - .5) * amp + 'px';
+  renderer.render(scene, camera);
+}
+animate();
+</script>
+
+<style id="universal-offsets">#ci-root.ci-tl{top:12px!important}#ar-mark-root{bottom:200px!important}</style>
+<script src="mark-button.js"></script>
+<script src="clip-import.js"></script>
+<script>
+/* ---- universal kit wiring (integration pass 2026-11-16) ---- */
+window.ArMark = window.MarkButton;
+ClipImport.attach({
+    position: 'tl',
+    videoEl: document.getElementById('cam'),
+    startCamera: function (v) { return window.AR.startCamera(); }, canvas: document.getElementById('fx')
+  });
+</script>
+</body>
+</html>

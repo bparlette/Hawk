@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Breaking News — AR Broadcast Overlay</title>
+<link rel="stylesheet" href="vendor/fonts/fonts-local.css">
+<link rel="stylesheet" href="ar.css">
+<style>
+  /* ===== THEME PALETTE (pack: "leonida") — reskin via these vars ===== */
+  :root{--news-red:#d21f26;--news-deep:#c8102e;--news-amber:#ffb02e;--news-navy:#0a1428;--news-gold:#ffd76a}
+  /* ===== broadcast package, drawn in the 1280x720 stage space ===== */
+  .bug{position:absolute;font-family:'Anton';color:#fff}
+  #livebug{top:20px;left:22px;background:var(--news-red);border-radius:8px;padding:8px 18px 6px;
+    font-size:30px;letter-spacing:.08em;box-shadow:0 4px 18px rgba(0,0,0,.5);animation:pulse 1.15s ease-in-out infinite}
+  #livebug .dot{display:inline-block;width:14px;height:14px;border-radius:50%;background:#fff;margin-right:9px;
+    animation:blink 1.15s steps(1) infinite;vertical-align:2px}
+  @keyframes pulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.35)}}
+  @keyframes blink{0%,60%{opacity:1}61%,100%{opacity:.15}}
+  #clockbug{top:74px;left:22px;background:rgba(8,12,20,.78);border-radius:6px;padding:3px 14px;
+    font-family:'Barlow Condensed';font-weight:600;font-size:24px;letter-spacing:.14em}
+  #chanbug{top:20px;right:22px;text-align:right;background:rgba(8,12,20,.55);border-radius:10px;padding:8px 16px 7px}
+  #chanbug .net{font-size:34px;letter-spacing:.05em;line-height:.95}
+  #chanbug .net b{color:var(--news-amber)}
+  #chanbug .tag{font-family:'Barlow Condensed';font-weight:600;font-size:16px;letter-spacing:.34em;opacity:.85}
+  #wxbug{position:absolute;right:22px;bottom:172px;background:rgba(8,12,20,.72);border-radius:8px;
+    padding:5px 14px;font-family:'Barlow Condensed';font-weight:600;font-size:23px;letter-spacing:.1em}
+  #wxbug b{color:var(--news-gold)}
+  /* lower third */
+  #lower3rd{position:absolute;left:0;right:0;bottom:0;height:158px}
+  #kicker{position:absolute;left:26px;bottom:124px;background:var(--news-amber);color:#161006;border-radius:5px 5px 0 0;
+    padding:4px 16px 2px;font-family:'Barlow Condensed';font-weight:700;font-size:24px;letter-spacing:.3em}
+  #headline-plate{position:absolute;left:0;right:0;bottom:52px;height:66px;
+    background:linear-gradient(90deg,var(--news-deep) 0 340px,#f4f5f7 340px);
+    display:flex;align-items:center;box-shadow:0 -4px 24px rgba(0,0,0,.35)}
+  #headline-plate .skew{position:absolute;left:296px;top:0;bottom:0;width:60px;background:#f4f5f7;
+    transform:skewX(-18deg);border-left:10px solid var(--news-deep)}
+  #headline{position:relative;margin-left:392px;font-family:'Anton';font-size:37px;color:#101623;
+    letter-spacing:.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:850px}
+  #headline.slide{animation:hl .38s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes hl{from{transform:translateX(46px);opacity:0}to{transform:none;opacity:1}}
+  #hl-side{position:absolute;left:26px;bottom:56px;font-family:'Anton';font-size:29px;line-height:1.02;color:#fff;z-index:2;
+    text-shadow:0 2px 0 rgba(0,0,0,.25)}
+  #tickerbar{position:absolute;left:0;right:0;bottom:0;height:52px;background:var(--news-navy);display:flex;align-items:stretch;overflow:hidden}
+  #ticker-tab{flex:0 0 auto;background:var(--news-red);color:#fff;font-family:'Anton';font-size:26px;
+    display:flex;align-items:center;padding:0 20px;letter-spacing:.1em;z-index:2}
+  #ticker-viewport{flex:1;overflow:hidden;position:relative;
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 30px,#000 96%,transparent);
+            mask-image:linear-gradient(90deg,transparent,#000 30px,#000 96%,transparent)}
+  #ticker-track{position:absolute;top:0;bottom:0;display:flex;align-items:center;white-space:nowrap;
+    font-family:'Barlow Condensed';font-weight:600;font-size:27px;letter-spacing:.06em;color:#e8eefc;
+    animation:tick 46s linear infinite;will-change:transform}
+  #ticker-track span{padding-right:18px}
+  #ticker-track .sep{color:var(--news-amber);padding-right:18px}
+  @keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  /* breaking sting */
+  #sting{position:absolute;inset:0;display:none;overflow:hidden;z-index:50}
+  #sting.on{display:block}
+  #sting .barT,#sting .barB{position:absolute;left:-6%;right:-6%;height:37%;background:var(--news-deep)}
+  #sting .barT{top:0;transform:translateY(-104%);animation:bin .5s cubic-bezier(.2,1.2,.3,1) forwards}
+  #sting .barB{bottom:0;transform:translateY(104%);background:var(--news-navy);animation:bin .5s cubic-bezier(.2,1.2,.3,1) forwards}
+  @keyframes bin{to{transform:none}}
+  #sting .word{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  #sting .word .w1{font-family:'Anton';font-size:118px;color:#fff;letter-spacing:.02em;line-height:.95;
+    text-shadow:0 6px 0 rgba(0,0,0,.3);animation:slam .45s .18s cubic-bezier(.2,1.6,.35,1) both}
+  #sting .word .w2{font-family:'Barlow Condensed';font-weight:700;font-size:30px;letter-spacing:.62em;color:var(--news-gold);
+    animation:slam .45s .3s cubic-bezier(.2,1.6,.35,1) both}
+  @keyframes slam{from{transform:scale(2.6);opacity:0}to{transform:scale(1);opacity:1}}
+</style>
+</head>
+<body data-app="breaking-news">
+<video id="cam" playsinline muted autoplay></video>
+<div id="fallback"><div class="tv"></div><div class="lamp" style="left:3%"></div><div class="lamp" style="right:3%"></div><div class="sofa"></div></div>
+
+<div id="stage">
+  <div id="livebug" class="bug"><span class="dot"></span>LIVE</div>
+  <div id="clockbug" class="bug">--:--</div>
+  <div id="chanbug" class="bug"><div class="net">NEWS<b>6</b></div><div class="tag">EYEWITNESS NEWS</div></div>
+  <div id="wxbug">BEACHFRONT <b>86° SUNNY</b></div>
+  <div id="lower3rd">
+    <div id="kicker">TRAFFIC</div>
+    <div id="headline-plate">
+      <div class="skew"></div>
+      <div id="hl-side">TOP<br>STORY</div>
+      <div id="headline">LOCAL DRIVER SOMEHOW PARKS ON TOP OF ANOTHER CAR</div>
+    </div>
+    <div id="tickerbar">
+      <div id="ticker-tab">LATEST</div>
+      <div id="ticker-viewport"><div id="ticker-track"></div></div>
+    </div>
+  </div>
+  <div id="sting"><div class="barT"></div><div class="barB"></div>
+    <div class="word"><div class="w1">BREAKING NEWS</div><div class="w2">WE INTERRUPT THIS GAME</div></div>
+  </div>
+</div>
+
+<canvas id="fx"></canvas>
+<div id="flashfx"></div>
+<div id="topbar"><div><span class="ttl">📺 BREAKING NEWS</span> <span class="sub">AR broadcast overlay</span></div></div>
+<div id="bar">
+  <button class="act primary" id="btn-headline">🗞️ Next Headline</button>
+  <button class="act" id="btn-breaking">🚨 Breaking</button>
+</div>
+
+<script src="scaffold.js"></script>
+<script>
+AR.init();
+/* ===== THEME PACK: "leonida" — swap this one object (plus the :root palette
+   in the <style> block) to reskin the broadcast for another game. ===== */
+const THEME = {
+  name: 'leonida',
+  brand: 'NEWS<b>6</b>', brandTag: 'EYEWITNESS NEWS',
+  wx: 'BEACHFRONT <b>86° SUNNY</b>',
+  stingSub: 'WE INTERRUPT THIS GAME'
+};
+document.querySelector('#chanbug .net').innerHTML = THEME.brand;
+document.querySelector('#chanbug .tag').textContent = THEME.brandTag;
+document.getElementById('wxbug').innerHTML = THEME.wx;
+document.querySelector('#sting .w2').textContent = THEME.stingSub;
+var STORIES = [
+ {k:'TRAFFIC', h:'LOCAL DRIVER SOMEHOW PARKS ON TOP OF ANOTHER CAR', side:'TOP STORY'},
+ {k:'PURSUIT WATCH', h:'MAN FLAGGED DOWN BY POLICE 14 TIMES BEFORE LUNCH', side:'AGAIN?!'},
+ {k:'BEACHFRONT', h:'CHASE ENDS WITH EVERYONE IN THE OCEAN, INCLUDING THE COPS', side:'SPLASH'},
+ {k:'DOWNTOWN', h:'CITY CONFIRMS HELICOPTER WAS "JUST PASSING THROUGH" THE MALL', side:'UH HUH'},
+ {k:'RENTALS', h:'DRIVER RETURNS RENTAL WITH "ONLY MINOR SAND" AND ONE ALLIGATOR', side:'DEPOSIT LOST'},
+ {k:'PUBLIC SAFETY', h:'POLICE ASK PUBLIC TO STOP RATING PURSUITS OUT OF TEN', side:'9.5 / 10'},
+ {k:'TRAFFIC', h:'TRAFFIC CAM CATCHES CAR DOING 140 THROUGH A CAR WASH', side:'SO CLEAN'},
+ {k:'LOCAL HERO', h:'MAN SAVES CAT, STEALS THREE CARS ON THE WAY HOME', side:'NET GOOD?'},
+ {k:'FREEWAY', h:'WITNESS: "HE REVERSED UP THE FREEWAY LIKE HE OWNED IT"', side:'INSPIRING'},
+ {k:'BRIDGES', h:'MAN CLAIMS THE BRIDGE "CAME OUT OF NOWHERE" FOR THE NINTH TIME', side:'NINTH!'},
+ {k:'MARINE UNIT', h:'BEACH PATROL REPORTS JET SKI "EVERYWHERE IT SHOULDN\'T BE"', side:'EVERYWHERE'},
+ {k:'CITY HALL', h:'CITYWIDE SIREN CONCERT ENTERS ITS FOURTH HOUR', side:'ENCORE'},
+ {k:'ERRANDS', h:'LOCAL DRIVER COMPLETES ONE ERRAND, EVENTUALLY, VIA ROOFTOP', side:'DONE!'},
+ {k:'AT LARGE', h:'MYSTERY DRIVER STILL AT LARGE, STILL DOING DONUTS', side:'ROUND & ROUND'},
+ {k:'SKY 6', h:'AUTHORITIES BAFFLED BY CAR PERFECTLY BALANCED ON A PALM TREE', side:'HOW'},
+ {k:'WEATHER', h:'LOCAL MAN DRIVES THROUGH HURRICANE "BECAUSE THE GPS SAID SO"', side:'RECULATING'}
+];
+var TICKS = [
+ 'CAUSEWAY FLOWING SMOOTHLY, SOMEHOW', 'BEACH ADVISORY: SHARKS, PROBABLY',
+ 'LOTTERY JACKPOT NOW $4.2 BILLION', 'GUN STOCKS UP 4% ON LOCAL OPTIMISM',
+ 'MANATEES WIN AGAIN, FANS RIOT QUIETLY', 'GAS PRICES DESCRIBED AS "A PERSONAL ATTACK"',
+ 'FERRY TO THE KEYS DELAYED BY "VIBES"', 'LOCAL CAT ELECTED TO THIRD TERM AS MAYOR',
+ 'SUNSCREEN SHORTAGE ENTERS DAY TWO', 'STUDY: 9 IN 10 DRIVERS "JUST VIBING"'
+];
+var idx = 0;
+var hlEl = document.getElementById('headline'), kickEl = document.getElementById('kicker'),
+    sideEl = document.getElementById('hl-side'), track = document.getElementById('ticker-track');
+function buildTicker(extra){
+  var items = TICKS.slice();
+  if (extra) items.unshift(extra.toUpperCase());
+  var html = items.map(function(t){ return '<span>'+t+'</span><span class="sep">///</span>'; }).join('');
+  track.innerHTML = html + html; // doubled for the -50% loop
+}
+function setStory(i){
+  var s = STORIES[i];
+  kickEl.textContent = s.k; sideEl.innerHTML = s.side.replace(' ', '<br>');
+  hlEl.textContent = s.h;
+  hlEl.classList.remove('slide'); void hlEl.offsetWidth; hlEl.classList.add('slide');
+  buildTicker(s.h);
+}
+buildTicker(STORIES[0].h);
+document.getElementById('btn-headline').addEventListener('click', function(){
+  idx = (idx+1) % STORIES.length; setStory(idx); AR.sfx.pop();
+});
+var stingEl = document.getElementById('sting'), flash = document.createElement('div');
+document.getElementById('btn-breaking').addEventListener('click', function(){
+  AR.sfx.sting();
+  var fl = document.getElementById('flashfx');
+  fl.style.transition = 'none'; fl.style.opacity = '0.85';
+  requestAnimationFrame(function(){ fl.style.transition = 'opacity .5s'; fl.style.opacity = '0'; });
+  stingEl.classList.remove('on'); void stingEl.offsetWidth; stingEl.classList.add('on');
+  setTimeout(function(){
+    idx = (idx+1) % STORIES.length; setStory(idx);
+    kickEl.textContent = 'BREAKING';
+  }, 900);
+  setTimeout(function(){ stingEl.classList.remove('on'); }, 2100);
+});
+function clock(){
+  var d = new Date(), hh = d.getHours(), mm = ('0'+d.getMinutes()).slice(-2);
+  var ap = hh >= 12 ? 'PM' : 'AM'; hh = hh % 12 || 12;
+  document.getElementById('clockbug').textContent = hh + ':' + mm + ' ' + ap;
+}
+clock(); setInterval(clock, 10000);
+</script>
+
+<style id="universal-offsets">#ci-root.ci-tl{top:12px!important}#ar-mark-root{bottom:134px!important}</style>
+<script src="mark-button.js"></script>
+<script src="clip-import.js"></script>
+<script>
+/* ---- universal kit wiring (integration pass 2026-11-16) ---- */
+window.ArMark = window.MarkButton;
+ClipImport.attach({
+    position: 'tl',
+    videoEl: document.getElementById('cam'),
+    startCamera: function (v) { return window.AR.startCamera(); }, canvas: document.getElementById('fx')
+  });
+</script>
+</body>
+</html>
