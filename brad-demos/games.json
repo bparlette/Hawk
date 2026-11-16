@@ -3162,6 +3162,14 @@
    "thumb": "thumbs/bonk-yard.png",
    "title": "Neon Vice (Enhanced)",
    "url": "../games/neon-vice/"
+  },
+  {
+   "category": "Originals",
+   "desc": "Original top-down open-city crime game — walk, jack, drive, outrun the heat at golden hour",
+   "id": "palm-city",
+   "thumb": "thumbs/bonk-yard.png",
+   "title": "Palm City",
+   "url": "../games/palm-city/"
   }
  ]
 }
