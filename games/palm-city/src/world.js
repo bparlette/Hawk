@@ -120,6 +120,12 @@ export class World {
     return null;
   }
 
+  // On the pier deck? `inset` keeps a body inside the side and end rails; the landward end is open.
+  onPier(x, y, inset = 0) {
+    const P = this.L.pier;
+    return x > P.x - 14 && x < P.x + P.w - inset && y > P.y + inset && y < P.y + P.h - inset;
+  }
+
   // Palm trunk within `pad` of a point, or null.
   hitTrunk(x, y, pad = 0) {
     for (const t of this.trunks) {

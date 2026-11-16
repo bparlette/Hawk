@@ -89,5 +89,72 @@ const palm = world.trunks.find(t => t.x === 1290 && t.y === 880);
   run(s, 60, idle());
   check('car into a palm: solid stop with a shake', c.y > palm.y + 20 && Math.abs(c.v) < 40 && ev.includes('rustle') && ev.includes('crash'), `y ${c.y.toFixed(0)} v ${c.v.toFixed(0)}`);
 }
+// ---------------------------------------------------------------- the pier and other interactables
+const PR = layout.pier;
+{
+  const { s } = fresh();
+  place(s, 1340, PR.y + PR.h / 2);
+  let minY = 1e9, maxY = -1e9;
+  run(s, 420, () => { const p = s.player.ped; minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y); return stick(E); });
+  const p = s.player.ped;
+  check('pier: you can walk out to the very end', p.x > PR.x + PR.w - 8 && p.x < PR.x + PR.w, `x ${p.x.toFixed(0)} of ${PR.x + PR.w}`);
+  check('…staying on the planks', minY > PR.y && maxY < PR.y + PR.h);
+  run(s, 120, stick(N));
+  check('…and the side rail holds you in', s.player.ped.y > PR.y + 3 && s.player.ped.x > 1600, `y ${s.player.ped.y.toFixed(1)}`);
+  run(s, 120, stick(E));
+  check('…and so does the end rail', s.player.ped.x < PR.x + PR.w - 3, `x ${s.player.ped.x.toFixed(1)}`);
+}
+{
+  const { s } = fresh();
+  place(s, 1350, 900);                                   // from the sand north of the pier, straight at the sea
+  run(s, 200, stick(E));
+  check('open water is still closed on foot', s.player.ped.x < world.shoreX(s.player.ped.y) + 7, `x ${s.player.ped.x.toFixed(0)}`);
+}
+{
+  const { s, ev } = fresh();
+  Object.assign(s.board, { x: 1340, y: PR.y + PR.h / 2, h: E, vx: 120, vy: 0, ridden: true }); s.player.mode = 'board';
+  run(s, 70, stick(E));
+  check('the board rolls onto the pier', s.player.mode === 'board' && s.board.x > PR.x + 100 && !ev.includes('bail'), `x ${s.board.x.toFixed(0)}`);
+  run(s, 240, stick(E, 0.5));
+  check('…and the end rail keeps board and rider out of the sea', s.board.x < PR.x + PR.w && s.canStand(s.player.ped.x, s.player.ped.y), `board x ${s.board.x.toFixed(0)} rider ${s.player.mode} x ${s.player.ped.x.toFixed(0)}`);
+}
+{
+  const { s } = fresh();
+  place(s, 100, 100);
+  const c = s.addCar(1340, PR.y + PR.h / 2, E, 'sedan_teal', 'player'); s.player.mode = 'car'; s.player.car = c; c.v = 150;
+  run(s, 120, idle());
+  check('cars stay off the pier', c.x < PR.x + 30, `x ${c.x.toFixed(0)}`);
+}
+{
+  const { s } = fresh();
+  const b = s.benches.find(q => q.x === 800 && q.y === 560);
+  place(s, 800, 600);
+  let minD = 1e9;
+  run(s, 120, () => { minD = Math.min(minD, Math.hypot(s.player.ped.x - b.x, s.player.ped.y - b.y)); return stick(N); });
+  check('benches are solid: straight at one, you stop', minD > 7 && s.player.ped.y > b.y + 6, `closest ${minD.toFixed(1)} y ${s.player.ped.y.toFixed(0)}`);
+  run(s, 60, stick(E)); run(s, 90, stick(N));
+  check('…and you can walk round it', s.player.ped.y < b.y - 10, `y ${s.player.ped.y.toFixed(0)}`);
+}
+{
+  const { s } = fresh();
+  const f = layout.props.find(q => q.type === 'fountain');
+  place(s, f.x - 70, f.y + 2);
+  let minD = 1e9;
+  run(s, 150, () => { minD = Math.min(minD, Math.hypot(s.player.ped.x - f.x, s.player.ped.y - f.y)); return stick(E); });
+  check('the fountain basin is solid', minD > 32, `closest ${minD.toFixed(1)}`);
+}
+{
+  const { s, ev } = fresh();
+  place(s, 1320, 700);
+  run(s, 40, stick(E));
+  check('promenade rail: you hop it onto the sand', ev.includes('hop') && s.player.ped.x > 1336, `x ${s.player.ped.x.toFixed(0)}`);
+}
+{
+  const t = new Sim(world, M, 3, () => {});                // an untouched sim: the strollers are part of the city
+  const q = t.peds.filter(p => p.path && p.path.type === 'pier');
+  let reached = false;
+  for (let i = 0; i < 60 * 40; i++) { t.step(STEP, idle()); reached ||= q.some(p => p.x > PR.x + PR.w - 20); }
+  check('people stroll the pier out to the end', q.length === 2 && reached && q.every(p => t.canStand(p.x, p.y)));
+}
 console.log(fails ? `FEEL FAIL (${fails})` : 'FEEL OK');
 process.exit(fails ? 1 : 0);

@@ -12,6 +12,10 @@ const COMBO_T = 2.6;      // seconds to land the next trick before the line cash
 export function initSkate(sim) {
   const L = sim.W.L;
   sim.rails = (L.rails || []).map(r => ({ ...r, len: Math.hypot(r.x1 - r.x0, r.y1 - r.y0) }));
+  if (L.pier) {                                           // the pier's side rails grind too
+    const P = L.pier;
+    for (const y of [P.y + 2, P.y + P.h - 2]) sim.rails.push({ x0: P.x + 8, y0: y, x1: P.x + P.w - 3, y1: y, len: P.w - 11, pier: true });
+  }
   sim.rims = L.rims || [];
   sim.benches = (L.benches || []).map(([x, y, a]) => ({ x, y, a, w: 34, d: 9 }));
   const [bx, by] = L.spawn.board;
@@ -66,7 +70,11 @@ export function mount(sim) {
 export function dismount(sim) {
   const P = sim.player, b = sim.board;
   P.mode = 'foot'; b.ridden = false; b.vx = b.vy = 0; b.grind = null; b.z = 0; b.air = 0;
-  P.ped.x = b.x + Math.cos(b.h + Math.PI / 2) * 10; P.ped.y = b.y + Math.sin(b.h + Math.PI / 2) * 10;
+  P.ped.x = b.x; P.ped.y = b.y;
+  for (const s of [1, -1]) {                               // step off to whichever side has footing
+    const x = b.x + Math.cos(b.h + Math.PI / 2) * 10 * s, y = b.y + Math.sin(b.h + Math.PI / 2) * 10 * s;
+    if (sim.canStand(x, y)) { P.ped.x = x; P.ped.y = y; break; }
+  }
   cashOut(sim, false);
 }
 
@@ -76,6 +84,10 @@ export function bail(sim, why) {
   // board skitters on, rider tumbles
   b.vx *= 0.6; b.vy *= 0.6;
   P.ped.x = b.x; P.ped.y = b.y;
+  if (!sim.canStand(b.x, b.y) && sim.W.onPier(b.x, b.y)) {      // thrown against a pier rail: land on the planks
+    const R = sim.W.L.pier;
+    P.ped.x = Math.min(b.x, R.x + R.w - 6); P.ped.y = Math.max(R.y + 6, Math.min(R.y + R.h - 6, b.y));
+  }
   P.stunT = 1.1;
   cashOut(sim, true);
   sim.ev('bail', why);
@@ -127,7 +139,7 @@ export function stepBoard(sim, dt, inp) {
     jx = (k.right ? 1 : 0) - (k.left ? 1 : 0); jy = (k.down ? 1 : 0) - (k.up ? 1 : 0);
     jm = Math.hypot(jx, jy) ? 1 : 0; if (jm) { const l = Math.hypot(jx, jy); jx /= l; jy /= l; }
   }
-  const surf = W.surfaceAt(b.x, b.y);
+  const surf = W.onPier(b.x, b.y) ? 'promenade' : W.surfaceAt(b.x, b.y);   // pier planks roll like the boardwalk
   if (jm > 0.15) {
     const ta = Math.atan2(jy, jx);
     const turn = (b.air > 0 ? 1.4 : 3.4) * dt;
@@ -219,7 +231,10 @@ export function stepBoard(sim, dt, inp) {
     if (s > 90) { b.vx *= -0.5; b.vy *= -0.5; bail(sim, 'tree'); return; }   // the board bounces back off the trunk
     b.vx *= -0.3; b.vy *= -0.3; sim.ev('bump');
   }
-  const hit = W.hitSolid(nx, ny, 4) || nx < 4 || ny < 4 || nx > W.L.world.w - 4 || ny > W.L.world.h - 4;
+  // pier rails are walls; so are the fountain basin and the lifeguard towers (benches when rolling slowly)
+  let wall = W.onPier(b.x, b.y, 2) && !W.onPier(nx, ny, 2) && nx > W.shoreX(ny) + 2;
+  if (b.air <= 0) for (const o of sim.obst) if ((o.kind !== 'bench' || boardSpeed(b) <= 70) && (nx - o.x) ** 2 + (ny - o.y) ** 2 < (o.r + 2) ** 2) wall = true;
+  const hit = wall || W.hitSolid(nx, ny, 4) || nx < 4 || ny < 4 || nx > W.L.world.w - 4 || ny > W.L.world.h - 4;
   if (tree) { /* stopped by the trunk */ } else if (hit) {
     if (boardSpeed(b) > 140) { bail(sim, 'wall'); return; }
     b.vx *= -0.3; b.vy *= -0.3;
