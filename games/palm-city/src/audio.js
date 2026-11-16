@@ -68,6 +68,12 @@ export class Audio {
     this.engG.gain.setTargetAtTime(car ? 0.05 + sp / 290 * 0.07 : 0, t, 0.1);
     const shore = world.shoreX(cam.y);
     this.seaG.gain.setTargetAtTime(Math.max(0, 1 - Math.abs(shore - cam.x) / 600) * 0.22, t, 0.3);
+    const bs = sim.player.mode === 'board' && !sim.board.air && !sim.board.grind ? Math.hypot(sim.board.vx, sim.board.vy) : 0;
+    if (!this.rollG) {
+      const r = this.loop(this.white); const rf = c.createBiquadFilter(); rf.type = 'bandpass'; rf.frequency.value = 700; rf.Q.value = 0.8;
+      this.rollG = c.createGain(); this.rollG.gain.value = 0; r.connect(rf).connect(this.rollG).connect(this.master);
+    }
+    this.rollG.gain.setTargetAtTime(Math.min(0.08, bs / 3000), t, 0.05);
     const f = sim.focus();
     let near = 1e9;
     for (const p of sim.cars) if (p.siren) near = Math.min(near, Math.hypot(p.x - f.x, p.y - f.y));
@@ -116,6 +122,12 @@ export class Audio {
       const seq = [[392, 0], [370, 0.18], [277, 0.36]];
       for (const [f, dt] of seq) { this.note(f, t + dt, dt === 0.36 ? 0.9 : 0.14, 0.16, 'sawtooth', 1400); this.note(f / 2, t + dt, dt === 0.36 ? 0.9 : 0.14, 0.12, 'square', 600); }
     }
+    if (name === 'ollie') { this.burst(2400, 3, 0.25, 0.05, 'bandpass'); this.burst(300, 1, 0.3, 0.08); }
+    if (name === 'land') this.burst(900, 2, 0.25, 0.07, 'bandpass');
+    if (name === 'grind') { this.burst(3200, 8, 0.18, 0.5, 'bandpass'); this.burst(1600, 6, 0.12, 0.5, 'bandpass'); }
+    if (name === 'hood') { this.burst(160, 1, 0.5, 0.18); if (v) this.note(1320, t + 0.05, 0.15, 0.06, 'square', 3000); }
+    if (name === 'bail') { this.burst(500, 0.8, 0.5, 0.35); this.burst(2600, 3, 0.15, 0.2, 'bandpass'); }
+    if (name === 'trick') this.note(988 + Math.random() * 200, t, 0.06, 0.035, 'triangle', 4000);
     if (name === 'respawn') { this.note(659, t, 0.18, 0.06, 'triangle'); this.note(988, t + 0.15, 0.3, 0.06, 'triangle'); }
   }
 }

@@ -2,6 +2,7 @@
 // Fixed-timestep and seeded, so ?demo plays the same route every time.
 
 import { mulberry32 } from './world.js';
+import { initSkate, stepBoard, stepCombo, nearBoard, mount, boardSpeed } from './skate.js';
 
 const TAU = Math.PI * 2;
 const wrap = (a) => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
@@ -35,6 +36,7 @@ export class Sim {
       [1302, 520, Math.PI / 2, 'conv_rose'],
     ];
     for (const [x, y, h, model] of parked) this.addCar(x, y, h, model, null, { parked: true });
+    initSkate(this);
     for (let i = 0; i < 10; i++) this.spawnTraffic(true);
     for (let i = 0; i < 40; i++) this.spawnPed(true);
   }
@@ -120,8 +122,13 @@ export class Sim {
     }
 
     // --- player
+    if (P.stunT > 0) { P.stunT -= dt; input = { ...input, jm: 0, action: false, keys: {} }; }
     if (P.mode === 'foot') this.stepPlayerFoot(dt, input);
+    else if (P.mode === 'board') stepBoard(this, dt, input);
     else this.stepPlayerCar(dt, input);
+    stepCombo(this, dt);
+    // a board left alone rolls to a stop
+    if (!this.board.ridden) { const b = this.board, f = Math.exp(-3 * dt); b.vx *= f; b.vy *= f; if (!this.W.hitSolid(b.x + b.vx * dt, b.y + b.vy * dt, 2)) { b.x += b.vx * dt; b.y += b.vy * dt; } }
 
     // --- AI cars
     for (const c of this.cars) {
@@ -170,7 +177,14 @@ export class Sim {
       p.walk += sp * dt;
       p.pose = [0, 1, 2, 1][Math.floor(p.walk / 9) % 4];
     } else p.pose = 1;
-    if (inp.action) this.tryEnterCar();
+    if (inp.action) {
+      // the board wins if it's right at your feet and nearer than any car
+      const p2 = this.player.ped, b = this.board;
+      const bd = Math.hypot(b.x - p2.x, b.y - p2.y);
+      const cd = Math.min(...this.cars.map(c => Math.hypot(c.x - p2.x, c.y - p2.y)));
+      if (nearBoard(this) && bd < cd) mount(this);
+      else this.tryEnterCar();
+    }
   }
 
   walkMove(p, dx, dy) {
@@ -331,7 +345,7 @@ export class Sim {
     };
     for (const o of this.cars) if (o !== c && check(o.x, o.y, 16)) return false;
     const pp = this.player.ped;
-    if (this.player.mode === 'foot' && check(pp.x, pp.y, 16)) return false;
+    if (this.player.mode !== 'car' && check(pp.x, pp.y, 16)) return false;
     return true;
   }
 
@@ -376,12 +390,12 @@ export class Sim {
     const ta = Math.atan2(ty - c.y, tx - c.x);
     const diff = wrap(ta - c.h);
     let throttle = 1 - Math.min(0.7, Math.abs(diff) / 2.2);
-    if (d < 70 && (this.player.mode === 'foot' || Math.abs(f.v) < 40)) throttle = c.v > 10 ? -1 : 0;
+    if (d < 70 && (this.player.mode !== 'car' || Math.abs(f.v) < 40)) throttle = c.v > 10 ? -1 : 0;
     if (Math.abs(diff) > 2.4 && c.v < 60) { throttle = -0.7; }
     this.driveCar(c, throttle, clamp((throttle < 0 && c.v < 0 ? -1 : 1) * diff * 2.6, -1, 1), dt, 350);
     if (Math.abs(c.v) < 40 && throttle > 0.3 && d > 90) { c.stuck += dt; if (c.stuck > 1.2) { c.v = -90; c.h = wrap(c.h + (this.rnd() - 0.5)); c.stuck = 0; } } else c.stuck = 0;
     // cops jump out for a foot chase
-    if (this.player.mode === 'foot' && d < 140 && Math.abs(c.v) < 40 && !c.copOut) {
+    if (this.player.mode !== 'car' && d < 140 && Math.abs(c.v) < 40 && !c.copOut) {
       c.copOut = true;
       const cop = this.makePed(c.x + Math.sin(c.h) * 18, c.y - Math.cos(c.h) * 18, 'cop', null);
       cop.mode = 'cop'; cop.speed = 82;
@@ -461,6 +475,7 @@ export class Sim {
       c.driver = null; c.parked = true; c.v = 0;
       P.mode = 'foot'; P.car = null;
     }
+    if (P.mode === 'board') { P.mode = 'foot'; this.board.ridden = false; this.combo = null; }
     const [rx, ry] = this.W.L.spawn.respawn;
     P.ped.x = rx; P.ped.y = ry; P.ped.h = -Math.PI / 2; P.ped.hidden = false;
     this.stars = 0;

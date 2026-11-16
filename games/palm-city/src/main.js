@@ -132,6 +132,10 @@ function frame(now) {
     tx += Math.cos(c.h) * c.v * 0.42; ty += Math.sin(c.h) * c.v * 0.42;
     tz = 1 - Math.min(0.16, Math.abs(c.v) / 290 * 0.16);
   }
+  if (sim.player.mode === 'board') {
+    const b = sim.board; tx += b.vx * 0.35; ty += b.vy * 0.35;
+    tz = 1 - Math.min(0.1, Math.hypot(b.vx, b.vy) / 250 * 0.1);
+  }
   if (fixedCam) { tx = fixedCam[0]; ty = fixedCam[1]; tz = fixedCam[2] || 1; }
   const k = fixedCam ? 1 : 1 - Math.exp(-dt * 3.2);
   cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k; cam.zoom += (tz - cam.zoom) * (fixedCam ? 1 : 1 - Math.exp(-dt * 1.5));
