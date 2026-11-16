@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Loot Drop — AR Supply Crate</title>
+<link rel="stylesheet" href="vendor/fonts/fonts-local.css">
+<link rel="stylesheet" href="ar.css">
+<style>
+  #gl{position:fixed;inset:0;z-index:20}
+  #hint{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 92px);transform:translateX(-50%);
+    z-index:1100;background:rgba(8,12,18,.8);border:1px solid rgba(255,255,255,.25);border-radius:999px;
+    padding:7px 18px;font:600 17px 'Barlow Condensed';letter-spacing:.14em;display:none;white-space:nowrap}
+</style>
+<script type="importmap">
+{"imports":{"three":"./vendor/three.module.min.js","three/addons/":"./vendor/addons/"}}
+</script>
+</head>
+<body data-app="loot-drop">
+<video id="cam" playsinline muted autoplay></video>
+<div id="fallback"><div class="tv"></div><div class="lamp" style="left:3%"></div><div class="lamp" style="right:3%"></div><div class="sofa"></div></div>
+<div id="stage"></div>
+<canvas id="fx"></canvas>
+<div id="hint">👆 TAP THE CRATE TO OPEN IT</div>
+<div id="topbar"><div><span class="ttl">🪂 LOOT DROP</span> <span class="sub">AR supply crate</span></div></div>
+<div id="bar">
+  <button class="act primary" id="btn-drop">🪂 Drop It</button>
+  <button class="act gold" id="btn-open" disabled style="opacity:.45">🎁 Open</button>
+  <button class="act small" id="btn-reset">↺ Reset</button>
+</div>
+
+<script src="scaffold.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+AR.init();
+/* ===== THEME PACK: "leonida" — models, textures, copy ===== */
+const THEME = {
+  name: 'leonida',
+  models: { crate: 'assets/crate.glb', parachute: 'assets/parachute.glb',
+            cash: 'assets/cash-stack.glb', gold: 'assets/gold-bars.glb' },
+  bill: 'assets/bill100.jpg',
+  jackpotToast: '💰 JACKPOT'
+};
+
+/* ---------- renderer in screen-pixel space (ortho) ---------- */
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.domElement.id = 'gl';
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+let camera;
+scene.add(new THREE.HemisphereLight(0xfff2dd, 0x2a3040, 1.4));
+const sun = new THREE.DirectionalLight(0xffffff, 1.9); sun.position.set(220, 420, 320); scene.add(sun);
+const fill = new THREE.DirectionalLight(0xbfd4ff, 0.5); fill.position.set(-260, 120, -200); scene.add(fill);
+const front = new THREE.DirectionalLight(0xffffff, 0.55); front.position.set(0, 60, 600); scene.add(front);
+
+function sizeAll(){
+  renderer.setSize(innerWidth, innerHeight);
+  camera = new THREE.OrthographicCamera(-innerWidth/2, innerWidth/2, innerHeight/2, -innerHeight/2, -1200, 2400);
+  camera.position.set(0, 0, 600); camera.lookAt(0, 0, 0);
+  layout();
+}
+const S2W = (sx, sy) => new THREE.Vector3(sx - innerWidth/2, innerHeight/2 - sy, 0);
+const W2S = (v) => ({x: v.x + innerWidth/2, y: innerHeight/2 - v.y});
+
+/* ---------- layout from TV quad ---------- */
+let CX = 0, FLOOR = 0, CRATE_W = 200; // world units (= px)
+function layout(){
+  const q = AR.quadPx();
+  const cxS = (q[0].x + q[1].x + q[2].x + q[3].x) / 4;
+  const botS = (q[2].y + q[3].y) / 2;
+  const tvW = Math.hypot(q[1].x - q[0].x, q[1].y - q[0].y);
+  const c = S2W(cxS, botS + innerHeight * 0.055);
+  CX = c.x; FLOOR = c.y; CRATE_W = Math.max(120, tvW * 0.30);
+  if (rig && state === 'idle') positionRigHome();
+  if (rig && (state === 'landed' || state === 'opened')) { rig.position.x = CX; rig.position.y = FLOOR; }
+}
+AR.onQuad(layout);
+
+/* ---------- model loading / normalization ---------- */
+const loader = new GLTFLoader();
+function loadNorm(url, targetW){
+  return new Promise((res, rej) => loader.load(url, (gltf) => {
+    const obj = gltf.scene;
+    const box = new THREE.Box3().setFromObject(obj);
+    const size = box.getSize(new THREE.Vector3());
+    const s = targetW / (size.x || 1);
+    obj.scale.setScalar(s);
+    const box2 = new THREE.Box3().setFromObject(obj);
+    obj.position.x -= (box2.min.x + box2.max.x) / 2;
+    obj.position.z -= (box2.min.z + box2.max.z) / 2;
+    obj.position.y -= box2.min.y; // bottom at local y=0
+    const wrap = new THREE.Group(); wrap.add(obj); wrap.userData.h = box2.max.y - box2.min.y;
+    res(wrap);
+  }, undefined, rej));
+}
+
+let rig = null, crate = null, chute = null, lootGroup = new THREE.Group();
+scene.add(lootGroup);
+let state = 'idle'; // idle | falling | landed | opened
+let fallT = 0, fallStart = 0, glowSprite = null, glowLight = null;
+
+const billImg = new Image(); billImg.src = THEME.bill;
+
+async function build(){
+  crate = await loadNorm(THEME.models.crate, 1); // scaled in layoutRig
+  chute = await loadNorm(THEME.models.parachute, 1);
+  rig = new THREE.Group(); rig.visible = false; scene.add(rig);
+  layoutRig(); positionRigHome();
+}
+function layoutRig(){
+  if (!crate) return;
+  // rescale children to CRATE_W
+  const cw = CRATE_W;
+  crate.scale.setScalar(cw / (crate.userData.baseW || (crate.userData.baseW = currentW(crate))));
+  chute.scale.setScalar(cw * 2.1 / (chute.userData.baseW || (chute.userData.baseW = currentW(chute))));
+  rig.clear(); rig.add(crate); rig.add(chute);
+  const crateH = crate.userData.h * crate.scale.x;
+  const chuteH = chute.userData.h * chute.scale.x;
+  chute.position.y = crateH - chuteH * 0.05; // canopy lines land right at the crate's top corners
+  // (the parachute model carries its own shroud lines)
+}
+function currentW(g){ const b = new THREE.Box3().setFromObject(g); return Math.max(0.0001, b.max.x - b.min.x); }
+function positionRigHome(){ if (rig) { rig.position.set(CX, FLOOR, 0); } }
+
+const dropBtn = document.getElementById('btn-drop'), openBtn = document.getElementById('btn-open'),
+      hint = document.getElementById('hint');
+function setState(s){
+  state = s;
+  dropBtn.disabled = s !== 'idle'; dropBtn.style.opacity = s === 'idle' ? 1 : .45;
+  openBtn.disabled = s !== 'landed'; openBtn.style.opacity = s === 'landed' ? 1 : .45;
+  hint.style.display = s === 'landed' ? 'block' : 'none';
+}
+dropBtn.addEventListener('click', () => {
+  if (state !== 'idle' || !rig) return;
+  layoutRig();
+  rig.visible = true; fallT = 0; fallStart = performance.now();
+  const topW = S2W(0, AR.quadPx()[0].y).y; // world y of the TV's top edge
+  rig.position.set(CX, topW + CRATE_W * 2.7, 0);
+  rig.userData.startY = rig.position.y;
+  chute.visible = true; chute.traverse(o => { if (o.material) { o.material.transparent = false; o.material.opacity = 1; } });
+  setState('falling'); AR.sfx.tone(600, 0.3, 'sine', 0.08, 240);
+});
+async function openLoot(){
+  if (state !== 'landed') return;
+  setState('opened');
+  AR.sfx.pop();
+  const top = rig.position.clone(); top.y += crate.userData.h * crate.scale.x;
+  const sp = W2S(top);
+  AR.burst.bills(sp.x, sp.y, billImg, 16);
+  AR.burst.confetti(sp.x, sp.y, 26);
+  const cash = await loadNorm(THEME.models.cash, CRATE_W * 0.52);
+  const gold = await loadNorm(THEME.models.gold, CRATE_W * 0.55);
+  const gold2 = await loadNorm(THEME.models.gold, CRATE_W * 0.4);
+  const items = [
+    {g: cash, dx: -CRATE_W * 0.52}, {g: gold, dx: CRATE_W * 0.5},
+    {g: cash.clone(), dx: CRATE_W * 0.06}, {g: gold2, dx: -CRATE_W * 0.1}
+  ];
+  items.forEach((it, i) => {
+    it.g.position.set(rig.position.x, FLOOR, 30 + i * 6);
+    it.targetX = rig.position.x + it.dx;
+    it.vx = it.dx * 2.4; it.vy = 330 + Math.random() * 130; it.spin = (Math.random() - .5) * 2.4;
+    lootGroup.add(it.g); fallingLoot.push(it);
+  });
+  // loot glow
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+  const g2 = cv.getContext('2d');
+  const gr = g2.createRadialGradient(64,64,4,64,64,62);
+  gr.addColorStop(0, 'rgba(255,214,110,0.85)'); gr.addColorStop(1, 'rgba(255,180,60,0)');
+  g2.fillStyle = gr; g2.fillRect(0,0,128,128);
+  glowSprite = new THREE.Sprite(new THREE.SpriteMaterial({map: new THREE.CanvasTexture(cv), transparent:true, depthWrite:false}));
+  glowSprite.scale.setScalar(CRATE_W * 2.3);
+  glowSprite.position.set(rig.position.x, FLOOR + CRATE_W * 0.5, -20);
+  scene.add(glowSprite);
+  glowLight = new THREE.PointLight(0xffc46b, 900, 0, 1.6);
+  glowLight.position.set(rig.position.x, FLOOR + CRATE_W * 0.6, 160);
+  scene.add(glowLight);
+  AR.sfx.coin(10);
+  AR.toast(THEME.jackpotToast, 1300);
+}
+openBtn.addEventListener('click', openLoot);
+document.getElementById('btn-reset').addEventListener('click', () => {
+  lootGroup.clear(); fallingLoot.length = 0;
+  if (glowSprite) { scene.remove(glowSprite); glowSprite = null; }
+  if (glowLight) { scene.remove(glowLight); glowLight = null; }
+  if (rig) { rig.visible = false; positionRigHome(); }
+  setState('idle');
+});
+renderer.domElement.addEventListener('pointerdown', (e) => {
+  if (state !== 'landed' || !crate) return;
+  const p = S2W(e.clientX, e.clientY);
+  if (Math.abs(p.x - rig.position.x) < CRATE_W * 0.75 && p.y > FLOOR - 10 && p.y < FLOOR + CRATE_W * 1.3) openLoot();
+});
+
+const fallingLoot = [];
+const clock = new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = Math.min(0.05, clock.getDelta()), t = clock.elapsedTime;
+  if (rig && state === 'falling'){
+    fallT = (performance.now() - fallStart) / 1000; // wall-clock: correct at any frame rate
+    const target = FLOOR, start = rig.userData.startY ?? (innerHeight/2 + 260);
+    const total = start - target, dur = 2.7;
+    const k = Math.min(1, fallT / dur), ease = 1 - Math.pow(1 - k, 1.6);
+    rig.position.y = start - total * ease;
+    const hFrac = 1 - k;
+    rig.position.x = CX + Math.sin(fallT * 1.5) * 30 * hFrac + Math.sin(fallT * 0.6) * 8;
+    rig.rotation.z = Math.sin(fallT * 1.1) * 0.055 * (0.4 + hFrac);
+    if (k >= 1){
+      rig.position.y = FLOOR; rig.rotation.z = 0;
+      setState('landed'); AR.sfx.thud();
+      const sp = W2S(rig.position); AR.burst.smoke(sp.x, sp.y + 6, 7, 130);
+      // canopy collapse
+      let ct = 0; const ch = chute;
+      (function collapse(){
+        ct += 0.06; ch.scale.y = chute.scale.x * Math.max(0.16, 1 - ct);
+        ch.position.x += 2.2; ch.rotation.z = -ct * 0.5;
+        if (ct < 1) requestAnimationFrame(collapse); else ch.visible = false;
+      })();
+    }
+  }
+  for (let i = fallingLoot.length - 1; i >= 0; i--){
+    const it = fallingLoot[i];
+    it.vy -= 1500 * dt;
+    it.g.position.x += it.vx * dt; it.g.position.y += it.vy * dt;
+    it.g.rotation.y += it.spin * dt;
+    if (it.g.position.y <= FLOOR){ it.g.position.y = FLOOR; fallingLoot.splice(i, 1); AR.sfx.noise(0.05, 900, 0.06); }
+  }
+  if (glowSprite) glowSprite.material.opacity = 0.75 + Math.sin(t * 3.2) * 0.2;
+  renderer.render(scene, camera);
+}
+sizeAll();
+addEventListener('resize', sizeAll);
+build().then(() => setState('idle'));
+animate();
+</script>
+
+<style id="universal-offsets">#ci-root.ci-tl{top:12px!important}#ar-mark-root{bottom:134px!important}</style>
+<script src="mark-button.js"></script>
+<script src="clip-import.js"></script>
+<script>
+/* ---- universal kit wiring (integration pass 2026-11-16) ---- */
+window.ArMark = window.MarkButton;
+ClipImport.attach({
+    position: 'tl',
+    videoEl: document.getElementById('cam'),
+    startCamera: function (v) { return window.AR.startCamera(); }, canvas: document.getElementById('fx')
+  });
+</script>
+</body>
+</html>

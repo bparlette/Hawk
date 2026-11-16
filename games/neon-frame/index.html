@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>NEON FRAME — AR Clip Studio</title>
+<style>
+  @font-face{ font-family:'Monoton'; src:url('assets/monoton.woff2') format('woff2'); font-display:swap; }
+  @font-face{ font-family:'Anton'; src:url('assets/anton.woff2') format('woff2'); font-display:swap; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; overflow:hidden; background:#000; touch-action:none; overscroll-behavior:none;
+    font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; color:#fff; }
+  #cam{ position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; }
+  body.nocam #cam{ display:none; }
+  .room{ position:fixed; inset:0; z-index:1; display:none;
+    background:linear-gradient(#262a36 0%, #2e3342 54%, #14151a 54.2%, #0c0c10 100%); }
+  body.nocam .room{ display:block; }
+  .fake-tv{ position:absolute; left:6%; top:19%; width:88%; height:41%; border-radius:6px; overflow:hidden;
+    box-shadow:0 0 0 6px #050507, 0 24px 60px rgba(0,0,0,.7); }
+  .fake-tv .feed{ position:absolute; inset:0;
+    background:linear-gradient(115deg,#0d3b5e,#8a2050 32%,#0d5c48 58%,#c96a1e 82%,#0d3b5e);
+    background-size:300% 100%; animation:feedslide 9s linear infinite; }
+  @keyframes feedslide{ from{ background-position:0% 0; } to{ background-position:300% 0; } }
+  .fake-tv .tag{ position:absolute; left:10px; bottom:8px; color:#fff; font-size:11px; letter-spacing:.14em;
+    background:rgba(0,0,0,.55); padding:3px 8px; border-radius:4px; }
+  .couch{ position:absolute; left:9%; right:9%; bottom:6%; height:11%; border-radius:18px 18px 0 0;
+    background:linear-gradient(#23242c,#131318); }
+  #palmCanvas{ position:fixed; inset:0; z-index:400; pointer-events:none; }
+  /* bounce light washes */
+  .bounce{ position:fixed; z-index:300; pointer-events:none; mix-blend-mode:screen; filter:blur(28px); }
+  /* neon tubes */
+  .tube{ position:fixed; z-index:600; height:11px; margin-top:-5.5px; border-radius:7px; pointer-events:none;
+    transform-origin:0 50%; }
+  .tube .core{ position:absolute; inset:3px 0; border-radius:5px; background:#fff; }
+  /* UI */
+  .chip{ position:fixed; z-index:1100; background:rgba(12,12,18,.78); color:#fff; border:1px solid rgba(255,255,255,.28);
+    border-radius:999px; padding:9px 14px; font-size:13px; letter-spacing:.08em; backdrop-filter:blur(6px); }
+  #titleChip{ top:calc(10px + env(safe-area-inset-top)); left:12px; font-family:'Anton'; font-size:15px; }
+  #alignBtn{ top:calc(10px + env(safe-area-inset-top)); right:12px; }
+  .bar{ position:fixed; left:0; right:0; bottom:0; z-index:1100; display:flex; gap:14px; align-items:center;
+    padding:14px 16px calc(14px + env(safe-area-inset-bottom));
+    background:linear-gradient(transparent, rgba(0,0,0,.55)); }
+  .bar label{ font-size:12px; letter-spacing:.18em; color:#ffb3d1; text-shadow:0 0 8px rgba(255,46,136,.8); }
+  #bright{ flex:1; -webkit-appearance:none; appearance:none; height:8px; border-radius:5px; touch-action:manipulation;
+    background:linear-gradient(90deg,#3b0a24,#ff2e88,#22d3ee); outline:none; }
+  #bright::-webkit-slider-thumb{ -webkit-appearance:none; width:30px; height:30px; border-radius:50%;
+    background:#fff; border:3px solid #ff2e88; box-shadow:0 0 14px rgba(255,46,136,.9); }
+  #quadSvg{ position:fixed; inset:0; z-index:1060; pointer-events:none; display:none; }
+  body.aligning #quadSvg{ display:block; }
+  .handle{ position:fixed; width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%; z-index:1200;
+    background:rgba(255,46,136,.85); border:3px solid #fff; display:none; touch-action:none; }
+  body.aligning .handle{ display:block; }
+  #err{ position:fixed; z-index:1150; left:12px; bottom:calc(96px + env(safe-area-inset-bottom)); max-width:80vw;
+    color:#ffb3b3; font-size:12px; display:none; }
+</style>
+</head>
+<body>
+  <video id="cam" autoplay playsinline muted></video>
+  <div class="room">
+    <div class="fake-tv"><div class="feed"></div><div class="tag">SAMPLE FEED — CAMERA OFF</div></div>
+    <div class="couch"></div>
+  </div>
+  <div class="bounce" id="bTop"></div><div class="bounce" id="bRight"></div>
+  <div class="bounce" id="bBottom"></div><div class="bounce" id="bLeft"></div>
+  <canvas id="palmCanvas"></canvas>
+  <div class="tube" id="tTop"><div class="core"></div></div>
+  <div class="tube" id="tRight"><div class="core"></div></div>
+  <div class="tube" id="tBottom"><div class="core"></div></div>
+  <div class="tube" id="tLeft"><div class="core"></div></div>
+
+  <div class="chip" id="titleChip">NEON&nbsp;FRAME</div>
+  <button class="chip" id="alignBtn">ALIGN&nbsp;TV</button>
+  <div id="err"></div>
+  <div class="bar">
+    <label>GLOW</label>
+    <input type="range" id="bright" min="25" max="140" value="100">
+  </div>
+
+  <svg id="quadSvg"><polygon id="quadPoly" fill="rgba(255,46,136,.10)" stroke="#ff2e88" stroke-width="2"/></svg>
+  <div class="handle" data-i="0"></div><div class="handle" data-i="1"></div>
+  <div class="handle" data-i="2"></div><div class="handle" data-i="3"></div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "./vendor/three.module.min.js",
+  "three/addons/": "./vendor/addons/"
+} }
+</script>
+<script>
+'use strict';
+/* ================= THEME (skin-pack config — swap this object to reskin) ================= */
+const THEME = {
+  pack: 'leonida-default',
+  tubes: { top:'#ff2e88', left:'#ff2e88', bottom:'#22d3ee', right:'#22d3ee' },
+  flickerTube: 'right',           /* the tube with the faulty ballast */
+  palmModel: 'assets/palm.glb',
+  palmSilhouette: '#06060c',
+  palmRim: { left:'#ff2e88', right:'#22d3ee' },
+  bounceOpacity: .34
+};
+window.__THEME = THEME;
+/* ================= shared scaffold ================= */
+const $ = s => document.querySelector(s);
+let AC = null;
+function audio(){ try{ if (navigator.audioSession) navigator.audioSession.type='playback'; }catch(e){}
+  if (!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  if (AC && AC.state==='suspended') AC.resume(); return AC; }
+document.addEventListener('pointerdown', audio);
+document.addEventListener('gesturestart', e=> e.preventDefault());
+async function startCam(){ const v = $('#cam');
+  try{ const s = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false });
+    v.srcObject = s; await v.play(); window.__camLive = true;
+  }catch(e){ document.body.classList.add('nocam'); window.__fallback = true; } }
+const QKEY = 'arquad-neon-frame';
+let quad = [[.07,.21],[.93,.21],[.93,.60],[.07,.60]];
+try{ const q = JSON.parse(localStorage.getItem(QKEY)); if (Array.isArray(q)&&q.length===4) quad = q; }catch(e){}
+const handles = [...document.querySelectorAll('.handle')];
+let brightness = 1;
+const tubes = { top:$('#tTop'), right:$('#tRight'), bottom:$('#tBottom'), left:$('#tLeft') };
+const bounces = { top:$('#bTop'), right:$('#bRight'), bottom:$('#bBottom'), left:$('#bLeft') };
+function setTube(el, p0, p1, color){
+  const dx = p1[0]-p0[0], dy = p1[1]-p0[1], len = Math.hypot(dx,dy);
+  el.style.left = p0[0]+'px'; el.style.top = p0[1]+'px'; el.style.width = len+'px';
+  el.style.transform = `rotate(${Math.atan2(dy,dx)}rad)`;
+  el.style.background = color;
+  el.style.boxShadow = `0 0 10px ${color}, 0 0 30px ${color}, 0 0 64px ${color}, 0 0 110px ${color}`;
+  el.style.opacity = String(Math.min(1, brightness));
+  el.style.filter = `brightness(${brightness})`;
+}
+function setBounce(el, p0, p1, color, out){
+  const mx = (p0[0]+p1[0])/2, my = (p0[1]+p1[1])/2, len = Math.hypot(p1[0]-p0[0], p1[1]-p0[1]);
+  const w = len*1.06, h = 190;
+  el.style.width = w+'px'; el.style.height = h+'px';
+  el.style.left = (mx - w/2 + out[0])+'px'; el.style.top = (my - h/2 + out[1])+'px';
+  el.style.background = `radial-gradient(ellipse at center, ${color} 0%, transparent 68%)`;
+  el.style.opacity = String(THEME.bounceOpacity * brightness);
+}
+function applyQuad(){
+  const W = innerWidth, H = innerHeight;
+  const P = quad.map(p => [p[0]*W, p[1]*H]);
+  handles.forEach((h,i)=>{ h.style.left = P[i][0]+'px'; h.style.top = P[i][1]+'px'; });
+  $('#quadPoly').setAttribute('points', P.map(p=> p[0]+','+p[1]).join(' '));
+  setTube(tubes.top,    P[0], P[1], THEME.tubes.top);
+  setTube(tubes.right,  P[1], P[2], THEME.tubes.right);
+  setTube(tubes.bottom, P[3], P[2], THEME.tubes.bottom);
+  setTube(tubes.left,   P[3], P[0], THEME.tubes.left);
+  setBounce(bounces.top,    P[0], P[1], THEME.tubes.top,    [0,-120]);
+  setBounce(bounces.right,  P[1], P[2], THEME.tubes.right,  [110,0]);
+  setBounce(bounces.bottom, P[3], P[2], THEME.tubes.bottom, [0,120]);
+  setBounce(bounces.left,   P[3], P[0], THEME.tubes.left,   [-110,0]);
+  if (window.__layoutPalms) window.__layoutPalms(P);
+}
+handles.forEach(h=>{ h.addEventListener('pointerdown', e=>{ h.setPointerCapture(e.pointerId);
+  const move = ev=>{ const i=+h.dataset.i;
+    quad[i]=[Math.min(.98,Math.max(.02,ev.clientX/innerWidth)), Math.min(.98,Math.max(.02,ev.clientY/innerHeight))]; applyQuad(); };
+  const up = ()=>{ h.removeEventListener('pointermove',move); h.removeEventListener('pointerup',up);
+    try{ localStorage.setItem(QKEY, JSON.stringify(quad)); }catch(e){} };
+  h.addEventListener('pointermove',move); h.addEventListener('pointerup',up); e.preventDefault(); }); });
+$('#alignBtn').addEventListener('click', ()=> document.body.classList.toggle('aligning'));
+$('#bright').addEventListener('input', e=>{ brightness = e.target.value/100; applyQuad(); });
+addEventListener('resize', applyQuad);
+
+/* flicker — one faulty tube */
+(function flicker(){
+  const el = tubes[THEME.flickerTube];
+  const burst = ()=>{
+    const steps = [0.15, 1, 0.35, 1, 0.1, 0.6, 1];
+    steps.forEach((o, i)=> setTimeout(()=>{ el.style.opacity = String(o * Math.min(1, brightness)); }, i*55));
+    setTimeout(burst, 3800 + Math.random()*6500);
+  };
+  setTimeout(burst, 2600);
+  /* rare single blink on the top tube */
+  setInterval(()=>{ if (Math.random() < .3){ tubes.top.style.opacity = '.25';
+    setTimeout(()=> tubes.top.style.opacity = String(Math.min(1, brightness)), 90); } }, 9000);
+})();
+
+applyQuad(); startCam();
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const _TH = window.__THEME || {};
+const THEME_REF = { model: _TH.palmModel || 'assets/palm.glb',
+  silhouette: new THREE.Color(_TH.palmSilhouette || '#06060c'),
+  rimL: new THREE.Color((_TH.palmRim||{}).left || '#ff2e88'),
+  rimR: new THREE.Color((_TH.palmRim||{}).right || '#22d3ee') };
+try{
+  const canvas = document.getElementById('palmCanvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha:true, antialias:true });
+  renderer.setPixelRatio(Math.min(2, devicePixelRatio||1));
+  const scene = new THREE.Scene();
+  const cam = new THREE.PerspectiveCamera(46, innerWidth/innerHeight, .1, 60);
+  cam.position.set(0, 0, 9);
+  const loader = new GLTFLoader();
+  const gltf = await loader.loadAsync(THEME_REF.model);
+  const src = gltf.scene;
+  const box = new THREE.Box3().setFromObject(src);
+  const hgt = box.max.y - box.min.y;
+  function makePalm(rimColor){
+    const g = new THREE.Group();
+    const rim = src.clone(true);
+    rim.traverse(o=>{ if (o.isMesh){ o.material = new THREE.MeshBasicMaterial({ color:rimColor, transparent:true, opacity:.20, side:THREE.DoubleSide }); } });
+    rim.scale.setScalar(1.045);
+    const body = src.clone(true);
+    body.traverse(o=>{ if (o.isMesh){ o.material = new THREE.MeshBasicMaterial({ color:THEME_REF.silhouette, side:THREE.DoubleSide }); } });
+    rim.position.y -= box.min.y; body.position.y -= box.min.y;   /* base sits on group origin */
+    g.add(rim); g.add(body);
+    const s = 2.6 / hgt; g.scale.setScalar(s);
+    return g;
+  }
+  const palmL = makePalm(THEME_REF.rimL), palmR = makePalm(THEME_REF.rimR);
+  palmR.scale.x *= -1;
+  scene.add(palmL); scene.add(palmR);
+  function ndc(px, py){ return [ (px/innerWidth)*2-1, -((py/innerHeight)*2-1) ]; }
+  window.__layoutPalms = P=>{
+    const dist = 9, vH = 2*Math.tan(THREE.MathUtils.degToRad(cam.fov/2)) * dist, vW = vH * cam.aspect;
+    const place = (g, corner, flip)=>{
+      const [nx, ny] = ndc(corner[0], corner[1]);
+      g.position.set(nx * vW/2 + (flip? .55 : -.55), ny * vH/2 + .05, 0);
+    };
+    place(palmL, P[3], false); place(palmR, P[2], true);
+  };
+  function resize(){
+    renderer.setSize(innerWidth, innerHeight);
+    cam.aspect = innerWidth/innerHeight; cam.updateProjectionMatrix();
+    const P = (JSON.parse(localStorage.getItem('arquad-neon-frame')) || [[.07,.21],[.93,.21],[.93,.60],[.07,.60]])
+      .map(p=> [p[0]*innerWidth, p[1]*innerHeight]);
+    window.__layoutPalms(P);
+  }
+  addEventListener('resize', resize); resize();
+  const clock = new THREE.Clock();
+  (function tick(){
+    requestAnimationFrame(tick);
+    const t = clock.getElapsedTime();
+    palmL.rotation.z = Math.sin(t*.7) * .038;      palmL.rotation.x = Math.sin(t*.5) * .012;
+    palmR.rotation.z = Math.sin(t*.7 + 1.7) * .038; palmR.rotation.x = Math.sin(t*.45 + .8) * .012;
+    renderer.render(scene, cam);
+  })();
+  window.__palmsLive = true;
+}catch(e){
+  const el = document.getElementById('err');
+  el.style.display = 'block'; el.textContent = 'Palm model failed to load — frame still live.';
+  window.__palmError = String(e && e.message || e);
+}
+</script>
+
+<style id="universal-offsets">#ci-root.ci-tl{top:53px!important}#ar-mark-root{bottom:33px!important}</style>
+<script src="mark-button.js"></script>
+<script src="clip-import.js"></script>
+<script>
+/* ---- universal kit wiring (integration pass 2026-11-16) ---- */
+window.ArMark = window.MarkButton;
+ClipImport.attach({
+    position: 'tl',
+    videoEl: document.getElementById('cam'),
+    startCamera: function (v) { return window.startCam(); }, canvas: document.getElementById('palmCanvas')
+  });
+</script>
+</body>
+</html>
