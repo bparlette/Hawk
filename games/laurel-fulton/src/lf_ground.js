@@ -6,6 +6,7 @@
 // lot aisle lines. Roads use the natural-asphalt palette (pc-ext-fable natural-asphalt-v2, owner-approved).
 // Only ground-level (layer 0) roads are painted here; bridge decks are drawn live above (lf_render.js).
 import { mulberry32, fbm, vnoise } from '../../palm-city/src/world.js';
+import { poly } from './lf_areas.js';
 
 export const CHUNK = 256, PX = 2, CPX = CHUNK * PX;
 const PAL = {
@@ -23,7 +24,7 @@ function curlAngle(wx, wy, sc, seed, base) {
 }
 
 export class GroundPainter {
-  constructor(W, cap = 64) { this.W = W; this.cache = new Map(); this.cap = cap; this.queue = []; this.job = null; this.stats = { sync: 0, sliced: 0, evicted: 0 }; }
+  constructor(W, cap = 64, areas = null) { this.areas = areas; this.W = W; this.cache = new Map(); this.cap = cap; this.queue = []; this.job = null; this.stats = { sync: 0, sliced: 0, evicted: 0 }; }
   key(cx, cy) { return cx + ',' + cy; }
   has(cx, cy) { return this.cache.has(this.key(cx, cy)); }
   trim() { while (this.cache.size > this.cap) { const k = this.cache.keys().next().value; if (this.job && this.job.k === k) break; this.cache.delete(k); this.stats.evicted++; } }
@@ -90,6 +91,23 @@ export class GroundPainter {
     yield;
     // pass 3: details from the real edges in and around this chunk
     g.save(); g.scale(PX, PX); g.translate(-ox, -oy);
+    const AR = this.areas;
+    if (AR) {                                             // task L10 background tier: real footprints, faded and generic
+      const r = mulberry32(cx * 7919 + cy * 104729 + 5);
+      for (const i of AR.inChunk('green', cx, cy)) { g.globalAlpha = 0.22; g.fillStyle = '#2f6a34'; poly(g, AR.A.green[i]); g.fill(); }
+      for (const i of AR.inChunk('parking', cx, cy)) { g.globalAlpha = 0.85; g.fillStyle = '#4f5765'; poly(g, AR.A.parking[i]); g.fill(); g.globalAlpha = 0.25; g.strokeStyle = '#e8e2d2'; g.lineWidth = 1.2; g.stroke(); }
+      yield;
+      const FADE = ['#cbbfae', '#c4b6a6', '#d1c5b0', '#bfb4a8', '#c9bba2'];
+      for (const i of AR.inChunk('buildings', cx, cy)) {
+        if (AR.heroSet.has(i)) continue;                  // heroes are drawn live, bigger and crisp (lf_render.js)
+        const f = AR.A.buildings[i];
+        g.globalAlpha = 0.22; g.fillStyle = '#2a2040'; g.save(); g.translate(5, -2.5); poly(g, f); g.fill(); g.restore();   // soft shadow, ENE like the bake's sun
+        g.globalAlpha = 0.62; g.fillStyle = FADE[i % FADE.length]; poly(g, f); g.fill();
+        g.globalAlpha = 0.28; g.strokeStyle = '#6f6070'; g.lineWidth = 1; g.stroke();
+      }
+      g.globalAlpha = 1;
+      yield;
+    }
     const near = new Set(), grid = W.grid[0];
     for (let i = cx - 1; i <= cx + 1; i++) for (let j = cy - 1; j <= cy + 1; j++) for (const si of grid.get(i * 100003 + j) || []) near.add(W.seg[si].e);
     const inC = (x, y, m = 40) => x > ox - m && x < ox + CHUNK + m && y > oy - m && y < oy + CHUNK + m;

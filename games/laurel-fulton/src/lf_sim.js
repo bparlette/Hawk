@@ -29,7 +29,7 @@ export class LFSim {
       } else c.h = toRoad;
       if (p.id === 'grant' || p.id === 'zack') { c.x += Math.cos(c.h + Math.PI / 2) * 26; c.y += Math.sin(c.h + Math.PI / 2) * 26; }   // shared driveways: side by side
     }
-    const sp = opts.spawn || W.G.anchors.ledo;
+    const sp = opts.spawn || W.verts[W.G.anchors.ledo.v];   // Ledo's lot aisle (the anchor's graph vertex), not the restaurant's point inside its footprint
     const model = opts.model || 'camaro_brad';
     const start = this.addCar(model, sp.x, sp.y, opts.h ?? 0, { player: true });
     this.player = start;
