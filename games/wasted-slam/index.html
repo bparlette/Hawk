@@ -113,7 +113,7 @@
 
   <div class="chip" id="titleChip">WASTED&nbsp;SLAM</div>
   <button class="chip" id="alignBtn">ALIGN&nbsp;TV</button>
-  <div id="hint">Frame the TV, then hit a button the moment it happens.</div>
+  <div id="hint">Frame the TV, then hit a button the moment it happens. Pinch to zoom, double-tap to reset — tap the screen and the buttons come back.</div>
   <div class="bar">
     <button class="btn" id="btnWasted">WASTED</button>
     <button class="btn" id="btnBusted">BUSTED</button>
@@ -263,6 +263,11 @@ ClipImport.attach({
     videoEl: document.getElementById('cam'),
     startCamera: function (v) { return window.startCam(); }
   });
+</script>
+<script src="clean-view.js"></script>
+<script>
+/* ---- clean view + pinch zoom (owner feedback fix 2026-11-16) ---- */
+CleanView.init({});
 </script>
 </body>
 </html>
