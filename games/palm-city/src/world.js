@@ -64,6 +64,15 @@ export class World {
     // World extension (shell): real-geography grid + road traces west of the core, from shell.json.
     // Purely additive: with no shell, bounds are exactly the core rect and every query is unchanged.
     this.bounds = { x0: 0, y0: 0, x1: layout.world.w, y1: layout.world.h };
+    // The open sea (owner, Nov 16: "extend the water much further out so there is more place
+    // to play on the boats and jet ski"): the land world (L.world / bounds) is unchanged, but
+    // the navigable water runs well past its east and south edges. seaE/seaS are the limits
+    // the craft physics, the on-water camera and the ground painter's grid use. Before this,
+    // the craft limits WERE the world edges: ~405 units of water east of the shore, and the
+    // island ran straight into the south edge. Now ~1110 east (~2.7x) and a 700-deep sea
+    // south of the island. A buoy line marks both edges in play (watercraft.js).
+    this.seaE = layout.world.w + 700;
+    this.seaS = layout.world.h + 700;
     this.shell = null;
     if (shell) this.setShell(shell);
     this.bushes = this.buildBushes();
@@ -233,6 +242,7 @@ export class World {
       if (sr.d < sr.hw) return 'road';                    // shell roads (incl. the seam connector into the core) outrank grid and core ground
       if (x < 0) return this.shellSurface(x, y, sr);
     }
+    if (y > this.L.world.h) return 'water';               // open sea south of the island (the sea extension)
     const sx = this.shoreX(y);
     if (x > sx + wobble * 6) return 'water';
     if (x > sx - 72 + wobble * 10) return 'sand';
