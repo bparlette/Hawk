@@ -586,6 +586,7 @@ export class Renderer {
     }
     for (const p of S.peds) {
       if (p.x < vx0 - 60 || p.x > vx1 + 60 || p.y < vy0 - 60 || p.y > vy1 + 60 || p.hidden) continue;
+      if (p.outfit === 'player' && S.player.mode === 'water') continue;   // mounted: no walking shadow on the water — the craft's soft water shadow (watercraft.js) covers craft + rider together
       const { m, idx, rows } = this.pedCell(p);
       const lift = p.outfit === 'player' && S.board && S.board.ridden ? S.board.z * 9 : 0;
       this.drawCell(sg, m.shadow, idx, m.cols, rows, p.x + lift, p.y - lift * 0.3);
@@ -1178,6 +1179,7 @@ export class Renderer {
     for (let i = 0; i < list.length; i++) {
       const m = list[i], a = m.a;
       if (m.x < vx0 - 80 || m.x > vx1 + 80 || m.y < vy0 - 40 || m.y > vy1 + 110) continue;
+      g.globalAlpha = m.alpha == null ? 1 : m.alpha;   // a retiring label fades out (labels.js)
       const bob = Math.sin(time * 2.2 + i * 1.3) * 2.5, big = a.big ? 1.25 : 1;
       const fs = 13 * big, lift = (a.group === 'hub' ? 6 : a.group === 'job' ? 38 : 46);
       g.font = `900 ${fs}px "Avenir Next", "Futura", "Trebuchet MS", system-ui, sans-serif`;
@@ -1194,6 +1196,7 @@ export class Renderer {
       g.fillStyle = '#210f2e'; g.textAlign = 'center'; g.textBaseline = 'middle';
       g.fillText(a.tag, cx, cy - 2 * big);
     }
+    g.globalAlpha = 1;
     g.textBaseline = 'alphabetic';
   }
 
