@@ -123,10 +123,13 @@ def place(f):
     for p in P:
         if f(p['tags']): return p
 ANCH = {'ledo': lambda t: t.get('name') == 'Ledo Pizza', 'atholton_hs': lambda t: t.get('name') == 'Atholton High School' and t.get('amenity') == 'school',
-        'reservoir_hs': lambda t: t.get('name') == 'Reservoir High School', 'brad': lambda t: t.get('addr:housenumber') == '10128' and t.get('addr:street') == 'Stansfield Road'}
+        'reservoir_hs': lambda t: t.get('name') == 'Reservoir High School', }
+# the crew's houses come from data/roster.json (exact positions, no house numbers in the repo)
+RO = json.load(open(os.path.join(ROOT, 'data', 'roster.json')))['people'] if os.path.exists(os.path.join(ROOT, 'data', 'roster.json')) else []
 anch = {}
-for k, f in ANCH.items():
-    p = place(f)
+houses = {q['id']: {'tags': {}, 'lat': q['lat'], 'lon': q['lon']} for q in RO if q.get('active') and q['id'] == 'brad'}
+for k, f in list(ANCH.items()) + [(h, None) for h in houses]:
+    p = houses[k] if f is None else place(f)
     if not p: continue
     x, y = proj(p['lat'], p['lon'])
     if not (BB[0] <= p['lat'] <= BB[2] and BB[1] <= p['lon'] <= BB[3]): continue

@@ -1,37 +1,49 @@
 #!/usr/bin/env python3
 # roster_build.py — writes data/roster.json, the ONE roster file task L2 asks for (players, houses, cars,
-# signature effects, mission meet-up), geocoding every house from OSM address points in data/osm_places.json
-# and placing it in world units (same projection as tools/osm_graph.py). A person whose address is not in
-# the data stays in the roster with "active": false (e.g. Grant until the map extends south) — a data
-# change activates them, never a code change. Edit PEOPLE below and re-run.
+# signature effects, mission meet-up). Every house sits at its EXACT OSM address point (data/osm_places.json),
+# in world units (same projection as tools/osm_graph.py), on its real street.
+# OWNER RULE (Nov 17): exact house + street, but NO HOUSE NUMBERS posted. The numbers live only in
+# data/addresses.local.json ({"id": ["number", "Street Name"]}, git-ignored, never committed): with it the
+# tool geocodes; without it, each person keeps the position already in data/roster.json. roster.json itself
+# carries the street, the position and the OSM element — never a number.
+# A person not yet in the map extent stays "active": false (Grant until the map extends south): a data change
+# activates them, never a code change. Edit PEOPLE (no numbers) and re-run.
 #   python3 tools/roster_build.py                                      (from games/laurel-fulton/)
 import json, os, math
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 LAT0, LON0 = (39.105 + 39.202) / 2, (-76.942 + -76.846) / 2
 KX, KY, U = math.cos(math.radians(LAT0)) * 111320.0, 110540.0, 10.0
 proj = lambda lat, lon: (round((lon - LON0) * KX * U), round(-(lat - LAT0) * KY * U))
-# owner's roster (tasking fable.md, task L2 state update, Nov 17)
+# owner's roster (tasking fable.md, task L2 state update, Nov 17; Grant corrected to Early Bud Way, Billy added)
 PEOPLE = [
- {'id': 'brad',    'name': 'Brad',    'addr': ['10128', 'Stansfield Road'], 'car': {'model': '1987 Chevrolet Camaro', 'paint': 'two-tone: front half white, rear half maroon', 'headlights': 'yellow', 'fx': ['bass']}},
- {'id': 'kosack',  'name': 'Kosack',  'addr': ['10400', 'Derby Drive'],      'car': {'model': '~1989 Chevrolet Cavalier', 'paint': 'red', 'fx': []}},
- {'id': 'jimmy',   'name': 'Jimmy',   'addr': ['8313', 'Sweet Cherry Lane'], 'car': {'model': '1996 Chevrolet Astro', 'paint': 'silver', 'fx': ['bass', 'underglow_blue']}},
- {'id': 'jason',   'name': 'Jason',   'addr': ['8743', 'Susini Drive'],      'car': {'model': '1989 Toyota Camry', 'paint': 'white', 'fx': ['tailpipe_sputter']}},
- {'id': 'clayton', 'name': 'Clayton Floyd', 'addr': ['9946', 'Hughes Avenue'], 'car': {'model': 'Chevrolet Camaro', 'paint': 'green', 'fx': []}},
- {'id': 'zack',    'name': 'Zack Floyd',    'addr': ['9946', 'Hughes Avenue'], 'car': {'model': 'Mercury Tracer', 'paint': 'green', 'fx': []}},
- {'id': 'rigg',    'name': 'Rigg',    'addr': ['8201', 'Mossy Stone Court'], 'car': {'model': 'first-gen Toyota Celica (owner: 1969; refs 1970-73)', 'paint': 'blue', 'headlights': 'blue', 'fx': ['bass']}},
- {'id': 'grant',   'name': 'Grant',   'addr': ['6311', 'Sandy Street'],      'car': {'model': 'Cadillac Brougham "USS Mino"', 'paint': 'maroon', 'fx': []}},
+ {'id': 'brad',    'name': 'Brad',    'street': 'Stansfield Road', 'car': {'model': '1987 Chevrolet Camaro', 'paint': 'two-tone: front half white, rear half maroon', 'headlights': 'yellow', 'fx': ['bass']}},
+ {'id': 'kosack',  'name': 'Kosack',  'street': 'Derby Drive',      'car': {'model': '~1989 Chevrolet Cavalier', 'paint': 'red', 'fx': []}},
+ {'id': 'jimmy',   'name': 'Jimmy',   'street': 'Sweet Cherry Lane', 'car': {'model': '1996 Chevrolet Astro', 'paint': 'silver', 'fx': ['bass', 'underglow_blue']}},
+ {'id': 'jason',   'name': 'Jason',   'street': 'Susini Drive',      'car': {'model': '1989 Toyota Camry', 'paint': 'white', 'fx': ['tailpipe_sputter']}},
+ {'id': 'clayton', 'name': 'Clayton Floyd', 'street': 'Hughes Avenue', 'car': {'model': 'Chevrolet Camaro', 'paint': 'green', 'fx': []}},
+ {'id': 'zack',    'name': 'Zack Floyd',    'street': 'Hughes Avenue', 'car': {'model': 'Mercury Tracer', 'paint': 'green', 'fx': []}},
+ {'id': 'rigg',    'name': 'Rigg',    'street': 'Mossy Stone Court', 'car': {'model': 'first-gen Toyota Celica (owner: 1969; refs 1970-73)', 'paint': 'blue', 'headlights': 'blue', 'fx': ['bass']}},
+ {'id': 'billy',   'name': 'Billy',   'street': 'Sweet Cherry Lane', 'car': None, 'note': "shares Jimmy's house; no car named yet (owner)"},
+ {'id': 'grant',   'name': 'Grant',   'street': 'Early Bud Way',      'car': {'model': 'Cadillac Brougham "USS Mino"', 'paint': 'maroon', 'fx': []}},
 ]
 P = json.load(open(os.path.join(ROOT, 'data', 'osm_places.json')))['elements']
+LOCAL = os.path.join(ROOT, 'data', 'addresses.local.json')
+book = json.load(open(LOCAL)) if os.path.exists(LOCAL) else {}
+prev = {}
+if os.path.exists(os.path.join(ROOT, 'data', 'roster.json')):
+    prev = {q['id']: q for q in json.load(open(os.path.join(ROOT, 'data', 'roster.json')))['people']}
 out = []
 for p in PEOPLE:
-    hit = next((q for q in P if q['tags'].get('addr:housenumber') == p['addr'][0] and q['tags'].get('addr:street') == p['addr'][1]), None)
-    e = dict(p, address=' '.join(p['addr'])); e.pop('addr')
+    e = dict(p); num = (book.get(p['id']) or [None])[0]
+    hit = next((q for q in P if num and q['tags'].get('addr:housenumber') == num and q['tags'].get('addr:street') == p['street']), None)
     if hit: e.update(active=True, lat=round(hit['lat'], 6), lon=round(hit['lon'], 6), house=list(proj(hit['lat'], hit['lon'])), osm=f"{hit['type']}/{hit['id']}")
-    else: e.update(active=False, why='address not in the current map extent (data/osm_places.json)')
+    elif p['id'] in prev and prev[p['id']].get('active'):          # no address book here: keep the known exact house
+        e.update({k: prev[p['id']][k] for k in ('active', 'lat', 'lon', 'house', 'osm')})
+    else: e.update(active=False, why='house not in the current map extent (or no local address book to geocode it)')
     out.append(e)
 school = next(q for q in P if q['tags'].get('name') == 'Atholton High School' and q['tags'].get('amenity') == 'school')
 roster = {'_doc': 'The ONE roster (task L2). Written by tools/roster_build.py from OSM address points. house = world units (10/m, x east, y south).',
           'people': out, 'unassigned_cars': [{'model': 'Chevrolet Cavalier', 'paint': 'black', 'note': 'no owner yet - no house, no design work until the owner names whose it is'}],
           'meetup': {'name': 'Atholton High School', 'lat': round(school['lat'], 6), 'lon': round(school['lon'], 6), 'pos': list(proj(school['lat'], school['lon']))}}
 json.dump(roster, open(os.path.join(ROOT, 'data', 'roster.json'), 'w'), indent=1)
-for e in out: print(f"{e['id']:8s} {'ACTIVE ' if e['active'] else 'pending'} {e['address']:26s} {e.get('house', '')}")
+for e in out: print(f"{e['id']:8s} {'ACTIVE ' if e['active'] else 'pending'} {e['street']:20s} {e.get('house', '')}")

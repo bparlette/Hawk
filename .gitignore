@@ -4,3 +4,6 @@ node_modules
 *.mp4
 *.webm
 *.mov
+
+# Laurel/Fulton: house numbers stay local (owner rule, Nov 17)
+games/laurel-fulton/data/addresses.local.json
