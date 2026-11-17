@@ -14,6 +14,10 @@ export class Recorder {
     this.mr = null; this.chunks = []; this.kind = 'gameplay'; this.t0 = 0; this.timer = null; this.wantShare = false;
     this.mime = MIMES.find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || null;
     this.supported = !!(this.mime && canvas.captureStream);
+    // CHANNEL 7 broadcast frame (polish bundle): drawn into the game canvas by main.js, so it is
+    // baked into the recorded picture. Default ON for highlight saves, OFF for live REC; the NEWS
+    // button flips both together and the choice lasts the session.
+    this.newsHL = true; this.newsLive = false;
     this.buildUi();
   }
 
@@ -25,6 +29,7 @@ export class Recorder {
         padding:10px 14px;touch-action:none;-webkit-tap-highlight-color:transparent;cursor:pointer}
       .pcRecBtn.on{color:#ff6b5e;border-color:rgba(255,107,94,.7)}
       #pcRecBtn{right:10px;top:58%}
+      #pcNewsBtn{right:10px;top:calc(58% + 52px)}
       #pcSaveBtn{left:50%;transform:translateX(-50%);bottom:96px;display:none}
       #pcToast{position:fixed;z-index:1201;left:50%;transform:translateX(-50%);bottom:150px;max-width:86vw;
         font:600 13px "Avenir Next",Futura,system-ui,sans-serif;color:#fff1d8;background:rgba(14,8,28,.85);
@@ -43,7 +48,14 @@ export class Recorder {
       document.body.appendChild(b); return b;
     };
     this.recBtn = mk('pcRecBtn', '● REC');
+    this.newsBtn = mk('pcNewsBtn', '📺 NEWS ✓');
     this.saveBtn = mk('pcSaveBtn', 'SAVE CLIP');
+    this.newsBtn.addEventListener('click', () => {
+      const target = !(this.newsHL || this.newsLive);   // any on -> all off; all off -> all on
+      this.newsHL = target; this.newsLive = target;
+      this.newsBtn.textContent = target ? '📺 NEWS ✓' : '📺 NEWS ✕';
+      this.toast(target ? 'Channel 7 frame ON — it will appear in your clips' : 'Channel 7 frame OFF — clips stay clean');
+    });
     this.toastEl = document.createElement('div'); this.toastEl.id = 'pcToast'; document.body.appendChild(this.toastEl);
     this.recBtn.addEventListener('click', () => { if (this.mr) this.stop(true); else this.start('gameplay'); });
     this.saveBtn.addEventListener('click', () => {
@@ -112,6 +124,48 @@ export class Recorder {
     if (wantShare && navigator.canShare && navigator.canShare({ files: [file] })) {
       navigator.share({ files: [file] }).catch(() => download());
     } else download();
+  }
+
+  // The Channel 7 frame, drawn by main.js onto the game canvas (so captureStream records it):
+  // a lower-third news bar, the wanted stars and the score / combo multiplier. `highlight` sits
+  // the bar just above the replay's letterbox; live play parks it clear of the touch buttons.
+  drawBroadcast(g, vw, vh, dpr, sim, highlight) {
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
+    const w = Math.min(vw - 24, 336), h = 54, x = 12;
+    const y = highlight ? vh - 54 - h - 10 : vh - h - 118;
+    g.fillStyle = 'rgba(14,8,28,0.85)';
+    g.beginPath(); g.roundRect(x, y, w, h, 8); g.fill();
+    g.fillStyle = '#e0232e'; g.fillRect(x, y, w, 4);                       // the news-red top rule
+    // LIVE chip
+    g.fillStyle = '#e0232e'; g.beginPath(); g.roundRect(x + 10, y + 11, 52, 18, 4); g.fill();
+    g.fillStyle = '#fff'; g.font = '900 11px "Avenir Next", Futura, system-ui, sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText('● LIVE', x + 36, y + 20.5);
+    // channel name
+    g.textAlign = 'left'; g.fillStyle = '#fff1d8';
+    g.font = '900 15px "Avenir Next", Futura, system-ui, sans-serif';
+    g.fillText('PALM CITY NEWS', x + 72, y + 20);
+    const titleW = g.measureText('PALM CITY NEWS').width;
+    g.fillStyle = '#ffd45c'; g.font = '800 11px "Avenir Next", Futura, system-ui, sans-serif';
+    g.fillText('CHANNEL 7', x + 72 + titleW + 10, y + 20.5);
+    // score + multiplier
+    const mult = sim.combo ? sim.combo.mult : (sim.lastTrick ? sim.lastTrick.mult || 1 : 1);
+    g.fillStyle = 'rgba(255,241,216,0.92)'; g.font = '800 13px "Avenir Next", Futura, system-ui, sans-serif';
+    g.fillText(`SCORE ${(sim.score || 0).toLocaleString()}${mult > 1 ? `  ·  ×${mult}` : ''}`, x + 12, y + 41);
+    // wanted stars, right end of the bar
+    for (let i = 0; i < 5; i++) {
+      const sx = x + w - 18 - (4 - i) * 17, sy = y + 40, r = 7.5, on = i < sim.stars;
+      g.beginPath();
+      for (let k = 0; k < 10; k++) {
+        const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r * 0.45 : r;
+        g.lineTo(sx + Math.cos(a) * rr, sy + Math.sin(a) * rr);
+      }
+      g.closePath();
+      g.fillStyle = on ? '#ffd45c' : 'rgba(255,241,216,0.22)'; g.fill();
+      if (on) { g.lineWidth = 1.2; g.strokeStyle = '#7a3a1a'; g.stroke(); }
+    }
+    g.textBaseline = 'alphabetic';
   }
 
   // Highlight lifecycle, driven from main.js frame() transitions.

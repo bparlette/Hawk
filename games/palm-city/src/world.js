@@ -37,7 +37,7 @@ export function fbm(x, y, seed = 0, oct = 3) {
 }
 
 export class World {
-  constructor(layout) {
+  constructor(layout, shell = null) {
     this.L = layout;
     const R = layout.roads;
     this.halfRoad = R.width / 2;
@@ -61,7 +61,121 @@ export class World {
     this.solids = layout.buildings.map(b => ({ x: b.x, y: b.y, w: b.w, h: b.d, id: b.id }));
     // palm trunks: solid for everyone. `sc` is the palm's drawn scale (the renderer reads it from here).
     this.trunks = layout.palms.map(([x, y], i) => { const sc = 0.8 + ((i * 37) % 10) / 22; return { x, y, i, sc, r: 5.5 * sc }; });
+    // World extension (shell): real-geography grid + road traces west of the core, from shell.json.
+    // Purely additive: with no shell, bounds are exactly the core rect and every query is unchanged.
+    this.bounds = { x0: 0, y0: 0, x1: layout.world.w, y1: layout.world.h };
+    this.shell = null;
+    if (shell) this.setShell(shell);
     this.bushes = this.buildBushes();
+  }
+
+  // Attach the extension shell (shell.json data + shell_layout.json buildings/palms/extra roads,
+  // merged by the caller). Grid classes: 0 water, 1 land, 2 park on 10-unit cells.
+  setShell(shell) {
+    this.shell = shell;
+    this.shellOx = shell.origin[0]; this.shellOy = shell.origin[1];
+    this.shellCell = shell.cellSize; this.shellCols = shell.cols; this.shellRows = shell.rows;
+    this.shellGrid = shell.grid;
+    this.shellSegs = [];
+    let maxX = -1e9;
+    for (const r of [...(shell.roads || []), ...(shell.extraRoads || [])]) {
+      const pts = r.points;
+      for (let i = 0; i + 1 < pts.length; i++) {
+        const [x0, y0] = pts[i], [x1, y1] = pts[i + 1], hw = r.width / 2, m = r.width + 80;
+        this.shellSegs.push({ x0, y0, x1, y1, hw, name: r.name, bx0: Math.min(x0, x1) - m, bx1: Math.max(x0, x1) + m, by0: Math.min(y0, y1) - m, by1: Math.max(y0, y1) + m });
+        maxX = Math.max(maxX, Math.max(x0, x1) + m);
+      }
+    }
+    this.shellRoadMaxX = maxX;   // east of this, no shell road can be nearest: surfaceAt skips the scan
+    this.shellBuildings = shell.buildings || [];
+    for (const b of this.shellBuildings) this.solids.push({ x: b.x, y: b.y, w: b.w, h: b.d, id: b.id });
+    this.shellPalms = shell.palms || [];
+    for (const [x, y] of this.shellPalms) {
+      const i = this.trunks.length, sc = 0.8 + ((i * 37) % 10) / 22;
+      this.trunks.push({ x, y, i, sc, r: 5.5 * sc });
+    }
+    this.bounds = { x0: Math.min(0, this.shellOx), y0: 0, x1: this.L.world.w, y1: this.L.world.h };
+    this.shellDistField = this.buildShellDist();
+  }
+
+  // Grid class at a point: 0 water, 1 land, 2 park; -1 outside the surveyed shell.
+  shellClass(x, y) {
+    const c = Math.floor((x - this.shellOx) / this.shellCell), r = Math.floor((y - this.shellOy) / this.shellCell);
+    if (c < 0 || r < 0 || c >= this.shellCols || r >= this.shellRows) return -1;
+    return this.shellGrid[r].charCodeAt(c) - 48;
+  }
+
+  // Chamfer distance transform over the shell grid: for water cells, distance (world units) to the
+  // nearest land/park cell; 0 on land. Lets the painter's shore-calm falloff work on shell coasts.
+  buildShellDist() {
+    const { shellCols: C, shellRows: R, shellCell: CS } = this;
+    const d = new Float32Array(C * R).fill(1e6);
+    for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) if (this.shellGrid[r].charCodeAt(c) !== 48) d[r * C + c] = 0;
+    const SQ = Math.SQRT2;
+    for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
+      const i = r * C + c; if (!d[i]) continue;
+      if (c > 0) d[i] = Math.min(d[i], d[i - 1] + 1);
+      if (r > 0) d[i] = Math.min(d[i], d[i - C] + 1);
+      if (c > 0 && r > 0) d[i] = Math.min(d[i], d[i - C - 1] + SQ);
+      if (c < C - 1 && r > 0) d[i] = Math.min(d[i], d[i - C + 1] + SQ);
+    }
+    for (let r = R - 1; r >= 0; r--) for (let c = C - 1; c >= 0; c--) {
+      const i = r * C + c; if (!d[i]) continue;
+      if (c < C - 1) d[i] = Math.min(d[i], d[i + 1] + 1);
+      if (r < R - 1) d[i] = Math.min(d[i], d[i + C] + 1);
+      if (c < C - 1 && r < R - 1) d[i] = Math.min(d[i], d[i + C + 1] + SQ);
+      if (c > 0 && r < R - 1) d[i] = Math.min(d[i], d[i + C - 1] + SQ);
+    }
+    for (let i = 0; i < d.length; i++) d[i] *= CS;
+    return d;
+  }
+
+  // Distance to the nearest shell land, for the painter's shore effects. 0 on land/park.
+  shellLandDist(x, y) {
+    const c = Math.floor((x - this.shellOx) / this.shellCell), r = Math.floor((y - this.shellOy) / this.shellCell);
+    if (c < 0 || r < 0 || c >= this.shellCols || r >= this.shellRows) return 1e6;
+    return this.shellDistField[r * this.shellCols + c];
+  }
+
+  // Nearest shell road centreline: distance, direction, and that road's own half width.
+  shellRoadInfo(x, y) {
+    let best = 1e9, dx = 1, dy = 0, hw = 0;
+    for (const s of this.shellSegs) {
+      if (x < s.bx0 - best || x > s.bx1 + best || y < s.by0 - best || y > s.by1 + best) continue;
+      const vx = s.x1 - s.x0, vy = s.y1 - s.y0, len2 = vx * vx + vy * vy;
+      let t = ((x - s.x0) * vx + (y - s.y0) * vy) / len2;
+      t = t < 0 ? 0 : t > 1 ? 1 : t;
+      const d = Math.hypot(s.x0 + vx * t - x, s.y0 + vy * t - y);
+      if (d < best) { best = d; const L = Math.sqrt(len2); dx = vx / L; dy = vy / L; hw = s.hw; }
+    }
+    return { d: best, dx, dy, hw };
+  }
+
+  // For painters: whichever road feature (core loop/streets or a shell road) claims the point most,
+  // judged by clearance beyond the road's edge so per-road widths compare fairly.
+  roadInfoAny(x, y) {
+    const r = this.roadInfo(x, y);
+    if (this.shell && x < this.shellRoadMaxX) {
+      const sr = this.shellRoadInfo(x, y);
+      if (sr.d - sr.hw < r.d - this.halfRoad) return sr;
+    }
+    return { d: r.d, dx: r.dx, dy: r.dy, hw: this.halfRoad };
+  }
+
+  // Shell surface for x < 0 (the core path never sees these points). `sr` is shellRoadInfo(x, y),
+  // already known not to be on a road. Roads sit on a sand apron: grid water within hw+10 of a
+  // centreline is causeway embankment, so the Venetian (absent from the mask) and the widened
+  // MacArthur strips are land-backed end to end.
+  shellSurface(x, y, sr) {
+    const cls = this.shellClass(x, y);
+    if (cls === -1) return 'water';                       // beyond the surveyed shell: open sea
+    if (cls === 0) return sr.d < sr.hw + 10 ? 'sand' : 'water';
+    if (sr.d < sr.hw + 6) return 'sidewalk';
+    if (cls === 2) return 'grass';                        // park
+    const CS = this.shellCell;                            // land: sand fringe where it meets water
+    if (this.shellClass(x - CS, y) === 0 || this.shellClass(x + CS, y) === 0 ||
+        this.shellClass(x, y - CS) === 0 || this.shellClass(x, y + CS) === 0) return 'sand';
+    return 'paving';
   }
 
   // Vegetation clusters: seeded, scattered in grass and along block edges, mixed variants + sizes.
@@ -76,6 +190,7 @@ export class World {
       for (let j = 0; j < k; j++) {
         const bx = x + (vr() - 0.5) * 34, by = y + (vr() - 0.5) * 34;
         if (this.hitSolid(bx, by, 10) || this.roadInfo(bx, by).d < this.walkEdge) continue;
+        if (this.shell) { const sr = this.shellRoadInfo(bx, by); if (sr.d < sr.hw + 24) continue; }   // keep clusters off shell roads (the seam connector crosses core grass)
         const v = (vr() * 4) | 0;
         out.push({ i: out.length, x: bx, y: by, v, sc: 0.7 + vr() * 0.7 });
       }
@@ -113,6 +228,11 @@ export class World {
 
   // Surface type at a world point. `wobble` perturbs soft edges (grass/paving) so they never look ruled.
   surfaceAt(x, y, wobble = 0) {
+    if (this.shell && x < this.shellRoadMaxX) {
+      const sr = this.shellRoadInfo(x, y);
+      if (sr.d < sr.hw) return 'road';                    // shell roads (incl. the seam connector into the core) outrank grid and core ground
+      if (x < 0) return this.shellSurface(x, y, sr);
+    }
     const sx = this.shoreX(y);
     if (x > sx + wobble * 6) return 'water';
     if (x > sx - 72 + wobble * 10) return 'sand';
@@ -128,7 +248,11 @@ export class World {
   }
 
   isDrivable(x, y) {
-    if (x < 0 || y < 0 || x > this.L.world.w || y > this.L.world.h) return false;
+    if (x < this.bounds.x0 || y < 0 || x > this.L.world.w || y > this.L.world.h) return false;
+    if (this.shell && x < 0) {
+      if (this.surfaceAt(x, y) === 'water') return false;   // shell land, park, roads and their aprons drive; the bay does not
+      return !this.hitSolid(x, y, 0);
+    }
     if (x > this.shoreX(y) - 4) return false;
     return !this.hitSolid(x, y, 0);
   }

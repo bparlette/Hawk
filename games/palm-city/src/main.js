@@ -66,7 +66,17 @@ function loading(p) {
 loading(0);
 
 const layout = await (await fetch('layout.json')).json();
-const world = new World(layout);
+// World extension shell (shell.json grid + traces, shell_layout.json facades/palms/connector road).
+// Optional by design: if either file is missing the game runs core-only, exactly as before.
+let shell = null;
+try {
+  const [sj, sl] = await Promise.all([
+    fetch('shell.json').then(r => (r.ok ? r.json() : null)).catch(() => null),
+    fetch('shell_layout.json').then(r => (r.ok ? r.json() : null)).catch(() => null),
+  ]);
+  if (sj) shell = { ...sj, buildings: (sl && sl.buildings) || [], palms: (sl && sl.palms) || [], extraRoads: (sl && sl.roads) || [] };
+} catch (_) { shell = null; }
+const world = new World(layout, shell);
 const ground = new GroundPainter(world);
 const M = await loadAssets(p => loading(p * 0.8));
 renderer = new Renderer(ctx, world, ground, M);
@@ -111,7 +121,7 @@ const fixedT = Q.has('t') ? Number(Q.get('t')) : null;
 // prewarm ground chunks around the start so the first frames don't hitch
 for (let cy = -2; cy <= 2; cy++) for (let cx = -1; cx <= 1; cx++) {
   const gx = Math.floor(cam.x / CHUNK) + cx, gy = Math.floor(cam.y / CHUNK) + cy;
-  if (gx >= 0 && gy >= 0 && gx < ground.cols && gy < ground.rows) ground.get(gx, gy);
+  if (gx >= ground.cx0 && gy >= ground.cy0 && gx < ground.cx1 && gy < ground.cy1) ground.get(gx, gy);
 }
 ground.stats.sync = 0;   // the prewarm happens behind the loader; count only in-play hitches
 loading(1);
@@ -129,8 +139,8 @@ function timeOfDay() {
 const wish = [], wishD = [];
 let lastFx = 0, lastFy = 0;
 function addRing(x, y, hw, hh) {
-  const c0 = Math.max(0, Math.floor((x - hw) / CHUNK)), c1 = Math.min(ground.cols - 1, Math.floor((x + hw) / CHUNK));
-  const r0 = Math.max(0, Math.floor((y - hh) / CHUNK)), r1 = Math.min(ground.rows - 1, Math.floor((y + hh) / CHUNK));
+  const c0 = Math.max(ground.cx0, Math.floor((x - hw) / CHUNK)), c1 = Math.min(ground.cx1 - 1, Math.floor((x + hw) / CHUNK));
+  const r0 = Math.max(ground.cy0, Math.floor((y - hh) / CHUNK)), r1 = Math.min(ground.cy1 - 1, Math.floor((y + hh) / CHUNK));
   for (let cy = r0; cy <= r1; cy++) for (let cx = c0; cx <= c1; cx++) {
     if (ground.has(cx, cy)) continue;
     const d = Math.hypot((cx + 0.5) * CHUNK - cam.x, (cy + 0.5) * CHUNK - cam.y);
@@ -232,13 +242,17 @@ function frame(now) {
     const b = sim.board; tx += b.vx * 0.35; ty += b.vy * 0.35;
     tz = 1 - Math.min(0.1, Math.hypot(b.vx, b.vy) / 250 * 0.1);
   }
+  if (sim.player.mode === 'water') {
+    const cr = sim.water.ride;
+    if (cr) { tx += cr.vx * 0.35; ty += cr.vy * 0.35; tz = 1 - Math.min(0.12, Math.hypot(cr.vx, cr.vy) / 470 * 0.12); }
+  }
   if (fixedCam) { tx = fixedCam[0]; ty = fixedCam[1]; tz = fixedCam[2] || 1; }
   if (sim.camSnap) { sim.camSnap = false; cam.x = tx; cam.y = ty; }   // a JUMP cuts, it doesn't swoop
   const k = fixedCam ? 1 : 1 - Math.exp(-dt * 3.2);
   cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k; cam.zoom += (tz - cam.zoom) * (fixedCam ? 1 : 1 - Math.exp(-dt * 1.5));
   const hw = VIEW_W / 2 / cam.zoom, hh = view.h / 2 / cam.zoom;
-  cam.x = Math.max(hw, Math.min(layout.world.w - hw, cam.x));
-  cam.y = Math.max(hh, Math.min(layout.world.h - hh, cam.y));
+  cam.x = Math.max(world.bounds.x0 + hw, Math.min(world.bounds.x1 - hw, cam.x));
+  cam.y = Math.max(world.bounds.y0 + hh, Math.min(world.bounds.y1 - hh, cam.y));
 
   // 2D camera feel (world transform only): zoom-punch on the big hits, a few degrees of roll into turns
   feel.punch *= Math.exp(-dt * 4.5);
@@ -262,6 +276,7 @@ function frame(now) {
   if (input.mapOpen) cityMap.draw(ctx, VIEW_W, view.h, DPR, sim, simTime);     // live: the game runs on under the map
   drawHud(ctx, VIEW_W, view.h, DPR, sim, input, t, simTime, { title: titleT, demo: DEMO, hintStick: !DEMO && simTime < 8, safeTop: safeTop() });
   if (panel) drawHelp(ctx, VIEW_W, view.h, DPR, sim, panel, safeTop(), now / 1000);
+  if (recorder.recording && recorder.kind === 'gameplay' && recorder.newsLive) recorder.drawBroadcast(ctx, VIEW_W, view.h, DPR, sim, false);
   audio.update(sim, cam, world);
   voice.update(sim, dt, t);
   prefetch(dt);
@@ -280,12 +295,13 @@ function replayFrame(dt) {
     let vx = 0, vy = 0;
     if (s.player.mode === 'car') { const c = s.player.car; vx = Math.cos(c.h) * c.v; vy = Math.sin(c.h) * c.v; }
     else if (s.player.mode === 'board') { vx = s.board.vx; vy = s.board.vy; }
+    else if (s.player.mode === 'water' && s.water.ride) { vx = s.water.ride.vx; vy = s.water.ride.vy; }
     const tx = f.x + vx * sh.lead, ty = f.y + vy * sh.lead, tz = sh.zoom * (p.slow ? 1.12 : 1);
     const k = p.cut || !p.camSet ? 1 : 1 - Math.exp(-dt * 3.2);      // cuts (and the first frame) snap
     p.cut = false; p.camSet = true;
     rcam.x += (tx - rcam.x) * k; rcam.y += (ty - rcam.y) * k; rcam.zoom += (tz - rcam.zoom) * (k === 1 ? 1 : 1 - Math.exp(-dt * 4));
     const hw = VIEW_W / 2 / rcam.zoom, hh = view.h / 2 / rcam.zoom;
-    rcam.x = Math.max(hw, Math.min(layout.world.w - hw, rcam.x)); rcam.y = Math.max(hh, Math.min(layout.world.h - hh, rcam.y));
+    rcam.x = Math.max(world.bounds.x0 + hw, Math.min(world.bounds.x1 - hw, rcam.x)); rcam.y = Math.max(world.bounds.y0 + hh, Math.min(world.bounds.y1 - hh, rcam.y));
     const tod = timeOfDay();
     if (s.siege) siegeR.draw(s, tod, p.i * STEP, VIEW_W, view.h, DPR);
     else renderer.draw(s, rcam, tod, p.i * STEP);
@@ -298,11 +314,12 @@ function replayFrame(dt) {
     g.fillText(p.slow ? 'HIGHLIGHT  ·  SLOW-MO' : 'HIGHLIGHT', VIEW_W / 2, bar / 2 + Math.max(0, safeTop() - 10));
     g.font = '600 12px "Avenir Next", Futura, system-ui, sans-serif'; g.fillStyle = 'rgba(255,241,216,0.7)';
     g.fillText('tap to skip', VIEW_W / 2, view.h - bar / 2);
+    if (recorder.newsHL) recorder.drawBroadcast(g, VIEW_W, view.h, DPR, s, true);   // Channel 7 frame, baked into SAVE CLIP
     audio.update(s, rcam, world);
   }
   const inp = input.read();
   if (director.done || ((inp.action || inp.punch || input.stick) && p.t > 0.6)) { director.end(); last = performance.now(); acc = 0; }
 }
 requestAnimationFrame(frame);
-window.__palm = { director, recorder, input, world, ground, cam, dpr: () => DPR, get sim() { return sim; }, M };
+window.__palm = { director, recorder, input, world, ground, cam, renderer, dpr: () => DPR, get sim() { return sim; }, M };
 window.__vox = voice;          // task 8 proof/debug: the voice module + its play log

@@ -22,7 +22,10 @@ const JOB = {
 const EVENT_HOW = {
   wreck: 'Drive onto the orange ring by the plaza and press START. Smash everything before time runs out.',
   valet: 'Drive onto the blue ring south of the Garage and press START. Park clean, park fast.',
+  spot: 'Drive onto the ring by the plaza fountain and press START. Drift in the chopper light.',
 };
+const EVENT_TAG = { wreck: 'WRECK IT!', valet: 'VALET', spot: 'SPOTLIGHT' };
+const EVENT_COL = { wreck: '#ff7a4a', valet: '#6ee2ff', spot: '#ffe95c' };
 
 export function initActivities(sim) {
   const L = sim.W.L, list = [];
@@ -40,7 +43,7 @@ export function initActivities(sim) {
     pos: () => { const c = jobCar(k); return !c || c.wreck || c.driver === 'player' || (sim.job && sim.job.car === c) ? null : [c.x, c.y]; },
   });
   for (const s of sim.eventSites || []) list.push({
-    id: s.kind, group: 'event', name: EVENTS[s.kind].name.replace(' — ', ': '), tag: s.kind === 'wreck' ? 'WRECK IT!' : 'VALET', color: s.kind === 'wreck' ? '#ff7a4a' : '#6ee2ff',
+    id: s.kind, group: 'event', name: EVENTS[s.kind].name.replace(' — ', ': '), tag: EVENT_TAG[s.kind] || 'EVENT', color: EVENT_COL[s.kind] || '#6ee2ff',
     how: EVENT_HOW[s.kind] || 'Drive onto the ring and press START.',
     live: () => !sim.event && !sim.job, pos: () => (sim.event ? null : s.p), site: s,
   });

@@ -11,6 +11,7 @@ import { chaseArmed, startChase } from './chase.js';
 import { initActivities, jump } from './activities.js';
 import { initEvents, stepEvents } from './events.js';
 import { initSkate, stepBoard, stepCombo, nearBoard, mount, boardSpeed } from './skate.js';
+import { initWatercraft, stepCraft, stepWaterFx, nearCraft, mountCraft } from './watercraft.js';
 import { initDestruct, stepDestruct, punchWorld, carState, carImpact, carsCollide, hitThing, palmImpact, initProps, propImpact } from './destruct.js';
 
 const TAU = Math.PI * 2;
@@ -34,6 +35,7 @@ export class Sim {
     this.cars = []; this.peds = [];
     this.time = 0;
     this.stars = 0; this.starDecay = 0; this.lostT = 0;
+    this.draft = 0; this.draftCar = null;               // traffic slipstream (polish bundle): charge + target
     this.busted = null;
     this.msg = null;
     this.bustT = 0;
@@ -50,6 +52,7 @@ export class Sim {
     ];
     for (const [x, y, h, model] of parked) this.addCar(x, y, h, model, null, { parked: true });
     initSkate(this);
+    initWatercraft(this);                   // the jetski + cigarette boat at the pier, the police boat (watercraft.js)
     initSkid(this);
     // things you'd expect to be solid are: bench slats, the fountain basin, the lifeguard towers
     this.obst = [];
@@ -207,11 +210,13 @@ export class Sim {
       if (input.punch && chaseArmed(this)) { startChase(this); input = { ...input, punch: false }; }   // A at the pier marker: START BOARD CHASE
       stepBoard(this, dt, input);
     }
+    else if (P.mode === 'water') stepCraft(this, dt, input);
     else if (P.mode === 'siege') stepSiege(this, dt, input);
     else this.stepPlayerCar(dt, input);
     stepJobs(this, dt, input);
     stepEvents(this, dt);
     stepCombo(this, dt);
+    stepWaterFx(this, dt);                  // spray decay, moored craft settling, the police boat
     // a board left alone rolls to a stop
     if (!this.board.ridden) { const b = this.board, f = Math.exp(-3 * dt); b.vx *= f; b.vy *= f; const bx = b.x + b.vx * dt, by = b.y + b.vy * dt; if (this.canStand(bx, by) && !this.W.hitTrunk(bx, by, 2)) { b.x = bx; b.y = by; } else { b.vx = b.vy = 0; } }   // never rolls off into the sea or through a rail
 
@@ -282,11 +287,15 @@ export class Sim {
     if (inp.punch && !(P0.punchCd > 0)) this.punch();
     if (inp.action && this.nearMotelDoor()) { enterSiege(this); return; }
     if (inp.action) {
-      // the board wins if it's right at your feet and nearer than any car
+      // the board wins if it's right at your feet and nearer than any car; a moored craft at
+      // the pier wins over both — you came to the dock for it
       const p2 = this.player.ped, b = this.board;
       const bd = Math.hypot(b.x - p2.x, b.y - p2.y);
       const cd = Math.min(...this.cars.map(c => Math.hypot(c.x - p2.x, c.y - p2.y)));
-      if (nearBoard(this) && bd < cd) mount(this);
+      const cr = nearCraft(this);
+      const wd = cr ? Math.hypot(cr.x - p2.x, cr.y - p2.y) : 1e9;
+      if (nearBoard(this) && bd < cd && bd < wd) mount(this);
+      else if (cr && wd < cd) mountCraft(this, cr);
       else this.tryEnterCar();
     }
   }
@@ -371,6 +380,8 @@ export class Sim {
   // Where feet can be: land up to the waterline, or the pier deck between its rails.
   canStand(x, y) {
     const W = this.W;
+    if (W.shell && x < 0)   // the extension shell: any non-water surface, causeway aprons included
+      return !W.hitSolid(x, y, 3) && x > W.bounds.x0 + 4 && y > 4 && y < W.L.world.h - 4 && W.surfaceAt(x, y) !== 'water';
     return !W.hitSolid(x, y, 3) && x > 4 && y > 4 && x < W.L.world.w - 4 && y < W.L.world.h - 4 && (x < W.shoreX(y) + 6 || W.onPier(x, y, 4));
   }
 
@@ -463,16 +474,55 @@ export class Sim {
     }
     if (c.wreck) { throttle = 0; steer = 0; }            // dead: all you can do is get out
     const boost = stepTurbo(this, c, !!inp.turbo, throttle, dt);                   // A held: turbo
-    const top = (c.heavy ? 235 : 290) * (1 + (TURBO.mult - 1) * (c.turbo || 0));         // eases in and back out, never snaps
-    this.driveCar(c, throttle * (boost ? TURBO.accel : 1), steer * (c.heavy ? 0.72 : 1), dt, top);   // the bus: slower, wider turns
+    const draftMul = 1 + 0.08 * (this.draft || 0);       // slipstream: up to +8% while the draft holds
+    const top = (c.heavy ? 235 : 290) * (1 + (TURBO.mult - 1) * (c.turbo || 0)) * draftMul;         // eases in and back out, never snaps
+    this.driveCar(c, throttle * (boost ? TURBO.accel : 1) * draftMul, steer * (c.heavy ? 0.72 : 1), dt, top);   // the bus: slower, wider turns
+    this.stepDraft(dt);
     if (inp.action && Math.abs(c.v) < 60) this.exitCar();
+  }
+
+  // ------------------------------------------------------------------ traffic slipstream
+  // Sit in the ~60-unit cone behind a moving traffic car and the DRAFT charges over ~1.4 s: wind
+  // streaks (render.js reads sim.draft) and up to +8% accel/top speed (applied in stepPlayerCar).
+  // Swing past the car you were drafting and it pays out: SLINGSHOT +50 and a small director mark.
+  // Traffic only: parked cars, cops, the patrol and job vehicles give nothing.
+  stepDraft(dt) {
+    const c = this.player.car;
+    if (!c || c.wreck) { this.draft = 0; this.draftCar = null; return; }
+    let best = null, bestGap = 1e9;
+    for (const o of this.cars) {
+      if (o === c || o.driver !== 'ai' || o.parked || o.patrol || o.job || o.wreck || o.kind === 'police') continue;
+      const dx = c.x - o.x, dy = c.y - o.y, ca = Math.cos(o.h), sa = Math.sin(o.h);
+      const u = dx * ca + dy * sa;                       // player position in the target's frame: u < 0 = behind
+      const v = -dx * sa + dy * ca;
+      const gap = -u - o.len / 2;                        // clear space behind the target's rear bumper
+      if (gap < -4 || gap > 60 || Math.abs(v) > o.wid / 2 + 10 || Math.abs(c.v) < 60) continue;
+      if (gap < bestGap) { bestGap = gap; best = o; }
+    }
+    if (best) {
+      this.draftCar = best;
+      this.draft = Math.min(1, this.draft + dt / 1.4);
+      return;
+    }
+    const o = this.draftCar;
+    if (o && this.draft > 0.5) {                         // no longer behind it: did we swing past?
+      const dx = c.x - o.x, dy = c.y - o.y, ca = Math.cos(o.h), sa = Math.sin(o.h);
+      const u = dx * ca + dy * sa;
+      if (u > o.len / 2 + c.len / 2 + 6) {               // fully ahead of the car we were drafting
+        this.score = (this.score || 0) + 50;
+        this.lastTrick = { name: 'SLINGSHOT', pts: 50, t: 1.2, mult: 1 };
+        this.ev('sling');
+      }
+    }
+    this.draft = Math.max(0, this.draft - dt * 2);
+    if (this.draft <= 0) this.draftCar = null;
   }
 
   exitCar() {
     const c = this.player.car, p = this.player.ped;
     for (const side of [-1, 1]) {
       const x = c.x + Math.sin(c.h) * 20 * side, y = c.y - Math.cos(c.h) * 20 * side;
-      if (!this.W.hitSolid(x, y, 3)) { p.x = x; p.y = y; break; }
+      if (!this.W.hitSolid(x, y, 3) && !(this.W.shell && x < 0 && this.W.surfaceAt(x, y) === 'water')) { p.x = x; p.y = y; break; }   // don't step out into the bay on a causeway
     }
     p.h = c.h; p.hidden = false;
     c.driver = null; c.v = 0; c.parked = true; c.fixed = false;
@@ -691,6 +741,7 @@ export class Sim {
     } else this.lostT = 0;
     // busted?
     if (this.busted || this.stars === 0 || this.legalJob()) { this.bustT = 0; return; }
+    if (this.player.mode === 'water') return;   // on the water the police boat owns the bust meter (watercraft.js)
     let pinned = false;
     if (this.player.mode === 'car') {
       const c = this.player.car;
@@ -722,6 +773,11 @@ export class Sim {
       P.mode = 'foot'; P.car = null;
     }
     if (P.mode === 'board') { P.mode = 'foot'; this.board.ridden = false; this.combo = null; }
+    if (P.mode === 'water') {               // busted on the water: back on foot, the craft stays moored-side, the boat goes home
+      P.mode = 'foot';
+      if (this.water.ride) { this.water.ride.ridden = false; this.water.ride = null; }
+      this.water.cop = null;
+    }
     const [rx, ry] = this.W.L.spawn.respawn;
     P.ped.x = rx; P.ped.y = ry; P.ped.h = -Math.PI / 2; P.ped.hidden = false;
     this.stars = 0;
@@ -735,6 +791,7 @@ export class Sim {
   // ------------------------------------------------------------------ pedestrians
   stepPed(p, dt) {
     const W = this.W;
+    p.holdPose = false;
     if (p.mode === 'down') {
       p.downT -= dt;
       const sx = p.x + p.vx * dt, sy = p.y + p.vy * dt;
@@ -793,7 +850,17 @@ export class Sim {
       if (pc && Math.abs(pc.v) > 150 && dist(pc, p) < 70) { p.mode = 'flee'; p.fleeT = 2; p.from = { x: pc.x, y: pc.y }; }
       if (!p.path) { p.gone = true; return; }
       if (p.gawkT > 0) { p.gawkT -= dt; const t = this.player.ped; p.h = Math.atan2(t.y - p.y, t.x - p.x); p.pose = 1; return; }   // stopped to stare
-      if (p.path.type === 'loop') {
+      if (p.path.type === 'crowd') {
+        // an event crowd (spotlight.js): stands at home on the verge, faces the action and
+        // bounces — p.cheer (0..2, set by the event) is the bounce rate; shoved or scattered,
+        // it walks back home. The pose is held against the shared tail below.
+        if (p.mode === 'return') p.mode = 'walk';
+        const t = this.focus();
+        p.h = Math.atan2(t.y - p.y, t.x - p.x);
+        const dx = p.path.x - p.x, dy = p.path.y - p.y;
+        if (dx * dx + dy * dy > 49) { mx = dx; my = dy; sp = 52; }
+        else { p.walk += (6 + (p.cheer || 0) * 15) * dt; p.pose = [0, 1, 2, 1][Math.floor(p.walk / 5) % 4]; p.holdPose = true; }
+      } else if (p.path.type === 'loop') {
         if (p.mode === 'return') {
           p.path.s = W.loopNearest(p.x, p.y); p.mode = 'walk';
         }
@@ -826,6 +893,6 @@ export class Sim {
       p.walk += moved;
       if (moved < step * 0.2 && (p.mode === 'walk' || p.mode === 'return')) { p.stuckT = (p.stuckT || 0) + dt; if (p.stuckT > 2) { p.x += mx / l * step; p.y += my / l * step; } } else p.stuckT = 0;
       p.pose = [0, 1, 2, 1][Math.floor(p.walk / 8) % 4];
-    } else p.pose = 1;
+    } else if (!p.holdPose) p.pose = 1;
   }
 }

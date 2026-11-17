@@ -1,5 +1,5 @@
 // activities_check.mjs — 7F: one marker language, and a marker for EVERY activity.
-// On the real sim: the registry lists the motel siege, the four jobs and the three city events (plus the
+// On the real sim: the registry lists the motel siege, the four jobs and the four city events (plus the
 // Garage's JOBS signpost); each has a name, a tag, a how-to line and a live street marker inside the
 // world; each is also on the map; a job's tag steps aside while you drive that vehicle and comes
 // back when you leave it; the event tags hide while an event runs.
@@ -13,7 +13,7 @@ const world = new World(layout);
 let fails = 0; const check = (ok, n, i = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${n} ${i}`); if (!ok) fails++; };
 const DT = 1 / 60, inp = (o = {}) => ({ jx: 0, jy: 0, jm: 0, action: false, punch: false, turbo: false, keys: {}, ...o });
 const s = new Sim(world, M, 7, () => {});
-const WANT = ['motel', 'taxi', 'tow', 'bus', 'getaway', 'wreck', 'valet', 'chase'];
+const WANT = ['motel', 'taxi', 'tow', 'bus', 'getaway', 'wreck', 'valet', 'spot', 'chase'];
 const ids = s.activities.map(a => a.id), mk = markers(s).slice();
 for (const id of WANT) {
   const a = s.activities.find(q => q.id === id), m = mk.find(q => q.a.id === id);

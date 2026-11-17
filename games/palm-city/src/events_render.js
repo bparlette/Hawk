@@ -17,11 +17,26 @@ function sprite(name) {
 export function drawEventsGround(g, S, time) {
   const ev = S.event, pulse = 0.5 + 0.5 * Math.sin(time * 4);
   if (!ev) {
-    for (const s of S.eventSites || []) beacon(g, s.p[0], s.p[1], s.kind === 'wreck' ? '#ff7a4a' : '#6ee2ff', pulse, time);
+    for (const s of S.eventSites || []) beacon(g, s.p[0], s.p[1], s.kind === 'wreck' ? '#ff7a4a' : s.kind === 'spot' ? '#ffe95c' : '#6ee2ff', pulse, time);
     if (S.chaseSite) beacon(g, S.chaseSite.p[0], S.chaseSite.p[1], '#7dffa8', pulse, time);
     return;
   }
   if (ev.kind === 'chase') { beacon(g, ev.spot[0], ev.spot[1], '#7dffa8', pulse, time); return; }   // the next checkpoint
+  if (ev.kind === 'spot') {                          // SPOTLIGHT RAVE: the stage is the beam pool — ring it
+    const c = S.chopper;
+    if (c && !c.leaving) {
+      const out = !c.lock, flash = out && Math.floor(time * 6) % 2 === 0;
+      g.save(); g.translate(c.bx, c.by);
+      g.lineWidth = 4; g.setLineDash([18, 12]); g.lineDashOffset = -time * 30;
+      g.strokeStyle = out ? (flash ? 'rgba(255,90,80,0.95)' : 'rgba(255,90,80,0.45)') : `rgba(255,233,92,${0.65 + 0.3 * pulse})`;
+      g.beginPath(); g.arc(0, 0, 70, 0, 7); g.stroke();
+      g.setLineDash([]);
+      g.fillStyle = out ? 'rgba(255,90,80,0.05)' : 'rgba(255,233,92,0.07)';
+      g.beginPath(); g.arc(0, 0, 70, 0, 7); g.fill();
+      g.restore();
+    }
+    return;
+  }
   if (ev.kind === 'wreck') {
     const E = EVENTS.wreck;
     g.save(); g.setLineDash([14, 10]); g.lineDashOffset = -time * 14; g.lineWidth = 3;
@@ -129,6 +144,29 @@ export function drawEventHud(g, vw, vh, top, S, font) {
     }
     return;
   }
+  if (ev && ev.kind === 'spot') {                          // SPOTLIGHT RAVE: hype meter, tier, beam state
+    const w = 210, x = vw / 2 - w / 2, y = top + 62, h = 68;
+    g.fillStyle = 'rgba(20,12,40,0.62)'; g.beginPath(); g.roundRect(x, y, w, h, 10); g.fill();
+    g.lineWidth = 2; g.strokeStyle = 'rgba(255,233,92,0.9)'; g.stroke();
+    g.textAlign = 'left'; g.font = font(13, 900); g.fillStyle = '#ffe95c'; g.fillText(ev.name, x + 12, y + 16);
+    const tt = Math.max(0, Math.ceil(ev.timer));
+    g.textAlign = 'right'; g.fillStyle = ev.timer < 15 ? '#ff7a8a' : '#fff1d8'; g.fillText(`${Math.floor(tt / 60)}:${String(tt % 60).padStart(2, '0')}`, x + w - 12, y + 16);
+    g.textAlign = 'left'; g.font = font(12, 800); g.fillStyle = '#fff1d8'; g.fillText(`TIER ${ev.tier}`, x + 12, y + 34);
+    g.textAlign = 'right'; g.fillText(`${Math.floor(ev.pts).toLocaleString()} PTS`, x + w - 12, y + 34);
+    g.fillStyle = 'rgba(255,241,216,0.25)'; g.fillRect(x + 12, y + 44, w - 24, 7);          // the HYPE meter
+    g.fillStyle = ev.inBeam ? '#ffd45c' : 'rgba(255,212,92,0.45)'; g.fillRect(x + 12, y + 44, (w - 24) * Math.min(1, ev.hype / 100), 7);
+    g.fillStyle = 'rgba(20,12,40,0.85)';
+    g.fillRect(x + 12 + (w - 24) * 0.34 - 1, y + 44, 2, 7); g.fillRect(x + 12 + (w - 24) * 0.67 - 1, y + 44, 2, 7);   // tier ticks at 34 / 67
+    g.textAlign = 'left'; g.font = font(11, 800);
+    if (ev.inBeam) { g.fillStyle = '#7dffa8'; g.fillText('IN THE LIGHT', x + 12, y + 62); }
+    else if (ev.outT > 0) { g.fillStyle = '#ff7a6a'; g.fillText(`BACK IN THE LIGHT ${Math.max(0, 5 - ev.outT).toFixed(1)}`, x + 12, y + 62); }
+    else { g.fillStyle = '#fff1d8'; g.fillText('FIND THE LIGHT', x + 12, y + 62); }
+    if (ev.count > 0) {
+      g.textAlign = 'center'; g.font = font(64, 900); g.lineWidth = 7; g.strokeStyle = 'rgba(33,15,46,0.7)';
+      const n = String(Math.ceil(ev.count)); g.strokeText(n, vw / 2, vh * 0.42); g.fillStyle = '#ffd45c'; g.fillText(n, vw / 2, vh * 0.42);
+    }
+    return;
+  }
   if (ev) {
     const w = 200, x = vw / 2 - w / 2, y = top + 62, h = ev.kind === 'wreck' ? 64 : 58;
     g.fillStyle = 'rgba(20,12,40,0.62)'; g.beginPath(); g.roundRect(x, y, w, h, 10); g.fill();
@@ -164,7 +202,7 @@ export function drawEventHud(g, vw, vh, top, S, font) {
     g.textAlign = 'center'; g.font = font(14, 900); g.fillStyle = '#fff1d8'; g.fillText(R.name, vw / 2, y + 22);
     g.font = font(26, 900); g.fillStyle = '#ffd45c'; g.fillText(R.kind === 'valet' ? `$${R.pts.toLocaleString()}` : R.pts.toLocaleString() + ' PTS', vw / 2, y + 54);
     g.font = font(13, 800); g.fillStyle = R.ok ? '#7dffa8' : '#ff9a8a';
-    g.fillText(R.kind === 'wreck' ? `${R.medal === 'NONE' ? 'NO MEDAL' : R.medal + ' MEDAL'} · BEST CHAIN ×${R.chain || 1}` : R.kind === 'chase' ? `${R.text.replace('BOARD CHASE — ', '')} · ${R.cp}/${R.of} CHECKPOINTS` : `${R.text}${R.bays != null ? ' · ' + R.bays + ' BAYS' : ''}`, vw / 2, y + 76);
+    g.fillText(R.kind === 'wreck' ? `${R.medal === 'NONE' ? 'NO MEDAL' : R.medal + ' MEDAL'} · BEST CHAIN ×${R.chain || 1}` : R.kind === 'chase' ? `${R.text.replace('BOARD CHASE — ', '')} · ${R.cp}/${R.of} CHECKPOINTS` : R.kind === 'spot' ? `${R.text} · HYPE ${R.hype ?? 0}% · TIER ${R.tier ?? 1}` : `${R.text}${R.bays != null ? ' · ' + R.bays + ' BAYS' : ''}`, vw / 2, y + 76);
     g.globalAlpha = 1;
   }
 }

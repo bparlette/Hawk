@@ -6,8 +6,10 @@
 //         crosswalks, cracks, oil, wet reflection troughs, shoreline foam.
 // Nothing is baked bigger than one chunk. Painting is TIME-SLICED (perf pass): paintGen is a generator
 // that yields between rows / dab rows / detail layers, and work(budgetMs) advances queued chunks a few
-// milliseconds per frame, so streaming never paints a whole chunk in one frame. Every chunk stays
-// cached once painted (72 chunks, ~72 MB): revisits never repaint.
+// milliseconds per frame, so streaming never paints a whole chunk in one frame. The cache is a bounded
+// LRU (MAX_CHUNKS canvases): the core alone is 72 chunks and the extension shell adds ~162 more, so an
+// unbounded cache would grow past 230 MB — the cap holds the visible area plus margin, and chunks
+// evicted behind the player simply repaint if the player drives back.
 
 import { mulberry32, fbm, vnoise } from './world.js';
 
@@ -47,6 +49,10 @@ function curlAngle(wx, wy, scale, seed, baseAng) {
 // the shallows tint key off it, so the sea is calm where it meets the land
 // and only gathers energy offshore.
 export function shoreCalm(W, x, y) {
+  if (W.shell && x < 0) {   // shell coasts: distance to the nearest shell land, same smoothstep falloff
+    const t0 = Math.max(0, Math.min(1, W.shellLandDist(x, y) / 170));
+    return t0 * t0 * (3 - 2 * t0);
+  }
   const sd = x - W.shoreX(y);
   const P = W.L.pier;
   const pdx = Math.max(P.x - x, 0, x - (P.x + P.w));
@@ -56,30 +62,46 @@ export function shoreCalm(W, x, y) {
   return t * t * (3 - 2 * t);
 }
 
+const MAX_CHUNKS = 64;   // LRU cap: ~64 MB of chunk canvases — the view + prefetch margin, not the whole map
+
 export class GroundPainter {
   constructor(world) {
     this.world = world;
-    this.cache = new Map(); // key -> canvas
-    this.cols = Math.ceil(world.L.world.w / CHUNK);
-    this.rows = Math.ceil(world.L.world.h / CHUNK);
+    this.cache = new Map(); // key -> canvas, in LRU order (oldest first)
+    const b = world.bounds || { x0: 0, y0: 0, x1: world.L.world.w, y1: world.L.world.h };
+    this.cx0 = Math.floor(b.x0 / CHUNK); this.cy0 = Math.floor(b.y0 / CHUNK);
+    this.cx1 = Math.ceil(b.x1 / CHUNK); this.cy1 = Math.ceil(b.y1 / CHUNK);
+    this.cols = this.cx1 - this.cx0;
+    this.rows = this.cy1 - this.cy0;
     this.queue = [];        // [cx, cy] waiting to be painted, nearest-first
     this.job = null;        // { k, gen } the chunk being painted a slice at a time
-    this.stats = { sync: 0, sliced: 0 };   // chunks painted all at once (a hitch) vs in slices
+    this.stats = { sync: 0, sliced: 0, evicted: 0 };   // chunks painted all at once (a hitch) vs in slices; LRU evictions
   }
 
   key(cx, cy) { return cx + ',' + cy; }
+
+  // Evict least-recently-used chunks until the cache fits the cap. The in-flight job's chunk is spared.
+  trim() {
+    while (this.cache.size > MAX_CHUNKS) {
+      const k0 = this.cache.keys().next().value;
+      if (this.job && this.job.k === k0) break;
+      this.cache.delete(k0);
+      this.stats.evicted++;
+    }
+  }
 
   // A chunk that must be drawn NOW. Painted ahead by work() in the normal case; if not, finish it here
   // (finishing the in-flight job if it's this chunk) — that's the hitch the prefetch is there to avoid.
   get(cx, cy) {
     const k = this.key(cx, cy);
     const c = this.cache.get(k);
-    if (c) return c;
+    if (c) { this.cache.delete(k); this.cache.set(k, c); return c; }   // a draw refreshes recency
     let gen;
     if (this.job && this.job.k === k) { gen = this.job.gen; this.job = null; } else gen = this.paintGen(cx, cy);
     let r = gen.next();
     while (!r.done) r = gen.next();
     this.cache.set(k, r.value);
+    this.trim();
     this.stats.sync++;
     return r.value;
   }
@@ -103,7 +125,7 @@ export class GroundPainter {
         this.job = { k: this.key(cx, cy), gen: this.paintGen(cx, cy) };
       }
       const r = this.job.gen.next();
-      if (r.done) { this.cache.set(this.job.k, r.value); this.job = null; this.stats.sliced++; }
+      if (r.done) { this.cache.set(this.job.k, r.value); this.job = null; this.stats.sliced++; this.trim(); }
     }
     return true;
   }
@@ -197,7 +219,7 @@ export class GroundPainter {
           const r1 = cr(), r2 = cr(), r3 = cr(), r4 = cr(), r5 = cr(), r6 = cr();
           let ang, len, wid, alpha, skipDab = false, dabFade = 1;
           if (t === 'road' || t === 'parking') {
-            const r = W.roadInfo(wx, wy);
+            const r = W.roadInfoAny(wx, wy);
             const roadA = Math.atan2(r.dy, r.dx);
             ang = curlAngle(wx, wy, 0.015, 11, roadA) * 0.32 + roadA * 0.68 + (r1 - 0.5) * 0.30;
             len = (pass === 0 ? 20 : 12) + r2 * 16;
@@ -459,9 +481,9 @@ export class GroundPainter {
     const wr = mulberry32(((ox * 31) ^ (oy * 17)) >>> 0);
     for (let n = 0; n < 16; n++) {
       const x = ox + wr() * CHUNK, y = oy + wr() * CHUNK;
-      const r = W.roadInfo(x, y);
-      if (r.d > hr - 3) continue;
-      const isGutter = r.d > hr - 24;
+      const r = W.roadInfoAny(x, y);
+      if (r.d > r.hw - 3) continue;
+      const isGutter = r.d > r.hw - 24;
       g.globalAlpha = isGutter ? 0.36 : 0.20;
       g.fillStyle = isGutter ? '#242338' : '#323046';
       g.beginPath(); g.ellipse(x, y, 16 + wr() * 18, 5 + wr() * 6, Math.atan2(r.dy, r.dx), 0, 7); g.fill();
@@ -489,6 +511,52 @@ export class GroundPainter {
       }
       g.globalAlpha = 0.26; g.fillStyle = '#be8d58';
       g.beginPath(); g.ellipse(sx - 6, y, 5.0, 1.9, 1.48, 0, 7); g.fill();
+    }
+
+    // ---- extension shell: curbs + lane dashes along the traced roads, foam on shell shorelines
+    if (W.shell) {
+      for (const s of W.shellSegs) {
+        const L = Math.hypot(s.x1 - s.x0, s.y1 - s.y0), ux = (s.x1 - s.x0) / L, uy = (s.y1 - s.y0) / L;
+        for (let d = 0; d <= L; d += 2.5) {
+          const x = s.x0 + ux * d, y = s.y0 + uy * d;
+          if (!inChunk(x, y)) continue;
+          for (const side of [-1, 1]) {
+            const nx = -uy * side, ny = ux * side;
+            const ex = x + nx * s.hw, ey = y + ny * s.hw;
+            if (W.shellRoadInfo(ex + nx * 3, ey + ny * 3).d < s.hw - 1) continue;   // inside a junction: no curb
+            g.globalAlpha = 0.72; g.fillStyle = '#f2dbb8';
+            g.fillRect(ex + nx * 1.3 - 1.7, ey + ny * 1.3 - 1.7, 3.4, 3.4);
+            g.globalAlpha = 0.45; g.fillStyle = '#201a42';
+            g.fillRect(ex - nx * 1.8 - 1.6, ey - ny * 1.8 - 1.6, 3.2, 3.2);
+          }
+          if (d % 36 < 18) {   // hand-painted golden-cream dashed lane line, same rhythm as the core
+            g.globalAlpha = 0.65 + vnoise(x * 0.3, y * 0.3, 3) * 0.3;
+            g.fillStyle = '#f8e3a4';
+            g.save(); g.translate(x, y); g.rotate(Math.atan2(uy, ux));
+            g.fillRect(-1.8, -1.35 + (rnd() - 0.5) * 0.35, 3.6, 2.7);
+            g.restore();
+          }
+        }
+      }
+      yield;
+      // Foam where shell water meets shell land: scallops along each shoreline cell edge, seeded per cell.
+      const CS = W.shellCell;
+      const fc0 = Math.max(0, Math.floor((ox - W.shellOx) / CS)), fc1 = Math.min(W.shellCols - 1, Math.floor((ox + CHUNK - W.shellOx) / CS));
+      const fr0 = Math.max(0, Math.floor((oy - W.shellOy) / CS)), fr1 = Math.min(W.shellRows - 1, Math.floor((oy + CHUNK - W.shellOy) / CS));
+      for (let r = fr0; r <= fr1; r++) for (let c = fc0; c <= fc1; c++) {
+        if (W.shellGrid[r].charCodeAt(c) !== 48) continue;   // water cells only
+        const wx = W.shellOx + (c + 0.5) * CS, wy = W.shellOy + (r + 0.5) * CS;
+        for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nc = c + dc, nr = r + dr;
+          if (nc < 0 || nr < 0 || nc >= W.shellCols || nr >= W.shellRows) continue;
+          if (W.shellGrid[nr].charCodeAt(nc) === 48) continue;   // neighbour is water too: open bay, no foam
+          const fr = mulberry32(((c * 73856093) ^ (r * 19349663) ^ (dc * 131 + dr * 197)) >>> 0);
+          const fx = wx + dc * CS / 2 + (fr() - 0.5) * 4, fy = wy + dr * CS / 2 + (fr() - 0.5) * 4;
+          g.globalAlpha = 0.30 + fr() * 0.4; g.fillStyle = '#fbf0d8';
+          g.beginPath(); g.ellipse(fx, fy, 3.2 + fr() * 2.6, 1.9 + fr() * 1.4, Math.atan2(dr, dc) + 1.35, 0, 7); g.fill();
+          if (fr() > 0.55) { g.globalAlpha = 0.20; g.fillStyle = '#5ab8cf'; g.beginPath(); g.ellipse(fx - dc * 5, fy - dr * 5, 3.6, 1.5, Math.atan2(dr, dc) + 1.45, 0, 7); g.fill(); }
+        }
+      }
     }
     g.restore();
     g.globalAlpha = 1;
