@@ -13,7 +13,7 @@
 | Short edges | 49 under 3 m (OSM node splits at junctions) — merge for traffic, keep for drawing |
 | **Grade separation** | **58 crossings without a shared node — all 58 tagged bridge/layer** (US-29 over Sandy Spring Rd, Dustin Rd over US-29, I-95 over Stansfield Rd…). The data is clean; the *game* must render and drive two levels. |
 | Labels | MD-216 is mostly `ref` only, no `name` — labels fall back to ref ("MD 216"). |
-| Anchors | Ledo Pizza (11845 Scaggsville Rd), Atholton HS, Reservoir HS — and **every roster house as an exact OSM address point** except Grant (6311 Sandy St is outside the bbox, as Moth found) — `data/roster.json` |
+| Anchors | Ledo Pizza (11845 Scaggsville Rd), Atholton HS, Reservoir HS — and **every roster house as an exact OSM address point** except Grant (his street, Sandy St, is outside the bbox, as Moth found) — `data/roster.json` |
 | Sample route | Ledo → Brad's: **7.22 km** shortest legal path (Scaggsville Rd / MD 216 → Crest Rd → Harding Rd → Stansfield Rd). The owner's sample route (via Maple Lawn Blvd) is a forced waypoint, a little longer. |
 
 Maps: `shots/l1-graph-full.png`, `shots/l1-graph-sample.png` (`tools/graph_map.py`).
@@ -73,6 +73,7 @@ collides with MD-216 below; the car turns round in a cul-de-sac; query cost < 20
   GitHub Pages, so the roster (names + exact addresses + cars) is readable by anyone. The tasking
   directs real names and places; I am building it as directed. A low-cost safeguard if wanted: keep
   the houses at their real spots but put only first names / no house numbers in anything shipped.
-  Owner's call.
+  **Owner, Nov 17: exact house + street, no house numbers posted.** roster.json carries street + exact
+  position + OSM element only; the numbers live in a git-ignored local file (tools/roster_build.py).
 - **Map extent:** Grant's street is ~292 m south of the bbox. Extending south is a fetch flag
   (`tools/osm_fetch.py`) plus a roster re-run.

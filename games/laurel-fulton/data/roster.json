@@ -4,6 +4,7 @@
   {
    "id": "brad",
    "name": "Brad",
+   "street": "Stansfield Road",
    "car": {
     "model": "1987 Chevrolet Camaro",
     "paint": "two-tone: front half white, rear half maroon",
@@ -12,7 +13,6 @@
      "bass"
     ]
    },
-   "address": "10128 Stansfield Road",
    "active": true,
    "lat": 39.120799,
    "lon": -76.866202,
@@ -25,12 +25,12 @@
   {
    "id": "kosack",
    "name": "Kosack",
+   "street": "Derby Drive",
    "car": {
     "model": "~1989 Chevrolet Cavalier",
     "paint": "red",
     "fx": []
    },
-   "address": "10400 Derby Drive",
    "active": true,
    "lat": 39.156176,
    "lon": -76.864876,
@@ -43,6 +43,7 @@
   {
    "id": "jimmy",
    "name": "Jimmy",
+   "street": "Sweet Cherry Lane",
    "car": {
     "model": "1996 Chevrolet Astro",
     "paint": "silver",
@@ -51,7 +52,6 @@
      "underglow_blue"
     ]
    },
-   "address": "8313 Sweet Cherry Lane",
    "active": true,
    "lat": 39.143235,
    "lon": -76.895053,
@@ -64,6 +64,7 @@
   {
    "id": "jason",
    "name": "Jason",
+   "street": "Susini Drive",
    "car": {
     "model": "1989 Toyota Camry",
     "paint": "white",
@@ -71,7 +72,6 @@
      "tailpipe_sputter"
     ]
    },
-   "address": "8743 Susini Drive",
    "active": true,
    "lat": 39.130182,
    "lon": -76.872849,
@@ -84,12 +84,12 @@
   {
    "id": "clayton",
    "name": "Clayton Floyd",
+   "street": "Hughes Avenue",
    "car": {
     "model": "Chevrolet Camaro",
     "paint": "green",
     "fx": []
    },
-   "address": "9946 Hughes Avenue",
    "active": true,
    "lat": 39.116264,
    "lon": -76.857515,
@@ -102,12 +102,12 @@
   {
    "id": "zack",
    "name": "Zack Floyd",
+   "street": "Hughes Avenue",
    "car": {
     "model": "Mercury Tracer",
     "paint": "green",
     "fx": []
    },
-   "address": "9946 Hughes Avenue",
    "active": true,
    "lat": 39.116264,
    "lon": -76.857515,
@@ -120,6 +120,7 @@
   {
    "id": "rigg",
    "name": "Rigg",
+   "street": "Mossy Stone Court",
    "car": {
     "model": "first-gen Toyota Celica (owner: 1969; refs 1970-73)",
     "paint": "blue",
@@ -128,7 +129,6 @@
      "bass"
     ]
    },
-   "address": "8201 Mossy Stone Court",
    "active": true,
    "lat": 39.148676,
    "lon": -76.885975,
@@ -139,16 +139,37 @@
    "osm": "way/568387123"
   },
   {
+   "id": "billy",
+   "name": "Billy",
+   "street": "Sweet Cherry Lane",
+   "car": null,
+   "note": "shares Jimmy's house; no car named yet (owner)",
+   "active": true,
+   "lat": 39.143235,
+   "lon": -76.895053,
+   "house": [
+    -909,
+    11347
+   ],
+   "osm": "way/1235085589"
+  },
+  {
    "id": "grant",
    "name": "Grant",
+   "street": "Early Bud Way",
    "car": {
     "model": "Cadillac Brougham \"USS Mino\"",
     "paint": "maroon",
     "fx": []
    },
-   "address": "6311 Sandy Street",
-   "active": false,
-   "why": "address not in the current map extent (data/osm_places.json)"
+   "active": true,
+   "lat": 39.138006,
+   "lon": -76.895552,
+   "house": [
+    -1339,
+    17127
+   ],
+   "osm": "way/1233616479"
   }
  ],
  "unassigned_cars": [
