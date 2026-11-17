@@ -1,18 +1,19 @@
 // controls.js — what the A button (the smaller round one, left of the action button) is right now.
 // One place decides it, so the HUD, the touch layer and the checks can never disagree, and the
 // button never shows an action that does nothing.
-//   on foot / in the siege : PUNCH
+//   on foot / in the siege : PUNCH (in OPEN ROAD's start circle: START OPEN ROAD — the grid car waits)
 //   in a car               : the job or event action if one is armed (START TAXI, HOOK, DECOY...),
 //                            otherwise TURBO (hold). A wreck has no A action.
 //   on the board           : none shown (the main button is the ollie; the A key ollies too)
 import { jobButton } from './jobs.js';
 import { chaseArmed } from './chase.js';
+import { openRoadArmed } from './openroad.js';
 
 export const TURBO = { mult: 1.4, accel: 1.6, burn: 3.0, cool: 2.0 };   // top-speed x, accel x, seconds of boost, seconds to recover
 
 export function buttonA(sim) {
   const P = sim.player;
-  if (P.mode === 'foot' || P.mode === 'siege') return { kind: 'punch', label: 'PUNCH' };
+  if (P.mode === 'foot' || P.mode === 'siege') return openRoadArmed(sim) ? { kind: 'event', label: 'START OPEN ROAD' } : { kind: 'punch', label: 'PUNCH' };
   if (P.mode === 'board') return chaseArmed(sim) ? { kind: 'event', label: 'START BOARD CHASE' } : null;
   if (P.mode === 'water') {                        // on a craft: TURBO, same hold-to-boost as a car
     const cr = sim.water && sim.water.ride;

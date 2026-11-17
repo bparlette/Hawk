@@ -94,6 +94,12 @@ export class Audio {
       if (k > 0.02) { this.burst(70, 0.9, 0.22 * k, 0.07); this.burst(240, 1.4, 0.05 * k, 0.05); }
       this.rotorT = t + 0.09;
     }
+    // the player's own helicopter: the same thump, at distance zero, tied to its rotor state (heli.js)
+    const ph = sim.heli;
+    if (ph && ph.rotor > 0.25 && t >= (this.rotorT2 || 0)) {
+      this.burst(70, 0.9, 0.20 * ph.rotor, 0.07); this.burst(240, 1.4, 0.05 * ph.rotor, 0.05);
+      this.rotorT2 = t + 0.09;
+    }
   }
 
   env(node, a, peak, d, t0) {
@@ -150,6 +156,7 @@ export class Audio {
     if (name === 'ollie') { this.burst(2400, 3, 0.25, 0.05, 'bandpass'); this.burst(300, 1, 0.3, 0.08); }
     if (name === 'land') this.burst(900, 2, 0.25, 0.07, 'bandpass');
     if (name === 'grind') { this.burst(3200, 8, 0.18, 0.5, 'bandpass'); this.burst(1600, 6, 0.12, 0.5, 'bandpass'); }
+    if (name === 'screech') { this.burst(2600, 6, 0.11, 0.34, 'bandpass'); this.burst(3400, 9, 0.05, 0.2, 'bandpass'); }   // OPEN ROAD: tyres at the limit
     if (name === 'hood') { this.burst(160, 1, 0.5, 0.18); if (v) this.note(1320, t + 0.05, 0.15, 0.06, 'square', 3000); }
     if (name === 'bail') { this.burst(500, 0.8, 0.5, 0.35); this.burst(2600, 3, 0.15, 0.2, 'bandpass'); }
     if (name === 'trick') this.note(988 + Math.random() * 200, t, 0.06, 0.035, 'triangle', 4000);
