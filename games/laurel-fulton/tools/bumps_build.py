@@ -6,7 +6,8 @@
 # street; >= 35 m from any junction; >= 45 m from every crew house and rally stop; nothing on a bridge.
 # Each bump: {x, y, dx, dy, w} — centre, the road's unit direction there, the carriageway width (units).
 import json, os, math
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+import sys as _s, os as _o; _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__))); import world_cfg
+ROOT = world_cfg.root()
 G = json.load(open(os.path.join(ROOT, 'data', 'graph.json'))); R = json.load(open(os.path.join(ROOT, 'data', 'roster.json')))
 SPACING, JUNC, HOUSE = 1100, 350, 450                  # units (10 / m)
 deg = {}

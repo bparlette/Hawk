@@ -1,0 +1,125 @@
+{
+ "_doc": "The ONE roster (task L2). Written by tools/roster_build.py from OSM address points. house = world units (10/m, x east, y south).",
+ "people": [
+  {
+   "id": "alex",
+   "name": "Alex",
+   "street": "Baltimore Street",
+   "car": {
+    "model": "1988 Ford Mustang red",
+    "paint": "1988 Ford Mustang red",
+    "fx": [
+     "bass"
+    ],
+    "sprite": "alex_mustang"
+   },
+   "active": true,
+   "lat": 39.137703,
+   "lon": -76.822483,
+   "house": [
+    3036,
+    -777
+   ],
+   "osm": "way/1347847635",
+   "approx": "street"
+  },
+  {
+   "id": "sam",
+   "name": "Sam",
+   "street": "Washington Street",
+   "car": {
+    "model": "1990 Honda Accord blue",
+    "paint": "1990 Honda Accord blue",
+    "fx": [
+     "tailpipe_sputter"
+    ],
+    "sprite": "sam_camry"
+   },
+   "active": true,
+   "lat": 39.136365,
+   "lon": -76.822532,
+   "house": [
+    2994,
+    702
+   ],
+   "osm": "way/1283805107",
+   "approx": "street"
+  },
+  {
+   "id": "jo",
+   "name": "Jo",
+   "street": "Fair Street",
+   "car": {
+    "model": "1992 Dodge Caravan white",
+    "paint": "1992 Dodge Caravan white",
+    "fx": [
+     "underglow_blue"
+    ],
+    "sprite": "jo_astro"
+   },
+   "active": true,
+   "lat": 39.137271,
+   "lon": -76.828197,
+   "house": [
+    -1897,
+    -299
+   ],
+   "osm": "way/557997419",
+   "approx": "street"
+  },
+  {
+   "id": "rio",
+   "name": "Rio",
+   "street": "Foundry Street",
+   "car": {
+    "model": "1986 Pontiac Firebird two-tone black/gold",
+    "paint": "1986 Pontiac Firebird two-tone black/gold",
+    "fx": [],
+    "sprite": "rio_camaro"
+   },
+   "active": true,
+   "lat": 39.139316,
+   "lon": -76.825889,
+   "house": [
+    96,
+    -2560
+   ],
+   "osm": "way/1347397899",
+   "approx": "street"
+  },
+  {
+   "id": "kit",
+   "name": "Kit",
+   "street": "Foundry Street",
+   "car": {
+    "model": "1989 Ford Escort green",
+    "paint": "1989 Ford Escort green",
+    "fx": [],
+    "sprite": "kit_tracer"
+   },
+   "active": true,
+   "lat": 39.139316,
+   "lon": -76.825889,
+   "house": [
+    96,
+    -2560
+   ],
+   "osm": "way/1347397899",
+   "approx": "street"
+  }
+ ],
+ "houses": {
+  "rio": "The Foundry Street house",
+  "kit": "The Foundry Street house"
+ },
+ "unassigned_cars": [],
+ "meetup": {
+  "name": "Savage Mill",
+  "lat": 39.136008,
+  "lon": -76.826498,
+  "pos": [
+   -430,
+   1097
+  ]
+ }
+}

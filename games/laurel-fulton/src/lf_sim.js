@@ -37,8 +37,9 @@ export class LFSim {
       this._atHouse.set(hk, nth + 1);                                                          // the 2nd, 3rd... car parks alongside
       if (nth) { const side = (nth % 2 ? 1 : -1) * Math.ceil(nth / 2) * 28; c.x += Math.cos(c.h + Math.PI / 2) * side; c.y += Math.sin(c.h + Math.PI / 2) * side; }
     }
-    const sp = opts.spawn || W.verts[W.G.anchors.ledo.v];   // Ledo's lot aisle (the anchor's graph vertex), not the restaurant's point inside its footprint
-    const model = opts.model || 'camaro_brad';
+    const A0 = W.G.anchors.ledo || Object.values(W.G.anchors)[0];   // Laurel: Ledo's lot aisle; any city: its first POI
+    const sp = opts.spawn || (A0 ? W.verts[A0.v] : W.verts[W.G.edges[0].a]);   // Ledo's lot aisle (the anchor's graph vertex), not the restaurant's point inside its footprint
+    const model = opts.model || (fleet.camaro_brad ? 'camaro_brad' : Object.keys(fleet)[0]);   // any city: its first car
     const start = this.addCar(model, sp.x, sp.y, opts.h ?? 0, { player: true });
     this.player = start;
     const r = W.roadInfo(sp.x, sp.y, 0);

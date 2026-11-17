@@ -1,0 +1,77 @@
+{
+ "name": "Savage",
+ "pois": [
+  {
+   "id": "mill",
+   "name": "Savage Mill"
+  }
+ ],
+ "people": [
+  {
+   "id": "alex",
+   "name": "Alex",
+   "street": "Baltimore Street",
+   "car": {
+    "model": "1988 Ford Mustang red",
+    "paint": "1988 Ford Mustang red",
+    "fx": [
+     "bass"
+    ],
+    "sprite": "alex_mustang"
+   }
+  },
+  {
+   "id": "sam",
+   "name": "Sam",
+   "street": "Washington Street",
+   "car": {
+    "model": "1990 Honda Accord blue",
+    "paint": "1990 Honda Accord blue",
+    "fx": [
+     "tailpipe_sputter"
+    ],
+    "sprite": "sam_camry"
+   }
+  },
+  {
+   "id": "jo",
+   "name": "Jo",
+   "street": "Fair Street",
+   "car": {
+    "model": "1992 Dodge Caravan white",
+    "paint": "1992 Dodge Caravan white",
+    "fx": [
+     "underglow_blue"
+    ],
+    "sprite": "jo_astro"
+   }
+  },
+  {
+   "id": "rio",
+   "name": "Rio",
+   "street": "Foundry Street",
+   "car": {
+    "model": "1986 Pontiac Firebird two-tone black/gold",
+    "paint": "1986 Pontiac Firebird two-tone black/gold",
+    "fx": [],
+    "sprite": "rio_camaro"
+   }
+  },
+  {
+   "id": "kit",
+   "name": "Kit",
+   "street": "Foundry Street",
+   "car": {
+    "model": "1989 Ford Escort green",
+    "paint": "1989 Ford Escort green",
+    "fx": [],
+    "sprite": "kit_tracer"
+   }
+  }
+ ],
+ "houses": {
+  "rio": "The Foundry Street house",
+  "kit": "The Foundry Street house"
+ },
+ "meet": "Savage Mill"
+}

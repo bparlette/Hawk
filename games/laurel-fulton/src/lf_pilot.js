@@ -4,13 +4,43 @@
 // Plan: nearest unvisited stop -> route on the graph -> follow it -> brake to pull in -> wait out the beat ->
 // next; when everyone is in, Atholton HS. Target behind you while slow: stick out to the SIDE (turn round
 // going forward); a stuck-for-2-s guard reverses briefly.
+// Plan a drive ON THE ROADS from (fx,fy) to (tx,ty): get onto your current edge, route between the edges' ends (whichever
+// pair is shortest), and follow the destination edge's real shape to the kerb point in front of the target — never a
+// straight line across a block (the nearest graph VERTEX can be on another street).
+export function roadPath(W, S, fx, fy, tx, ty) {
+  // the nearest few distinct edges to a point (from the world's 256-unit grid), nearest first, each with its kerb point
+  const cands = (x, y) => {
+    const seen = new Map();
+    for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (const si of W.grid[0].get((Math.floor(x / 256) + i) * 100003 + Math.floor(y / 256) + j) || []) {
+      const sg = W.seg[si], vx = sg.x1 - sg.x0, vy = sg.y1 - sg.y0, L2 = vx * vx + vy * vy || 1, t = Math.max(0, Math.min(1, ((x - sg.x0) * vx + (y - sg.y0) * vy) / L2));
+      const px = sg.x0 + vx * t, py = sg.y0 + vy * t, d = Math.hypot(px - x, py - y), k = W.edges.indexOf(sg.e);
+      const cur = seen.get(sg.e); if (!cur || d < cur.d) seen.set(sg.e, { e: sg.e, d, k: { x: px, y: py }, i: sg.e.pts.findIndex(p => p[0] === sg.x0 && p[1] === sg.y0) });
+    }
+    return [...seen.values()].sort((p, q) => p.d - q.d).slice(0, 6);
+  };
+  const toEnd = (o, end) => end === 'a' ? [[o.k.x, o.k.y], ...o.e.pts.slice(0, o.i + 1).reverse()] : [[o.k.x, o.k.y], ...o.e.pts.slice(o.i + 1)];
+  const len = (pts) => { let L = 0; for (let i = 0; i + 1 < pts.length; i++) L += Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]); return L; };
+  const As = cands(fx, fy), Bs = cands(tx, ty);
+  for (const A of As) for (const B of Bs) {                  // nearest pair that is actually CONNECTED (skips lot aisles and driveways that are islands)
+    if (A.e === B.e) return [[fx, fy], [A.k.x, A.k.y], [B.k.x, B.k.y]];
+    let best = null;
+    for (const ea of ['a', 'b']) for (const eb of ['a', 'b']) {
+      const r = W.route(A.e[ea], B.e[eb]); if (!r) continue;
+      const head = toEnd(A, ea), tail = toEnd(B, eb).reverse(), tot = len(head) + r.len + len(tail);
+      if (!best || tot < best.tot) best = { tot, pts: [[fx, fy], ...head, ...r.pts, ...tail] };
+    }
+    if (best) return best.pts;
+  }
+  return [[fx, fy], [tx, ty]];
+}
+
 export class Pilot {
   constructor(S, W, M) { this.S = S; this.W = W; this.M = M; this.pts = null; this.pi = 0; this.goal = null; this.stuck = 0; }
   dense(pts, step = 20) { const o = [pts[0]]; for (let i = 0; i + 1 < pts.length; i++) { const [ax, ay] = pts[i], [bx, by] = pts[i + 1], n = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / step)); for (let k = 1; k <= n; k++) o.push([ax + (bx - ax) * k / n, ay + (by - ay) * k / n]); } return o; }
   nearestV(x, y) { let b = 1e18, bv = -1; for (const [v] of this.W.adj) { const q = this.W.verts[v], d = (q.x - x) ** 2 + (q.y - y) ** 2; if (d < b) { b = d; bv = v; } } return bv; }
   plan(x, y, stopAtEnd) {
-    const S = this.S, r = this.W.route(this.nearestV(S.player.x, S.player.y), this.nearestV(x, y));
-    this.pts = r ? this.dense([[S.player.x, S.player.y], ...r.pts, [x, y]]) : this.dense([[S.player.x, S.player.y], [x, y]]);
+    const S = this.S;
+    this.pts = this.dense(roadPath(this.W, S, S.player.x, S.player.y, x, y));   // on the roads, to the kerb in front of the target
     this.pi = 0; this.goal = { x, y, stopAtEnd };
   }
   next() {

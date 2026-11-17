@@ -27,7 +27,7 @@ function resize() {
 }
 addEventListener('resize', resize); resize();
 const msg = (t) => { ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = '#1b1430'; ctx.fillRect(0, 0, VIEW_W, view.h); ctx.fillStyle = '#ffe4b0'; ctx.font = '800 22px system-ui'; ctx.textAlign = 'center'; ctx.fillText(t, VIEW_W / 2, view.h / 2); };
-msg('LAUREL / FULTON — loading the real roads…');
+msg((document.title || 'LAUREL / FULTON').toUpperCase() + ' — loading the real roads…');   // any factory city: its own name (play.html <title>)
 const j = async (f) => { const r = await fetch(f); if (!r.ok) throw new Error(f + ' failed to load (' + r.status + ')'); return r.json(); };
 const [G, roster, fleet, AJ, BJ] = await Promise.all([j('data/graph.json'), j('data/roster.json'), j('assets/fleet.json'), j('data/areas.json'), j('data/bumps.json')]);
 const files = new Set(); for (const m of Object.values(fleet)) for (const k of ['color', 'shadow', 'light']) files.add(m[k].file);
@@ -39,7 +39,7 @@ if (Q.get('spawn')) { const [x, y, h] = Q.get('spawn').split(',').map(Number); o
 if (Q.get('model')) opts.model = Q.get('model');
 const sim = new LFSim(W, roster, fleet, opts);
 if (!opts.spawn) {                                       // Ledo Pizza: face out of the lot, toward the way to Brad's
-  const r = W.route(G.anchors.ledo.v, G.anchors.brad.v);
+  const pa = Object.entries(G.anchors), r = pa.length > 1 ? W.route(pa[0][1].v, pa[pa.length - 1][1].v) : null;   // face out of the lot toward the first house
   if (r && r.pts.length > 3) sim.player.h = Math.atan2(r.pts[3][1] - r.pts[0][1], r.pts[3][0] - r.pts[0][0]);
 }
 renderer = new Renderer(ctx, W, ground, fleet, imgs, areas);
@@ -61,7 +61,7 @@ addEventListener('keydown', e => { if (picking && /^Digit[1-9]$/.test(e.code)) {
 function drawPick() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = 'rgba(20,12,32,0.86)'; ctx.fillRect(0, 0, VIEW_W, view.h);
   ctx.textAlign = 'center'; ctx.fillStyle = '#ffd25c'; ctx.font = '900 30px system-ui'; ctx.fillText('PICK YOUR PLAYER', VIEW_W / 2, 70);
-  ctx.fillStyle = '#e8dcc8'; ctx.font = '600 13px system-ui'; ctx.fillText('then rally the crew — meet at Atholton High', VIEW_W / 2, 98);
+  ctx.fillStyle = '#e8dcc8'; ctx.font = '600 13px system-ui'; ctx.fillText('then rally the crew — meet at ' + roster.meetup.name, VIEW_W / 2, 98);
   pickRows().forEach(({ p, x, y, w, h }, i) => {
     ctx.fillStyle = 'rgba(255,241,216,0.94)'; ctx.beginPath(); ctx.roundRect(x, y, w, h, 12); ctx.fill();
     const m = fleet[p.car.sprite], im = imgs[m.color.file], fw = im.width / m.cols, fh = im.height / Math.ceil(m.angles / m.cols);
@@ -80,7 +80,7 @@ function drawMissionHud() {
   // the edge arrow: nearest pickup, then the school
   if (M.complete || M.beat) return;
   const c = sim.player, todo = M.stops.filter(s => !s.done);
-  const tgt = todo.length ? todo.sort((a, b) => Math.hypot(a.x - c.x, a.y - c.y) - Math.hypot(b.x - c.x, b.y - c.y))[0] : { x: M.meet.pos[0], y: M.meet.pos[1], people: [{ name: 'Atholton High' }] };
+  const tgt = todo.length ? todo.sort((a, b) => Math.hypot(a.x - c.x, a.y - c.y) - Math.hypot(b.x - c.x, b.y - c.y))[0] : { x: M.meet.pos[0], y: M.meet.pos[1], people: [{ name: M.meet.name }] };
   const dx = tgt.x - cam.x, dy = tgt.y - cam.y, a = Math.atan2(dy, dx), d = Math.hypot(dx, dy);
   if (d * cam.zoom < VIEW_W * 0.45) return;
   const rx = VIEW_W / 2 + Math.cos(a) * (VIEW_W / 2 - 36), ry = view.h / 2 + Math.sin(a) * (view.h / 2 - 90);
@@ -161,7 +161,7 @@ function drawMap(c) {
   const px = x0 + (c.x * mapK + mapO[0]) * s, py = y0 + (c.y * mapK + mapO[1]) * s;
   ctx.save(); ctx.translate(px, py); ctx.rotate(c.h); ctx.fillStyle = '#20a0ff'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(-7, 6); ctx.lineTo(-4, 0); ctx.lineTo(-7, -6); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
-  ctx.font = '800 16px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffe4b0'; ctx.fillText('LAUREL / FULTON — tap MAP to close', VIEW_W / 2, 40);
+  ctx.font = '800 16px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffe4b0'; ctx.fillText(document.title.toUpperCase() + ' — tap MAP to close', VIEW_W / 2, 40);
 }
 
 // Palm City's control graphics (its hud.js), drawn over the world: the stick while

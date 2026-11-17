@@ -34,7 +34,8 @@ export function startRally(S, roster, id) {
     const cars = ppl.map(p => S.cars.find(c => c.owner === p.id));
     if (k === key(me)) { M.time = 0; for (let i = 0; i < ppl.length; i++) join(S, M, ppl[i], cars[i]); continue; }   // housemates ride from the start
     const x = cars.reduce((a, c) => a + c.x, 0) / cars.length, y = cars.reduce((a, c) => a + c.y, 0) / cars.length;
-    M.stops.push({ x, y, people: ppl, cars, done: false });
+    const r = S.W.roadInfo(x, y, 0), kerb = r.e ? S.nearPt(x, y, r) : { x, y };    // where you pull up: the kerb in front of the driveway
+    M.stops.push({ x, y, kx: kerb.x, ky: kerb.y, people: ppl, cars, done: false });
   }
   M.meet = roster.meetup;
   pushTrail(M, S.player.x, S.player.y, true);
@@ -122,7 +123,7 @@ export function stepRally(S, M, dt) {
     return;
   }
   if (!M.complete) for (const st of M.stops) {
-    if (st.done || Math.hypot(P.x - st.x, P.y - st.y) > PULL_IN_R || Math.abs(P.v) > PULL_IN_V) continue;
+    if (st.done || Math.min(Math.hypot(P.x - st.x, P.y - st.y), Math.hypot(P.x - st.kx, P.y - st.ky)) > PULL_IN_R || Math.abs(P.v) > PULL_IN_V) continue;
     // everyone in the convoy + the people at this house walk to a huddle between the cars and the house
     const hx = (P.x + st.x) / 2, hy = (P.y + st.y) / 2, all = [{ c: P, who: M.me }, ...M.convoy.map(f => ({ c: f.car, who: f.person })), ...st.cars.map((c, i) => ({ c, who: st.people[i] }))];
     const figs = all.map((a, k) => { const ang = k / all.length * Math.PI * 2; return { who: a.who, k, cx: a.c.x, cy: a.c.y, hx: hx + Math.cos(ang) * 22, hy: hy + Math.sin(ang) * 22, x: a.c.x, y: a.c.y, vis: false, dap: 0 }; });
