@@ -28,12 +28,12 @@ addEventListener('resize', resize); resize();
 const msg = (t) => { ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = '#1b1430'; ctx.fillRect(0, 0, VIEW_W, view.h); ctx.fillStyle = '#ffe4b0'; ctx.font = '800 22px system-ui'; ctx.textAlign = 'center'; ctx.fillText(t, VIEW_W / 2, view.h / 2); };
 msg('LAUREL / FULTON — loading the real roads…');
 const j = async (f) => { const r = await fetch(f); if (!r.ok) throw new Error(f + ' failed to load (' + r.status + ')'); return r.json(); };
-const [G, roster, fleet, AJ] = await Promise.all([j('data/graph.json'), j('data/roster.json'), j('assets/fleet.json'), j('data/areas.json')]);
+const [G, roster, fleet, AJ, BJ] = await Promise.all([j('data/graph.json'), j('data/roster.json'), j('assets/fleet.json'), j('data/areas.json'), j('data/bumps.json')]);
 const files = new Set(); for (const m of Object.values(fleet)) for (const k of ['color', 'shadow', 'light']) files.add(m[k].file);
 const imgs = {};
 await Promise.all([...files].map(async (f) => { const im = new Image(); im.src = 'assets/' + f; try { await im.decode(); } catch (e) { throw new Error('sprite failed to decode: assets/' + f); } imgs[f] = im; }));
-const W = new GraphWorld(G), areas = new Areas(AJ, W), ground = new GroundPainter(W, 64, areas);
-const opts = {};
+const W = new GraphWorld(G), areas = new Areas(AJ, W), ground = new GroundPainter(W, 64, areas, BJ.bumps);
+const opts = { bumps: BJ.bumps };
 if (Q.get('spawn')) { const [x, y, h] = Q.get('spawn').split(',').map(Number); opts.spawn = { x, y }; opts.h = h || 0; }
 if (Q.get('model')) opts.model = Q.get('model');
 const sim = new LFSim(W, roster, fleet, opts);

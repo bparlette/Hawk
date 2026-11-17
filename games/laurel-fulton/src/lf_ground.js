@@ -24,7 +24,7 @@ function curlAngle(wx, wy, sc, seed, base) {
 }
 
 export class GroundPainter {
-  constructor(W, cap = 64, areas = null) { this.areas = areas; this.W = W; this.cache = new Map(); this.cap = cap; this.queue = []; this.job = null; this.stats = { sync: 0, sliced: 0, evicted: 0 }; }
+  constructor(W, cap = 64, areas = null, bumps = []) { this.bumps = bumps; this.areas = areas; this.W = W; this.cache = new Map(); this.cap = cap; this.queue = []; this.job = null; this.stats = { sync: 0, sliced: 0, evicted: 0 }; }
   key(cx, cy) { return cx + ',' + cy; }
   has(cx, cy) { return this.cache.has(this.key(cx, cy)); }
   trim() { while (this.cache.size > this.cap) { const k = this.cache.keys().next().value; if (this.job && this.job.k === k) break; this.cache.delete(k); this.stats.evicted++; } }
@@ -139,6 +139,21 @@ export class GroundPainter {
         for (const sd of [-1, 1]) { const o = sd * (hw - 4); g.globalAlpha = 0.5; g.fillStyle = '#efe9da'; g.fillRect(x - uy * o - 0.9, y + ux * o - 0.9, 1.8, 1.8); }
       }, 3);
       yield;
+    }
+    // task L3: speed bumps — a raised asphalt hump across the carriageway with worn yellow chevrons
+    for (const b of this.bumps) {
+      if (b.x < ox - 60 || b.x > ox + CHUNK + 60 || b.y < oy - 60 || b.y > oy + CHUNK + 60) continue;
+      g.save(); g.translate(b.x, b.y); g.rotate(Math.atan2(b.dy, b.dx));
+      const hw = b.w / 2 - 2;
+      g.globalAlpha = 0.5; g.fillStyle = '#1e1a2c'; g.fillRect(2, -hw, 6, hw * 2);                 // the far side's shade
+      g.globalAlpha = 1; g.fillStyle = '#6a7284'; g.fillRect(-6, -hw, 12, hw * 2);                 // the hump
+      g.fillStyle = '#8c93a2'; g.fillRect(-6, -hw, 3, hw * 2);                                     // its lit leading edge
+      g.fillStyle = '#f0c63e';
+      for (let k = -1; k <= 1; k++) {                                                              // three worn chevrons
+        const cy = k * hw * 0.6; g.globalAlpha = 0.85 - Math.abs(k) * 0.12;
+        g.beginPath(); g.moveTo(-5, cy - 7); g.lineTo(3, cy); g.lineTo(-5, cy + 7); g.lineTo(-2, cy + 7); g.lineTo(6, cy); g.lineTo(-2, cy - 7); g.closePath(); g.fill();
+      }
+      g.restore();
     }
     g.restore(); g.globalAlpha = 1;
     return cv;

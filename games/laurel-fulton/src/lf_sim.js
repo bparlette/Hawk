@@ -10,11 +10,17 @@
 const TAU = Math.PI * 2;
 const wrap = (a) => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
 const clamp = (x, a, b) => x < a ? a : x > b ? b : x;
-export const TOP = 290, TURBO_MULT = 1.4;                 // Palm City: 290 u/s top, turbo x1.4
+export const TOP = 290, TURBO_MULT = 1.4;
+// L3 speed bumps: below `launch` u/s (~30 mph) a crossing is a jolt (speed x jolt); above it the car leaves the
+// ground with vz = vz0 + (speed - launch) * k under game gravity g — arc height/length scale with entry speed.
+export const BUMP = { launch: 135, jolt: 0.72, vz0: 55, k: 0.9, g: 620 };                 // Palm City: 290 u/s top, turbo x1.4
 
 export class LFSim {
   constructor(W, roster, fleet, opts = {}) {
     this.W = W; this.roster = roster; this.fleet = fleet; this.time = 0; this.cars = []; this.events = [];
+    // task L3: speed bumps (data/bumps.json), indexed by 256-unit cell for the crossing test
+    this.bumps = opts.bumps || []; this.bumpGrid = new Map();
+    this.bumps.forEach((b, i) => { const k = Math.floor(b.x / 256) * 100003 + Math.floor(b.y / 256); let l = this.bumpGrid.get(k); if (!l) this.bumpGrid.set(k, l = []); l.push(i); });
     // every crew car parked at its owner's house, nose toward the street
     for (const p of roster.people) {
       if (!p.active || !p.car || !p.car.sprite || !fleet[p.car.sprite]) continue;
@@ -52,7 +58,7 @@ export class LFSim {
 
   addCar(model, x, y, h, extra = {}) {
     const m = this.fleet[model];
-    const c = { model, x, y, h, v: 0, layer: 0, len: m.length, wid: m.width, turbo: 0, ...extra };
+    const c = { model, x, y, h, v: 0, layer: 0, z: 0, vz: 0, len: m.length, wid: m.width, turbo: 0, ...extra };
     this.cars.push(c); return c;
   }
 
@@ -85,8 +91,30 @@ export class LFSim {
     this.collide();
   }
 
-  // Palm City driveCar, verbatim numbers
+  // task L3: the bump the car's centre crossed this step (old -> new position), or null
+  bumpCrossed(c, nx, ny) {
+    for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) {
+      for (const bi of this.bumpGrid.get((Math.floor(nx / 256) + i) * 100003 + Math.floor(ny / 256) + j) || []) {
+        const b = this.bumps[bi], s0 = (c.x - b.x) * b.dx + (c.y - b.y) * b.dy, s1 = (nx - b.x) * b.dx + (ny - b.y) * b.dy;
+        if (s0 * s1 > 0 || s0 === s1) continue;
+        if (Math.abs(-(nx - b.x) * b.dy + (ny - b.y) * b.dx) < b.w / 2 + 6) return b;
+      }
+    }
+    return null;
+  }
+
+  // Palm City driveCar, verbatim numbers — plus the L3 airborne state (z, vz)
   driveCar(c, throttle, steer, dt, vmax) {
+    if (c.z > 0) {                                        // airborne: no grip, no throttle — you keep the line you left on
+      c.z += c.vz * dt; c.vz -= BUMP.g * dt; c.airSteer += Math.abs(steer) * dt;
+      c.x += c.dirx * c.v * dt; c.y += c.diry * c.v * dt;
+      if (c.z <= 0) {                                     // touchdown: clean keeps the speed, a yanked wheel costs some
+        c.z = 0; c.vz = 0;
+        const bad = Math.min(1, c.airSteer / 0.25); c.v *= 0.97 - 0.2 * bad;
+        this.events.push({ t: this.time, kind: bad > 0.5 ? 'land_bad' : 'land', model: c.model });
+      }
+      c.surface = this.W.surfaceAt(c.x, c.y, c.layer); return;
+    }
     const accel = throttle > 0 ? (c.v < 0 ? 520 : 240) : throttle < 0 ? (c.v > 0 ? 520 : 200) : 0;
     c.v += throttle * accel * dt;
     if (throttle === 0) c.v *= Math.pow(0.35, dt);
@@ -98,6 +126,13 @@ export class LFSim {
     c.h = wrap(c.h + steer * 2.7 * grip * Math.sign(c.v) * dt);
     c.dirx = Math.cos(c.h); c.diry = Math.sin(c.h);
     const nx = c.x + c.dirx * c.v * dt, ny = c.y + c.diry * c.v * dt;
+    const bump = this.bumps.length && c.layer === 0 ? this.bumpCrossed(c, nx, ny) : null;
+    if (bump) {
+      const sp = Math.abs(c.v);
+      if (sp < BUMP.launch) { c.v *= BUMP.jolt; c.jolt = 0.22; this.events.push({ t: this.time, kind: 'jolt', model: c.model }); }   // crawl over: a jolt that scrubs momentum
+      else { c.vz = BUMP.vz0 + (sp - BUMP.launch) * BUMP.k; c.z = 0.01; c.airSteer = 0; this.events.push({ t: this.time, kind: 'launch', model: c.model, v: sp }); }   // fast: LAUNCH
+    }
+    if (c.jolt > 0) c.jolt -= dt;
     c.layer = this.layerAt(c, nx, ny);
     c.x = nx; c.y = ny;
     c.surface = this.W.surfaceAt(c.x, c.y, c.layer);

@@ -24,7 +24,8 @@ if (MI) {
   const plus = JSON.parse(JSON.stringify(ROSTER)); plus.people.push({ id: 'newbie', name: 'Newbie', street: 'Test', active: true, house: [0, 0], car: { model: 'x', sprite: 'camry_jason' } });
   check(MI.players(plus).some(p => p.id === 'newbie'), 'a person added to the DATA appears in PICK YOUR PLAYER (no code change)');
   // 2 pick
-  const S = new LFSim(W, ROSTER, FLEET, { spawn: { x: 0, y: 0 } });
+  const BUMPS = fs.existsSync(path.join(ROOT, 'data/bumps.json')) ? JSON.parse(fs.readFileSync(path.join(ROOT, 'data/bumps.json'))).bumps : [];   // the game's speed bumps (L3) are part of the world
+  const S = new LFSim(W, ROSTER, FLEET, { spawn: { x: 0, y: 0 }, bumps: BUMPS });
   const M = MI.startRally(S, ROSTER, WHO);
   const me = ROSTER.people.find(p => p.id === WHO);
   check(S.player.owner === WHO && S.player.model === me.car.sprite && Math.hypot(S.player.x - me.house[0], S.player.y - me.house[1]) < 250, `PICK ${me.name}: you start at your house in your own car`, `${S.player.model} ${Math.round(Math.hypot(S.player.x - me.house[0], S.player.y - me.house[1]) / 10)} m from the house`);
