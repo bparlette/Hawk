@@ -12,7 +12,7 @@ out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'shots', 'fleet-g
 def frame(path, k, cols=8, n=32):
     im = Image.open(path).convert('RGBA'); fw = im.width // cols; fh = im.height // ((n + cols - 1) // cols)
     r, c = divmod(k, cols); return im.crop((c * fw, r * fh, (c + 1) * fw, (r + 1) * fh))
-ORDER = ['camaro_brad', 'camaro_clayton', 'cavalier_kosack', 'cavalier_black', 'astro_jimmy', 'astro_billy', 'camry_jason', 'tracer_zack', 'celica_rigg', 'brougham_grant']
+ORDER = ['camaro_brad', 'camaro_clayton', 'cavalier_kosack', 'cavalier_black', 'astro_jimmy', 'astro_billy', 'camry_jason', 'tracer_zack', 'celica_rigg', 'mustang_lamar', 'brougham_grant']
 items = [(n, os.path.join(ROOT, 'assets', F[n]['color']['file'])) for n in ORDER if n in F] + [('palm: sedan', os.path.join(PC, PM['sedan_coral']['color']['file'])), ('palm: van', os.path.join(PC, PM['van_sky']['color']['file']))]
 HEAD = [24, 0, 4]                       # north, east, a diagonal (game heading k * 360/32 deg, 0 = east)
 fw = Image.open(items[0][1]).width // 8

@@ -55,12 +55,15 @@ CARS = {
      bumpers='body', lights=dict(head='#ffd23a', head_shape='slit', tail='fullwidth'), spoiler=True, louvres=True, headcol=(1.0, 0.82, 0.25)),
  # Clayton — green Camaro (same third-gen body, solid green)
  'camaro_clayton': dict(base='camaro_brad', paint='#2f6b3a', paint2=None, headcol=(1.0, 0.9, 0.7), lights=dict(head='#f2efe0', head_shape='slit', tail='fullwidth')),
- # Kosack — ~1989 Chevrolet Cavalier coupe, red: small notchback, short hood, upright trunk
- 'cavalier_kosack': dict(L=4.50, W=1.68, plan=[(0, .80), (.05, .95), (.12, 1), (.92, 1), (1, .9)],
+ # Kosack — 1996 Chevrolet Cavalier SEDAN (third gen, the rounded '95+ shape), red: soft rounded nose and
+ # tail, steeply raked glass both ends, short rounded trunk (owner correction, Nov 17: a 1996, not '89)
+ 'cavalier_kosack': dict(L=4.60, W=1.69, plan=[(0, .68), (.04, .86), (.10, .97), (.18, 1), (.86, 1), (.95, .94), (1, .78)],
+     top=[(0, .62), (.05, .80), (.24, .90), (.28, .94), (.42, 1.36), (.66, 1.37), (.81, 1.02), (.85, 1.0), (1, .84)],
+     belt=0.96, cabin=(.28, .42, .66, .81), gw=(.76, .72), paint='#b81d24', bumpers='body', lights=dict(head='#f2efe0', head_shape='rect', tail='corner')),
+ # the unassigned black Cavalier — the earlier (second-gen, ~1989) boxy coupe, no owner yet
+ 'cavalier_black': dict(L=4.50, W=1.68, plan=[(0, .80), (.05, .95), (.12, 1), (.92, 1), (1, .9)],
      top=[(0, .62), (.05, .80), (.26, .88), (.30, .90), (.42, 1.28), (.66, 1.30), (.80, 0.98), (.84, .96), (1, .80)],
-     belt=0.93, cabin=(.30, .42, .66, .80), gw=(.74, .70), paint='#b81d24', bumpers='black', lights=dict(head='#f2efe0', head_shape='rect', tail='corner')),
- # the unassigned black Cavalier (no owner yet — baked so it is ready, placed nowhere)
- 'cavalier_black': dict(base='cavalier_kosack', paint='#16161a'),
+     belt=0.93, cabin=(.30, .42, .66, .80), gw=(.74, .70), paint='#16161a', bumpers='black', lights=dict(head='#f2efe0', head_shape='rect', tail='corner')),
  # Jimmy — 1996 Chevrolet Astro, silver: boxy van, short sloped nose, upright windshield, long flat roof
  # with roof rails, vertical rear doors. (Underglow + bass rings are the game's FX, not paint.)
  'astro_jimmy': dict(L=4.82, W=1.97, plan=[(0, .84), (.04, .95), (.10, 1), (.98, 1), (1, .96)],
@@ -76,11 +79,17 @@ CARS = {
  'tracer_zack': dict(L=4.17, W=1.65, plan=[(0, .80), (.06, .95), (.14, 1), (.90, 1), (1, .9)],
      top=[(0, .62), (.05, .80), (.22, .86), (.26, .90), (.40, 1.30), (.74, 1.32), (.94, .98), (1, .84)],
      belt=0.94, cabin=(.26, .40, .74, .94), gw=(.76, .72), paint='#3f7a52', bumpers='black', lights=dict(head='#f2efe0', head_shape='rect', tail='corner')),
- # Rigg — first-gen Toyota Celica (TA22, 1970-73 refs), blue: long hood, short fastback-ish roof,
- # coke-bottle hips flaring at the rear wheels, chrome bumpers, BLUE headlights
- 'celica_rigg': dict(L=4.17, W=1.60, plan=[(0, .80), (.06, .93), (.18, .95), (.42, .92), (.66, 1.0), (.86, 1.0), (1, .88)],
-     top=[(0, .62), (.05, .78), (.33, .84), (.37, .88), (.49, 1.24), (.66, 1.25), (.84, .96), (.88, .94), (1, .80)],
-     belt=0.90, cabin=(.37, .49, .66, .84), gw=(.70, .64), paint='#1d4fa8', bumpers='chrome', lights=dict(head='#7fb2ff', head_shape='round', tail='corner'), headcol=(0.45, 0.65, 1.0)),
+ # Rigg — 1987 Toyota Celica GT (fourth gen, ST162), blue: a low sharp WEDGE — the nose comes to a thin flat
+ # edge with the POP-UP headlights hidden flush in it (blue lamps), long raked windshield, liftback glass to a
+ # short tail, smooth flush sides (owner correction, Nov 17: '87 GT, not first-gen)
+ 'celica_rigg': dict(L=4.37, W=1.69, plan=[(0, .62), (.04, .82), (.12, .95), (.22, 1), (.88, 1), (.97, .93), (1, .84)],
+     top=[(0, .50), (.05, .66), (.30, .82), (.35, .86), (.48, 1.24), (.62, 1.25), (.90, .98), (.94, .96), (1, .80)],
+     belt=0.88, cabin=(.35, .48, .62, .90), gw=(.74, .66), paint='#1f4fb0', bumpers='body', lights=dict(head='#2a4a9a', head_shape='popup', tail='fullwidth'), headcol=(0.45, 0.65, 1.0)),
+ # Lamar — 1987 Ford Mustang (Fox body, GT hatchback): aero nose with flush composite lamps, long hood,
+ # fastback hatch glass, louvred quarter windows, rear spoiler. Parked at Atholton HS, ON FIRE (a game FX).
+ 'mustang_lamar': dict(L=4.56, W=1.76, plan=[(0, .64), (.04, .82), (.12, .95), (.22, 1), (.88, 1), (.97, .94), (1, .86)],
+     top=[(0, .58), (.05, .74), (.30, .86), (.35, .90), (.46, 1.28), (.60, 1.29), (.86, 1.0), (.92, .98), (1, .82)],
+     belt=0.92, cabin=(.35, .46, .60, .86), gw=(.74, .66), paint='#c8c8cc', bumpers='body', lights=dict(head='#f2efe0', head_shape='slit', tail='fullwidth'), spoiler=True),
  # Grant — 1989 Cadillac Brougham "USS Mino", maroon: a land yacht — very long, square, long hood with the
  # stand-up wreath ornament, padded VINYL LANDAU roof over the rear half, small formal rear glass, long
  # trunk, chrome bumpers and trim
@@ -181,6 +190,7 @@ def build_car(name):
     hs = c['lights']['head_shape']; zf = z_at(0.7, 0.03) + 0.01; nW = hw(0.04) * 2   # lights sit inside the nose as drawn
     for sx in (-1, 1):
         if hs == 'slit':   objs.append(pb.cube((sx * nW * 0.30, fy - 0.12, zf), (nW * 0.26, 0.08, 0.06), head, bevel=0.02))
+        elif hs == 'popup': objs.append(pb.cube((sx * nW * 0.30, fy - 0.20, zf + 0.004), (nW * 0.24, 0.26, 0.012), M['trim'], bevel=0.01))   # closed pop-up doors: two flush seams
         elif hs == 'round': objs.append(pb.cyl((sx * W * 0.33, fy - 0.10, zf), 0.10, 0.10, head, rot=(math.pi / 2, 0, 0)))
         elif hs == 'quad':
             for k in (0, 1): objs.append(pb.cube((sx * (W * 0.24 + k * 0.24), fy - 0.07, zf), (0.2, 0.08, 0.12), head, bevel=0.02))
