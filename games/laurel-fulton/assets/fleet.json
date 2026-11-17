@@ -1,0 +1,272 @@
+{
+ "astro_billy": {
+  "angles": 32,
+  "color": {
+   "file": "cars/car_astro_billy.webp",
+   "h": 64.0,
+   "ox": -32.0,
+   "oy": -32.0,
+   "w": 64.0
+  },
+  "cols": 8,
+  "length": 48.2,
+  "light": {
+   "file": "cars/car_astro_billy_light.webp",
+   "h": 220.0,
+   "ox": -35.0,
+   "oy": -160.0,
+   "w": 70.0
+  },
+  "shadow": {
+   "file": "cars/car_astro_billy_sh.webp",
+   "h": 96.0,
+   "ox": -36.41,
+   "oy": -51.11,
+   "w": 96.0
+  },
+  "width": 19.7
+ },
+ "astro_jimmy": {
+  "angles": 32,
+  "color": {
+   "file": "cars/car_astro_jimmy.webp",
+   "h": 64.0,
+   "ox": -32.0,
+   "oy": -32.0,
+   "w": 64.0
+  },
+  "cols": 8,
+  "length": 48.2,
+  "light": {
+   "file": "cars/car_astro_jimmy_light.webp",
+   "h": 220.0,
+   "ox": -35.0,
+   "oy": -160.0,
+   "w": 70.0
+  },
+  "shadow": {
+   "file": "cars/car_astro_jimmy_sh.webp",
+   "h": 96.0,
+   "ox": -36.41,
+   "oy": -51.11,
+   "w": 96.0
+  },
+  "width": 19.7
+ },
+ "brougham_grant": {
+  "angles": 32,
+  "color": {
+   "file": "cars/car_brougham_grant.webp",
+   "h": 64.0,
+   "ox": -32.0,
+   "oy": -32.0,
+   "w": 64.0
+  },
+  "cols": 8,
+  "length": 56.2,
+  "light": {
+   "file": "cars/car_brougham_grant_light.webp",
+   "h": 220.0,
+   "ox": -35.0,
+   "oy": -160.0,
+   "w": 70.0
+  },
+  "shadow": {
+   "file": "cars/car_brougham_grant_sh.webp",
+   "h": 96.0,
+   "ox": -36.41,
+   "oy": -51.11,
+   "w": 96.0
+  },
+  "width": 19.5
+ },
+ "camaro_brad": {
+  "angles": 32,
+  "color": {
+   "file": "cars/car_camaro_brad.webp",
+   "h": 64.0,
+   "ox": -32.0,
+   "oy": -32.0,
+   "w": 64.0
+  },
+  "cols": 8,
+  "length": 48.8,
+  "light": {
+   "file": "cars/car_camaro_brad_light.webp",
+   "h": 220.0,
+   "ox": -35.0,
+   "oy": -160.0,
+   "w": 70.0
+  },
+  "shadow": {
+   "file": "cars/car_camaro_brad_sh.webp",
+   "h": 96.0,
+   "ox": -36.41,
+   "oy": -51.11,
+   "w": 96.0
+  },
+  "width": 18.3
+ },
+ "camaro_clayton": {
+  "angles": 32,
+  "color": {
+   "file": "cars/car_camaro_clayton.webp",
+   "h": 64.0,
+   "ox": -32.0,
+   "oy": -32.0,
+   "w": 64.0
+  },
+  "cols": 8,
+  "length": 48.8,
+  "light": {
+   "file": "cars/car_camaro_clayton_light.webp",
+   "h": 220.0,
+   "ox": -35.0,
+   "oy": -160.0,
+   "w": 70.0
+  },
+  "shadow": {
+   "file": "cars/car_camaro_clayton_sh.webp",
+   "h": 96.0,
+   "ox": -36.41,
+   "oy": -51.11,
+   "w": 96.0
+  },
+  "width": 18.3
+ },
+ "camry_jason": {
+  "angles": 32,
+  "color": {
+   "file": "cars/car_camry_jason.webp",
+   "h": 64.0,
+   "ox": -32.0,
+   "oy": -32.0,
+   "w": 64.0
+  },
+  "cols": 8,
+  "length": 45.2,
+  "light": {
+   "file": "cars/car_camry_jason_light.webp",
+   "h": 220.0,
+   "ox": -35.0,
+   "oy": -160.0,
+   "w": 70.0
+  },
+  "shadow": {
+   "file": "cars/car_camry_jason_sh.webp",
+   "h": 96.0,
+   "ox": -36.41,
+   "oy": -51.11,
+   "w": 96.0
+  },
+  "width": 16.9
+ },
+ "cavalier_black": {
+  "angles": 32,
+  "color": {
+   "file": "cars/car_cavalier_black.webp",
+   "h": 64.0,
+   "ox": -32.0,
+   "oy": -32.0,
+   "w": 64.0
+  },
+  "cols": 8,
+  "length": 45.0,
+  "light": {
+   "file": "cars/car_cavalier_black_light.webp",
+   "h": 220.0,
+   "ox": -35.0,
+   "oy": -160.0,
+   "w": 70.0
+  },
+  "shadow": {
+   "file": "cars/car_cavalier_black_sh.webp",
+   "h": 96.0,
+   "ox": -36.41,
+   "oy": -51.11,
+   "w": 96.0
+  },
+  "width": 16.8
+ },
+ "cavalier_kosack": {
+  "angles": 32,
+  "color": {
+   "file": "cars/car_cavalier_kosack.webp",
+   "h": 64.0,
+   "ox": -32.0,
+   "oy": -32.0,
+   "w": 64.0
+  },
+  "cols": 8,
+  "length": 45.0,
+  "light": {
+   "file": "cars/car_cavalier_kosack_light.webp",
+   "h": 220.0,
+   "ox": -35.0,
+   "oy": -160.0,
+   "w": 70.0
+  },
+  "shadow": {
+   "file": "cars/car_cavalier_kosack_sh.webp",
+   "h": 96.0,
+   "ox": -36.41,
+   "oy": -51.11,
+   "w": 96.0
+  },
+  "width": 16.8
+ },
+ "celica_rigg": {
+  "angles": 32,
+  "color": {
+   "file": "cars/car_celica_rigg.webp",
+   "h": 64.0,
+   "ox": -32.0,
+   "oy": -32.0,
+   "w": 64.0
+  },
+  "cols": 8,
+  "length": 41.7,
+  "light": {
+   "file": "cars/car_celica_rigg_light.webp",
+   "h": 220.0,
+   "ox": -35.0,
+   "oy": -160.0,
+   "w": 70.0
+  },
+  "shadow": {
+   "file": "cars/car_celica_rigg_sh.webp",
+   "h": 96.0,
+   "ox": -36.41,
+   "oy": -51.11,
+   "w": 96.0
+  },
+  "width": 16.0
+ },
+ "tracer_zack": {
+  "angles": 32,
+  "color": {
+   "file": "cars/car_tracer_zack.webp",
+   "h": 64.0,
+   "ox": -32.0,
+   "oy": -32.0,
+   "w": 64.0
+  },
+  "cols": 8,
+  "length": 41.7,
+  "light": {
+   "file": "cars/car_tracer_zack_light.webp",
+   "h": 220.0,
+   "ox": -35.0,
+   "oy": -160.0,
+   "w": 70.0
+  },
+  "shadow": {
+   "file": "cars/car_tracer_zack_sh.webp",
+   "h": 96.0,
+   "ox": -36.41,
+   "oy": -51.11,
+   "w": 96.0
+  },
+  "width": 16.5
+ }
+}

@@ -23,7 +23,7 @@ PEOPLE = [
  {'id': 'clayton', 'name': 'Clayton Floyd', 'street': 'Hughes Avenue', 'car': {'model': 'Chevrolet Camaro', 'paint': 'green', 'fx': []}},
  {'id': 'zack',    'name': 'Zack Floyd',    'street': 'Hughes Avenue', 'car': {'model': 'Mercury Tracer', 'paint': 'green', 'fx': []}},
  {'id': 'rigg',    'name': 'Rigg',    'street': 'Mossy Stone Court', 'car': {'model': 'first-gen Toyota Celica (owner: 1969; refs 1970-73)', 'paint': 'blue', 'headlights': 'blue', 'fx': ['bass']}},
- {'id': 'billy',   'name': 'Billy',   'street': 'Sweet Cherry Lane', 'car': None, 'note': "shares Jimmy's house; no car named yet (owner)"},
+ {'id': 'billy',   'name': 'Billy',   'street': 'Sweet Cherry Lane', 'car': {'model': '1994 Chevrolet Astro (first gen)', 'paint': 'teal-blue', 'fx': []}, 'note': "shares Jimmy's house"},
  {'id': 'grant',   'name': 'Grant',   'street': 'Early Bud Way',      'car': {'model': 'Cadillac Brougham "USS Mino"', 'paint': 'maroon', 'fx': []}},
 ]
 P = json.load(open(os.path.join(ROOT, 'data', 'osm_places.json')))['elements']
@@ -33,7 +33,11 @@ prev = {}
 if os.path.exists(os.path.join(ROOT, 'data', 'roster.json')):
     prev = {q['id']: q for q in json.load(open(os.path.join(ROOT, 'data', 'roster.json')))['people']}
 out = []
+SPRITE = {'brad': 'camaro_brad', 'kosack': 'cavalier_kosack', 'jimmy': 'astro_jimmy', 'billy': 'astro_billy', 'jason': 'camry_jason',
+          'clayton': 'camaro_clayton', 'zack': 'tracer_zack', 'rigg': 'celica_rigg', 'grant': 'brougham_grant'}   # assets/fleet.json (tools/bake_fleet.py)
 for p in PEOPLE:
+    p = dict(p)
+    if p.get('car') and p['id'] in SPRITE: p['car'] = dict(p['car'], sprite=SPRITE[p['id']])
     e = dict(p); num = (book.get(p['id']) or [None])[0]
     hit = next((q for q in P if num and q['tags'].get('addr:housenumber') == num and q['tags'].get('addr:street') == p['street']), None)
     if hit: e.update(active=True, lat=round(hit['lat'], 6), lon=round(hit['lon'], 6), house=list(proj(hit['lat'], hit['lon'])), osm=f"{hit['type']}/{hit['id']}")
@@ -43,7 +47,7 @@ for p in PEOPLE:
     out.append(e)
 school = next(q for q in P if q['tags'].get('name') == 'Atholton High School' and q['tags'].get('amenity') == 'school')
 roster = {'_doc': 'The ONE roster (task L2). Written by tools/roster_build.py from OSM address points. house = world units (10/m, x east, y south).',
-          'people': out, 'unassigned_cars': [{'model': 'Chevrolet Cavalier', 'paint': 'black', 'note': 'no owner yet - no house, no design work until the owner names whose it is'}],
+          'people': out, 'unassigned_cars': [{'model': 'Chevrolet Cavalier', 'paint': 'black', 'sprite': 'cavalier_black', 'note': 'no owner yet - no house, no design work until the owner names whose it is'}],
           'meetup': {'name': 'Atholton High School', 'lat': round(school['lat'], 6), 'lon': round(school['lon'], 6), 'pos': list(proj(school['lat'], school['lon']))}}
 json.dump(roster, open(os.path.join(ROOT, 'data', 'roster.json'), 'w'), indent=1)
 for e in out: print(f"{e['id']:8s} {'ACTIVE ' if e['active'] else 'pending'} {e['street']:20s} {e.get('house', '')}")
