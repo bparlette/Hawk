@@ -44,7 +44,7 @@
   <canvas id="draw"></canvas>
   <div id="wipe"></div>
   <div id="replaytag"><span class="dot"></span><span id="replaytagtext">INSTANT REPLAY</span></div>
-  <div id="hint">✎ Draw on it — circle the crime</div>
+  <div id="hint">✎ Draw on it — circle the crime · pinch to zoom · tap screen for buttons</div>
 
   <div class="topbar">
     <div class="title">Telestrator</div>
@@ -78,6 +78,11 @@ ClipImport.attach({
     videoEl: document.getElementById('srcvideo'),
     startCamera: function (v) { window.ARShared.initCamera(v, function () {}); }, canvas: document.getElementById('view')
   });
+</script>
+<script src="clean-view.js"></script>
+<script>
+/* ---- clean view + pinch zoom (owner feedback fix 2026-11-16) ---- */
+CleanView.init({ mode: 'stage', noPan: '#draw, #view' });
 </script>
 </body>
 </html>

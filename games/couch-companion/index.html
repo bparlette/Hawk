@@ -65,5 +65,10 @@ ClipImport.attach({
     startCamera: function (v) { return window.AR.startCamera(v); }
   });
 </script>
+<script src="clean-view.js"></script>
+<script>
+/* ---- clean view + pinch zoom (owner feedback fix 2026-11-16) ---- */
+CleanView.init({ pinSelector: '#placeBtn.on' });
+</script>
 </body>
 </html>

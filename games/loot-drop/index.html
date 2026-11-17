@@ -249,5 +249,10 @@ ClipImport.attach({
     startCamera: function (v) { return window.AR.startCamera(); }, canvas: document.getElementById('fx')
   });
 </script>
+<script src="clean-view.js"></script>
+<script>
+/* ---- clean view + pinch zoom (owner feedback fix 2026-11-16) ---- */
+CleanView.init({});
+</script>
 </body>
 </html>
