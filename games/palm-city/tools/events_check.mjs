@@ -32,7 +32,7 @@ const startAt = (s, c, kind) => { put(c, ...EVENTS[kind].site); run(s, 0.05); pr
 // ---- registration + start
 {
   const { s, c } = fresh();
-  check(s.eventSites.length === 3 && s.eventSites.map(e => e.kind).sort().join() === 'spot,valet,wreck', 'all three ring events register in sim.eventSites (map.js lists them)');
+  check(s.eventSites.length === 4 && s.eventSites.map(e => e.kind).sort().join() === 'openroad,spot,valet,wreck', 'all four ring events register in sim.eventSites (map.js lists them)');
   put(c, 700, 800); check(jobButton(s) === null, 'away from a beacon there is no event button');
   put(c, ...EVENTS.wreck.site, 0, 0);
   check(jobButton(s) && jobButton(s).label === 'START WRECK IT!', 'at the Plaza beacon the button reads START WRECK IT!', jobButton(s) && jobButton(s).label);

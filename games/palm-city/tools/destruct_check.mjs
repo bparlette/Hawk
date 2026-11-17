@@ -58,8 +58,8 @@ const clearCops = (s) => { s.cars = s.cars.filter(c => c.kind !== 'police'); };
 {
   // two cars meet: both are damaged; the lighter one more
   const s = fresh(); clearCops(s);
-  const a = s.addCar(700, 1450, 0, 'sedan_coral', 'player'); s.player.mode = 'car'; s.player.car = a; s.player.ped.hidden = true; a.v = 240;
-  const b = s.addCar(780, 1450, 0, 'sedan_plum', null, { parked: true });
+  const a = s.addCar(700, 1350, 0, 'sedan_coral', 'player'); s.player.mode = 'car'; s.player.car = a; s.player.ped.hidden = true; a.v = 240;
+  const b = s.addCar(780, 1350, 0, 'sedan_plum', null, { parked: true });
   run(s, 0.6, { ...none, keys: { up: true } });
   check('a car crash damages both cars', a.dmg > 0.05 && b.dmg > 0.05, `player ${a.dmg.toFixed(2)} parked ${b.dmg.toFixed(2)}`);
   check('the parked car (lighter, not the hero) takes more', b.dmg > a.dmg);
