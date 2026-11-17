@@ -124,37 +124,60 @@ newRun();
 const cam = { x: sim.player.ped.x, y: sim.player.ped.y, zoom: 1 };
 const fixedCam = Q.get('cam') ? Q.get('cam').split(',').map(Number) : null;
 
-// DYNAMIC CAMERA ZOOM (owner spec, Nov 17): linger in one area on foot — fighting, exploring —
-// and the camera eases IN to 1.5x, slowly; set off further/faster and it eases back OUT to 1x,
-// faster than it came in. "Local" is decided by net displacement: a rolling 2.5 s window under
-// 120 u settles you in (anchored where you settled; stray 250 u from the anchor and you're
-// travelling again), and a sustained >120 u/s for 0.5 s trips travel too — the 120/250 gap is
-// the hysteresis, so the zoom never hunts at the boundary. Foot and board only: a car, a boat,
-// the heli, the Open Road chase cam and the siege interior keep their own framing, and the
-// factor quietly resets to 1 while you're in any of them.
-const dyn = { f: 1, local: false, anchor: null, trail: [], v: 0, fastT: 0, lx: 0, ly: 0, init: false };
-const DYN_IN = 1.5, DYN_WIN = 2.5, DYN_ENTER = 120, DYN_EXIT = 250, DYN_V = 120, DYN_TAU_IN = 2.75, DYN_TAU_OUT = 0.35;
+// DYNAMIC CAMERA ZOOM (owner spec, Nov 17; REVISED the same day on her verdict — "I like the
+// zoom but needs to zoom out in more scenarios"). The rule is about CONSTANT movement, not
+// distance travelled:
+//   - Zoom IN to 1.5x whenever you are NOT walking constantly: standing still, fighting in
+//     place, or stop-start exploring (walk 1 s, stop; walk 2 s, stop) all count as local.
+//   - One unbroken movement streak of 3 s = travelling: back OUT to 1x, promptly (the out
+//     ease is ~8x faster than the in ease, as in v1).
+//   - Threats: while you're wanted and any cop / the police chopper is still outside the
+//     standard 1x frame, the camera widens to keep it in view — never past 0.75x — so you
+//     see them coming. Once every threat is inside the standard frame the movement rule takes
+//     over again: stand your ground and the camera eases back in as they close. Engage and
+//     release sit at different thresholds (zRaw 0.97 / 1.10) with a 0.8 s minimum hold, so
+//     the target never flaps.
+// "Moving" is the smoothed focus speed over DYN_MOV (20 u/s: a real walk is 74, a palm-bump
+// crawl ~26, a stop 0); any dip under it zeroes the streak. Foot and board only: a car, a
+// boat, the heli, the Open Road chase cam and the siege interior keep their own framing, and
+// the factor quietly resets to 1 while you're in any of them.
+const dyn = { f: 1, local: true, streak: 0, threat: false, threatT: 0, target: 1, zraw: 1, v: 0, lx: 0, ly: 0, init: false };
+const DYN_IN = 1.5, DYN_STREAK = 3, DYN_MOV = 20, DYN_TAU_IN = 2.75, DYN_TAU_OUT = 0.35;
+const DYN_TH_MIN = 0.75, DYN_TH_MARGIN = 40, DYN_TH_ON = 0.97, DYN_TH_OFF = 1.10, DYN_TH_HOLD = 0.8;
 function dynZoomUpdate(dt) {
   if (!(dt > 0)) return;   // frame 0 can arrive with a negative dt (rAF timestamp vs the long module block): the exponentials must never see it
   const f = sim.focus();
   if (!dyn.init) { dyn.lx = f.x; dyn.ly = f.y; dyn.init = true; }
-  if (dt > 0) { const iv = Math.hypot(f.x - dyn.lx, f.y - dyn.ly) / dt; dyn.v += (iv - dyn.v) * Math.min(1, dt * 8); }
+  const iv = Math.hypot(f.x - dyn.lx, f.y - dyn.ly) / dt;
+  dyn.v += (iv - dyn.v) * Math.min(1, dt * 8);
   dyn.lx = f.x; dyn.ly = f.y;
   const eligible = !fixedCam && !sim.siege && (sim.player.mode === 'foot' || sim.player.mode === 'board');
   let target = 1;
   if (eligible) {
-    dyn.trail.push({ t: simTime, x: f.x, y: f.y });
-    while (dyn.trail.length > 2 && dyn.trail[0].t < simTime - DYN_WIN) dyn.trail.shift();
-    if (dyn.trail.length > 400) dyn.trail.shift();
-    if (dyn.local) {
-      if (Math.hypot(f.x - dyn.anchor.x, f.y - dyn.anchor.y) > DYN_EXIT) dyn.local = false;
-      else if (dyn.v > DYN_V) { dyn.fastT += dt; if (dyn.fastT > 0.5) dyn.local = false; } else dyn.fastT = 0;
-    } else {
-      const o = dyn.trail[0];
-      if (o && Math.hypot(f.x - o.x, f.y - o.y) < DYN_ENTER && dyn.v < DYN_V) { dyn.local = true; dyn.anchor = { x: f.x, y: f.y }; dyn.fastT = 0; }
-    }
+    // the constant-movement streak: any real stop zeroes it, 3 unbroken seconds trips travel
+    if (dyn.v > DYN_MOV) dyn.streak += dt; else dyn.streak = 0;
+    dyn.local = dyn.streak < DYN_STREAK;
     target = dyn.local ? DYN_IN : 1;
-  } else { dyn.local = false; dyn.trail.length = 0; dyn.fastT = 0; }
+    // threat awareness: widen while ANY active cop / the chopper is still outside the 1x
+    // frame. The binding threat is the one needing the widest zoom (the min zRaw — the zoom
+    // at which that threat exactly fits the standard frame, plus a margin of road), so a
+    // second inbound threat keeps the camera wide even after the first is on top of you.
+    let zRaw = Infinity;
+    if (sim.stars > 0 && !sim.busted) {
+      const zOf = (o) => Math.min(VIEW_W / 2 / (Math.abs(o.x - f.x) + DYN_TH_MARGIN), view.h / 2 / (Math.abs(o.y - f.y) + DYN_TH_MARGIN));
+      for (const c of sim.cars) if (c.driver === 'police') zRaw = Math.min(zRaw, zOf(c));
+      const ch = sim.chopper;
+      if (ch && !ch.leaving) zRaw = Math.min(zRaw, zOf(ch));
+    }
+    dyn.zraw = zRaw === Infinity ? 1 : Math.min(9, zRaw);
+    if (zRaw < Infinity) {
+      dyn.threatT += dt;
+      if (!dyn.threat && zRaw < DYN_TH_ON) { dyn.threat = true; dyn.threatT = 0; }
+      else if (dyn.threat && zRaw > DYN_TH_OFF && dyn.threatT > DYN_TH_HOLD) { dyn.threat = false; dyn.threatT = 0; }
+      if (dyn.threat) target = Math.min(target, Math.max(DYN_TH_MIN, Math.min(1, zRaw)));
+    } else if (dyn.threat) { dyn.threat = false; dyn.threatT = 0; }
+  } else { dyn.streak = 0; dyn.local = true; dyn.threat = false; dyn.threatT = 0; }
+  dyn.target = target;
   const tau = target > dyn.f ? DYN_TAU_IN : DYN_TAU_OUT;
   dyn.f += (target - dyn.f) * (1 - Math.exp(-dt / tau));
 }
