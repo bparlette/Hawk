@@ -198,7 +198,7 @@
    "w": 64.0
   },
   "cols": 8,
-  "length": 45.0,
+  "length": 46.0,
   "light": {
    "file": "cars/car_cavalier_kosack_light.webp",
    "h": 220.0,
@@ -213,7 +213,7 @@
    "oy": -51.11,
    "w": 96.0
   },
-  "width": 16.8
+  "width": 16.9
  },
  "celica_rigg": {
   "angles": 32,
@@ -225,7 +225,7 @@
    "w": 64.0
   },
   "cols": 8,
-  "length": 41.7,
+  "length": 43.7,
   "light": {
    "file": "cars/car_celica_rigg_light.webp",
    "h": 220.0,
@@ -240,7 +240,34 @@
    "oy": -51.11,
    "w": 96.0
   },
-  "width": 16.0
+  "width": 16.9
+ },
+ "mustang_lamar": {
+  "angles": 32,
+  "color": {
+   "file": "cars/car_mustang_lamar.webp",
+   "h": 64.0,
+   "ox": -32.0,
+   "oy": -32.0,
+   "w": 64.0
+  },
+  "cols": 8,
+  "length": 45.6,
+  "light": {
+   "file": "cars/car_mustang_lamar_light.webp",
+   "h": 220.0,
+   "ox": -35.0,
+   "oy": -160.0,
+   "w": 70.0
+  },
+  "shadow": {
+   "file": "cars/car_mustang_lamar_sh.webp",
+   "h": 96.0,
+   "ox": -36.41,
+   "oy": -51.11,
+   "w": 96.0
+  },
+  "width": 17.6
  },
  "tracer_zack": {
   "angles": 32,

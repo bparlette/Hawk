@@ -28,7 +28,7 @@
    "name": "Kosack",
    "street": "Derby Drive",
    "car": {
-    "model": "~1989 Chevrolet Cavalier",
+    "model": "1996 Chevrolet Cavalier sedan (third gen)",
     "paint": "red",
     "fx": [],
     "sprite": "cavalier_kosack"
@@ -128,7 +128,7 @@
    "name": "Rigg",
    "street": "Mossy Stone Court",
    "car": {
-    "model": "first-gen Toyota Celica (owner: 1969; refs 1970-73)",
+    "model": "1987 Toyota Celica GT (fourth gen, pop-up headlights)",
     "paint": "blue",
     "headlights": "blue",
     "fx": [
@@ -164,6 +164,29 @@
     11347
    ],
    "osm": "way/1235085589"
+  },
+  {
+   "id": "lamar",
+   "name": "Lamar",
+   "street": null,
+   "at": "Atholton High School",
+   "car": {
+    "model": "1987 Ford Mustang GT hatchback (Fox body)",
+    "paint": "unstated (silver placeholder)",
+    "fx": [
+     "on_fire"
+    ],
+    "sprite": "mustang_lamar"
+   },
+   "note": "no house on the map; his car lives at the school, burning (the finale set piece)",
+   "active": true,
+   "lat": 39.189257,
+   "lon": -76.880901,
+   "house": [
+    11307,
+    -39526
+   ],
+   "osm": "way/147254302"
   },
   {
    "id": "grant",
