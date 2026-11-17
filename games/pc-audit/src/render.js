@@ -1336,14 +1336,25 @@ export class Renderer {
     for (let k = 0; k < 32; k++) {
       const sx = (k % cols) * cw, sy = Math.floor(k / cols) * ch;
       cg.clearRect(0, 0, cw, ch); cg.drawImage(src, sx, sy, cw, ch, 0, 0, cw, ch);
+      const th = k / 32 * Math.PI * 2, cx = cw / 2, cy = ch / 2;
       cg.globalCompositeOperation = 'source-atop';
-      cg.fillStyle = 'rgba(244,242,238,0.62)'; cg.fillRect(0, 0, cw, ch);
-      const th = k / 32 * Math.PI * 2, ca = Math.cos(th), sa = Math.sin(th), cx = cw / 2, cy = ch / 2;
-      cg.strokeStyle = 'rgba(216,52,44,0.95)'; cg.lineCap = 'round'; cg.lineWidth = cw * 0.075;
-      cg.beginPath(); cg.moveTo(cx - ca * cw * 0.30, cy - sa * cw * 0.30); cg.lineTo(cx + ca * cw * 0.34, cy + sa * cw * 0.34); cg.stroke();
-      cg.fillStyle = '#d8342c';
-      const px = cx - ca * cw * 0.16, py = cy - sa * cw * 0.16, s = cw * 0.055;
-      cg.fillRect(px - s * 1.7, py - s * 0.55, s * 3.4, s * 1.1); cg.fillRect(px - s * 0.55, py - s * 1.7, s * 1.1, s * 3.4);
+      cg.fillStyle = 'rgba(244,242,238,0.60)'; cg.fillRect(0, 0, cw, ch);   // the white belly
+      cg.save(); cg.translate(cx, cy); cg.rotate(th);   // +x is the nose in every cell
+      cg.fillStyle = 'rgba(22,24,34,0.85)';              // the cockpit glass stays dark
+      cg.beginPath(); cg.ellipse(cw * 0.40, 0, cw * 0.085, cw * 0.105, 0, 0, 7); cg.fill();
+      cg.fillStyle = 'rgba(207,32,40,0.92)';             // the red deck
+      cg.beginPath(); cg.ellipse(-cw * 0.03, 0, cw * 0.36, cw * 0.185, 0, 0, 7); cg.fill();
+      cg.fillRect(-cw * 0.52, -cw * 0.045, cw * 0.24, cw * 0.09);   // the tail boom
+      cg.beginPath(); cg.ellipse(-cw * 0.44, 0, cw * 0.085, cw * 0.13, 0, 0, 7); cg.fill();   // the fin
+      cg.fillStyle = 'rgba(246,243,238,0.95)';           // the cheatline slashes
+      for (const off of [-0.06, -0.20]) {
+        cg.save(); cg.translate(off * cw, 0); cg.rotate(0.9);
+        cg.fillRect(-cw * 0.035, -cw * 0.30, cw * 0.07, cw * 0.60); cg.restore();
+      }
+      cg.fillStyle = 'rgba(247,243,234,0.97)';           // a white cross on the red deck
+      cg.fillRect(cw * 0.115, -cw * 0.028, cw * 0.15, cw * 0.056);
+      cg.fillRect(cw * 0.162, -cw * 0.075, cw * 0.056, cw * 0.15);
+      cg.restore();
       cg.globalCompositeOperation = 'source-over';
       g.drawImage(cell, sx, sy);
     }
