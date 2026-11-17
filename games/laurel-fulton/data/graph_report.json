@@ -1,0 +1,264 @@
+{
+ "bbox": [
+  39.105,
+  -76.942,
+  39.202,
+  -76.846
+ ],
+ "units_per_m": 10.0,
+ "ways_drivable": 6419,
+ "vertices": 10220,
+ "edges": 12435,
+ "km_by_class": {
+  "service": 397.6,
+  "residential": 274.9,
+  "tertiary": 72.6,
+  "motorway": 33.6,
+  "primary": 31.6,
+  "motorway_link": 28.3,
+  "secondary": 25.4,
+  "trunk": 17.8,
+  "trunk_link": 10.7,
+  "unclassified": 9.6,
+  "primary_link": 2.5,
+  "secondary_link": 1.6,
+  "tertiary_link": 0.3
+ },
+ "km_total": 906.7,
+ "extent_m": [
+  8287,
+  10722
+ ],
+ "components": [
+  9887,
+  31,
+  27,
+  26,
+  25,
+  20
+ ],
+ "largest_component_share": 0.967,
+ "dead_ends_residential": 347,
+ "oneway_edges": 1332,
+ "short_edges_lt3m": 49,
+ "crossings_without_shared_node": 58,
+ "crossings_grade_separated_tagged": 58,
+ "crossings_untagged": 0,
+ "untagged_examples": [],
+ "graded_examples": [
+  {
+   "at": [
+    -30589,
+    46393
+   ],
+   "a": "Columbia Pike (bridge)",
+   "b": "Sandy Spring Road"
+  },
+  {
+   "at": [
+    -30512,
+    46168
+   ],
+   "a": "Columbia Pike (bridge)",
+   "b": "Sandy Spring Road"
+  },
+  {
+   "at": [
+    -27307,
+    34575
+   ],
+   "a": "Columbia Pike",
+   "b": "Dustin Road (bridge)"
+  },
+  {
+   "at": [
+    -27541,
+    34447
+   ],
+   "a": "Columbia Pike",
+   "b": "Dustin Road (bridge)"
+  },
+  {
+   "at": [
+    -30242,
+    46161
+   ],
+   "a": "Columbia Pike (bridge)",
+   "b": "Sandy Spring Road"
+  },
+  {
+   "at": [
+    -30319,
+    46383
+   ],
+   "a": "Columbia Pike (bridge)",
+   "b": "Sandy Spring Road"
+  },
+  {
+   "at": [
+    13980,
+    45953
+   ],
+   "a": "Brooklyn Bridge Road (bridge)",
+   "b": "motorway"
+  },
+  {
+   "at": [
+    23006,
+    36125
+   ],
+   "a": "Stansfield Road",
+   "b": "motorway (bridge)"
+  }
+ ],
+ "anchors": {
+  "ledo": {
+   "x": -25906,
+   "y": 1416,
+   "v": 2415,
+   "snap_m": 12.1
+  },
+  "atholton_hs": {
+   "x": 11307,
+   "y": -39526,
+   "v": 8954,
+   "snap_m": 42.2
+  },
+  "reservoir_hs": {
+   "x": -16748,
+   "y": 1620,
+   "v": 3054,
+   "snap_m": 73.4
+  },
+  "brad": {
+   "x": 23997,
+   "y": 36148,
+   "v": 1045,
+   "snap_m": 31.2
+  }
+ },
+ "route": {
+  "from": "ledo",
+  "to": "brad",
+  "km": 7.22,
+  "roads": [
+   [
+    "service",
+    39
+   ],
+   [
+    "Scaggsville Road",
+    159
+   ],
+   [
+    "primary",
+    957
+   ],
+   [
+    "Scaggsville Road",
+    147
+   ],
+   [
+    "primary",
+    1992
+   ],
+   [
+    "Crest Road",
+    253
+   ],
+   [
+    "Scaggsville Road",
+    1159
+   ],
+   [
+    "Harding Road",
+    300
+   ],
+   [
+    "Stansfield Road",
+    2210
+   ]
+  ],
+  "edges": [
+   2904,
+   2755,
+   2754,
+   3033,
+   3032,
+   3031,
+   3030,
+   2891,
+   2890,
+   2889,
+   2888,
+   4147,
+   4199,
+   4146,
+   3408,
+   4145,
+   3443,
+   3442,
+   3441,
+   3254,
+   3936,
+   3939,
+   3876,
+   3943,
+   3247,
+   3406,
+   3221,
+   3874,
+   4156,
+   3405,
+   3875,
+   3269,
+   4093,
+   3438,
+   3273,
+   3272,
+   3402,
+   3403,
+   3404,
+   4052,
+   4645,
+   4465,
+   4555,
+   4556,
+   4557,
+   4464,
+   4463,
+   4462,
+   4461,
+   4460,
+   4459,
+   4458,
+   4457,
+   4456,
+   4455,
+   4454,
+   4453,
+   4452,
+   4451,
+   4450,
+   4449,
+   4448,
+   4447,
+   4733,
+   4734,
+   4376,
+   1285,
+   1284,
+   1283,
+   1282,
+   1281,
+   1280,
+   1279,
+   1278,
+   1277,
+   1276,
+   1275,
+   1274,
+   1273
+  ]
+ }
+}
