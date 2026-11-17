@@ -4,15 +4,17 @@
 import { mulberry32 } from './world.js';
 import { enterSiege, stepSiege } from './siege.js';
 import { initPressure, stepPressure } from './pressure.js';
+import { initHeli, stepHeli, stepHeliState, nearHeli, stealOrBoard } from './heli.js';
 import { initJobs, stepJobs } from './jobs.js';
 import { stepTurbo, TURBO } from './controls.js';
 import { initSkid, layMarks } from './skid.js';
-import { chaseArmed, startChase } from './chase.js';
+import { chaseArmed, startChase, boardRack } from './chase.js';
 import { initActivities, jump } from './activities.js';
-import { initEvents, stepEvents } from './events.js';
+import { initEvents, stepEvents, startEvent } from './events.js';
 import { initSkate, stepBoard, stepCombo, nearBoard, mount, boardSpeed } from './skate.js';
 import { initWatercraft, stepCraft, stepWaterFx, nearCraft, mountCraft } from './watercraft.js';
 import { initDestruct, stepDestruct, punchWorld, carState, carImpact, carsCollide, hitThing, palmImpact, initProps, propImpact } from './destruct.js';
+import { openRoadArmed, stepRouteCar } from './openroad.js';
 
 const TAU = Math.PI * 2;
 const wrap = (a) => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
@@ -60,6 +62,7 @@ export class Sim {
     for (const p of world.L.props) this.obst.push({ x: p.x, y: p.y, r: p.type === 'fountain' ? 30 : 12, kind: p.type });
     initProps(this);                                     // benches, lamps, lifeguard towers can be broken (destruct.js)
     initPressure(this);                                  // the chopper, roadblocks, spikes (pressure.js)
+    initHeli(this);                                      // the hospital helicopter + its walkable roof (heli.js)
     initJobs(this);                                      // job vehicles + the one job slot (jobs.js)
     initEvents(this);                                    // WRECK IT! + VALET sites and the one event slot (events.js)
     initActivities(this);                    // the registry the markers, map and HELP read
@@ -212,7 +215,9 @@ export class Sim {
     }
     else if (P.mode === 'water') stepCraft(this, dt, input);
     else if (P.mode === 'siege') stepSiege(this, dt, input);
+    else if (P.mode === 'air') stepHeli(this, dt, input);
     else this.stepPlayerCar(dt, input);
+    stepHeliState(this, dt);
     stepJobs(this, dt, input);
     stepEvents(this, dt);
     stepCombo(this, dt);
@@ -224,6 +229,7 @@ export class Sim {
     for (const c of this.cars) {
       if (c.driver === 'ai') this.stepTraffic(c, dt);
       else if (c.driver === 'police') this.stepPolice(c, dt);
+      else if (c.driver === 'route') stepRouteCar(this, c, dt);   // OPEN ROAD shell traffic (openroad.js)
       else if (c.driver === null) { c.v *= Math.pow(0.05, dt); this.moveCar(c, dt); }
     }
     this.carCollisions(dt);
@@ -284,9 +290,13 @@ export class Sim {
     } else p.pose = 1;
     // the fight button: a punch with a short lunge
     if (P0.punchT > 0) { P0.punchT -= dt; if (P0.punchT > 0.14) this.walkMove(p, Math.cos(p.h) * 100 * dt, Math.sin(p.h) * 100 * dt); }
+    if (inp.punch && openRoadArmed(this)) { startEvent(this, 'openroad'); return; }   // A in the start circle: into the waiting grid car, countdown on
     if (inp.punch && !(P0.punchCd > 0)) this.punch();
     if (inp.action && this.nearMotelDoor()) { enterSiege(this); return; }
     if (inp.action) {
+      boardRack(this);   // INSTANT-START: recall a stray board to the pier rack before the mount test below
+      if (nearHeli(this)) { stealOrBoard(this); return; }   // the hospital helicopter (heli.js)
+      if (this.player.roof) return;                          // nothing else to use up on the roof
       // the board wins if it's right at your feet and nearer than any car; a moored craft at
       // the pier wins over both — you came to the dock for it
       const p2 = this.player.ped, b = this.board;
@@ -389,7 +399,7 @@ export class Sim {
   // pressed against this step (or null) so callers can react.
   walkMove(p, dx, dy) {
     const W = this.W;
-    const ok = (x, y) => this.canStand(x, y);
+    const ok = (x, y) => this.canStand(x, y) || (p === this.player.ped && this.roofStand && this.roofStand(x, y));   // the player may stand on the hospital roof (heli.js)
     if (ok(p.x + dx, p.y + dy)) { p.x += dx; p.y += dy; }
     else if (ok(p.x + dx, p.y)) p.x += dx;
     else if (ok(p.x, p.y + dy)) p.y += dy;
@@ -549,6 +559,8 @@ export class Sim {
     for (const [u, v] of [[c.len / 2, c.wid / 2], [c.len / 2, -c.wid / 2], [-c.len / 2, c.wid / 2], [-c.len / 2, -c.wid / 2], [c.len / 2, 0]]) {
       const px = x + ca * u - sa * v, py = y + sa * u + ca * v;
       if (!W.isDrivable(px, py)) return true;
+      const H = this.heli;   // a helicopter parked on the ground is a solid (heli.js)
+      if (H && H.state === 'parked' && !H.onRoof && (px - H.x) ** 2 + (py - H.y) ** 2 < 27 * 27) return true;
       for (const o of this.obst) if ((px - o.x) ** 2 + (py - o.y) ** 2 < o.r * o.r) { this.hitObst = o; return true; }
       const tr = W.hitTrunk(px, py, 1);
       if (tr) { this.hitTree = tr; return true; }
@@ -665,7 +677,7 @@ export class Sim {
       const x = c.x + (tx - c.x) * i / 8, y = c.y + (ty - c.y) * i / 8;
       if (!W.isDrivable(x, y)) { los = false; break; }
     }
-    if (!los || d > 420) {
+    if ((!los || d > 420) && !(W.shell && c.x < 0 && f.x < 0)) {   // OPEN ROAD: in the shell the loop is another world — hunt the driver, not the loop
       this.syncS(c, 0, 90);
       const ps = W.loopNearestFast ? W.loopNearestFast(f.x, f.y) : this.playerS;
       let ds = (ps - c.s) % W.loopPath.len;
@@ -710,7 +722,7 @@ export class Sim {
     if (this.stars > 0 && !this.busted && !this.legalJob()) for (const c of this.cars) if (c.patrol && c.driver === 'ai' && dist(c, f) < 650) c.driver = 'police';        // 7C: wider re-acquire
     const police = this.cars.filter(c => c.driver === 'police');
     const want = this.stars > 0 && !this.busted && !this.legalJob() ? Math.min(4, this.stars + 1) : 0;
-    if (police.length < want && this.rnd() < dt * 0.6) {
+    if (police.length < want && !(this.event && this.event.kind === 'openroad') && this.rnd() < dt * 0.6) {   // OPEN ROAD runs exactly its own two-car pursuit: no fresh spawns off the loop
       // police arrive from behind: spawn back along the loop, opposite the way the player is heading
       let back = this.rnd() < 0.5 ? -1 : 1;
       if (this.player.mode === 'car') {
@@ -755,6 +767,7 @@ export class Sim {
       pinned = still && (police.some(c => dist(c, p) < 46 && Math.abs(c.v) < 50) ||
                this.peds.some(o => o.mode === 'cop' && dist(o, p) < 14));
     }
+    if (this.player.mode === 'air' || this.player.roof) pinned = false;   // unreachable: airborne, or up on the hospital roof
     // fill: 2.8 s standing in a cop's grip (car), 1.5 s on foot; drain at 3x the fill rate once you are moving
     this.bustT = pinned ? this.bustT + dt : Math.max(0, this.bustT - dt * 3);
     if (this.bustT > (this.player.mode === 'car' ? 2.8 : 1.5)) {
@@ -773,11 +786,16 @@ export class Sim {
       P.mode = 'foot'; P.car = null;
     }
     if (P.mode === 'board') { P.mode = 'foot'; this.board.ridden = false; this.combo = null; }
-    if (P.mode === 'water') {               // busted on the water: back on foot, the craft stays moored-side, the boat goes home
+    if (P.mode === 'water') {               // busted on the water: back on foot, the craft goes home to its mooring
       P.mode = 'foot';
-      if (this.water.ride) { this.water.ride.ridden = false; this.water.ride = null; }
+      if (this.water.ride) {
+        const cr = this.water.ride; cr.ridden = false;
+        if (cr.home) { cr.x = cr.home.x; cr.y = cr.home.y; cr.h = cr.home.h; cr.vx = 0; cr.vy = 0; cr.farT = 0; }   // INSTANT-START: a bust never strands the craft mid-bay
+        this.water.ride = null;
+      }
       this.water.cop = null;
     }
+    if (P.mode === 'air') { P.mode = 'foot'; P.ped.hidden = false; }
     const [rx, ry] = this.W.L.spawn.respawn;
     P.ped.x = rx; P.ped.y = ry; P.ped.h = -Math.PI / 2; P.ped.hidden = false;
     this.stars = 0;

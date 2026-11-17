@@ -52,6 +52,14 @@ export function initWatercraft(sim) {
     ],
     hintT: -9,
   };
+  // INSTANT-START (owner rule, Nov 16): each player craft remembers its mooring
+  for (const cr of sim.water.craft) { cr.home = { x: cr.x, y: cr.y, h: cr.h }; cr.farT = 0; }
+  // the sea edge reads in play: a buoy line along the open-water limits (east + south)
+  const sE = sim.W.seaE, sS = sim.W.seaS;
+  if (sE && sS) {
+    for (let y = 260; y <= sS - 260; y += 215) sim.water.buoys.push({ x: sE - 55, y });
+    for (let x = 1560; x <= sE - 260; x += 215) sim.water.buoys.push({ x, y: sS - 55 });
+  }
 }
 
 export const craftSpeed = (cr) => Math.hypot(cr.vx, cr.vy);
@@ -108,7 +116,9 @@ export function dismountCraft(sim) {
 // way walkers slide round palms — axis-sliding alone wedges a hull inside a circle's margin.
 function hardBlocked(sim, cr, x, y) {
   const W = sim.W;
-  if (x < 10 || y < 10 || x > W.L.world.w - 10 || y > W.L.world.h - 10) return true;
+  // the open sea runs past the land world's east/south edges (world.seaE/seaS); west and
+  // north limits are unchanged — the shell's causeway water stays as it was
+  if (x < 10 || y < 10 || x > (W.seaE || W.L.world.w) - 10 || y > (W.seaS || W.L.world.h) - 10) return true;
   if (W.surfaceAt(x, y) !== 'water') return true;
   const P = W.L.pier, r = cr.spec.wid * 0.62;
   return x > P.x - r && x < P.x + P.w + r && y > P.y - r && y < P.y + P.h + r;
@@ -126,6 +136,12 @@ function circleResolve(sim, cr) {
   const others = sim.water.cop && sim.water.cop !== cr ? [...sim.water.craft, sim.water.cop] : sim.water.craft;
   for (const o of others) if (o !== cr) push(o.x, o.y, cr.spec.len * 0.30 + o.spec.len * 0.34 + 2);
   return pushed;
+}
+
+// grinding along a wall/hull at speed: spray and a bump (gated), but no velocity cut —
+// the slide itself is the cost. Called from physStep's slide branches only.
+function slideBump(sim, cr, spd) {
+  if (spd > 110 && sim.time - cr.bumpT > 0.45) { cr.bumpT = sim.time; if (cr.ridden || cr.kind === 'cop') sim.ev('bump'); burstSpray(sim, cr, 8); }
 }
 
 // One physics step for any craft. throttle 0..1, targetH the heading it wants (null = hold),
@@ -147,16 +163,19 @@ function physStep(sim, cr, dt, throttle, targetH, boost) {
   }
   const f = Math.exp(-(acc / top) * dt * (throttle > 0 ? 1 : 2.4));   // drag: terminal = top
   cr.vx *= f; cr.vy *= f;
-  // move, sliding along whatever stops us; a hard arrival costs speed and throws spray
+  // move, sliding along whatever stops us; a hard arrival costs speed and throws spray.
+  // A slide that SUCCEEDS is not a hit: it costs only the into-wall component. (The old code
+  // also cut ALL velocity x0.55 on every blocked step, slides included — a slow-turning hull
+  // could never swing its velocity clear before the next cut landed, so the boat glued to the
+  // first thing it touched and "only rotated". Owner report, Nov 16.)
   const nx = cr.x + cr.vx * dt, ny = cr.y + cr.vy * dt;
   if (!hardBlocked(sim, cr, nx, ny)) { cr.x = nx; cr.y = ny; }
+  else if (!hardBlocked(sim, cr, nx, cr.y)) { cr.x = nx; cr.vy *= 0.35; slideBump(sim, cr, spd); }
+  else if (!hardBlocked(sim, cr, cr.x, ny)) { cr.y = ny; cr.vx *= 0.35; slideBump(sim, cr, spd); }
   else {
-    let hit = true;
-    if (!hardBlocked(sim, cr, nx, cr.y)) { cr.x = nx; cr.vy *= 0.35; }
-    else if (!hardBlocked(sim, cr, cr.x, ny)) { cr.y = ny; cr.vx *= 0.35; }
-    else { cr.vx *= -0.15; cr.vy *= -0.15; hit = spd > 130; }
-    if (hit) {
-      if (spd > 110 && sim.time - cr.bumpT > 0.45) { cr.bumpT = sim.time; if (cr.ridden || cr.kind === 'cop') sim.ev('bump'); burstSpray(sim, cr, 10); }
+    cr.vx *= -0.15; cr.vy *= -0.15;                       // nose-dead: bounce off
+    if (spd > 130) {                                      // a fast arrival is a real hit
+      if (sim.time - cr.bumpT > 0.45) { cr.bumpT = sim.time; if (cr.ridden || cr.kind === 'cop') sim.ev('bump'); burstSpray(sim, cr, 10); }
       cr.vx *= 0.55; cr.vy *= 0.55;
     }
   }
@@ -229,7 +248,7 @@ function spawnCop(sim) {
     ? [[f.x + 60, f.y + 390], [f.x - 40, f.y + 430], [P.x + P.w + 26, P.y + P.h / 2], [f.x + 60, f.y - 390], [1720, 1900]]
     : [[f.x + 60, f.y - 390], [f.x - 40, f.y - 430], [P.x + P.w + 26, P.y + P.h / 2], [f.x + 60, f.y + 390], [1720, 300]];
   for (const [x, y] of cands) {
-    if (x < 30 || y < 30 || x > sim.W.L.world.w - 30 || y > sim.W.L.world.h - 30) continue;
+    if (x < 30 || y < 30 || x > (sim.W.seaE || sim.W.L.world.w) - 30 || y > (sim.W.seaS || sim.W.L.world.h) - 30) continue;
     if (sim.W.surfaceAt(x, y) !== 'water') continue;
     const d = Math.hypot(x - f.x, y - f.y);
     if (d < 240 || d > 760) continue;
@@ -253,8 +272,9 @@ function stepCop(sim, dt) {
   if (!onWater || sim.stars < 2) cop.mode = 'leave';                   // ashore or cooled off: land cops' job
   if (cop.mode === 'leave') {
     const ty = cop.y < 1100 ? 700 : 1600;                            // break off east, out to open water
-    physStep(sim, cop, dt, 0.85, Math.atan2(ty - cop.y, 1790 - cop.x), false);
-    if (cop.x > 1752 || Math.hypot(cop.x - sim.focus().x, cop.y - sim.focus().y) > 880) W.cop = null;
+    const seaE = sim.W.seaE || sim.W.L.world.w;
+    physStep(sim, cop, dt, 0.85, Math.atan2(ty - cop.y, seaE - 60 - cop.x), false);
+    if (cop.x > seaE - 110 || Math.hypot(cop.x - sim.focus().x, cop.y - sim.focus().y) > 880) W.cop = null;
     return;
   }
   // chase: steer at where the player's craft will be, ease off alongside so it can pin, not orbit
@@ -317,6 +337,17 @@ export function stepWaterFx(sim, dt) {
     if (cr.ridden) continue;
     cr.vx *= Math.exp(-2 * dt); cr.vy *= Math.exp(-2 * dt);
     cr.v = craftSpeed(cr);
+    // INSTANT-START stranding guardian: a craft left >260 from its mooring while the player
+    // is far away drifts home after 20 s, so the pier always has a craft waiting
+    if (cr.home) {
+      if (Math.hypot(cr.x - cr.home.x, cr.y - cr.home.y) > 260) {
+        cr.farT = (cr.farT || 0) + dt;
+        if (cr.farT > 20) {
+          const f = sim.focus();
+          if (Math.hypot(f.x - cr.x, f.y - cr.y) > 500) { cr.x = cr.home.x; cr.y = cr.home.y; cr.h = cr.home.h; cr.vx = 0; cr.vy = 0; cr.farT = 0; }
+        }
+      } else cr.farT = 0;
+    }
   }
 }
 
