@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1b1430">
+<title>Palm City</title>
+<link rel="icon" href="data:,">
+<style>
+  html,body{margin:0;height:100%;background:#120c22;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  canvas{display:block;touch-action:none}
+  #err{position:fixed;left:0;right:0;top:0;padding:12px;background:#a0203a;color:#fff;font:14px/1.4 -apple-system,system-ui,sans-serif;white-space:pre-wrap;display:none;z-index:9}
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="game"></canvas></div>
+<div id="err"></div>
+<div id="safe" style="position:fixed;top:0;left:0;width:1px;height:env(safe-area-inset-top,0px);pointer-events:none;visibility:hidden"></div>
+<script>
+  // No silent fallbacks: any load or runtime failure is shown on screen.
+  function showErr(m){const e=document.getElementById('err');e.style.display='block';e.textContent+=m+'\n';}
+  addEventListener('error',e=>showErr('Error: '+(e.message||e.target&&e.target.src)));
+  addEventListener('unhandledrejection',e=>showErr('Error: '+(e.reason&&e.reason.stack||e.reason)));
+</script>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
