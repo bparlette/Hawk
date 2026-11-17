@@ -101,12 +101,7 @@ const ALL = {
     await shot('beauty-bleed-off.png', 'cam=520,1750&t=0.3&fx=none,bleed');
     await shot('beauty-bleed-on.png', 'cam=880,480&t=0.3&fx=none,bleed');
   },
-  // 5. curb puddles: through the Ocean Drive patch at dusk, frozen mid-splash
-  puddle: async () => {
-    await shotDrive('beauty-puddle-off.png', 'cam=1200,1035&t=0.62&fx=none', 90, 1000);
-    await shotDrive('beauty-puddle-on.png', 'cam=1200,1035&t=0.62&fx=none,puddle', 90, 1000);
-  },
-  // 6. slipstream petals: 300 u/s down Ocean Drive, frozen with the wake behind
+  // 5. slipstream petals: 300 u/s down Ocean Drive, frozen with the wake behind
   petals: async () => {
     await shotDrive('beauty-petals-off.png', 'cam=1200,1300&t=0.3&fx=none', 300, 1330, [1200, 1560, NORTH]);
     await shotDrive('beauty-petals-on.png', 'cam=1200,1300&t=0.3&fx=none,petals', 300, 1330, [1200, 1560, NORTH]);
