@@ -2,9 +2,10 @@
 //   bass            : the car VIBRATES and throws expanding bass rings (Brad, Jimmy, Rigg)
 //   underglow_blue  : a blue neon pool under the van, day or night (Jimmy)
 //   tailpipe_sputter: irregular puffs + broken arcs spitting from the bare pipe at the REAR (Jason)
-//   on_fire         : flames + smoke pouring off the parked Mustang (Lamar, Atholton HS)
+//   on_fire         : Palm City's wreck fire on the parked Mustang — engine ember glow + dark smoke, NO flame tongues (Lamar, Atholton HS)
 // and the arrival beat's walkers + dap, the pulsing pickup rings. All drawn in world space by lf_render.js.
 const TAU = Math.PI * 2;
+let this_ember = null;   // the ember gradient, built once (Palm City render.js wreck ember)
 // ---- people: PALM CITY'S EXACT PED SPRITES (owner directive, Nov 17: reuse
 // gta remake's assets for people, never redraw them). The sheets live in
 // games/palm-city/assets/ and are REFERENCED, not copied, so the two games
@@ -91,16 +92,15 @@ export function over(g, S, M, time) {
         g.globalAlpha = (1 - ph) * 0.4; g.fillStyle = '#9a948c'; g.beginPath(); g.arc(rx - ca * d * 0.8, ry - sa * d * 0.8, 2 + ph * 6, 0, TAU); g.fill();
       }
     }
-    if (fx.includes('on_fire')) {                                       // the burning Mustang: tongues of flame + rolling smoke
-      for (let k = 0; k < 14; k++) {
-        const ph = (time * (0.9 + (k % 4) * 0.23) + k * 0.137) % 1, ox = Math.sin(k * 7.3) * c.len * 0.32, oy = Math.cos(k * 3.1) * c.wid * 0.35;
-        const x = c.x + ca * ox - sa * oy + ph * 18, y = c.y + sa * ox + ca * oy - ph * 22;
-        g.globalAlpha = (1 - ph) * 0.9; g.fillStyle = ph < 0.35 ? '#fff3a0' : ph < 0.65 ? '#ffa531' : '#e3441f';
-        g.beginPath(); g.ellipse(x, y, 5 + (1 - ph) * 5, 8 + (1 - ph) * 9, -0.4, 0, TAU); g.fill();
-      }
-      for (let k = 0; k < 8; k++) {
-        const ph = (time * 0.35 + k / 8) % 1;
-        g.globalAlpha = (1 - ph) * 0.42; g.fillStyle = '#3b3340'; g.beginPath(); g.arc(c.x + ph * 90 + Math.sin(k) * 8, c.y - ph * 70, 8 + ph * 30, 0, TAU); g.fill();
+    if (fx.includes('on_fire')) {                                       // Lamar's Mustang — PALM CITY'S fire (standing rule, Nov 17): the engine
+      const ex = c.x + ca * c.len * 0.3, ey = c.y + sa * c.len * 0.3;        // ember under the hood (render.js wreck ember, same gradient) + its dark
+      if (!this_ember) { this_ember = g.createRadialGradient(0, 0, 0, 0, 0, 22); this_ember.addColorStop(0, 'rgba(255,207,92,1)'); this_ember.addColorStop(0.35, 'rgba(255,118,28,0.6)'); this_ember.addColorStop(1, 'rgba(0,0,0,0)'); }
+      g.save(); g.translate(ex, ey); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.35 + 0.5 * (0.75 + 0.25 * Math.sin(time * 9 + c.x));
+      g.fillStyle = this_ember; g.fillRect(-22, -22, 44, 44); g.restore(); g.globalCompositeOperation = 'source-over';
+      for (let k = 0; k < 12; k++) {                                        // smoke (destruct.js / drawSmoke dark puffs: base + lit lobe, no flame tongues)
+        const u = (time * 0.32 + k / 12) % 1, sx = ex + u * 70 + Math.sin(k * 1.7 + time) * 6, sy = ey - u * 60, r = (4 + u * 15) * 1.6;
+        g.globalAlpha = (1 - u) * 0.42; g.fillStyle = 'rgb(44,36,48)'; g.beginPath(); g.arc(sx, sy, r, 0, TAU); g.fill();
+        g.globalAlpha *= 0.7; g.fillStyle = 'rgb(74,62,72)'; g.beginPath(); g.arc(sx - r * 0.3, sy - r * 0.3, r * 0.55, 0, TAU); g.fill();
       }
     }
   }
