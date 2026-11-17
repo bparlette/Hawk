@@ -362,14 +362,41 @@ function hullPath(g, L, Wd) {
   g.closePath();
 }
 
+// The world's cast direction: the baked sprites were lit by a sun at azimuth 255° /
+// elevation 30°, so every shadow in the game falls east-north-east and long. render.js
+// offsets its procedural shadows (chopper, board lift) by (+0.8, -0.3) per unit — the
+// same vector, normalised once here.
+const SUN_DX = 0.936, SUN_DY = -0.351;
+
 function drawCraftShape(g, cr, time) {
   const sp = cr.spec, L = sp.len, Wd = sp.wid;
   const bob = cr.ridden ? 0 : Math.sin(time * 1.25 + cr.phase) * 1.1;
-  // ONE soft water shadow for craft + rider together (a mounted rider casts no walking
-  // shadow — render.js skips it): a deep-teal ellipse a touch larger than the waterline,
-  // feathered to nothing at the rim so it sits IN the water, not on it, and stretching a
-  // little with speed. Replaces the old hard-edged navy ellipse.
   const spd = Math.hypot(cr.vx, cr.vy);
+  // CAST SHADOW (round 2 — owner, on the live build: "Everything has a shade and long.
+  // But jetski has none."): round 1's blob was a heading-rotated ellipse barely larger
+  // than the hull, so past the hull it left a few px of faint halo — nothing at phone
+  // size, worst on the little jetski, parked or mounted. Now the craft casts like
+  // everything else in the world: a LONG soft shadow down-sun, sun-locked (it does NOT
+  // turn with the hull), deep-teal so it sits IN the water, reaching well past the hull
+  // toward ENE — the same read as the pier's baked boats in the very same frame.
+  const reach = (L * 0.62 + 18) * (1 + Math.min(0.2, (spd / sp.top) * 0.2));   // cast length past the hull, + a touch of speed smear
+  const srx = L * 0.5 + reach * 0.55, sry = Wd * 0.72 + 3;
+  g.save();
+  g.translate(cr.x + SUN_DX * reach * 0.55, cr.y + 2 + SUN_DY * reach * 0.55 + bob * 0.3);
+  g.rotate(Math.atan2(SUN_DY, SUN_DX));
+  g.scale(1, sry / srx);
+  const cg = g.createRadialGradient(0, 0, srx * 0.35, 0, 0, srx);
+  cg.addColorStop(0, 'rgba(8,46,66,0.52)');
+  cg.addColorStop(0.5, 'rgba(8,46,66,0.38)');
+  cg.addColorStop(0.8, 'rgba(8,46,66,0.16)');
+  cg.addColorStop(1, 'rgba(8,46,66,0)');
+  g.fillStyle = cg;
+  g.beginPath(); g.arc(0, 0, srx, 0, TAU); g.fill();
+  g.restore();
+  // CONTACT SHADOW (round 1, kept): one soft water shadow for craft + rider together
+  // (a mounted rider casts no walking shadow — render.js skips it): a deep-teal ellipse
+  // a touch larger than the waterline, feathered to nothing at the rim, grounding the
+  // hull in the water under the cast shadow, and stretching a little with speed.
   const rx = L * 0.58 * (1 + Math.min(0.30, (spd / sp.top) * 0.30)), ry = Wd * 0.80;
   g.save();
   g.translate(cr.x + 5, cr.y + 3 + bob * 0.4);                       // soft water shadow, down-sun
@@ -447,6 +474,6 @@ export function drawWatercraft(g, S, time, vx0, vy0, vx1, vy1) {
     g.beginPath(); g.ellipse(p.x, p.y - p.z * 0.55, r, r * 0.62, p.rot, 0, TAU); g.fill();
   }
   g.globalAlpha = 1;
-  for (const cr of W.craft) if (cr.x > vx0 - 90 && cr.x < vx1 + 90 && cr.y > vy0 - 90 && cr.y < vy1 + 90) drawCraftShape(g, cr, time);
-  if (W.cop && W.cop.x > vx0 - 90 && W.cop.x < vx1 + 90 && W.cop.y > vy0 - 90 && W.cop.y < vy1 + 90) drawCraftShape(g, W.cop, time);
+  for (const cr of W.craft) if (cr.x > vx0 - 120 && cr.x < vx1 + 120 && cr.y > vy0 - 120 && cr.y < vy1 + 120) drawCraftShape(g, cr, time);
+  if (W.cop && W.cop.x > vx0 - 120 && W.cop.x < vx1 + 120 && W.cop.y > vy0 - 120 && W.cop.y < vy1 + 120) drawCraftShape(g, W.cop, time);
 }
