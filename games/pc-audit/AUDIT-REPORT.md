@@ -32,6 +32,12 @@ reproduces all of them: each `BUG` line is one finding, and the script exits 1 u
     (`nearCraft` needs `!cr.ridden`, watercraft.js:71), and the stranding guardian skips it
     (`if (cr.ridden) continue`, watercraft.js:337). Probe: 40 s later the jetski is still
     `ridden=true`, drifting in the bay. One of the two craft is gone until reload.
+- **Owner, Nov 17: "jump out of boat worked for me."** That matches the probe for the JUMP targets
+  that seat you in a vehicle (jobs, events, the chase): you do leave the boat. The fault on those
+  paths is invisible: the craft you left stays `ridden` and can't be boarded or sent home for the
+  rest of the session. To see it: JUMP from the jetski to TAXI, then walk back to the pier. The
+  jetski can't be mounted, and its tag no longer rides it home. The MOTEL / HELICOPTER / BOATS
+  targets are the ones that visibly snap back.
 - **Fix:** in `jump()`'s `leave()`, handle `P.mode === 'water'` the way `respawn()` already does
   (sim.js:793-800): clear `ridden`, null `water.ride` and `water.cop`, send the craft to `cr.home`,
   and set mode to `'foot'`.
