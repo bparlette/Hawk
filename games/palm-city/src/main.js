@@ -14,6 +14,7 @@ import { Voice } from './voice.js';
 import { drawHud } from './hud.js';
 import { DemoPilot } from './demo.js';
 import { Director } from './director.js';
+import { Recorder } from './record.js';
 import { jobButton } from './jobs.js';
 import { buttonA } from './controls.js';
 import { drawHelp, helpHit } from './help.js';
@@ -83,6 +84,7 @@ if (DEMO) { try { audio.start(); } catch (_) {} }
 let sim, pilot, simTime = 0;
 const SEED = 7;
 const director = new Director(SEED);
+const recorder = new Recorder(canvas, audio);          // record.js: SAVE CLIP on the highlight + REC for live play
 const feel = { punch: 0, roll: 0, lastH: 0, slowT: 0 };      // 2D camera feel + the slow-mo beat
 const NO_DIRECTOR = Q.has('nodirector') || Q.has('t') || Q.has('cam');   // staged captures stay un-interrupted
 function onEvent(name, v) {
@@ -185,9 +187,12 @@ function panelAct(hit) {
 input.panelKey = (code) => { if (!panelMode()) return false; if (code === 'Enter' || code === 'Space') { panelAct({ type: 'close' }); return true; } return false; };
 window.__ui = ui;
 let acc = 0, last = performance.now(), titleT = ui.start ? 0 : 3.2;
+let wasPlaying = false;
 function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000);
   last = now;
+  const playing = !!director.play;                       // highlight lifecycle → recorder (SAVE CLIP button + auto-save)
+  if (playing !== wasPlaying) { wasPlaying = playing; if (playing) recorder.replayStarted(); else recorder.replayEnded(); }
   if (director.play) { replayFrame(dt); requestAnimationFrame(frame); return; }
   const panel = panelMode();
   input.panelTap = panel ? (p) => panelAct(helpHit(p, VIEW_W, view.h, sim, panel, safeTop())) : null;
@@ -299,5 +304,5 @@ function replayFrame(dt) {
   if (director.done || ((inp.action || inp.punch || input.stick) && p.t > 0.6)) { director.end(); last = performance.now(); acc = 0; }
 }
 requestAnimationFrame(frame);
-window.__palm = { director, input, world, ground, cam, dpr: () => DPR, get sim() { return sim; }, M };
+window.__palm = { director, recorder, input, world, ground, cam, dpr: () => DPR, get sim() { return sim; }, M };
 window.__vox = voice;          // task 8 proof/debug: the voice module + its play log

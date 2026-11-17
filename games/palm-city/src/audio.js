@@ -55,6 +55,14 @@ export class Audio {
     this.on = true;
   }
 
+  // A live copy of everything on the master bus (engine, city, voices) for the
+  // recorder (record.js). Null until the context exists.
+  tap() {
+    if (!this.ctx || !this.master) return null;
+    if (!this.tapDest) { this.tapDest = this.ctx.createMediaStreamDestination(); this.master.connect(this.tapDest); }
+    return this.tapDest.stream;
+  }
+
   loop(buf) { const s = this.ctx.createBufferSource(); s.buffer = buf; s.loop = true; s.start(); return s; }
 
   update(sim, cam, world) {
