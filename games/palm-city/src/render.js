@@ -16,6 +16,10 @@ import { CHOPPER } from './pressure.js';
 import { JOBS } from './jobs.js';
 import { drawEventsGround } from './events_render.js';
 import { DEBRIS_CAP, SMOKE_CAP, SPARK_CAP, STAGES, stageOf, FALL_T, palmReach } from './destruct.js';
+import { CHASE, elevAt, easeBlend } from './chasecam.js';
+import { fxOn, PUDDLES } from './fx.js';
+
+const ROOF0 = [0, 0];   // shared zero shift for the beauty samples (never mutated)
 
 // procedural debris colours (index = destruct.js D kind) for the kinds with no sprite
 const DEBRIS_COL = ['#d8f0ff', '#8a8f9c', '#b97a50', '#e0a878', '#2f6a22', '#7a5232', '#523420', '#b8b0a4', '#222', '#6fa844', '#ff6494'];
@@ -78,6 +82,16 @@ export class Renderer {
     this.buildDestructSprites();
     this.tracks = new TrackLayer(layer);          // tyre marks: stamped once, under everything that moves
     this.lastTime = 0;
+    this.chaseOK = false;                          // OPEN ROAD chase cam: main.js enables it on the main renderer only (the news-cam PiP renderer never gets it, so the PiP stays the plain aerial view)
+    // BEAUTY SAMPLES state (src/fx.js): fixed pools, allocated once, only touched while their fx is on.
+    this.roofOff = null;                          // { cx, cy } camera centre while sample 1 (roof parallax) is on
+    this.swayOn = false;                          // sample 2 (palm shadow sway)
+    this.petals = [];                             // sample 7: slipstream petal/paper pool
+    for (let i = 0; i < 160; i++) this.petals.push({ on: false, x: 0, y: 0, vx: 0, vy: 0, rot: 0, vr: 0, t: 0, life: 1, col: 0, sw: 1 });
+    this.petalAcc = 0; this.petalSeed = 1234567;
+    this.pudState = PUDDLES.map(p => ({ ...p, last: -9 }));   // sample 6: puddle decals + last ripple time
+    this.pudRipples = [];
+    for (let i = 0; i < 28; i++) this.pudRipples.push({ on: false, x: 0, y: 0, t0: 0, seed: 0 });
   }
 
   // Destruction sprites (assets/destruct.json): per-model car stages and pooled debris variants.
@@ -126,12 +140,26 @@ export class Renderer {
     this.bloomB = layer(Math.ceil(w / 8), Math.ceil(h / 8));
   }
 
+  // OPEN ROAD chase cam: the frame buffers the world pass renders into while the chase view is
+  // live (CHASE.frameW x CHASE.frameH CSS px at the live dpr, with the same shadow/light/bloom
+  // pyramid as resize()). Built lazily on the first chase frame and rebuilt if the dpr changes.
+  ensureChaseBuffers() {
+    if (this.chaseCv && this.chaseDpr === this.dpr) return;
+    this.chaseDpr = this.dpr;
+    const w = Math.round(CHASE.frameW * this.dpr), h = Math.round(CHASE.frameH * this.dpr);
+    this.chaseCv = layer(w, h);
+    this.chaseShadow = layer(w, h);
+    this.chaseLight = layer(Math.ceil(w / 2), Math.ceil(h / 2));
+    this.chaseBloomA = layer(Math.ceil(w / 4), Math.ceil(h / 4));
+    this.chaseBloomB = layer(Math.ceil(w / 8), Math.ceil(h / 8));
+  }
+
   buildStatics() {
     const M = this.M, L = this.L, out = [];
     for (const b of L.buildings) {
       const e = M.buildings[b.id];
       if (!e) throw new Error('no baked sprite for building ' + b.id + ' — run tools/bake_sprites.py');
-      out.push({ kind: 'building', x: b.x + b.w / 2, y: b.y + b.d / 2, e, id: b.id });
+      out.push({ kind: 'building', x: b.x + b.w / 2, y: b.y + b.d / 2, e, id: b.id, brect: b, hgt: b.h || 6 });
     }
     L.palms.forEach(([x, y], i) => out.push({ kind: 'palm', x, y, ti: i, sc: this.world.trunks[i].sc, e: M.props['palm' + (i % 3)] }));
     if (this.world.shellPalms) this.world.shellPalms.forEach(([x, y], j) => { const ti = L.palms.length + j; out.push({ kind: 'palm', x, y, ti, sc: this.world.trunks[ti].sc, e: M.props['palm' + (j % 3)] }); });
@@ -200,18 +228,20 @@ export class Renderer {
   buildGlints() {
     const r = mulberry32(99), W = this.world, g = [];
     for (let i = 0; i < 1400; i++) {
-      const y = r() * this.L.world.h;
-      const x = W.shoreX(y) + 8 + r() * (this.L.world.w - W.shoreX(y));
+      const y = r() * (W.seaS || this.L.world.h);
+      const x = W.shoreX(y) + 8 + r() * ((W.seaE || this.L.world.w) - W.shoreX(y));
       g.push({ x, y, ph: r() * 6.28, f: 0.8 + r() * 1.6, w: 5 + r() * 12 });
     }
     return g;
   }
 
   buildWaterPath() {
-    const p = new Path2D(), W = this.world, H = this.L.world.h;
-    p.moveTo(this.L.world.w + 50, -50);
-    for (let y = -50; y <= H + 50; y += 10) p.lineTo(W.shoreX(y), y);
-    p.lineTo(this.L.world.w + 50, H + 50);
+    const p = new Path2D(), W = this.world, E = W.seaE || this.L.world.w, H = W.seaS || this.L.world.h;
+    p.moveTo(E + 50, -50);
+    for (let y = -50; y <= this.L.world.h + 10; y += 10) p.lineTo(W.shoreX(y), y);   // the island's east shore
+    p.lineTo(-50, this.L.world.h + 10);                                              // then the island's south coast
+    p.lineTo(-50, H + 50);
+    p.lineTo(E + 50, H + 50);
     p.closePath();
     return p;
   }
@@ -237,11 +267,16 @@ export class Renderer {
     }
     const sh = s.kind === 'palm' && S.shakes ? S.shakes[s.ti] : null;
     const lean = P && P.stage ? (P.stage === 1 ? 4 : 8) * s.sc : 0;
-    if (!sh && !lean) { this.drawEntry(g, f, s.x, s.y, s.sc); return; }
+    // BEAUTY SAMPLES 1+2: the colour frame of a building leans with the roof parallax, the
+    // shadow frame of a palm drifts with the sway. Both shifts are exactly 0 with their fx off.
+    let fxOx = 0, fxOy = 0;
+    if (f === s.e.shadow) { const so = this.swayOff(s, S.time); fxOx = so[0]; fxOy = so[1]; }
+    else if (s.kind === 'building') { const rs = this.roofShift(s); fxOx = rs[0]; fxOy = rs[1]; if ((fxOx || fxOy) && f === s.e.color) this.drawRoofSkirt(g, s, fxOx, fxOy); }
+    if (!sh && !lean) { this.drawEntry(g, f, s.x + fxOx, s.y + fxOy, s.sc); return; }
     const e = sh ? Math.exp(-3.6 * sh.t) * sh.amp : 0;
     g.save();
     const lx = lean ? P.lx * lean : 0, ly = lean ? P.ly * lean : 0;
-    g.translate(s.x + (sh ? sh.ax * Math.sin(sh.t * 40) * 4.5 * e : 0) + lx, s.y + (sh ? sh.ay * Math.sin(sh.t * 40) * 4.5 * e : 0) + ly);
+    g.translate(s.x + (sh ? sh.ax * Math.sin(sh.t * 40) * 4.5 * e : 0) + lx + fxOx, s.y + (sh ? sh.ay * Math.sin(sh.t * 40) * 4.5 * e : 0) + ly + fxOy);
     g.rotate((sh ? Math.sin(sh.t * 27) * 0.13 * e : 0) + (lean ? 0.05 * P.stage : 0));
     this.drawEntry(g, f, 0, 0, s.sc);
     g.restore();
@@ -459,6 +494,22 @@ export class Renderer {
   }
 
   draw(S, cam, t, time) {
+    // OPEN ROAD chase cam: while S.chase is live, the whole world pass renders into the chase
+    // frame (heading-up, focused ahead of the car) and compositeChase() at the end of draw()
+    // lays it back onto the real canvas in elevation-offset strips under a painted sky.
+    // Everything between runs unchanged — it just sees the frame's ctx/dims, not the screen's.
+    const chase = this.chaseOK && S.chase && S.chase.blend > 0.002 && S.player.mode === 'car' ? S.chase : null;
+    const ease = chase ? easeBlend(chase.blend) : 0;
+    let saved = null;
+    if (chase) {
+      this.ensureChaseBuffers();
+      saved = { ctx: this.ctx, vw: this.vw, vh: this.vh, fw: this.fw, fh: this.fh, shadowCv: this.shadowCv, lightCv: this.lightCv, bloomA: this.bloomA, bloomB: this.bloomB };
+      this.ctx = this.chaseCv.getContext('2d');
+      this.vw = CHASE.frameW; this.vh = CHASE.frameH;
+      this.fw = this.chaseCv.width; this.fh = this.chaseCv.height;
+      this.shadowCv = this.chaseShadow; this.lightCv = this.chaseLight;
+      this.bloomA = this.chaseBloomA; this.bloomB = this.chaseBloomB;
+    }
     const g = this.ctx, vw = this.vw, vh = this.vh, dpr = this.dpr;
     // ?prof: per-section CPU time (ms, exponential average) in window.__prof
     let P = null;
@@ -468,19 +519,35 @@ export class Renderer {
       P = (name) => { const t1 = performance.now(); this.prof[name] = (this.prof[name] || 0) * 0.9 + (t1 - t0) * 0.1; t0 = t1; };
     }
     const G = this.gradeFor(t);
-    const zoom = cam.zoom || 1;
+    // BEAUTY SAMPLES frame state (src/fx.js): the parallax centre, the sway flag, and the
+    // petal pool's step. All inert while their fx is off.
+    this.roofOff = fxOn('roof') ? { cx: cam.x, cy: cam.y } : null;
+    this.swayOn = fxOn('sway');
+    const dtF = Math.max(0, Math.min(0.1, time - (this.lastFxT === undefined ? time : this.lastFxT)));
+    this.lastFxT = time;
+    if (fxOn('petals')) this.stepPetals(S, dtF);
+    const zoom = chase ? lerp(cam.zoom || 1, CHASE.zoom, ease) : (cam.zoom || 1);
     const hw = vw / 2 / zoom, hh = vh / 2 / zoom;
-    const vx0 = cam.x - hw, vy0 = cam.y - hh, vx1 = cam.x + hw, vy1 = cam.y + hh;
-    const inView = (bb, m = 0) => bb[2] > vx0 - m && bb[0] < vx1 + m && bb[3] > vy0 - m && bb[1] < vy1 + m;
+    // view focus: the camera position normally; in chase mode a point CHASE.lead ahead of the
+    // car, so the car sits below centre in the frame and the road runs out ahead of it
+    const car = chase ? S.player.car : null;
+    const fx = chase ? car.x + Math.cos(car.h) * CHASE.lead : cam.x;
+    const fy = chase ? car.y + Math.sin(car.h) * CHASE.lead : cam.y;
     // 2D camera feel: zoom-punch (cam.kick) and a clamped roll (cam.roll) on the WORLD transform only;
     // the grade, light composite, HUD stay level. Culling keeps the un-kicked bounds, which cover it.
-    const kick = cam.kick || 1, roll = cam.roll || 0;
+    // In chase mode the roll is the chase heading instead (the world rotates so the car points
+    // up-screen), the kick is off, and the culling box grows to cover the rotated frame.
+    const kick = chase ? 1 : (cam.kick || 1), roll = chase ? chase.rot : (cam.roll || 0);
+    const cr = Math.abs(Math.cos(roll)), sr = Math.abs(Math.sin(roll));
+    const ex = chase ? hw * cr + hh * sr : hw, ey = chase ? hw * sr + hh * cr : hh;
+    const vx0 = fx - ex, vy0 = fy - ey, vx1 = fx + ex, vy1 = fy + ey;
+    const inView = (bb, m = 0) => bb[2] > vx0 - m && bb[0] < vx1 + m && bb[3] > vy0 - m && bb[1] < vy1 + m;
     const worldTf = (ctx, s = 1) => {
       ctx.setTransform(dpr * s, 0, 0, dpr * s, 0, 0);
       ctx.translate(vw / 2, vh / 2);
       if (roll) ctx.rotate(roll);
       ctx.scale(zoom * kick, zoom * kick);
-      ctx.translate(-cam.x, -cam.y);
+      ctx.translate(-fx, -fy);
     };
 
     P && P('setup');
@@ -499,6 +566,8 @@ export class Renderer {
     }
     this.drawShellMasses(g, vx0, vy0, vx1, vy1);
     this.drawOcean(g, G, t, time, vx0, vy0, vx1, vy1);
+    if (fxOn('causeway')) this.drawCausewayFx(g, time, vx0, vy0, vx1, vy1);   // BEAUTY SAMPLE 3: deck shadow + caustics
+    if (fxOn('puddle')) this.drawPuddles(g, S, time, vx0, vy0, vx1, vy1);      // BEAUTY SAMPLE 6: mirror patches + ripples
     this.tracks.draw(g, S, Math.max(0, Math.min(0.1, time - this.lastTime)), vx0, vy0, vx1, vy1);
     this.lastTime = time;
 
@@ -529,6 +598,11 @@ export class Renderer {
     if (S.chopper) {                                   // the chopper's soft altitude shadow, cast down-sun
       const c = S.chopper, e = this.M.pressure.chopper.shadow;
       sg.save(); sg.globalAlpha = 0.45; sg.translate(c.x + CHOPPER.ALT * 0.8, c.y - CHOPPER.ALT * 0.3); sg.rotate(c.h + Math.PI / 2);
+      sg.drawImage(e.img, e.ox, e.oy, e.w, e.h); sg.restore();
+    }
+    if (S.heli && S.heli.alt > 0.02) {                 // the player's helicopter casts the same shadow, growing with altitude (heli.js)
+      const H = S.heli, e = this.M.pressure.chopper.shadow, a = H.alt;
+      sg.save(); sg.globalAlpha = 0.5 - a * 0.16; sg.translate(H.x + CHOPPER.ALT * 0.8 * a, H.y - CHOPPER.ALT * 0.3 * a); sg.rotate(H.h + Math.PI / 2);
       sg.drawImage(e.img, e.ox, e.oy, e.w, e.h); sg.restore();
     }
     sg.setTransform(1, 0, 0, 1, 0, 0);
@@ -584,6 +658,7 @@ export class Renderer {
     }
     for (const p of S.peds) {
       if (p.hidden || p.x < vx0 - 30 || p.x > vx1 + 30 || p.y < vy0 - 30 || p.y > vy1 + 30) continue;
+      if (p.outfit === 'player' && S.player.roof) continue;   // up on the hospital roof: drawn above the building (drawRoofPlayer)
       const { m, idx, rows } = this.pedCell(p);
       if (p.down) {                                     // lying flat; the last half second is the get-up
         const k = Math.min(1, p.downT / 0.5);
@@ -602,6 +677,9 @@ export class Renderer {
         }
         g.save(); g.translate(p.x + Math.cos(p.h) * jab, p.y + Math.sin(p.h) * jab); g.scale(1.2 + z * 0.4, 1.2 + z * 0.4);
         this.drawCell(g, m.color, idx, m.cols, rows, 0, 0); g.restore();
+      } else if (p.cheerT > 0) {                        // OPEN ROAD crowds: bouncing on the spot while the cheer lasts (their shadow stays planted in the shadow pass)
+        const lift = Math.abs(Math.sin(p.cheerT * 9)) * 7;
+        g.save(); g.translate(p.x, p.y - lift); this.drawCell(g, m.color, idx, m.cols, rows, 0, 0); g.restore();
       } else this.drawCell(g, m.color, idx, m.cols, rows, p.x, p.y);
     }
     { // turbo: painted speed streaks torn back off the car, and a hot glow at the tail
@@ -650,11 +728,13 @@ export class Renderer {
         if (c.dmg > 0.01) this.drawCarDamage(g, c);     // scuffs and first dents, before stage 1
       }
     }
+    this.drawHospitalGround(g, S);   // the stair stripes + red cross at the hospital's west kerb (heli.js)
     for (const s of this.statics) {
       if (s.kind === 'pier' || s.kind === 'fountain' || s.kind === 'lifeguard') continue;
-      if (inView(s.bb)) this.drawStatic(g, s, s.e.color, S);
+      if (inView(s.bb, this.roofOff ? 52 : 0)) this.drawStatic(g, s, s.e.color, S);
     }
     this.drawLeaves(g, S);
+    if (fxOn('petals')) this.drawPetals(g, vx0, vy0, vx1, vy1);   // BEAUTY SAMPLE 7
     this.drawSmoke(g, S, time, G, vx0, vy0, vx1, vy1);
     this.drawSparks(g, S, vx0, vy0, vx1, vy1);
     for (const f of S.fx || []) {                         // hit flash: a burst of short rays
@@ -670,6 +750,8 @@ export class Renderer {
     this.drawJobsTop(g, S, time);
     this.drawActivityMarkers(g, S, time, vx0, vy0, vx1, vy1);   // painted tags over everything you can start
     if (S.chopper) this.drawChopper(g, S.chopper, t, time);    // above roofs and palms
+    if (S.heli) this.drawHeli(g, S, t, time, vx0, vy0, vx1, vy1);   // the hospital helicopter, parked or flying (heli.js)
+    if (S.player.roof) this.drawRoofPlayer(g, S);              // the hero, up on the hospital roof
 
     P && P('sprites');
     // painted surface grain (world-anchored)
@@ -705,13 +787,14 @@ export class Renderer {
     worldTf(lg, 0.5);
     lg.globalCompositeOperation = 'lighter';
     for (const s of this.statics) {
-      if (!s.e.night || !inView(s.bb)) continue;
+      if (!s.e.night || !inView(s.bb, this.roofOff ? 52 : 0)) continue;
       lg.globalAlpha = s.kind === 'lamp' ? Math.min(1, G.lamps * 0.78) * this.lampLight(S, s.li, time) : s.kind === 'building' ? Math.min(1, G.windows * 1.05) : Math.max(G.windows, G.lamps) * 0.8;
-      if (lg.globalAlpha > 0.01) this.drawEntry(lg, s.e.night, s.x, s.y);
+      if (lg.globalAlpha > 0.01) { const rs = this.roofShift(s); this.drawEntry(lg, s.e.night, s.x + rs[0], s.y + rs[1]); }
     }
     this.drawNeonPuddles(lg, G, time, vx0, vy0, vx1, vy1);
     this.drawWetReflections(lg, G, time, vx0, vy0, vx1, vy1, S);
     this.drawSunbeams(lg, G, t, time, vx0, vy0, vx1, vy1);
+    if (fxOn('puddle')) this.drawPuddleLight(lg, G, time, vx0, vy0, vx1, vy1);   // BEAUTY SAMPLE 6 (light half)
     if (S.chopper) this.drawSearchlight(lg, S.chopper, t, time, S.stars);
     { // activity markers carry their own light, so the plaques still read after dark
       const list = this.mk || [], al = Math.max(G.lamps, G.windows) * 0.55;
@@ -814,6 +897,118 @@ export class Renderer {
       g.globalAlpha = 1;
     }
     P && P('end');
+    if (chase) {
+      // the frame is complete (grade, light, vignette and all): lay it onto the real canvas
+      // in strips under the sky, then hand the renderer its real fields back
+      this.compositeChase(saved, chase, ease, zoom, G, time);
+      this.ctx = saved.ctx; this.vw = saved.vw; this.vh = saved.vh; this.fw = saved.fw; this.fh = saved.fh;
+      this.shadowCv = saved.shadowCv; this.lightCv = saved.lightCv; this.bloomA = saved.bloomA; this.bloomB = saved.bloomB;
+    }
+  }
+
+  // OPEN ROAD chase composite: the painted sky band above the horizon, then the chase frame in
+  // CHASE.strips horizontal strips, each strip's source shifted vertically by the course
+  // elevation ahead of the car (elevAt(routeS + ahead) - elevAt(routeS), gained and blended) —
+  // straights rise toward the horizon and the road falls away past a crest. The vertical
+  // squash (CHASE.squash at full blend) is the oblique tilt: screen distance below the horizon
+  // maps to frame distance / squash, with the car anchored CHASE.anchor down the screen.
+  // Ground, cars, crowds and smoke all live in the one frame, so everything rides the same
+  // per-strip offsets — nothing floats or sinks against the ground it sits on. A strip whose
+  // source would run off the frame's top/bottom edge is clamped to the frame edge instead
+  // (the far field compresses at the horizon, which is what a horizon does; the silhouette
+  // strip drawn over the seam hides the join).
+  compositeChase(saved, chase, ease, zoom, G, time) {
+    const ctx = saved.ctx, vw = saved.vw, vh = saved.vh, dpr = this.dpr;
+    const sq = lerp(1, CHASE.squash, ease);
+    const anchorY = lerp(vh / 2, vh * CHASE.anchor, ease);
+    const HY = lerp(0, vh * CHASE.horizon, ease);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+    ctx.imageSmoothingEnabled = true;
+    if (HY > 0.5) this.drawChaseSky(ctx, vw, HY, G, chase, time, ease);
+    const frame = this.chaseCv;
+    const carFrameX = CHASE.frameW / 2, carFrameY = CHASE.frameH / 2 + CHASE.lead * zoom;
+    const sx = Math.max(0, Math.min(CHASE.frameW - vw, carFrameX - vw / 2));
+    const sw = Math.min(vw, CHASE.frameW - sx), dx = (vw - sw) / 2;
+    const N = CHASE.strips, yTop = Math.max(0, HY), stripH = (vh - yTop) / N;
+    const e0 = elevAt(chase.routeS);
+    for (let i = 0; i < N; i++) {
+      const y = yTop + i * stripH, mid = y + stripH / 2;
+      const ahead = (anchorY - mid) / (sq * zoom);                 // world units ahead of the car this strip shows
+      const off = (elevAt(chase.routeS + ahead) - e0) * CHASE.elevGain * ease;
+      const srcH = stripH / sq;
+      let srcY = carFrameY + (y - anchorY + off) / sq;
+      srcY = Math.max(0, Math.min(CHASE.frameH - srcH, srcY));
+      ctx.drawImage(frame, sx * dpr, srcY * dpr, sw * dpr, srcH * dpr, dx, y, sw, stripH + 1);
+    }
+    if (HY > 0.5) this.drawChaseSilhouette(ctx, vw, HY, chase, ease);
+  }
+
+  // The chase sky: a dusk gradient in the grade's own palette — saturated blue at the top at
+  // golden hour deepening to violet, through the shadow plum, to the east-glow at the horizon
+  // line — plus a few soft cloud dabs in the glow colour, drifting parallax-slow. Cached by
+  // (time-of-day step, horizon bucket, width); rebuilt only when one of those moves.
+  drawChaseSky(ctx, vw, HY, G, chase, time, ease) {
+    const bucket = Math.max(8, Math.round(HY / 8) * 8);
+    const key = G.tq + ':' + bucket + ':' + vw;
+    if (!this.skyGradC || this.skyGradC.key !== key) {
+      const gr = ctx.createLinearGradient(0, 0, 0, bucket);
+      const t = G.tq;
+      gr.addColorStop(0, `rgb(${Math.round(lerp(70, 30, t))},${Math.round(lerp(130, 44, t))},${Math.round(lerp(215, 110, t))})`);
+      gr.addColorStop(0.72, `rgb(${G.shadowCol[0]},${G.shadowCol[1]},${G.shadowCol[2]})`);
+      gr.addColorStop(1, `rgb(${G.eastGlow[0]},${G.eastGlow[1]},${G.eastGlow[2]})`);
+      this.skyGradC = { key, gr };
+    }
+    ctx.fillStyle = this.skyGradC.gr;
+    ctx.fillRect(0, 0, vw, HY + 2);
+    const eg = `rgba(${G.eastGlow[0]},${G.eastGlow[1]},${G.eastGlow[2]},1)`;
+    for (const [fx, fy, w, h, a] of [[0.16, 0.30, 120, 13, 0.15], [0.52, 0.16, 170, 17, 0.11], [0.83, 0.38, 95, 10, 0.16]]) {
+      let x = fx * vw + (chase.rot * 40 + time * 2) * (0.4 + fx * 0.6);
+      x = ((x % (vw + 260)) + vw + 260) % (vw + 260) - 130;
+      ctx.globalAlpha = a * ease;
+      ctx.fillStyle = eg;
+      ctx.beginPath(); ctx.ellipse(x, HY * fy, w, h, 0, 0, 7); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // The distant silhouette at the horizon: one tileable strip (far hazy ridge, a stretch of
+  // city blocks, near plum ridge, painterly dabs), scrolled parallax-slow by the view rotation
+  // and the route distance, bobbing gently with the elevation far ahead.
+  drawChaseSilhouette(ctx, vw, HY, chase, ease) {
+    if (!this.silhCv) this.silhCv = this.buildSilhouette();
+    const bob = (elevAt(chase.routeS + 520) - elevAt(chase.routeS)) * 0.5 * ease;
+    const off = ((chase.rot * 260 + chase.routeS * 0.05) % 1024 + 1024) % 1024;
+    ctx.globalAlpha = 0.9 * ease;
+    for (const x of [-off, -off + 1024]) ctx.drawImage(this.silhCv, x, HY - 46 + bob, 1024, 52);
+    ctx.globalAlpha = 1;
+  }
+
+  buildSilhouette() {
+    const c = layer(1024, 52), g = c.getContext('2d'), r = mulberry32(77);
+    const ridge = (base, a1, a2, col) => {
+      g.fillStyle = col;
+      g.beginPath(); g.moveTo(0, 52);
+      for (let x = 0; x <= 1024; x += 16) {
+        const y = base + Math.sin(x / 1024 * Math.PI * 2 * 3 + 1.2) * a1 + Math.sin(x / 1024 * Math.PI * 2 * 7 + 4.0) * a2;
+        g.lineTo(x, y);
+      }
+      g.lineTo(1024, 52); g.closePath(); g.fill();
+    };
+    ridge(26, 7, 3, 'rgba(150,120,170,0.55)');                 // far ridge, hazy lavender
+    g.fillStyle = 'rgba(122,92,150,0.6)';                      // city haze: soft blocks on the far line
+    for (let x = 618; x < 918; x += 18 + ((r() * 14) | 0)) {
+      const h = 12 + r() * 16, w = 12 + r() * 12;
+      g.fillRect(x, 30 - h, w, h + 22);
+    }
+    ridge(38, 5, 2, '#3a2450');                                // near ridge, deep plum
+    g.fillStyle = 'rgba(214,164,120,0.20)';                    // painterly dabs catching the low sun
+    for (let i = 0; i < 90; i++) {
+      const x = r() * 1024, y = 36 + r() * 14;
+      g.beginPath(); g.ellipse(x, y, 3 + r() * 7, 1.2 + r() * 1.6, 0, 0, 7); g.fill();
+    }
+    return c;
   }
 
   // Scuffs and first dents below stage 1, painted over the baked cell in the car's own frame (the
@@ -1099,6 +1294,99 @@ export class Renderer {
 
   // The beam: a feathered cone from the nose turret to a soft pool on the ground, champagne by day,
   // xenon ice-cyan after dusk, with dust motes drifting inside it (procedural, no allocation per mote).
+  // ---- The hospital helicopter (heli.js): ground markings, the hero on the roof, the machine itself
+
+  // painted stair stripes up the west sidewalk into the parapet gap, and a red cross at their foot
+  drawHospitalGround(g, S) {
+    const hz = S.W.L.hospital; if (!hz) return;
+    const gp = hz.gap, cy = gp.y + gp.d / 2;
+    g.fillStyle = 'rgba(246,239,226,0.85)';
+    for (let i = 0; i < 4; i++) g.fillRect(gp.x - 20 + i * 13, gp.y + 5, 7, gp.d - 10);
+    g.fillStyle = '#d8342c';
+    g.fillRect(gp.x - 18, cy - 3, 16, 6); g.fillRect(gp.x - 13, cy - 8, 6, 16);
+  }
+
+  // the hero while they are up on the hospital roof: the ped loop skips them (the building sprite
+  // would cover them), so they are drawn here, above the statics, blob shadow and all
+  drawRoofPlayer(g, S) {
+    const p = S.player.ped, { m, idx, rows } = this.pedCell(p);
+    g.fillStyle = 'rgba(40,16,40,0.35)';
+    g.beginPath(); g.ellipse(p.x + 7, p.y - 2.5, 9, 4.5, 0, 0, 7); g.fill();
+    const pt = S.player.punchT > 0 ? S.player.punchT / 0.26 : 0, jab = Math.sin(Math.PI * pt) * 5;
+    if (pt > 0) {
+      g.strokeStyle = 'rgba(255,232,200,0.95)'; g.lineWidth = 3.4; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(p.x + Math.cos(p.h + 0.5) * 6, p.y + Math.sin(p.h + 0.5) * 6);
+      g.lineTo(p.x + Math.cos(p.h) * (9 + jab * 1.6), p.y + Math.sin(p.h) * (9 + jab * 1.6)); g.stroke();
+    }
+    g.save(); g.translate(p.x + Math.cos(p.h) * jab, p.y + Math.sin(p.h) * jab); g.scale(1.2, 1.2);
+    this.drawCell(g, m.color, idx, m.cols, rows, 0, 0); g.restore();
+  }
+
+  // the medevac recolour of the police chopper's baked sheet, built once per sheet: navy -> white,
+  // a red stripe along each cell's fuselage axis and a red cross on the rear fuselage
+  heliSheet(sheet) {
+    if (!this.heliSheets) this.heliSheets = new Map();
+    if (this.heliSheets.has(sheet)) return this.heliSheets.get(sheet);
+    const src = sheet.img, cols = sheet.cols, rows = Math.ceil(32 / cols);
+    const cw = src.width / cols, ch = src.height / rows;
+    const cv = document.createElement('canvas'); cv.width = src.width; cv.height = src.height;
+    const g = cv.getContext('2d');
+    const cell = document.createElement('canvas'); cell.width = cw; cell.height = ch;
+    const cg = cell.getContext('2d');
+    for (let k = 0; k < 32; k++) {
+      const sx = (k % cols) * cw, sy = Math.floor(k / cols) * ch;
+      cg.clearRect(0, 0, cw, ch); cg.drawImage(src, sx, sy, cw, ch, 0, 0, cw, ch);
+      const th = k / 32 * Math.PI * 2, cx = cw / 2, cy = ch / 2;
+      cg.globalCompositeOperation = 'source-atop';
+      cg.fillStyle = 'rgba(244,242,238,0.60)'; cg.fillRect(0, 0, cw, ch);   // the white belly
+      cg.save(); cg.translate(cx, cy); cg.rotate(th);   // +x is the nose in every cell
+      cg.fillStyle = 'rgba(22,24,34,0.85)';              // the cockpit glass stays dark
+      cg.beginPath(); cg.ellipse(cw * 0.40, 0, cw * 0.085, cw * 0.105, 0, 0, 7); cg.fill();
+      cg.fillStyle = 'rgba(207,32,40,0.92)';             // the red deck
+      cg.beginPath(); cg.ellipse(-cw * 0.03, 0, cw * 0.36, cw * 0.185, 0, 0, 7); cg.fill();
+      cg.fillRect(-cw * 0.52, -cw * 0.045, cw * 0.24, cw * 0.09);   // the tail boom
+      cg.beginPath(); cg.ellipse(-cw * 0.44, 0, cw * 0.085, cw * 0.13, 0, 0, 7); cg.fill();   // the fin
+      cg.fillStyle = 'rgba(246,243,238,0.95)';           // the cheatline slashes
+      for (const off of [-0.06, -0.20]) {
+        cg.save(); cg.translate(off * cw, 0); cg.rotate(0.9);
+        cg.fillRect(-cw * 0.035, -cw * 0.30, cw * 0.07, cw * 0.60); cg.restore();
+      }
+      cg.fillStyle = 'rgba(247,243,234,0.97)';           // a white cross on the red deck
+      cg.fillRect(cw * 0.115, -cw * 0.028, cw * 0.15, cw * 0.056);
+      cg.fillRect(cw * 0.162, -cw * 0.075, cw * 0.056, cw * 0.15);
+      cg.restore();
+      cg.globalCompositeOperation = 'source-over';
+      g.drawImage(cell, sx, sy);
+    }
+    const out = { img: cv, cols, ox: sheet.ox, oy: sheet.oy, w: sheet.w, h: sheet.h };
+    this.heliSheets.set(sheet, out);
+    return out;
+  }
+
+  drawHeli(g, S, t, time, vx0, vy0, vx1, vy1) {
+    const H = S.heli; if (!H || H.state === 'gone') return;
+    if (H.x < vx0 - 220 || H.x > vx1 + 220 || H.y < vy0 - 220 || H.y > vy1 + 220) return;   // off-screen: skip (and defer the one-time recolour)
+    const P = this.M.pressure.chopper, body = this.heliSheet(t >= 0.55 && P.bodyDusk ? P.bodyDusk : P.body);
+    const Z = 1.15;
+    if (H.state === 'wreck' && this.scorch) { const e = this.scorch; g.globalAlpha = 0.85; g.drawImage(e.img, H.x + e.ox, H.y + e.oy, e.w, e.h); g.globalAlpha = 1; }
+    if (H.alt < 0.02 && H.state !== 'falling') {   // a contact blob while it sits on the roof or the ground
+      g.fillStyle = 'rgba(40,16,40,0.30)'; g.beginPath(); g.ellipse(H.x + 10, H.y - 4, 34, 15, 0, 0, 7); g.fill();
+    }
+    const k = ((Math.round((((H.h % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) / (Math.PI * 2) * 32) % 32) + 32) % 32;
+    const rows = Math.ceil(32 / body.cols), cw = body.img.width / body.cols, chh = body.img.height / rows;
+    g.save(); g.translate(H.x, H.y);
+    if (H.state === 'falling') g.rotate((0.55 - H.fallT) * 5); else if (H.state === 'wreck') g.rotate(0.45);
+    g.drawImage(body.img, (k % body.cols) * cw, Math.floor(k / body.cols) * chh, cw, chh, body.ox * Z, body.oy * Z, body.w * Z, body.h * Z);
+    g.restore();
+    const e2 = P.rotor, ang = H.rotor > 0.7 ? time * 21 : H.h + 0.7;
+    g.save(); g.translate(H.x, H.y); g.rotate(ang); g.globalAlpha = 0.25 + H.rotor * 0.55;
+    g.drawImage(e2.img, e2.ox * Z, e2.oy * Z, e2.w * Z, e2.h * Z); g.restore();
+    if (H.rotor > 0.15) {
+      g.save(); g.translate(H.x, H.y); g.globalAlpha = H.rotor * 0.10; g.fillStyle = '#2a2438';
+      g.beginPath(); g.ellipse(0, 0, 60, 60, 0, 0, 7); g.fill(); g.restore();
+    }
+  }
+
   // Drawn into the additive light layer, so it blooms; brighter as it gets dark.
   drawSearchlight(lg, c, t, time, stars) {
     const dusk = t >= 0.55, dark = clamp01((t - 0.3) / 0.6);
@@ -1142,6 +1430,207 @@ export class Renderer {
       lg.fillRect(x - 0.7, y - 0.7, 1.4, 1.4);
     }
     lg.globalAlpha = 1;
+  }
+
+  // ================= BEAUTY SAMPLES (src/fx.js — all default OFF) =================
+
+  // SAMPLE 1 — roof parallax shift for a building static: (centre − camera centre) × a
+  // height factor from the layout height class (h 5 → 0.058, h 40 → 0.11), capped at 34 units
+  // so a roof never tears away from its footprint at the frame edge. Zero for non-buildings.
+  roofShift(s) {
+    if (!this.roofOff || s.kind !== 'building' || !s.brect) return ROOF0;
+    const hf = 0.05 + 0.06 * Math.min(1, (s.hgt || 6) / 40);
+    let ox = (s.x - this.roofOff.cx) * hf, oy = (s.y - this.roofOff.cy) * hf;
+    const d = Math.hypot(ox, oy);
+    if (d > 34) { ox *= 34 / d; oy *= 34 / d; }
+    return [ox, oy];
+  }
+
+  // SAMPLE 1 — the extrusion under a shifted roof: the footprint swept from its ground
+  // position to the shifted one in deep plum ink (the game's outline family, #210f2e),
+  // in ~5-unit steps so the sweep stays solid at the largest shifts.
+  drawRoofSkirt(g, s, ox, oy) {
+    const b = s.brect, steps = Math.max(1, Math.ceil(Math.hypot(ox, oy) / 5));
+    g.fillStyle = '#2a1836';
+    for (let i = 0; i <= steps; i++) {
+      const u = i / steps;
+      g.fillRect(b.x + ox * u, b.y + oy * u, b.w, b.d);
+    }
+  }
+
+  // SAMPLE 2 — palm shadow sway: the whole baked shadow (crown + trunk are one sprite, so the
+  // crown cannot sway alone without a rebake) drifts on a slow ~0.5 Hz sine, ±2.6 × ±1.9 units,
+  // phase hashed per palm so the row never moves in lockstep.
+  swayOffset(ti, time) {
+    const ph = ti * 1.93;
+    return [Math.sin(time * Math.PI + ph) * 2.6, Math.cos(time * Math.PI * 0.77 + ph * 1.7) * 1.9];
+  }
+  swayOff(s, time) {
+    if (!this.swayOn || s.kind !== 'palm') return ROOF0;
+    return this.swayOffset(s.ti, time);
+  }
+
+  // SAMPLE 3 — causeway water depth: a soft shadow band on the bay along the MacArthur deck's
+  // north edge (three widening strokes, so the edge feathers), and caustic rings around the
+  // piling lines pulsing on the ocean's own 6.4 s surf cycle (drawSurf's T). Decals in the
+  // ground stage, so real shadows still fall across them and cars draw over them. The band
+  // sits on the north edge because the sprite bake's sun (azimuth 255°) throws every shadow
+  // north-east; the sample's first build had it on the south edge, against the game's light.
+  drawCausewayFx(g, time, vx0, vy0, vx1, vy1) {
+    const W = this.world;
+    if (!W.shellSegs) return;
+    if (!this.cwSegs) {
+      this.cwSegs = []; this.cwPiles = [];
+      for (const s of W.shellSegs) {
+        if (s.name !== 'macarthur_causeway') continue;
+        const dx = s.x1 - s.x0, dy = s.y1 - s.y0, L = Math.hypot(dx, dy);
+        let nx = -dy / L, ny = dx / L;
+        if (ny > 0) { nx = -nx; ny = -ny; }                       // the north normal: the −y side — the baked sun (az 255°) throws the deck's shadow north-east, so the band rides the north edge
+        this.cwSegs.push({ x0: s.x0, y0: s.y0, x1: s.x1, y1: s.y1, hw: s.hw, nx, ny });
+        for (let d = 27; d < L; d += 55) for (const side of [-1, 1]) {
+          const h1 = Math.sin(d * 12.9898 + side * 78.233) * 43758.5453;
+          this.cwPiles.push({ x: s.x0 + dx * d / L + nx * side * (s.hw + 13), y: s.y0 + dy * d / L + ny * side * (s.hw + 13), h: h1 - Math.floor(h1) });
+        }
+      }
+    }
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    for (const [wid, al] of [[40, 0.10], [26, 0.16], [13, 0.20]]) {
+      g.strokeStyle = `rgba(14,28,58,${al})`; g.lineWidth = wid;
+      g.beginPath();
+      for (const s of this.cwSegs) {
+        const ox = s.nx * (s.hw + 7), oy = s.ny * (s.hw + 7);
+        if (Math.max(s.x0, s.x1) + ox < vx0 - 60 || Math.min(s.x0, s.x1) + ox > vx1 + 60 ||
+            Math.max(s.y0, s.y1) + oy < vy0 - 60 || Math.min(s.y0, s.y1) + oy > vy1 + 60) continue;
+        g.moveTo(s.x0 + ox, s.y0 + oy); g.lineTo(s.x1 + ox, s.y1 + oy);
+      }
+      g.stroke();
+    }
+    g.strokeStyle = '#bfefff';
+    for (const p of this.cwPiles) {
+      if (p.x < vx0 - 30 || p.x > vx1 + 30 || p.y < vy0 - 30 || p.y > vy1 + 30) continue;
+      for (let k = 0; k < 2; k++) {
+        let u = (time / 6.4 + p.h + k * 0.5) % 1;
+        if (u < 0) u += 1;
+        const r = 5 + u * 14;
+        g.globalAlpha = (1 - u) * 0.42; g.lineWidth = 1.6;
+        g.beginPath(); g.ellipse(p.x, p.y, r, r * 0.55, 0, 0, 7); g.stroke();
+      }
+    }
+    g.globalAlpha = 1;
+  }
+
+  // SAMPLE 6 (ground half) — curb puddles: a dark mirror patch, plus ripple rings and a small
+  // splash when the player drives through one. Spawning is renderer-side (the sim is never
+  // touched): the car inside a patch's ellipse at speed lays a ripple every 0.11 s.
+  drawPuddles(g, S, time, vx0, vy0, vx1, vy1) {
+    for (const p of this.pudState) {
+      if (p.x + p.rx < vx0 || p.x - p.rx > vx1 || p.y + p.ry < vy0 || p.y - p.ry > vy1) continue;
+      g.fillStyle = 'rgba(16,14,32,0.52)';
+      g.beginPath(); g.ellipse(p.x, p.y, p.rx, p.ry, 0, 0, 7); g.fill();
+      g.fillStyle = 'rgba(34,32,58,0.45)';
+      g.beginPath(); g.ellipse(p.x - p.rx * 0.18, p.y - p.ry * 0.2, p.rx * 0.68, p.ry * 0.62, 0, 0, 7); g.fill();
+    }
+    const c = S.player.mode === 'car' ? S.player.car : null;
+    if (c && Math.abs(c.v) > 25) {
+      for (const p of this.pudState) {
+        const u = ((c.x - p.x) / p.rx) ** 2 + ((c.y - p.y) / p.ry) ** 2;
+        if (u < 1 && time - p.last > 0.11) {
+          p.last = time;
+          const r = this.pudRipples.find(q => !q.on) || this.pudRipples[0];
+          r.on = true; r.x = c.x; r.y = c.y; r.t0 = time; r.seed = (time * 997) % 10;
+        }
+      }
+    }
+    g.lineCap = 'round';
+    for (const r of this.pudRipples) {
+      if (!r.on) continue;
+      const age = time - r.t0;
+      if (age > 1.1) { r.on = false; continue; }
+      if (r.x < vx0 - 40 || r.x > vx1 + 40 || r.y < vy0 - 40 || r.y > vy1 + 40) continue;
+      const a = 1 - age / 1.1, rad = 4 + age * 30;
+      g.strokeStyle = '#eaf6ff'; g.lineWidth = 1.6;
+      g.globalAlpha = a * 0.55;
+      g.beginPath(); g.ellipse(r.x, r.y, rad, rad * 0.45, 0, 0, 7); g.stroke();
+      g.globalAlpha = a * 0.4;
+      g.beginPath(); g.ellipse(r.x, r.y, rad * 0.55, rad * 0.25, 0, 0, 7); g.stroke();
+      g.fillStyle = '#eaf6ff';
+      for (let i = 0; i < 5; i++) {                                 // splash droplets on little arcs
+        const h1 = Math.sin(r.seed * 91.7 + i * 47.3) * 43758.5453, fr = h1 - Math.floor(h1);
+        const ang = fr * 6.28, dist = age * (16 + fr * 22), lift = Math.sin(Math.min(1, age * 2.4) * Math.PI) * (4 + fr * 5);
+        g.globalAlpha = a * 0.8;
+        g.beginPath(); g.arc(r.x + Math.cos(ang) * dist, r.y + Math.sin(ang) * dist * 0.5 - lift, 1.5, 0, 7); g.fill();
+      }
+    }
+    g.globalAlpha = 1;
+  }
+
+  // SAMPLE 6 (light half) — the mirror throws the nearest sign's colour back: a soft tint pool
+  // plus short wobbling streaks, the wet-reflection ribbon at decal scale, scaled by how lit
+  // the signs and lamps are (so the patch is nearly plain water at golden hour).
+  drawPuddleLight(lg, G, time, vx0, vy0, vx1, vy1) {
+    const glow = Math.max(G.neon, G.lamps * 0.8);
+    if (glow < 0.03) return;
+    lg.lineCap = 'round';
+    for (const p of this.pudState) {
+      if (p.x + p.rx < vx0 || p.x - p.rx > vx1 || p.y + p.ry < vy0 || p.y - p.ry > vy1) continue;
+      const [r, gg, b] = p.tint;
+      const rg = lg.createRadialGradient(p.x, p.y, 2, p.x, p.y, p.rx * 1.25);
+      rg.addColorStop(0, `rgba(${r},${gg},${b},0.55)`); rg.addColorStop(1, `rgba(${r},${gg},${b},0)`);
+      lg.globalAlpha = glow * 0.5; lg.fillStyle = rg;
+      lg.beginPath(); lg.ellipse(p.x, p.y, p.rx * 1.25, p.ry * 1.25, 0, 0, 7); lg.fill();
+      lg.fillStyle = `rgb(${r},${gg},${b})`;
+      for (let i = 0; i < 6; i++) {
+        const u = i / 6, dx = Math.sin(time * 2.3 + p.x + i * 1.7) * 2.2;
+        lg.globalAlpha = glow * 0.30 * (1 - u * 0.6);
+        lg.beginPath(); lg.ellipse(p.x + dx + (i % 3 - 1) * p.rx * 0.3, p.y - p.ry * 0.5 + u * p.ry, p.rx * (0.30 - u * 0.12), 1.7, 0, 0, 7); lg.fill();
+      }
+    }
+    lg.globalAlpha = 1;
+  }
+
+  // SAMPLE 7 — slipstream petals: past ~200 u/s the player's wake stirs loose petals and
+  // paper off the street. Fixed pool (160), renderer-side only; each mote's velocity keeps
+  // curling (the vortex), damps out, and the mote settles and fades over 1.3–2.3 s.
+  stepPetals(S, dt) {
+    const c = S.player.mode === 'car' ? S.player.car : null;
+    const sp = c ? Math.abs(c.v) : 0;
+    if (c && sp > 200 && dt > 0) {
+      this.petalAcc += Math.min(46, 8 + (sp - 200) * 0.5) * dt;
+      const rnd = () => { this.petalSeed = (this.petalSeed * 1664525 + 1013904223) >>> 0; return this.petalSeed / 4294967296; };
+      while (this.petalAcc >= 1) {
+        this.petalAcc -= 1;
+        const p = this.petals.find(q => !q.on) || this.petals[0];
+        const ca = Math.cos(c.h), sa = Math.sin(c.h), side = (rnd() - 0.5) * c.wid;
+        p.on = true;
+        p.x = c.x - ca * c.len * 0.5 - sa * side; p.y = c.y - sa * c.len * 0.5 + ca * side;
+        p.vx = -ca * (26 + rnd() * 44) + sa * (rnd() - 0.5) * 30;
+        p.vy = -sa * (26 + rnd() * 44) - ca * (rnd() - 0.5) * 30;
+        p.rot = rnd() * 6.28; p.vr = (rnd() - 0.5) * 9;
+        p.t = 0; p.life = 1.3 + rnd() * 1.0; p.col = (rnd() * 4) | 0; p.sw = rnd() < 0.5 ? 1 : -1;
+      }
+    }
+    for (const p of this.petals) {
+      if (!p.on) continue;
+      p.t += dt;
+      if (p.t >= p.life) { p.on = false; continue; }
+      const ra = Math.atan2(p.vy, p.vx) + p.sw * 2.4 * dt;
+      const vl = Math.hypot(p.vx, p.vy) * Math.exp(-1.5 * dt);
+      p.vx = Math.cos(ra) * vl; p.vy = Math.sin(ra) * vl;
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      p.rot += p.vr * dt;
+    }
+  }
+  drawPetals(g, vx0, vy0, vx1, vy1) {
+    const COLS = ['#ff6494', '#ffd44c', '#fff4e8', '#f4ead2'];   // bougainvillea, frangipani, paper
+    for (const p of this.petals) {
+      if (!p.on || p.x < vx0 - 10 || p.x > vx1 + 10 || p.y < vy0 - 10 || p.y > vy1 + 10) continue;
+      const u = p.t / p.life, a = u < 0.15 ? u / 0.15 : 1 - Math.max(0, (u - 0.6) / 0.4);
+      g.save(); g.translate(p.x, p.y); g.rotate(p.rot);
+      g.globalAlpha = 0.85 * a; g.fillStyle = COLS[p.col];
+      g.beginPath(); g.ellipse(0, 0, 2.6, 1.7, 0, 0, 7); g.fill();
+      g.restore();
+    }
+    g.globalAlpha = 1;
   }
 
   drawOcean(g, G, t, time, vx0, vy0, vx1, vy1) {
@@ -1234,6 +1723,7 @@ export class Renderer {
     const y0 = Math.floor((vy0 - 10) / STEP) * STEP;
     for (let pass = 0; pass < 3; pass++) {
       for (let y = y0; y < vy1 + 10; y += STEP) {
+        if (y > this.L.world.h) continue;   // surf belongs to the island's east shore, not the open sea south
         const sx = W.shoreX(y);
         if (sx + 8 < vx0 || sx - 60 > vx1) continue;
         const k = y / STEP, n1 = 0.5 + 0.5 * Math.sin(y * 0.031) * Math.sin(y * 0.0113 + 1.7), n2 = 0.5 + 0.5 * Math.sin(y * 0.0071 + 4);
@@ -1294,7 +1784,7 @@ export class Renderer {
   // streak of its colour across the wet asphalt toward the viewer.
   buildReflectors() {
     const L = this.L, W = this.world, out = [];
-    const NEON = { SOLANA: '#ff4fa8', TACOS: '#ff8a3c', DINER: '#3fe0ff', MOTEL: '#ff3f6a', NOVA: '#b45cff' };
+    const NEON = { SOLANA: '#ff4fa8', TACOS: '#ff8a3c', DINER: '#3fe0ff', MOTEL: '#ff3f6a', NOVA: '#b45cff', HOSPITAL: '#ff4040' };
     L.lamps.forEach(([x, y], i) => out.push({ x: x + 13, y: y + 6, col: [255, 178, 86], len: 120, lamp: true, li: i, w0: 3.4 }));
     for (const b of L.buildings) if (b.sign) {
       let best = null;
@@ -1318,18 +1808,8 @@ export class Renderer {
     if (!this.reflectors) this.reflectors = this.buildReflectors();
     const W = this.world, half = W.halfRoad - 2;
     lg.lineCap = 'round';
-    let sheenSample = -1;
     for (const r of this.reflectors) {
-      let peak = r.lamp ? G.lamps * 0.44 * this.lampLight(S, r.li, time) : G.neon * 0.50;
-      // OCEAN DRIVE SHEEN (polish bundle): reflectors on the ocean-side strip breathe with the
-      // surf — the same 6.4 s cycle and travel as drawSurf — gleaming as each wave lands.
-      if (r.x > W.shoreX(r.y) - 300) {
-        const n2 = 0.5 + 0.5 * Math.sin(r.y * 0.0071 + 4);
-        let u = time / 6.4 - r.y / 1500 + n2 * 0.16; u -= Math.floor(u);
-        const pulse = Math.max(0, 1 - Math.abs(u - 0.34) / 0.22);
-        if (sheenSample < 0) sheenSample = pulse;         // fx probe: one fixed reflector's pulse
-        peak *= 1 + 1.1 * pulse;
-      }
+      const peak = r.lamp ? G.lamps * 0.44 * this.lampLight(S, r.li, time) : G.neon * 0.50;
       if (peak < 0.02 || r.x < vx0 - 40 || r.x > vx1 + 40 || r.y < vy0 - 150 || r.y > vy1 + 20) continue;
       const phase = r.x * 0.13 + r.y * 0.07;
       if (!r.grad) {                                   // the ribbon's colour ramp at peak 1; peak goes on globalAlpha
@@ -1355,7 +1835,6 @@ export class Renderer {
         lg.beginPath(); lg.ellipse(r.x + dx, wy, rx * 0.72, 2.2, 0, 0, 7); lg.fill();
       }
     }
-    this.fxSheen = Math.max(0, sheenSample);
     lg.globalAlpha = 1;
   }
 
