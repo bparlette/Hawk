@@ -63,7 +63,7 @@ export function spawnRoadblock(sim, sAt, dirIn) {
 
 function stepStreet(sim, dt) {
   const f = sim.focus();
-  if (sim.stars >= 4 && !sim.busted && !(sim.legalJob && sim.legalJob()) && sim.player.mode === 'car' && Math.abs(sim.player.car.v) > 80 && sim.time > sim.rbNext) {
+  if (sim.stars >= 4 && !sim.busted && !(sim.legalJob && sim.legalJob()) && !(sim.event && sim.event.kind === 'openroad') && sim.player.mode === 'car' && Math.abs(sim.player.car.v) > 80 && sim.time > sim.rbNext) {   // OPEN ROAD: the race's pressure is fixed (two cars + the chopper) — no roadblocks join it
     sim.rbNext = sim.time + (spawnRoadblock(sim) ? 16 : 2);
   }
   // sawhorses: smash through at speed, or get stopped short
@@ -150,7 +150,7 @@ export function stepPressure(sim, dt) {
   const f = sim.focus();
   const wantChopper = sim.stars >= 3 && !sim.busted && !sim.siege && !(sim.legalJob && sim.legalJob());
   let c = sim.chopper;
-  if (!c && wantChopper) { spawnChopper(sim, f); c = sim.chopper; }
+  if (!c && wantChopper && sim.time >= (sim.chopperNext || 0)) { spawnChopper(sim, f); c = sim.chopper; }   // chopperNext: a downed chopper takes a while to be replaced (heli.js)
   if (!c) return;
   c.t += dt;
   if (!wantChopper && !c.leaving) { c.leaving = true; c.lock = false; }
@@ -166,7 +166,8 @@ export function stepPressure(sim, dt) {
   const stars = Math.min(5, sim.stars);
   // where the beam wants to be
   const fv = sim.player.mode === 'car' ? { x: Math.cos(sim.player.car.h) * sim.player.car.v, y: Math.sin(sim.player.car.h) * sim.player.car.v }
-    : sim.player.mode === 'board' ? { x: sim.board.vx, y: sim.board.vy } : { x: 0, y: 0 };
+    : sim.player.mode === 'board' ? { x: sim.board.vx, y: sim.board.vy }
+    : sim.player.mode === 'air' ? { x: sim.heli.vx, y: sim.heli.vy } : { x: 0, y: 0 };
   let tx, ty;
   if (c.lock || stars >= 4) {
     const lead = stars >= 5 ? 0.55 : 0.4;

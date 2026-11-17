@@ -21,6 +21,7 @@ export function clockText(t) {
 }
 
 import { siegeAction } from './siege.js';
+import { nearHeli, heliLabel } from './heli.js';
 import { jobButton, JOBS } from './jobs.js';
 import { buttonA } from './controls.js';
 import { canDismount } from './watercraft.js';
@@ -146,6 +147,8 @@ export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
   let label = '';
   if (P.mode === 'siege') { const a = siegeAction(sim); label = a ? a.label : ''; }
   else if (sim.nearMotelDoor()) label = 'ENTER';
+  else if (P.mode === 'air') label = 'LAND';
+  else if (nearHeli(sim)) label = heliLabel(sim);
   else if (P.mode === 'car') label = Math.abs(P.car.v) < 60 ? 'EXIT' : '';
   else if (P.mode === 'board') label = Math.hypot(sim.board.vx, sim.board.vy) < 22 ? 'DROP' : sim.board.grind ? 'POP' : 'OLLIE';
   else if (P.mode === 'water') label = canDismount(sim) ? 'HOP OFF' : '';
