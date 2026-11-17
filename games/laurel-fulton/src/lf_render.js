@@ -17,7 +17,13 @@ export class Renderer {
   drawCar(g, c, which) {
     const m = this.fleet[c.model], k = ((Math.round(c.h / (Math.PI * 2) * m.angles) % m.angles) + m.angles) % m.angles;
     const [img, sx, sy, sw, sh, ox, oy, w, h] = this.cell(m, k, which);
-    const [jx, jy] = this.time != null ? FX.shake(this.S, c, this.time) : [0, 0];   // bass cars vibrate
+    let [jx, jy] = this.time != null ? FX.shake(this.S, c, this.time) : [0, 0];   // bass cars vibrate
+    if (c.jolt > 0) { jx += Math.sin(this.time * 90) * 2.2 * c.jolt / 0.22; jy += Math.cos(this.time * 77) * 2.2 * c.jolt / 0.22; }   // the bump's jolt
+    if (which === 'color' && c.z > 0) {                   // L3 airborne: the body rises toward you and grows; the shadow stays down
+      const k = 1 + c.z * 0.012; g.save(); g.translate(c.x + jx - c.z * 0.25, c.y + jy - c.z * 1.5); g.scale(k, k);   // presentation only: lift + loom so a 3 m arc reads at phone zoom
+      g.drawImage(img, sx, sy, sw, sh, ox, oy, w, h); g.restore(); return;
+    }
+    if (which === 'shadow' && c.z > 0) { g.save(); g.globalAlpha *= Math.max(0.3, 1 - c.z / 50); g.drawImage(img, sx, sy, sw, sh, c.x + ox + c.z * 0.8, c.y + oy + c.z * 0.25, w, h); g.restore(); return; }   // the shadow stays on the road, sliding down-sun
     g.drawImage(img, sx, sy, sw, sh, c.x + ox + jx, c.y + oy + jy, w, h);
   }
   draw(S, cam, time) {
