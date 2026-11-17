@@ -1,0 +1,170 @@
+{
+ "_doc": "The ONE roster (task L2). Written by tools/roster_build.py from OSM address points. house = world units (10/m, x east, y south).",
+ "people": [
+  {
+   "id": "brad",
+   "name": "Brad",
+   "car": {
+    "model": "1987 Chevrolet Camaro",
+    "paint": "two-tone: front half white, rear half maroon",
+    "headlights": "yellow",
+    "fx": [
+     "bass"
+    ]
+   },
+   "address": "10128 Stansfield Road",
+   "active": true,
+   "lat": 39.120799,
+   "lon": -76.866202,
+   "house": [
+    23997,
+    36148
+   ],
+   "osm": "way/1249060573"
+  },
+  {
+   "id": "kosack",
+   "name": "Kosack",
+   "car": {
+    "model": "~1989 Chevrolet Cavalier",
+    "paint": "red",
+    "fx": []
+   },
+   "address": "10400 Derby Drive",
+   "active": true,
+   "lat": 39.156176,
+   "lon": -76.864876,
+   "house": [
+    25141,
+    -2958
+   ],
+   "osm": "way/1348385470"
+  },
+  {
+   "id": "jimmy",
+   "name": "Jimmy",
+   "car": {
+    "model": "1996 Chevrolet Astro",
+    "paint": "silver",
+    "fx": [
+     "bass",
+     "underglow_blue"
+    ]
+   },
+   "address": "8313 Sweet Cherry Lane",
+   "active": true,
+   "lat": 39.143235,
+   "lon": -76.895053,
+   "house": [
+    -909,
+    11347
+   ],
+   "osm": "way/1235085589"
+  },
+  {
+   "id": "jason",
+   "name": "Jason",
+   "car": {
+    "model": "1989 Toyota Camry",
+    "paint": "white",
+    "fx": [
+     "tailpipe_sputter"
+    ]
+   },
+   "address": "8743 Susini Drive",
+   "active": true,
+   "lat": 39.130182,
+   "lon": -76.872849,
+   "house": [
+    18259,
+    25776
+   ],
+   "osm": "way/1248854375"
+  },
+  {
+   "id": "clayton",
+   "name": "Clayton Floyd",
+   "car": {
+    "model": "Chevrolet Camaro",
+    "paint": "green",
+    "fx": []
+   },
+   "address": "9946 Hughes Avenue",
+   "active": true,
+   "lat": 39.116264,
+   "lon": -76.857515,
+   "house": [
+    31496,
+    41161
+   ],
+   "osm": "way/1247967727"
+  },
+  {
+   "id": "zack",
+   "name": "Zack Floyd",
+   "car": {
+    "model": "Mercury Tracer",
+    "paint": "green",
+    "fx": []
+   },
+   "address": "9946 Hughes Avenue",
+   "active": true,
+   "lat": 39.116264,
+   "lon": -76.857515,
+   "house": [
+    31496,
+    41161
+   ],
+   "osm": "way/1247967727"
+  },
+  {
+   "id": "rigg",
+   "name": "Rigg",
+   "car": {
+    "model": "first-gen Toyota Celica (owner: 1969; refs 1970-73)",
+    "paint": "blue",
+    "headlights": "blue",
+    "fx": [
+     "bass"
+    ]
+   },
+   "address": "8201 Mossy Stone Court",
+   "active": true,
+   "lat": 39.148676,
+   "lon": -76.885975,
+   "house": [
+    6927,
+    5333
+   ],
+   "osm": "way/568387123"
+  },
+  {
+   "id": "grant",
+   "name": "Grant",
+   "car": {
+    "model": "Cadillac Brougham \"USS Mino\"",
+    "paint": "maroon",
+    "fx": []
+   },
+   "address": "6311 Sandy Street",
+   "active": false,
+   "why": "address not in the current map extent (data/osm_places.json)"
+  }
+ ],
+ "unassigned_cars": [
+  {
+   "model": "Chevrolet Cavalier",
+   "paint": "black",
+   "note": "no owner yet - no house, no design work until the owner names whose it is"
+  }
+ ],
+ "meetup": {
+  "name": "Atholton High School",
+  "lat": 39.189257,
+  "lon": -76.880901,
+  "pos": [
+   11307,
+   -39526
+  ]
+ }
+}
