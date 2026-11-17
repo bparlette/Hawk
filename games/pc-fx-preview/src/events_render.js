@@ -10,7 +10,7 @@ const IMG = {};
 function sprite(name) {
   if (typeof Image === 'undefined') return null;
   let i = IMG[name];
-  if (!i) { i = IMG[name] = new Image(); i.src = 'https://cdn.jsdelivr.net/gh/bparlette/Hawk@main/games/palm-city/assets/events/' + name + '.webp'; }
+  if (!i) { i = IMG[name] = new Image(); i.src = '../palm-city/assets/events/' + name + '.webp'; }
   return i.complete && i.naturalWidth ? i : null;
 }
 

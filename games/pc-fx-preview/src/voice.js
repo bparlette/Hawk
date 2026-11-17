@@ -119,7 +119,7 @@ const PEDS = ['ped01', 'ped02', 'ped04', 'ped05'];
 const RADIO = ['rad02', 'rad03', 'rad04', 'rad05'];
 
 export class Voice {
-  constructor(base = 'https://cdn.jsdelivr.net/gh/bparlette/Hawk@main/games/palm-city/assets/audio/voice/') {
+  constructor(base = '../palm-city/assets/audio/voice/') {
     this.base = base;
     this.ext = '.ogg';
     try {
