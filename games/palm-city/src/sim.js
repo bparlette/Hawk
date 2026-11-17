@@ -15,6 +15,7 @@ import { initSkate, stepBoard, stepCombo, nearBoard, mount, boardSpeed } from '.
 import { initWatercraft, stepCraft, stepWaterFx, nearCraft, mountCraft } from './watercraft.js';
 import { initDestruct, stepDestruct, punchWorld, carState, carImpact, carsCollide, hitThing, palmImpact, initProps, propImpact } from './destruct.js';
 import { openRoadArmed, stepRouteCar } from './openroad.js';
+import { stepLabels } from './labels.js';
 
 const TAU = Math.PI * 2;
 const wrap = (a) => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
@@ -38,6 +39,8 @@ export class Sim {
     this.time = 0;
     this.stars = 0; this.starDecay = 0; this.lostT = 0;
     this.draft = 0; this.draftCar = null;               // traffic slipstream (polish bundle): charge + target
+    this.labelUse = { id: null, t: 0 };                  // helper-label retirement (labels.js): continuous-use tracker
+    this.labelFadeAt = {};                               // label id -> sim.time it retired this session (the fade)
     this.busted = null;
     this.msg = null;
     this.bustT = 0;
@@ -220,6 +223,7 @@ export class Sim {
     stepHeliState(this, dt);
     stepJobs(this, dt, input);
     stepEvents(this, dt);
+    stepLabels(this, dt);                   // helper labels retire after ~3 s of continuous use (labels.js)
     stepCombo(this, dt);
     stepWaterFx(this, dt);                  // spray decay, moored craft settling, the police boat
     // a board left alone rolls to a stop

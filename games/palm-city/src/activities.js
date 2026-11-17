@@ -9,6 +9,7 @@
 // A hub (the Garage's JOBS sign) is a signpost, not something you start: it gets a marker and no
 // HELP row. To add an activity, push one more entry in build() — nothing else needs touching.
 import { EVENTS, quitEvent } from './events.js';
+import { labelAlpha } from './labels.js';
 import { quitJob } from './jobs.js';
 import { dismount, mount } from './skate.js';
 import { CHASE } from './chase.js';
@@ -73,10 +74,17 @@ export function initActivities(sim) {
   sim.activities = list;
 }
 
-// what the street markers draw this frame: [{ a, x, y }] for every activity with a position
+// what the street markers draw this frame: [{ a, x, y, alpha }] for every activity with a
+// position. A learned label (labels.js: used its vehicle/mode for ~3 s once, ever) is gone
+// from here — street plaque and map POI alike — apart from its half-second goodbye fade.
 export function markers(sim, out = []) {
   out.length = 0;
-  for (const a of sim.activities || []) { const p = a.pos(); if (p) out.push({ a, x: p[0], y: p[1] }); }
+  for (const a of sim.activities || []) {
+    const p = a.pos(); if (!p) continue;
+    const alpha = labelAlpha(sim, a.id);
+    if (alpha < 0) continue;
+    out.push({ a, x: p[0], y: p[1], alpha });
+  }
   return out;
 }
 
