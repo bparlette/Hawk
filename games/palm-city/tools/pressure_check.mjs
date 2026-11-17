@@ -106,15 +106,26 @@ const inCar = (s, x, y, h) => { const P = s.player, c = s.addCar(x, y, h, 'sedan
 // spikes: the player rides ON RIMS for ~8 s (polish bundle), then the tyres give up and the limp lands
 {
   const s = fresh(0);
-  const q = world.loopAt(600, 12), h = Math.atan2(q.ty, q.tx), c = inCar(s, q.x, q.y, h);
+  // staging (push #2): the traffic loop was rebuilt for the shell, so the old fixed arc point
+  // (600) now lands on a curve in the oncoming lane — the pin cut chords onto grass and met
+  // head-on traffic, poisoning the measurement. Scan for a clean straight of the CURRENT loop
+  // (all-road, heading drift < 0.1 over 160 units) and stage there instead.
+  let ms = -1, q = null;
+  for (let a = 0; a < world.loopPath.len - 200 && ms < 0; a += 20) {
+    const p0 = world.loopAt(a, 12), p1 = world.loopAt(a + 80, 12), p2 = world.loopAt(a + 160, 12);
+    const dh = Math.abs(Math.atan2(p2.ty, p2.tx) - Math.atan2(p0.ty, p0.tx));
+    if (world.surfaceAt(p0.x, p0.y) === 'road' && world.surfaceAt(p1.x, p1.y) === 'road' && world.surfaceAt(p2.x, p2.y) === 'road' && Math.min(dh, Math.PI * 2 - dh) < 0.1) { ms = a; q = p0; }
+  }
+  if (!q) { check(false, 'rim-run staging finds a clean straight on the traffic loop', 'none found'); }
+  const h = Math.atan2(q.ty, q.tx), c = inCar(s, q.x, q.y, h);
   s.spikes.push({ x: q.x + Math.cos(h) * 50, y: q.y + Math.sin(h) * 50, a: h + Math.PI / 2 });
-  let tRims = -1, t1 = -1, v1 = 0, ms = 600;
+  let tRims = -1, t1 = -1, v1 = 0;
   for (let i = 0; i < 14 * 60; i++) {
     if (t1 < 0 && !c.spiked) c.v = 240;
     if (t1 >= 0) { ms += c.v * DT; const qq = world.loopAt(ms, 12); c.x = qq.x; c.y = qq.y; c.h = Math.atan2(qq.ty, qq.tx); }   // the rim run ends wherever it ends — measure the limp pinned to the loop, floored, clear of grass drag and the fighting wheel
     s.step(DT, { ...none, keys: { up: true } });
     if ((c.rims || 0) > 0 && tRims < 0) tRims = i;
-    if (c.spiked && t1 < 0) { t1 = i; c.v = 240; c.dmg = 0; c.wreck = false; }   // the forced rim run also wrecks the car against the city — clear the crash damage so this measures the TYRE limp (wrecking has its own checks)
+    if (c.spiked && t1 < 0) { t1 = i; c.v = 240; c.dmg = 0; c.wreck = false; s.cars = s.cars.filter(o => o === c || o.parked); }   // the forced rim run also wrecks the car against the city — clear the crash damage so this measures the TYRE limp (wrecking has its own checks); moving traffic leaves too: a same-direction rear-ender in the window is RNG weather, not limp
     if (t1 >= 0 && i === t1 + 60) { v1 = Math.abs(c.v); break; }
   }
   check(tRims >= 0 && t1 > tRims && (t1 - tRims) / 60 > 7 && (t1 - tRims) / 60 < 9.5, 'a spike strip puts the player ON RIMS for ~8 s before the tyres give up', tRims >= 0 ? `${((t1 - tRims) / 60).toFixed(1)} s` : 'never rimmed');

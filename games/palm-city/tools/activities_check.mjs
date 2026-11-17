@@ -13,7 +13,7 @@ const world = new World(layout);
 let fails = 0; const check = (ok, n, i = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${n} ${i}`); if (!ok) fails++; };
 const DT = 1 / 60, inp = (o = {}) => ({ jx: 0, jy: 0, jm: 0, action: false, punch: false, turbo: false, keys: {}, ...o });
 const s = new Sim(world, M, 7, () => {});
-const WANT = ['motel', 'taxi', 'tow', 'bus', 'getaway', 'wreck', 'valet', 'spot', 'chase'];
+const WANT = ['motel', 'taxi', 'tow', 'bus', 'getaway', 'wreck', 'valet', 'spot', 'openroad', 'chase', 'heli', 'boats'];
 const ids = s.activities.map(a => a.id), mk = markers(s).slice();
 for (const id of WANT) {
   const a = s.activities.find(q => q.id === id), m = mk.find(q => q.a.id === id);

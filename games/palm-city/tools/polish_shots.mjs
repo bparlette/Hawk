@@ -1,7 +1,7 @@
 // polish_shots.mjs — before/after pairs for the polish bundle.
 //   node tools/polish_shots.mjs before   (serves ../palm-city-record — the live base)
 //   node tools/polish_shots.mjs after    (serves this tree)
-// Pairs: (a) dusk chase — tinted smoke + Ocean Drive sheen, (b) spikes — instant limp (before)
+// Pairs: (a) dusk chase — tinted smoke, (b) spikes — instant limp (before)
 // vs ON RIMS with sparks (after), (c) the highlight playing — clean (before) vs Channel 7
 // frame (after). Identical staging in both trees; only the build differs. 420x860 frames.
 import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';

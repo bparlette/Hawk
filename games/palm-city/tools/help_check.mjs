@@ -12,13 +12,14 @@ import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath }
 import { World } from '../src/world.js'; import { Sim } from '../src/sim.js';
 import { helpRows } from '../src/activities.js'; import { helpLayout, helpHit, CONTROLS } from '../src/help.js';
 import { jobButton } from '../src/jobs.js'; import { buttonA } from '../src/controls.js';
+import { nearHeli } from '../src/heli.js'; import { nearCraft } from '../src/watercraft.js';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const layout = JSON.parse(fs.readFileSync(path.join(ROOT, 'layout.json'))), M = JSON.parse(fs.readFileSync(path.join(ROOT, 'assets/manifest.json')));
 const world = new World(layout);
 let fails = 0; const check = (ok, n, i = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${n} ${i}`); if (!ok) fails++; };
 const DT = 1 / 60, inp = (o = {}) => ({ jx: 0, jy: 0, jm: 0, action: false, punch: false, turbo: false, keys: {}, ...o });
 const fresh = () => { const s = new Sim(world, M, 7, () => {}); s.spawnTraffic = () => null; return s; };
-const WANT = ['motel', 'taxi', 'tow', 'bus', 'getaway', 'wreck', 'valet', 'spot', 'chase'];
+const WANT = ['motel', 'taxi', 'tow', 'bus', 'getaway', 'wreck', 'valet', 'spot', 'openroad', 'chase', 'heli', 'boats'];
 
 { const s = fresh(), rows = helpRows(s);
   check(rows.map(a => a.id).join() === WANT.join(), 'the panel lists every registered activity, in order', rows.map(a => a.name).join(' · '));
@@ -28,6 +29,14 @@ const WANT = ['motel', 'taxi', 'tow', 'bus', 'getaway', 'wreck', 'valet', 'spot'
     const L = helpLayout(vw, vh, rows.length, mode, 0), P = L.panel;
     const ok = P.y >= 0 && P.y + P.h <= vh && L.rows.every(r => r.y >= P.y && r.y + r.h <= P.y + P.h && r.jump.x >= P.x && r.jump.x + r.jump.w <= P.x + P.w) && L.btn.y + L.btn.h <= P.y + P.h && L.rows.at(-1).y + L.rows.at(-1).h <= L.btn.y;
     check(ok, `layout fits ${vw}x${vh} (${mode})`, `panel ${Math.round(P.y)}..${Math.round(P.y + P.h)}, row ${Math.round(L.rows[0].h)} px`);
+  }
+  { // the two-column grid (owner, Nov 16): all 12 on ONE 420x860 screen, PLAY pinned visible
+    const G = helpLayout(420, 860, rows.length, 'start', 0), GP = G.panel;
+    check(rows.length === 12 && G.rows.length === 12, 'the menu lists all 12 activities', `${rows.length} rows`);
+    check(G.rows[0].x < G.rows[1].x && G.rows[0].y === G.rows[1].y && G.rows[2].y > G.rows[0].y, 'the grid is two columns');
+    check(GP.y + GP.h <= 860 && G.btn.y + G.btn.h <= GP.y + GP.h && G.rows.every(r => r.x >= GP.x && r.x + r.w <= GP.x + GP.w && r.y + r.h <= G.btn.y), 'all 12 tiles fit one screen with PLAY fully visible below them', `panel ${Math.round(GP.y)}..${Math.round(GP.y + GP.h)}`);
+    const centres = rows.map((a, i) => helpHit({ x: G.rows[i].x + G.rows[i].w / 2, y: G.rows[i].y + G.rows[i].h / 2 }, 420, 860, s, 'start', 0));
+    check(centres.every((h, i) => h && h.type === 'jump' && h.id === WANT[i]), 'a tap anywhere on a tile resolves to that activity');
   }
   const L = helpLayout(420, 860, rows.length, 'help', 0);
   const hits = rows.map((a, i) => helpHit({ x: L.rows[i].jump.x + 30, y: L.rows[i].jump.y + 16 }, 420, 860, s, 'help', 0));
@@ -43,10 +52,14 @@ for (const id of WANT) {
   if (id === 'motel') { armed = P.mode === 'foot' && s.nearMotelDoor(); where = `on foot ${Math.round(P.ped.x)},${Math.round(P.ped.y)}`; }
   else if (a.group === 'job') { armed = P.mode === 'car' && P.car.job === id && jb && jb.kind === 'start' && A.label === 'START ' + a.name; where = `in the ${P.car && P.car.model}, A = ${A && A.label}`; }
   else if (a.board) { armed = P.mode === 'board' && A && A.label === 'START BOARD CHASE'; where = `on the board at ${Math.round(s.board.x)},${Math.round(s.board.y)}, A = ${A && A.label}`; }
+  else if (a.heli) { armed = P.mode === 'foot' && !!s.player.roof && nearHeli(s); where = `on the hospital roof at ${Math.round(P.ped.x)},${Math.round(P.ped.y)}`; }
+  else if (a.water) { const cr = nearCraft(s); armed = P.mode === 'foot' && !!cr; where = `on the pier at ${Math.round(P.ped.x)},${Math.round(P.ped.y)}, beside the ${cr && cr.kind}`; }
   else { armed = P.mode === 'car' && jb && jb.kind === 'evstart' && jb.ev === id; where = `in the ${P.car && P.car.model} at ${Math.round(P.car.x)},${Math.round(P.car.y)}, A = ${A && A.label}`; }
   check(armed, `JUMP ${a.name}: you are there with it armed`, where);
   check(s.score === 1234 && s.stars === stars, `JUMP ${a.name}: free — no score or wanted change`);
-  if (a.group !== 'siege') { s.step(DT, inp({ punch: true })); check(a.group === 'job' ? !!s.job && s.job.kind === id : !!s.event && s.event.kind === id, `JUMP ${a.name}: one press of A starts it`); }
+  if (a.heli) { s.step(DT, inp({ action: true })); check(P.mode === 'air' && s.stars === stars + 2, `JUMP ${a.name}: the big button steals it (+2 stars)`); }
+  else if (a.water) { s.step(DT, inp({ action: true })); check(P.mode === 'water' && !!s.water.ride, `JUMP ${a.name}: one press of the big button hops on`); }
+  else if (a.group !== 'siege') { s.step(DT, inp({ punch: true })); check(a.group === 'job' ? !!s.job && s.job.kind === id : !!s.event && s.event.kind === id, `JUMP ${a.name}: one press of A starts it`); }
 }
 { const s = fresh();
   s.step(DT, inp({ jump: 'taxi' })); s.step(DT, inp({ punch: true }));
