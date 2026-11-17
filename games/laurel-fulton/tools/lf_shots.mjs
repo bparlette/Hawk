@@ -14,10 +14,13 @@ const browser = await chromium.launch({ executablePath: process.env.CHROME || un
 const G = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/graph.json'))), A = G.anchors;
 const mlb = G.edges.find(e => e.name === 'Maple Lawn Boulevard');
 const shots = [
-  ['l1-drive-from-ledo', `/laurel-fulton/index.html`, 'drive'],
-  ['l1-maple-lawn-blvd', `/laurel-fulton/index.html?cam=${mlb.pts[0][0]},${mlb.pts[0][1]}`],
-  ['l1-interchange', `/laurel-fulton/index.html?cam=-27307,34575,0.6`],
-  ['l1-brads-street', `/laurel-fulton/index.html?cam=${A.brad.x},${A.brad.y}`],
+  ['l1-drive-from-ledo', `/laurel-fulton/play.html`, 'drive'],
+  ['l1-maple-lawn-blvd', `/laurel-fulton/play.html?cam=${mlb.pts[0][0]},${mlb.pts[0][1]}`],
+  ['l1-interchange', `/laurel-fulton/play.html?cam=-27307,34575,0.6`],
+  ['l1-brads-street', `/laurel-fulton/play.html?cam=${A.brad.x},${A.brad.y}`],
+  ['l10-map', `/laurel-fulton/play.html?map`],
+  ['l10-brads-home', `/laurel-fulton/play.html?cam=${A.brad.x},${A.brad.y}`],
+  ['l10-ledo', `/laurel-fulton/play.html?cam=${G.verts[A.ledo.v].x},${G.verts[A.ledo.v].y}`],
   ['l1-bar-palm-opening', `/palm-city/index.html?cam=1240,1240&t=0.1&nostart`],
 ];
 for (const [name, url, mode] of shots) {

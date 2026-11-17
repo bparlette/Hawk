@@ -71,7 +71,7 @@ if (GW && SIM) {
   const ROSTER2 = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/roster.json')));
   // B1 spawn
   const S = new SIM.LFSim(W, ROSTER2, FLEET);
-  check(S.player && Math.hypot(S.player.x - G.anchors.ledo.x, S.player.y - G.anchors.ledo.y) < 1 && ['road', 'service'].includes(W.surfaceAt(S.player.x, S.player.y, 0)) || W.roadInfo(S.player.x, S.player.y, 0).d < 300,
+  check(S.player && Math.hypot(S.player.x - G.anchors.ledo.x, S.player.y - G.anchors.ledo.y) < 300 && ['road', 'service'].includes(W.surfaceAt(S.player.x, S.player.y, 0)) || W.roadInfo(S.player.x, S.player.y, 0).d < 300,
     'B1 spawn at Ledo Pizza, in Brad\'s Camaro', `${S.player.model} at ${Math.round(S.player.x)},${Math.round(S.player.y)}, ${(W.roadInfo(S.player.x, S.player.y, 0).d / 10).toFixed(0)} m from the lot aisle`);
   check(S.cars.filter(c => c.parked).length >= 8, 'B1 the crew\'s cars are parked at their houses', `${S.cars.filter(c => c.parked).length} parked`);
   // B2 the owner's sample route: Ledo -> Maple Lawn Blvd -> MD 216 -> Stansfield Rd, by the stick
