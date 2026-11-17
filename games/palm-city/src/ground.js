@@ -12,6 +12,7 @@
 // evicted behind the player simply repaint if the player drives back.
 
 import { mulberry32, fbm, vnoise } from './world.js';
+import { fxOn, inBleed } from './fx.js';
 
 export const CHUNK = 256;
 export const PX_PER_UNIT = 2;
@@ -69,8 +70,11 @@ export class GroundPainter {
     this.world = world;
     this.cache = new Map(); // key -> canvas, in LRU order (oldest first)
     const b = world.bounds || { x0: 0, y0: 0, x1: world.L.world.w, y1: world.L.world.h };
+    // the grid follows the open sea east/south (world.seaE/seaS): chunks out there paint
+    // procedurally from surfaceAt like any other — same water, no edge at the old world line
+    const gx1 = Math.max(b.x1, world.seaE || 0), gy1 = Math.max(b.y1, world.seaS || 0);
     this.cx0 = Math.floor(b.x0 / CHUNK); this.cy0 = Math.floor(b.y0 / CHUNK);
-    this.cx1 = Math.ceil(b.x1 / CHUNK); this.cy1 = Math.ceil(b.y1 / CHUNK);
+    this.cx1 = Math.ceil(gx1 / CHUNK); this.cy1 = Math.ceil(gy1 / CHUNK);
     this.cols = this.cx1 - this.cx0;
     this.rows = this.cy1 - this.cy0;
     this.queue = [];        // [cx, cy] waiting to be painted, nearest-first
@@ -263,11 +267,27 @@ export class GroundPainter {
             wid = (pass === 0 ? 8.5 : 5.5) + r3 * 4.6;
             alpha = 0.30 + r4 * 0.28;
           }
+          // BEAUTY SAMPLE 5 — gouache edge bleed, plaza + NOVA blocks only (fx.js BLEED_RECTS):
+          // a dab near a surface border goes bigger and hotter (and is laid twice); a dab near
+          // a road centreline goes softer and loses its dark under-ridge. Decided from extra
+          // surfaceAt samples taken AFTER r1..r6 leave the seeded stream, so chunk seams and
+          // the untreated paint are bit-identical; with the fx off this block never runs.
+          let dabTwice = false, noRidge = false;
+          if (fxOn('bleed') && inBleed(wx, wy)) {
+            const wob2 = vnoise(wx * 0.055, wy * 0.055, 9) * 2 - 1;
+            if (W.surfaceAt(wx - 11, wy, wob2) !== t || W.surfaceAt(wx + 11, wy, wob2) !== t ||
+                W.surfaceAt(wx, wy - 11, wob2) !== t || W.surfaceAt(wx, wy + 11, wob2) !== t) {
+              alpha = Math.min(0.95, alpha * 1.4); len *= 1.18; wid *= 1.3; dabTwice = true;
+            } else if (t === 'road') {
+              const ri = W.roadInfoAny(wx, wy);
+              if (ri.d < ri.hw * 0.45) { alpha *= 0.62; wid *= 0.9; noRidge = true; }
+            }
+          }
           if (!skipDab) {
           const col = p.dabs[(r5 * p.dabs.length) | 0];
           const cxs = Math.cos(ang) * len / 2, sys = Math.sin(ang) * len / 2;
           const bend = (r6 - 0.5) * 0.36;
-          if (pass === 1 && r4 > 0.35) {
+          if (pass === 1 && r4 > 0.35 && !noRidge) {
             g.strokeStyle = 'rgba(28, 22, 62, 0.11)';
             g.globalAlpha = alpha * 0.55;
             g.lineWidth = wid + 1.0;
@@ -283,6 +303,7 @@ export class GroundPainter {
           g.moveTo(px - cxs, py - sys);
           g.quadraticCurveTo(px - sys * bend, py + cxs * bend, px + cxs, py + sys);
           g.stroke();
+          if (dabTwice) { g.globalAlpha = alpha * 0.55; g.stroke(); }   // the same stroke laid again: a hotter edge
           if (pass === 1 && r4 > 0.74) {
             g.strokeStyle = t === 'water' ? '#bfefff' : (t === 'road' ? '#cfc6d0' : '#fff3ce');
             g.globalAlpha = 0.26 * dabFade;
