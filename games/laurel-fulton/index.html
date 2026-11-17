@@ -1,29 +1,79 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#1b1430">
-<title>Laurel / Fulton</title>
-<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laurel / Fulton — The Map &amp; The Fleet</title>
 <style>
-  html,body{margin:0;height:100%;background:#120c22;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
-  canvas{display:block;touch-action:none}
-  #err{position:fixed;left:0;right:0;top:0;padding:12px;background:#a0203a;color:#fff;font:14px/1.4 -apple-system,system-ui,sans-serif;white-space:pre-wrap;display:none;z-index:9}
+  :root{ --ink:#17102a; --panel:#221839; --gold:#f5c542; --blue:#7fd4ff; --paper:#f3ead8; --dim:#b9aed6; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--ink); color:var(--paper); font-family:Georgia,'Times New Roman',serif; }
+  header{ padding:34px 18px 8px; text-align:center; }
+  h1{ color:var(--gold); font-size:clamp(26px,6vw,44px); margin:0 0 6px; letter-spacing:.5px; }
+  .sub{ color:var(--blue); font-size:clamp(14px,3.4vw,19px); margin:0 0 4px; }
+  .mission{ color:var(--paper); font-size:clamp(15px,3.8vw,21px); margin:10px auto 0; max-width:720px; }
+  main{ max-width:1060px; margin:0 auto; padding:10px 14px 40px; }
+  h2{ color:var(--gold); font-size:clamp(20px,5vw,30px); margin:34px 0 10px; text-align:center; }
+  p.note{ color:var(--dim); text-align:center; max-width:720px; margin:6px auto 14px; font-size:15px; line-height:1.45; }
+  img.wide{ width:100%; height:auto; display:block; border:2px solid var(--gold); border-radius:10px; background:#0d0919; }
+  .card{ background:var(--panel); border:1px solid #4a3a75; border-radius:12px; padding:14px; margin:16px 0; }
+  .card h3{ margin:0 0 2px; color:var(--gold); font-size:21px; }
+  .card .street{ color:var(--blue); font-size:14px; margin:0 0 4px; }
+  .card .car{ margin:0 0 10px; font-size:16px; }
+  .pair{ display:flex; align-items:stretch; gap:10px; }
+  .pair figure{ flex:1; margin:0; background:#0d0919; border-radius:8px; padding:8px; display:flex; flex-direction:column; }
+  .pair img{ width:100%; height:auto; margin:auto 0; }
+  .pair .spritebox{ flex:0 0 30%; align-items:center; }
+  .pair .spritebox img{ image-rendering:auto; max-height:300px; width:auto; max-width:100%; margin:auto; }
+  figcaption{ color:var(--dim); font-size:12.5px; text-align:center; padding-top:6px; }
+  .arrow{ align-self:center; color:var(--gold); font-size:26px; flex:0 0 auto; }
+  footer{ color:var(--dim); text-align:center; font-size:13.5px; padding:0 16px 34px; line-height:1.5; }
+  @media (max-width:560px){ .pair{ flex-direction:column; } .arrow{ transform:rotate(90deg); } .pair .spritebox{ flex:none; } }
 </style>
 </head>
 <body>
-<div id="wrap"><canvas id="game"></canvas></div>
-<div id="err"></div>
-<div id="safe" style="position:fixed;top:0;left:0;width:1px;height:env(safe-area-inset-top,0px);pointer-events:none;visibility:hidden"></div>
-<script>
-  // No silent fallbacks: any load or runtime failure is shown on screen.
-  function showErr(m){const e=document.getElementById('err');e.style.display='block';e.textContent+=m+'\n';}
-  addEventListener('error',e=>showErr('Error: '+(e.message||e.target&&e.target.src)));
-  addEventListener('unhandledrejection',e=>showErr('Error: '+(e.reason&&e.reason.stack||e.reason)));
-</script>
-<script type="module" src="src/main.js"></script>
+<header>
+  <h1>LAUREL / FULTON</h1>
+  <p class="sub">A real neighborhood, built as a game — the map &amp; the fleet</p>
+  <p class="mission"><b>Pick your player</b> at their house &rarr; get in your car &rarr; <b>rally the crew</b>, house to house &rarr; the whole convoy meets at <b>Atholton High School</b>.</p>
+</header>
+<main>
+  <h2>The Map</h2>
+  <p class="note">The real Laurel/Fulton road network, drawn from OpenStreetMap at full extent — every street where it really is. Public version: people and street names only, no house numbers.</p>
+  <a href="showcase-assets/map-overview-public.png"><img class="wide" src="showcase-assets/map-overview-public.png" alt="Laurel Fulton game map — public overview"></a>
+
+  <h2>The Fleet — In-Game, Two Ways</h2>
+  <p class="note">Gemini&rsquo;s true-scale 3D renders (Blender, exact real-world dimensions) and the flat top-down sprites that drive the map — same nine house cars, both styles.</p>
+  <img class="wide" src="showcase-assets/fleet-lineup-gemini.png" alt="Fleet lineup — Gemini 3D renders">
+  <p class="note" style="margin-top:14px;">The map sprites, at true relative scale — Grant&rsquo;s Cadillac is really that much bigger than Rigg&rsquo;s Celica:</p>
+  <img class="wide" src="showcase-assets/contact-sheet.png" alt="All ten car sprites at true scale">
+
+  <h2>Real Inspiration &rarr; In-Game Asset</h2>
+  <p class="note">Every car was drawn from real photographs of the real model. Left: the photo. Right: the sprite it became.</p>
+
+  <section class="card"><h3>Brad</h3><p class="street">Stansfield Rd</p><p class="car">1987 Camaro IROC-Z — two-tone (white front, maroon rear), yellow headlights, loud sound system</p><div class="pair"><figure><img src="showcase-assets/brad-ref.jpg" alt="Real 1987 Camaro reference photo"><figcaption>REAL — 1987 Camaro, front 3/4</figcaption></figure><div class="arrow">&rarr;</div><figure class="spritebox"><img src="showcase-assets/brad-sprite.png" alt="Brad's Camaro sprite"><figcaption>IN-GAME</figcaption></figure></div></section>
+
+  <section class="card"><h3>Kosack</h3><p class="street">Derby Dr</p><p class="car">Cavalier sedan, ~1989 — red</p><div class="pair"><figure><img src="showcase-assets/kosack-ref.jpg" alt="Real Cavalier reference photo"><figcaption>REAL — Cavalier sedan (shape ref; the red came from an &rsquo;89 Z24 convertible photo)</figcaption></figure><div class="arrow">&rarr;</div><figure class="spritebox"><img src="showcase-assets/kosack-sprite.png" alt="Kosack's Cavalier sprite"><figcaption>IN-GAME</figcaption></figure></div></section>
+
+  <section class="card"><h3>Jimmy</h3><p class="street">Sweet Cherry Ln — shares the house with Billy</p><p class="car">1996 Astro — silver, blue neon underglow, loud sound system</p><div class="pair"><figure><img src="showcase-assets/jimmy-ref.jpg" alt="Real 1996 Astro reference photo"><figcaption>REAL — 1996 Astro, front</figcaption></figure><div class="arrow">&rarr;</div><figure class="spritebox"><img src="showcase-assets/jimmy-sprite.png" alt="Jimmy's Astro sprite"><figcaption>IN-GAME</figcaption></figure></div></section>
+
+  <section class="card"><h3>Billy</h3><p class="street">Sweet Cherry Ln — shares the house with Jimmy</p><p class="car">1994 Astro — teal blue, boxy first-generation body</p><div class="pair"><figure><img src="showcase-assets/billy-ref.jpg" alt="Real teal 1994 Astro reference photo"><figcaption>REAL — an actual teal 1994 Astro</figcaption></figure><div class="arrow">&rarr;</div><figure class="spritebox"><img src="showcase-assets/billy-sprite.png" alt="Billy's Astro sprite"><figcaption>IN-GAME</figcaption></figure></div></section>
+
+  <section class="card"><h3>Jason</h3><p class="street">Susini Dr</p><p class="car">1989 Camry — white, NO exhaust: loud and horrible, sputters from the tailpipe</p><div class="pair"><figure><img src="showcase-assets/jason-ref.png" alt="Real white 1989 Camry reference photo"><figcaption>REAL — white 1989 Camry</figcaption></figure><div class="arrow">&rarr;</div><figure class="spritebox"><img src="showcase-assets/jason-sprite.png" alt="Jason's Camry sprite"><figcaption>IN-GAME</figcaption></figure></div></section>
+
+  <section class="card"><h3>Clayton Floyd</h3><p class="street">Hughes Ave — the Floyds house</p><p class="car">Camaro IROC-Z — dark green</p><div class="pair"><figure><img src="showcase-assets/clayton-ref.jpg" alt="Real green Camaro reference photo"><figcaption>REAL — green IROC-Z, front 3/4</figcaption></figure><div class="arrow">&rarr;</div><figure class="spritebox"><img src="showcase-assets/clayton-sprite.png" alt="Clayton's Camaro sprite"><figcaption>IN-GAME</figcaption></figure></div></section>
+
+  <section class="card"><h3>Zack Floyd</h3><p class="street">Hughes Ave — the Floyds house</p><p class="car">Mercury Tracer 5-door hatch — green</p><div class="pair"><figure><img src="showcase-assets/zack-ref.jpg" alt="Real Mercury Tracer reference photo"><figcaption>REAL — first-gen Tracer 5-door (the green is the owner&rsquo;s spec; the photo car is blue)</figcaption></figure><div class="arrow">&rarr;</div><figure class="spritebox"><img src="showcase-assets/zack-sprite.png" alt="Zack's Tracer sprite"><figcaption>IN-GAME</figcaption></figure></div></section>
+
+  <section class="card"><h3>Rigg</h3><p class="street">Mossy Stone Ct</p><p class="car">First-gen Celica — blue, blue headlights, loud sound system</p><div class="pair"><figure><img src="showcase-assets/rigg-ref.jpg" alt="Real blue Celica reference photo"><figcaption>REAL — 1973 Celica ST in blue</figcaption></figure><div class="arrow">&rarr;</div><figure class="spritebox"><img src="showcase-assets/rigg-sprite.png" alt="Rigg's Celica sprite"><figcaption>IN-GAME</figcaption></figure></div></section>
+
+  <section class="card"><h3>Grant</h3><p class="street">Early Bud Way</p><p class="car">Cadillac Brougham — maroon, the &ldquo;USS Mino&rdquo;, 5.61 m of land yacht</p><div class="pair"><figure><img src="showcase-assets/grant-ref.webp" alt="Real maroon Cadillac Brougham reference photo"><figcaption>REAL — maroon Brougham, front 3/4</figcaption></figure><div class="arrow">&rarr;</div><figure class="spritebox"><img src="showcase-assets/grant-sprite.png" alt="Grant's Cadillac sprite"><figcaption>IN-GAME</figcaption></figure></div></section>
+
+  <section class="card"><h3>Lamar</h3><p class="street">Atholton High School — the rally finale</p><p class="car">1987 Mustang GT hatchback — ON FIRE</p><div class="pair"><figure><img src="showcase-assets/lamar-ref.jpg" alt="Real 1987 Mustang GT reference photo"><figcaption>REAL — 1987 Mustang GT hatchback</figcaption></figure><div class="arrow">&rarr;</div><figure class="spritebox"><img src="showcase-assets/lamar-sprite.png" alt="Lamar's burning Mustang sprite"><figcaption>IN-GAME — burning set piece at the school</figcaption></figure></div></section>
+</main>
+<footer>
+  Built from the real neighborhood and real photographs of the real cars.<br>
+  One car is still waiting for its owner: a black Cavalier.
+</footer>
 </body>
 </html>
