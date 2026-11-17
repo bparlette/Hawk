@@ -1140,6 +1140,31 @@ def build_building(b):
         cyl((W / 2 - 5, -D / 2 + 1.2, 3.2), 0.12, 6.4, dark)
         facade_windows(W, D, 1, rnd, lit=0.8)
         string_lights([(-W / 2 + 10, -D / 2 + 1), (W / 2 - 1, -D / 2 + 1)], 3.0, rnd)
+    elif style == 'hospital':
+        wall = mat('wall', srgb('#f2ede2'), rough=0.6)
+        flat_block(0, 0, W, D, H, wall, gravel('#d9d2c4'), mat('par', srgb('#faf5e8'), rough=0.6), par_h=1.0, par_w=0.5)
+        # the helipad: dark disc, cream ring, a big H — centred on the roof, sized for the chopper
+        padm = mat('helipad', srgb('#3c4048'), rough=0.85, noise=0.05)
+        cyl((0, 0, H + 0.12), 5.8, 0.1, padm, verts=48)
+        ring = mat('hring', srgb('#f6efe2'), rough=0.6, noise=0)
+        cyl((0, 0, H + 0.13), 5.35, 0.1, ring, verts=48)
+        cyl((0, 0, H + 0.14), 5.0, 0.1, padm, verts=48)
+        text_obj('H', (0, 0, H + 0.2), 5.2, mat('hpaint', srgb('#f6efe2'), rough=0.7, noise=0), extrude=0.01)
+        # the red cross, one quadrant over from the pad
+        cross = mat('cross', srgb('#d8342c'), rough=0.55, noise=0)
+        cube((W / 4, D / 4, H + 0.16), (4.6, 1.5, 0.1), cross)
+        cube((W / 4, D / 4, H + 0.16), (1.5, 4.6, 0.1), cross)
+        # mechanical clutter along the north edge, kept clear of the pad
+        cube((-W / 4, -D / 2 + 2.2, H + 1.1), (W / 3, 3.0, 2.2), wall, bevel=0.1)
+        for i in range(3):
+            ac_unit(W / 4 - 2 + i * 2.0, -D / 2 + 2.0, H, metal, dark)
+        water_tank(-W / 2 + 2.6, D / 2 - 2.6, H, wood, dark)
+        # entrance canopy on the west face (the stair side), with a red cross over it
+        canopy = mat('canopy', srgb('#e8e2d4'), rough=0.6, noise=0.05)
+        cube((-W / 2 - 0.7, 0, 3.4), (1.8, 6.0, 0.14), canopy)
+        cube((-W / 2 - 0.5, 0, H - 2.2), (0.18, 3.4, 3.4), cross)
+        facade_windows(W, D, floors, rnd, lit=0.8, shop=True)
+        feat_h = 3.6
     elif style == 'office':
         wall = mat('wall', srgb('#c9cdd8'), rough=0.5)
         flat_block(0, 0, W, D, H, wall, gravel('#9ea0a8'), mat('par', srgb('#e8e6ea'), rough=0.5), par_h=1.0, par_w=0.5)
