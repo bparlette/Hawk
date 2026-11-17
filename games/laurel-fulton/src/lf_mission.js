@@ -113,7 +113,7 @@ export function stepRally(S, M, dt) {
     }
     B.phase = BEAT[B.i][0];
     const u = B.t / BEAT[B.i][1], ease = u * u * (3 - 2 * u);
-    M.camZoom = B.phase === 'zoom' ? 1 + 0.75 * ease : B.phase === 'roll' ? 1.75 - 0.75 * ease : 1.75;
+    M.camZoom = B.phase === 'zoom' ? 1 + 1.6 * ease : B.phase === 'roll' ? 2.6 - 1.6 * ease : 2.6;   // rescaled for the 0.62 base zoom (Nov 17) — same push-in framing as before
     for (const fg of B.figs) {                             // walkers: out to the huddle, then back to their own car
       const k = B.phase === 'out' ? ease : B.phase === 'dap' ? 1 : B.phase === 'in' ? 1 - ease : 0;
       fg.x = fg.cx + (fg.hx - fg.cx) * k; fg.y = fg.cy + (fg.hy - fg.cy) * k; fg.vis = B.phase !== 'zoom' && B.phase !== 'roll';

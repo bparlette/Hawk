@@ -5,6 +5,42 @@
 //   on_fire         : flames + smoke pouring off the parked Mustang (Lamar, Atholton HS)
 // and the arrival beat's walkers + dap, the pulsing pickup rings. All drawn in world space by lf_render.js.
 const TAU = Math.PI * 2;
+// ---- people: PALM CITY'S EXACT PED SPRITES (owner directive, Nov 17: reuse
+// gta remake's assets for people, never redraw them). The sheets live in
+// games/palm-city/assets/ and are REFERENCED, not copied, so the two games
+// can never drift apart. Palm City's own manifest dialect (its render.js):
+// 16 angles x 3 poses, cols 12, colour cell 39x39 at ox/oy -19.5, shadow
+// 110x110 at -20.23/-64.32; walk cycle poses [0,1,2,1] at 7 fps, idle pose 1.
+const PED_OUTFIT = { brad: 'player', clayton: 'ped_straw', zack: 'fare_chaos', rigg: 'ped_blue', kosack: 'ped_rose', jason: 'ped_white', jimmy: 'fare_tourist', billy: 'ped_sun', grant: 'fare_vip', lamar: 'fare_fed' };
+const PED_FILE = { player: 'ped_player.webp', ped_straw: 'ped_ped_straw.webp', ped_blue: 'ped_ped_blue.webp', ped_rose: 'ped_ped_rose.webp', ped_white: 'ped_ped_white.webp', ped_sun: 'ped_ped_sun.webp', fare_tourist: 'jobs/ped_fare_tourist.webp', fare_chaos: 'jobs/ped_fare_chaos.webp', fare_vip: 'jobs/ped_fare_vip.webp', fare_fed: 'jobs/ped_fare_fed.webp' };
+const PED_IMG = {};
+if (typeof Image !== 'undefined') for (const k in PED_FILE) {
+  const im = new Image(); im.src = new URL('../../palm-city/assets/' + PED_FILE[k], import.meta.url).href; PED_IMG[k] = im;
+}
+// NOTE: Palm City's *_sh sheets are NOT drawn here — they are pure-black RGB
+// with the shadow shape in alpha, baked for Palm City's angled camera; drawn
+// raw in this top-down game they smear into black streaks (seen Nov 17).
+// drawPed lays its own soft ellipse instead, matching the car shadows.
+function pedCell(g, img, idx, x, y, w, h, ox, oy) {
+  const cw = img.naturalWidth / 12, ch = img.naturalHeight / 4;
+  g.drawImage(img, (idx % 12) * cw, Math.floor(idx / 12) * ch, cw, ch, x + ox, y + oy, w, h);
+}
+// draws the fig as its Palm City ped; returns false until the sheet decodes
+function drawPed(g, f, time) {
+  const outfit = PED_OUTFIT[f.who.id] || 'ped_sun', img = PED_IMG[outfit];
+  if (!img || !img.complete || !img.naturalWidth) return false;
+  const dx = f.x - (f.px ?? f.x), dy = f.y - (f.py ?? f.y), moving = Math.hypot(dx, dy) > 0.02;
+  if (moving) f.h = Math.atan2(dy, dx);
+  f.px = f.x; f.py = f.y;
+  let a = Math.round((f.h || 0) / TAU * 16) % 16; if (a < 0) a += 16;
+  const pose = moving ? [0, 1, 2, 1][Math.floor(time * 7) % 4] : 1, idx = a * 3 + pose;
+  g.save(); g.translate(f.x, f.y + 5); g.scale(1, 0.45);
+  const gr = g.createRadialGradient(0, 0, 1, 0, 0, 11);
+  gr.addColorStop(0, 'rgba(24,30,18,0.34)'); gr.addColorStop(1, 'rgba(24,30,18,0)');
+  g.fillStyle = gr; g.beginPath(); g.arc(0, 0, 11, 0, TAU); g.fill(); g.restore();
+  pedCell(g, img, idx, f.x, f.y - (f.dap ? Math.abs(f.dap) * 3 : 0), 39, 39, -19.5, -19.5);
+  return true;
+}
 const fxOf = (S, c) => (S.fxBy && S.fxBy[c.model]) || [];
 export function setFx(S, roster) {
   S.fxBy = {};
@@ -66,14 +102,18 @@ export function over(g, S, M, time) {
   }
   if (M.stops.every(s => s.done) && !M.complete) { const [mx, my] = M.meet.pos, p = 0.5 + 0.5 * Math.sin(time * 3); g.globalAlpha = 0.4 + 0.3 * p; g.strokeStyle = '#7fd4ff'; g.lineWidth = 8; g.setLineDash([22, 14]); g.beginPath(); g.arc(mx, my, 400, 0, TAU); g.stroke(); g.setLineDash([]); }
   g.globalAlpha = 1;
-  if (M.beat) for (const f of M.beat.figs) {                           // the walkers + the dap
+  if (M.beat) for (const f of M.beat.figs) {                           // the walkers + the dap — Palm City ped sprites
     if (!f.vis) continue;
-    const bob = f.dap ? Math.abs(f.dap) * 3 : 0, col = ['#d9583a', '#2f6fb0', '#e0a040', '#3f7a52', '#7a4a8c', '#c8c8cc', '#b81d24', '#1f6f7c', '#5a1424'][f.k % 9];
-    g.fillStyle = 'rgba(30,20,50,0.35)'; g.beginPath(); g.ellipse(f.x + 3, f.y + 3, 7, 4, 0, 0, TAU); g.fill();
-    g.fillStyle = col; g.beginPath(); g.ellipse(f.x, f.y - bob, 7, 5.5, 0, 0, TAU); g.fill();                         // shoulders, top-down
-    g.fillStyle = '#e8c39e'; g.beginPath(); g.arc(f.x, f.y - bob, 3.6, 0, TAU); g.fill();                             // head
-    g.strokeStyle = '#2a1430'; g.lineWidth = 1.2; g.stroke();
-    g.font = '700 9px system-ui'; g.textAlign = 'center'; g.fillStyle = '#fff3dc'; g.fillText(f.who.name.split(' ')[0], f.x, f.y - 12 - bob);
+    if (f.h === undefined) f.h = Math.atan2(M.beat.cy - f.y, M.beat.cx - f.x);   // face the huddle until they move
+    const bob = f.dap ? Math.abs(f.dap) * 3 : 0;
+    if (!drawPed(g, f, time)) {                                       // sheets not decoded yet: the old painted figure
+      const col = ['#d9583a', '#2f6fb0', '#e0a040', '#3f7a52', '#7a4a8c', '#c8c8cc', '#b81d24', '#1f6f7c', '#5a1424'][f.k % 9];
+      g.fillStyle = 'rgba(30,20,50,0.35)'; g.beginPath(); g.ellipse(f.x + 3, f.y + 3, 7, 4, 0, 0, TAU); g.fill();
+      g.fillStyle = col; g.beginPath(); g.ellipse(f.x, f.y - bob, 7, 5.5, 0, 0, TAU); g.fill();
+      g.fillStyle = '#e8c39e'; g.beginPath(); g.arc(f.x, f.y - bob, 3.6, 0, TAU); g.fill();
+      g.strokeStyle = '#2a1430'; g.lineWidth = 1.2; g.stroke();
+    }
+    g.font = '700 9px system-ui'; g.textAlign = 'center'; g.fillStyle = '#fff3dc'; g.fillText(f.who.name.split(' ')[0], f.x, f.y - 26 - bob);
   }
   if (M.beat && M.beat.phase === 'dap') {                              // the dap: a spark in the middle of the huddle
     const { cx, cy } = M.beat, s = 1 + 0.4 * Math.sin(time * 18);
