@@ -27,7 +27,9 @@ export class LFSim {
         const sx = hx + (nx - hx) * 0.55, sy = hy + (ny - hy) * 0.55;
         c.x = sx; c.y = sy; c.h = Math.atan2(ny - hy, nx - hx);
       } else c.h = toRoad;
-      if (p.id === 'grant' || p.id === 'zack') { c.x += Math.cos(c.h + Math.PI / 2) * 26; c.y += Math.sin(c.h + Math.PI / 2) * 26; }   // shared driveways: side by side
+      const hk = hx + ',' + hy, nth = (this._atHouse = this._atHouse || new Map()).get(hk) || 0;   // a shared driveway (data: same house):
+      this._atHouse.set(hk, nth + 1);                                                          // the 2nd, 3rd... car parks alongside
+      if (nth) { const side = (nth % 2 ? 1 : -1) * Math.ceil(nth / 2) * 28; c.x += Math.cos(c.h + Math.PI / 2) * side; c.y += Math.sin(c.h + Math.PI / 2) * side; }
     }
     const sp = opts.spawn || W.verts[W.G.anchors.ledo.v];   // Ledo's lot aisle (the anchor's graph vertex), not the restaurant's point inside its footprint
     const model = opts.model || 'camaro_brad';
