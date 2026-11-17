@@ -1,8 +1,10 @@
 // fx.js — BEAUTY WINNERS (Nov 16 2026). Six of the seven beauty samples, promoted by the
 // owner's verdict ("implement all except rim light") from opt-in samples to the game's
-// default look: roof parallax, palm shadow sway, causeway water depth, gouache edge bleed,
-// curb puddles and slipstream petals are ON from boot. Rim light was cut by the same verdict
-// and its code is removed entirely — there is no 'rim' switch anywhere.
+// default look: roof parallax, palm shadow sway, causeway water depth, gouache edge bleed
+// and slipstream petals are ON from boot. Rim light was cut by the same verdict
+// and its code is removed entirely — there is no 'rim' switch anywhere. The curb puddles
+// (sample 6) were likewise removed entirely Nov 17 on the owner's verdict: at golden hour
+// their dark mirror patches read as big brown spots on the roads.
 // The switchboard stays a switchboard, so tuning can still kill any winner live:
 // window.__palm.fx is the live set (delete a name to turn that effect off, add it back to
 // restore; applies next frame — 'bleed' is the exception: it is baked into ground chunks as
@@ -11,7 +13,7 @@
 // applied left to right: ?fx=none turns everything off, ?fx=-sway turns one winner off,
 // ?fx=none,roof leaves only roof on, a bare name turns an effect on.
 
-export const FX_DEFAULTS = ['roof', 'sway', 'causeway', 'bleed', 'puddle', 'petals'];
+export const FX_DEFAULTS = ['roof', 'sway', 'causeway', 'bleed', 'petals'];
 export const FX = new Set(FX_DEFAULTS);
 export const fxOn = (name) => FX.has(name);
 
@@ -40,11 +42,3 @@ export function inBleed(x, y) {
   return false;
 }
 
-// CURB PUDDLES: three on Ocean Drive (the loop's east leg, x 1152..1248) and one on the plaza's
-// south-east corner. tint = the sign/lamp colour the mirror patch throws back.
-export const PUDDLES = [
-  { x: 1196, y: 1010, rx: 30, ry: 13, tint: [255, 178, 86] },   // Ocean Drive: lamp amber
-  { x: 1218, y: 1135, rx: 24, ry: 11, tint: [63, 216, 255] },   // Ocean Drive: DINER cyan spill
-  { x: 1172, y: 1222, rx: 27, ry: 12, tint: [255, 120, 170] },  // Ocean Drive: pink sign spill
-  { x: 1086, y: 700, rx: 30, ry: 14, tint: [255, 138, 60] },    // plaza SE corner: TACOS orange
-];

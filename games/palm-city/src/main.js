@@ -24,7 +24,7 @@ import { chaseStick } from './chasecam.js';
 import { FX, fxFromQuery } from './fx.js';
 
 const Q = new URLSearchParams(location.search);
-fxFromQuery(Q);   // BEAUTY WINNERS: roof,sway,causeway,bleed,puddle,petals on by default; ?fx=none / ?fx=-name overrides (rim light cut by owner verdict)
+fxFromQuery(Q);   // BEAUTY WINNERS: roof,sway,causeway,bleed,petals on by default; ?fx=none / ?fx=-name overrides (rim light + curb puddles cut by owner verdicts)
 const DEMO = Q.has('demo');
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
