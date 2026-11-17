@@ -544,3 +544,278 @@ Proof: `node tools/siege_check.mjs` green on the new sheets;
 `CHROME=… node tools/siege_pick_shots.mjs <label>` → `shots/siege-pick-{before,after}-{golden,dusk}.png`
 (entered through the JUMP + a real touch on ENTER, t = 0.25 and 0.68).
 
+
+## Watercraft — jetski, cigarette boat, police boat (`src/watercraft.js`, Nov 16 2026)
+
+The fourth way to move, skateboard-scoped: ONE module, moored at the pier's south side (clear
+of the three boats baked into the pier sprite — those are scenery and solid; their centres are
+in the module as `BAKED_BOATS`, read off `assets/pier.webp`). Walk the deck, action button hops
+on (nearest-thing wins in `stepPlayerFoot`, after the board); ride out; action again alongside
+the pier at low speed hops off onto the deck. On a craft the A button is **TURBO** — the same
+`stepTurbo` hold-to-boost as a car (`controls.buttonA` returns `turbo` in the new `water` mode;
+the HUD gauge reads the craft).
+
+Physics is heading + velocity with drift: thrust along the heading, the velocity vector bends
+toward it at each craft's carve rate, drag makes terminal = top speed. The **jetski** (30×14,
+top 240) carves (carve 5.5, turn 3.3 — r≈66); the **cigarette boat** (76×18, top 400) winds up
+slowly and slides wide (carve 1.7, turn 1.45 — r≈250). Hulls stay on the water: land, the pier
+deck and the world edge are hard stops (axis-slide, bump + speed loss); round things (baked
+boats, the other craft) push the centre out radially, speed cost once per contact — per-frame
+damping grinds a hull to a stop against a circle, and axis-sliding alone wedges in a circle's
+margin (both learned from the checks).
+
+The spray is the headline: painted foam dabs (the shoreline palette — foam white, aqua) thrown
+off the stern with an arc (z + gravity, drawn raised), spreading and fading; rate and height
+scale with speed, double on turbo. The boats' plume reaches ~3× the jetski's height — the
+rooster tail. Three buoys float out in the bay to round. Craft are drawn in the colour pass
+(canvas-painted hulls: shading, stripe, cockpit, ink outline — no baked sprite) before the peds,
+so the rider stands on the deck.
+
+The **police boat** (white hull, blue stripe, strobing light bar) is AI on the same physics:
+it spawns along the bay from your side of the pier when you're on the water at **2+ stars**,
+top speed 470 — above the cigarette boat's cruise (400), below its turbo top (560), so a held
+turbo is a clean getaway and anything sloppier gets run down. It steers at your predicted
+position, eases off alongside, and shoulders you on contact. Stay within 64 units at matched
+speed and the shared `sim.bustT` meter fills on the car timing (2.8 s — `stepWanted` leaves
+the meter to this module in `water` mode) → the ordinary busted flow, respawn on foot at the
+station. Step ashore (or cool below 2 stars) and it breaks off east and despawns; land cops
+are the land system's job. Anti-wedge: full throttle and no motion for 0.8 s = pressed against
+the pier or a hull, so it breaks east into open water and comes again. Follow-up owed: engine
+sound (skipped by design — no new synth; sea ambience carries the sample).
+
+Proof: `node tools/watercraft_check.mjs` (in `check_all.sh`) — mounts, speed, turbo, turning
+radii, a 60 s random run that never leaves the water, dismount, cop spawn/close/bust/break-off.
+Shots: `node tools/watercraft_shots.mjs` → `shots/water-{moored,jetski,boat,cop}.png`.
+
+## 7I — SPOTLIGHT RAVE (Nov 16 2026, owner mini-game slate)
+
+A score-attack event in the same `sim.event` slot as WRECK IT!/VALET/BOARD CHASE. Verb:
+STAY IN THE LIGHT — drift and stunt inside the police chopper's searchlight beam while a
+crowd watches from the verges. All heat machinery is the REAL pressure system; the event
+only pins the wanted level and reads the beam back out of `sim.chopper`.
+
+**Files.** New: `src/spotlight.js` (the whole event: tuning table `SPOT`, `startSpot`,
+`stepSpot`, `endSpot`), `tools/spotlight_check.mjs`, `tools/spotlight_shots.mjs`. Edited:
+`src/events.js` (registry row `spot: { name: 'SPOTLIGHT RAVE', site: [1000, 560], time: 120 }`
+— key order in `EVENTS` is the registry/`eventSites` order, so spot sits after valet;
+`eventStats.spot`; a `kind === 'spot'` branch in `startEvent`, in the `stepEvents` dispatch,
+in the busted branch (before the generic bust line, after BOARD CHASE's own line — the
+event writes its own fail card `BUSTED` + `vox_evt_spot_busted`), and an `endSpot` cleanup
+call in `endEvent` beside the wreck-anchor sweep), `src/activities.js` (`EVENT_HOW.spot`,
+plus the tag/colour lookups factored out of the event row: `EVENT_TAG`/`EVENT_COL` — wreck
+`#ff7a4a`, valet `#6ee2ff`, spot `#ffe95c`; tag `SPOTLIGHT`), `src/sim.js` (one new ped path
+type, below), `src/events_render.js` (idle beacon colour for spot; the beam-pool stage ring;
+the HYPE HUD card; a result-card third line), `src/director.js` (`rave: 3.5` in the WEIGHT
+table). Registry-contract fallout, updated to match: `tools/activities_check.mjs` and
+`tools/help_check.mjs` WANT lists gain `'spot'`; `tools/events_check.mjs` now expects three
+ring events (`spot,valet,wreck`); `tools/check_all.sh` runs `spotlight_check.mjs`.
+
+**The stage.** The start ring is at [1000, 560] — plaza paving 90 units south of the
+fountain (a solid grind rim at [1000, 470], r ≈ 30: never stage anything on it). The ring
+is on open plaza (surface probe: road-distance 200, no solid within ~70), with the plaza
+rect x 700–1128, y 392–728 around it. Starting works like every event: the generic
+`eventButton` (within 70 of the site, |v| < 140) arms `START SPOTLIGHT RAVE`; JUMP seats
+the player in the nearest car at the site first. `startEvent` builds the shared ev template;
+`startSpot` fills the rave fields and sets the wanted level DIRECTLY (`sim.stars = 3`,
+`sim.lostT = 0`, one `star` fx event) — assignment, not `addStars`, because the pin is
+re-asserted every tick (below) and addStars' decay bookkeeping fights it.
+
+**Heat = tiers.** `ev.floor = 2 + tier` (3/4/5). Every `stepSpot` tick, before anything
+else: if `sim.stars < ev.floor`, set stars to the floor and reset `lostT`. That one rule
+drives all of pressure.js untouched: the chopper spawns at 3★, `stepWanted` targets
+min(4, stars+1) cruisers — capped at 4, so tier-ups ALSO call `spawnBackup` (the stepWanted
+spawn recipe verbatim: anchor at `sim.playerS` or `loopNearest`, one block back, placed
+with `loopAt(s, 23·dir)`, ≥ 380 from the player, no car within 60, `addCar(..., 'police',
+'police', { s, dir })`, v = 160, `siren` fx) to grow the fleet past the cap. Beam behaviour
+comes from pressure.js's own star table: SLEW [120, 175, 225] at 3/4/5★ — tier 2 (hype ≥ 34)
+gets slew 175, tier 3 (hype ≥ 67) gets slew 225 AND velocity lead, because at 5★ the beam
+leads the player (`lead 0.55`) instead of searching a figure-8. Star decay can't undercut
+the rave: in-beam the chopper's `lock` refreshes `seenT` every tick, and the floor catches
+any out-of-beam decay after 22 s unseen.
+
+**Scoring.** HYPE is 0–100 and is the score's spine. Per tick, in-beam only
+(`ev.inBeam = chopper && chopper.lock && !chopper.leaving` — lock is pressure's own
+inside-the-pool test, pool radius 70):
+- score feed: `max(0, sim.score − ev.lastScore) × 0.04` — any points the base game awards
+  (drift banks, destruction popups, trick lines) feed hype; the snapshot is taken at the
+  END of the tick after the event's own pays, so the event never double-counts itself.
+- drift: yaw rate from the car's heading delta; lateral slip `lat = |v · yaw|` against
+  skid.js's own 430 mark threshold — `slip = lat > 430 ? min(1, 0.35 + (lat−430)/300) :
+  (|yaw| > 1.7 && 14 < |v| < 170) ? 0.9 : 0` (the second clause is a held donut: full-lock
+  yaw at parking-lot speed, where lat stays under the mark threshold); hype += 8·slip·dt.
+- turbo: `c.turbo > 0.3 && |v| > 120` → 2.5/s.
+- near-miss: no car near-miss scoring exists in the base game (it is board-only), so the
+  event runs its own: AI-driven, unparked cars passing in the 20–38 unit band with
+  relative speed > 100 (heading·v vectors) pay 40 (`NEAR MISS`, float text via the shared
+  `pay`), +4 hype, a `trick` director mark, 3 s per-car cooldown in `ev.nearCd`.
+- hype also banks as points continuously: `hypeGain × 10` into a float accumulator
+  `ev.ptsF`; `bank()` moves whole points into `ev.pts` (the result card reads `ev.pts`).
+Outside the beam (chopper present): hype decays 1.5/s, nothing is earned. Parked in the
+beam earns exactly nothing — every feed needs motion or score.
+Win at hype ≥ 100: bonus `ceil(timer) × 15` (`FULL HYPE BONUS`), card `FULL HYPE!` with
+`{ hype: 100, tier }`. Clock-out at 120 s: `TIME UP`, ok = tier ≥ 2 (a tier-1 clock-out is
+a fail card with the score still banked).
+
+**The beam timer.** `ev.outT` accumulates only once the beam has locked once
+(`ev.everLock`) or after a 5 s grace (`ev.armT`) — the chopper needs ~2–4 s to arrive and
+find the player, and that search must not eat the fail budget. Warn at 2.5 s out
+(`BACK IN THE LIGHT!` + `vox_evt_spot_beam`), fail at 5 s: `LOST THE LIGHT`. Any single
+locked tick resets outT to 0. Bust is NOT handled in stepSpot: `stepEvents` checks
+`sim.busted` before dispatch (a pinned car: |v| < 15 % vmax with a cruiser within 64 for
+2.8 s — the base rule) and ends the event as a fail; the director still gets the bust
+highlight, which is the clip. Leaving the car or mode changes end it as `ON FOOT`;
+wrecking the car ends it as `WRECKED` (both mirror stepWreck's guards).
+
+**Crowds.** `startSpot` gathers up to 17 peds from four verge clusters probed off the
+driving surface — [790,470], [1090,420], [1020,640], [730,600] ± jitter (28/20): each
+candidate is rejected if its surface is road/water or it sits inside a solid, then made
+with `sim.makePed` and re-pathed to `{ type: 'crowd', x, y }` (the spawn point IS home),
+flagged `p.crowd`, `p.cheer = 0`. A pathless ped would be swept as `gone`, and a 'loop'
+ped would wander off — hence the new path type in `sim.stepPed`: mode 'return' folds back
+to 'walk'; the ped faces `sim.focus()`; more than 7 units from home it walks home at
+52 u/s; at home it bounces — `p.walk += (6 + cheer·15)·dt`, pose cycling [0,1,2,1] every
+5 walk units, held via a new `p.holdPose` flag (reset at the top of stepPed; the shared
+movement tail's `else p.pose = 1` became `else if (!p.holdPose) p.pose = 1` — the only
+change to existing ped behaviour, and it only fires for crowd peds). The generic scare
+rule still applies (a car over 150 u/s within 70 scatters them into flee; flee ends in
+'return', which the crowd branch folds home). `ev.crowd` tracks the live peds; cheer is
+set per tick from the rave: hype ≥ 20 → 1, tier 3 → 2. At tier 3, `crowdCloser` moves
+every other crowd ped's home 30 % toward the fountain stage point [1000, 470] (re-probed:
+never onto road/water/solid). `endSpot` filters crowd peds out of `sim.peds` — they exist
+only for the rave. Voice: crowd/rave lines ride the existing vox hook system —
+`vox_evt_spot_start`, `vox_evt_spot_beam`, `vox_evt_spot_tier2`, `vox_evt_spot_tier3`,
+`vox_evt_spot_win`, `vox_evt_spot_busted` — all silent-safe until the wave-2 vox files
+land (audio.play on a missing hook is a no-op).
+
+**Director.** While in-beam and stunting (slip > 0.15 or turbo), stepSpot fires
+`sim.ev('rave')` throttled to 0.5 s; `rave: 3.5` sits between `busted` (2) and `bail` (3)
+in the WEIGHT table, so the highlight window centres on beam sequences and the bust at
+the end still lands inside it.
+
+**Render.** Idle: the shared beacon in spot yellow. During the event, `drawEventsGround`
+draws the stage: a dashed ring (r 70 = the pool radius, dash offset scrolling) at the
+beam centre `(chopper.bx, chopper.by)` — gold and pulsing while locked, red-flashing
+while out — over a faint pool disc. No change to render.js's beam: the pool already
+reads at golden hour (alpha 0.42 × a0, a0 = 0.62 + 0.24·dark), and the ring carries the
+event read. HUD card (210×68, top centre): name + m:ss clock (red under 15 s), `TIER n`,
+banked PTS, the HYPE bar with tier ticks at 34 %/67 %, and a state line — `IN THE LIGHT`
+(green) / `BACK IN THE LIGHT 4.3` (red countdown) / `FIND THE LIGHT`; the 3-2-1 countdown
+gets the big centre number like WRECK IT!. Result card third line for spot:
+`<text> · HYPE n% · TIER n`.
+
+**Proof.** `node tools/spotlight_check.mjs` — 29 rules on the real sim: marker + map POI
++ START armed at the ring; JUMP + A starts it (3★, chopper arrives, 17-ped crowd all on
+verges within 420 of the site, start vox hook fired); parked in the beam for 3 s earns
+hype 0 / pts 0 with outT held at 0; 5 s of donuts in the beam → hype 12.2 and points
+banked; beam parked at [100,100] → hype decays (11.2 → 8.2 in 2 s) and 5.6 s out ends it
+`LOST THE LIGHT` (that block drives with the cruisers filtered out — a wedged car would
+be busted first, which is the next block's job); a cruiser placed 40 units off pins the
+car → `BUSTED` fail card, event cleared; hype forced to 40 → tier 2 / 4★ / floor 4 /
++1 cruiser, stars forced to 1 → pin restores 4 next tick; hype 70 → tier 3 / 5★ / +1
+cruiser, beam teleported 400 away closes to < 150 in 1.5 s (the 225 slew + lead, vs the
+figure-8 search at 3★); hype 99.5 + donuts → `FULL HYPE!`, card pts 1806 (the ceil(117 s)
+× 15 bonus dominates), stats counted, crowd gone; timer forced to 0.05 → `TIME UP` card.
+Full suite: `sh tools/check_all.sh` green except `touch_check.mjs`, which fails with
+`stick did not drive the car` — confirmed identical (same failure line, intermittently
+passing) on the pristine base tree the same evening: a pre-existing headless-shell flake,
+not a regression. `CHROME=… node tools/spotlight_shots.mjs` →
+`shots/spotlight-rave.png` (freeze on the first step with hype > 18 in-beam: donuts in
+the ringed pool, crowd bouncing, HYPE card up) and `shots/spotlight-tier3.png` (hype set
+to 80 to cross tier 3 for real, freeze when a cruiser closes within 320 in-beam).
+
+## 7I — the POLISH BUNDLE: six clip-facing upgrades (Nov 16 2026, staging tree palm-city-polish)
+
+Built in a staging copy of Hawk main da74ffd6; integration is Moth's. All six were approved by
+the owner Nov 16, plus her standing multi-pass license on art/camera/colour/shadows. Proof tool:
+`tools/polish_check.mjs` (registered in check_all.sh) — Node parts A–C, browser parts D–F.
+
+1. **Director two-angle impact splice (src/director.js).** The highlight's camera normally cuts
+   on a 3.5–5 s timer through SHOTS[0..3]. Around the window's single heaviest mark the peak now
+   overrides the timer: a state machine on the play object (`p.splice`: null → 'pre' → 'peak' →
+   'done') forces SHOTS[1] (WIDE, zoom 0.8) once the peak is within `SPLICE_LEAD = 3.5*60` steps
+   and more than 24 steps out, then cuts to SHOTS[2] (TIGHT lead, zoom 1.22) on the exact step
+   the 0.35× slow-mo window opens (peak−i in (−24, 30)), and hands the timer back when slow-mo
+   ends. If the peak is already inside the lead when playback starts, it cuts straight to TIGHT.
+   Skips and all other marks are untouched. WEIGHT also gains `sling: 0.8` (item 4's mark).
+
+2. **Channel 7 broadcast frame (src/record.js + src/main.js).** The recorder captures the game
+   canvas, so the overlay is DRAWN INTO the canvas during playback/recording — never a
+   post-process. `Recorder.drawBroadcast(g, vw, vh, dpr, sim, highlight)`: a lower-third bar
+   (min(vw−24, 336) × 54, dark plum rgba(14,8,28,0.85), red top rule #e0232e) with a red ● LIVE
+   chip, "PALM CITY NEWS / CHANNEL 7", the live SCORE · ×multiplier line, and the wanted stars
+   in gold at the bar's right end. Highlight saves draw it at y = vh−118; live REC at vh−172
+   (above the REC button row). Toggle: a `#pcNewsBtn` built by the same `mk` factory as REC /
+   SAVE CLIP (including the touchstart stopPropagation shield — input.js's document gesture
+   guard otherwise eats the click). Defaults: `newsHL = true`, `newsLive = false`; one tap
+   flips both to the opposite of "any on", and the choice persists for the session. OFF =
+   recordings stay pixel-clean.
+
+3. **Rim-driving on spikes (src/pressure.js + src/destruct.js + src/sim.js + src/hud.js).**
+   Spike strips used to set `c.spiked` instantly. Now, for the PLAYER's car only: contact sets
+   `c.rims = RIMS_T = 8` (seconds) and says ON RIMS!. While rims > 0, stepStreet caps speed at
+   lerp(RIMS_VMAX 210 → SPIKE_VMAX 150, elapsed/8), yanks the heading with a wander
+   (sin(time·11 + id·2.7) · 0.55 · sway) plus a lateral fishtail slide (sin(time·6.3 + id·1.9) ·
+   34 · sway, sway = min(1, |v|/140)), and streams sparks from both rear wheels — a fixed pool
+   in destruct.js (`SPARK_CAP = 96`, `sim.sparks`, `spawnSpark(sim,x,y,vx,vy)`, life 0.35–0.75 s,
+   drag exp(−3dt) + slight fall; rendered by render.js drawSparks as velocity streaks
+   #fff3cf → #ffb84a, right after the smoke). At rims = 0 the existing blown-tyre limp takes
+   over unchanged (cap 150, fighting wheel). Cop/traffic cars still spike instantly — the rim
+   branch is gated on the car being the player's current car. HUD: an ON RIMS! pill under the
+   stars with a burn-down bar (hud.js). jobs_check is unaffected (its BAIL test sets c.spiked
+   directly), but in real play the getaway's spike moment now buys 8 s before BAIL can trigger.
+   Side effect, handled: the ?demo pilot used to get busted at ~21.5 s because the instant limp
+   stopped it near the roadblock; on rims it coasts ~350 units off-road to a spot squad cars
+   can't box in, and the demo never busts. demo.js's 'stop' phase now BRAKES in place (full
+   reverse input until |v| ≤ 8) — a real pull-over — and the bust lands again (seed sweep:
+   18.8–39.3 s across five seeds, inside the demo's 40 s cap; seed 7 is the tight one).
+   check_all.sh's demo soak window grew 34 s → 45 s for the same reason, and pressure_check's
+   spike section now asserts the rim run (~8.0 s, then limp at exactly 150, measured pinned to
+   the loop with crash damage cleared — the forced rim run otherwise wrecks the test car).
+
+4. **Traffic slipstream (src/sim.js + src/render.js).** `sim.draft` (0..1) + `sim.draftCar`.
+   stepDraft runs inside stepPlayerCar: the target must be a traffic car (driver 'ai', not
+   parked/patrol/job/police — job vehicles and the bus excluded by construction). Player in the
+   cone behind it (gap −4..60 behind its rear bumper, lateral ≤ wid/2 + 10, |v| ≥ 60) charges
+   draft at dt/1.4; the bonus is +8% at full draft, applied to both top speed and throttle in
+   stepPlayerCar. Leaving the cone decays draft at dt·2 — but if the player exits FULLY AHEAD
+   (u > len/2 + len/2 + 6) with draft > 0.5, it pays instead: SLINGSHOT +50, a lastTrick popup
+   and a small director mark (ev('sling'), WEIGHT 0.8). Render: while draft > 0.25 at speed,
+   seven faint wind streaks (#eaf6ff, alpha draft·(1−phase)·0.38) stream past the player car,
+   drawn with the turbo streaks.
+
+5. **Light-tinted smoke (src/render.js).** drawSmoke now asks `smokeTint(S, p, time, G)` per
+   puff: the strongest nearby light wins — police flashers within 110 (red/blue alternating on
+   the same phase as drawSiren, floor(time·6)%2), headlight cones of non-parked cars within 55
+   (warm, gated by G.heads), the chopper's beam pool within POOL_R+40 of (chopper.bx, by) (warm
+   white), neon puddles within r+24 (their layout colour, gated by G.neon). The tint blends
+   toward the light colour at strength min(0.6, best·0.62) over the existing dark/lite smoke
+   greys — a tint, never a recolour; no light nearby = exactly the old grey.
+
+6. **West light + ocean sheen (src/render.js).** All three ride the early window
+   early = clamp01((0.30 − t)/0.30) unless noted. (a) WEST FLARE: after the bloom composite,
+   before the vignette — facing/driving west (west = clamp01((−cos(heading) − 0.15)/0.85)) at
+   strength early · west · (0.3 + 0.7·clamp01(G.glow + G.warm·0.5)), a screen-space warm
+   gradient rgba(255,176,92, ≤0.5·flare) washes in from the west edge to 62% of the width.
+   Probe value: `renderer.fxFlare`. (b) SUNBEAM SHAFTS: drawSunbeams in the light layer after
+   the wet reflections — seven world-anchored quads slanting with the light (dx 0.86, dy 0.51,
+   length 1050, hashed origins/widths, rgba(255,203,110) at alpha early·(0.05..0.095)) plus ~110
+   golden motes drifting down-shaft on the chopper cone's sin-hash technique, alpha pulsing
+   with sin(π·u). Probe: `renderer.fxBeams` (= early). (c) OCEAN DRIVE SHEEN: in
+   drawWetReflections, reflectors east of shoreX(y) − 300 get their peak multiplied by
+   1 + 1.1·pulse, pulse being the drawSurf wave phase at that reflector (6.4 s cycle, travel
+   −y/1500, crest at u = 0.34, width 0.22) — the strip gleams as each wave lands. Probe:
+   `renderer.fxSheen` (one fixed near-shore reflector's pulse). window.__palm now also exposes
+   `renderer` for these probes.
+
+**Verification state (Nov 16, staging):** polish_check parts A–C PASS (splice cuts wide→tight
+on the slow-mo frame; rims 8.0 s with the spark pool saturated; cop blows instantly; draft
+charges to 1.00 behind traffic, pays +50 on the pass, stays 0 behind a parked car). Full
+Node-side suite green (pressure, director, jobs, destruct, sim_run 45, skate, feel, bust,
+events, siege, map, turbo, skid, activities, help, chase, owner_tuning, voice_world).
+**Browser parts D–F and tools/polish_shots.mjs are written but could not be run in this VM on
+Nov 16: every browser binary (Playwright headless shell, /opt/meta-chromium, Firefox, WebKit)
+dies at startup with SIGILL/SIGTRAP since a VM host change (~03:00) — record_check fails
+identically on the pristine base tree, so it is the environment, not this bundle. Re-run
+`node tools/polish_check.mjs` and `node tools/polish_shots.mjs before|after` once a browser
+launches again; the before/after captures and the second visual tuning pass (first values to
+review: flare alpha 0.5, beam alpha 0.05–0.095, sheen ×1.1, tint cap 0.6) are still owed.**

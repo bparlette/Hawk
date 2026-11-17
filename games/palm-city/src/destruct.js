@@ -19,6 +19,7 @@ export const stageOf = (d, kind = 'car') => { const T = STAGES[kind]; return d >
 
 export const DEBRIS_CAP = 180;
 export const SMOKE_CAP = 56;
+export const SPARK_CAP = 96;
 // debris kinds (index into the renderer's palette)
 export const D = { GLASS: 0, METAL: 1, WOOD: 2, CHIP: 3, LEAF: 4, BARK: 5, DIRT: 6, STONE: 7, TIRE: 8, FROND: 9, PETAL: 10 };
 
@@ -29,6 +30,9 @@ export function initDestruct(sim) {
   sim.smoke = new Array(SMOKE_CAP);
   for (let i = 0; i < SMOKE_CAP; i++) sim.smoke[i] = { on: false, x: 0, y: 0, vx: 0, vy: 0, t: 0, life: 1, s: 1, dark: 0 };
   sim.smokeN = 0;
+  sim.sparks = new Array(SPARK_CAP);
+  for (let i = 0; i < SPARK_CAP; i++) sim.sparks[i] = { on: false, x: 0, y: 0, vx: 0, vy: 0, t: 0, life: 1 };
+  sim.sparkN = 0;
   sim.things = [];          // non-car destructibles: { kind, x, y, r, dmg, stage, ... } (palms, bushes, props)
   sim.heat = 0;             // witness reports since the last witness star
   sim.lastWreckStar = -9; sim.lastWitnessStar = -9;
@@ -60,6 +64,14 @@ export function puff(sim, x, y, dark, s = 1) {
   p.on = true; p.x = x + (r() - 0.5) * 6; p.y = y + (r() - 0.5) * 6; p.t = 0; p.life = 1.4 + r() * 1.2;
   p.vx = 9 + r() * 8; p.vy = -10 - r() * 10;          // the sea breeze carries it inland-ish and up-screen
   p.s = s * (0.8 + r() * 0.5); p.dark = dark;
+}
+
+// One spark: a short-lived streak thrown from a point, dragged and gravity-kissed. The rim-driving
+// system (pressure.js) streams these off blown wheels; drawn as bright streaks in render.js.
+export function spawnSpark(sim, x, y, vx, vy) {
+  const p = sim.sparks[sim.sparkN];
+  sim.sparkN = (sim.sparkN + 1) % SPARK_CAP;
+  p.on = true; p.x = x; p.y = y; p.vx = vx; p.vy = vy; p.t = 0; p.life = 0.35 + sim.fxr() * 0.4;
 }
 
 // Line of sight between two points: no building in between.
@@ -264,6 +276,14 @@ export function stepDestruct(sim, dt) {
     p.t += dt;
     if (p.t >= p.life) { p.on = false; continue; }
     p.x += p.vx * dt; p.y += p.vy * dt;
+  }
+  for (let i = 0; i < SPARK_CAP; i++) {
+    const p = sim.sparks[i];
+    if (!p.on) continue;
+    p.t += dt;
+    if (p.t >= p.life) { p.on = false; continue; }
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    p.vx *= Math.exp(-3 * dt); p.vy = p.vy * Math.exp(-3 * dt) + 130 * dt;   // drag, and a little fall
   }
   // damaged cars smoke (look spec): a bent car puffs dark from the hood every 0.35 s, a wreck
   // trails pale grey wisps on the breeze

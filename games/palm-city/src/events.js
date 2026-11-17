@@ -12,6 +12,7 @@
 // (hydrants, fuel drums) are ordinary sim.things of two new kinds registered with destruct.js.
 import { hitCar, hitThing, burst, puff, report, registerKind, STAGES, D } from './destruct.js';
 import { initChase, stepChase } from './chase.js';
+import { startSpot, stepSpot, endSpot } from './spotlight.js';
 
 const TAU = Math.PI * 2;
 const wrap = (a) => { while (a > Math.PI) a -= TAU; while (a < -Math.PI) a += TAU; return a; };
@@ -21,6 +22,7 @@ const dxy = (o, p) => Math.hypot(o.x - p[0], o.y - p[1]);
 export const EVENTS = {
   wreck: { name: 'WRECK IT!', site: [1168, 470], radius: 430, time: 45, window: 2.2, medals: [2500, 5500, 9500] },
   valet: { name: 'VALET — PARK IT!', site: [760, 1690], time: 50, split: 16 },
+  spot: { name: 'SPOTLIGHT RAVE', site: [1000, 560], time: 120 },
 };
 // valet round 1: three wide bays on the Garage's south apron (x 720..1120, y 1650..1710 is open paving
 // under the garage wall). u axis = along the stall (vertical), 34 wide x 60 deep per spec.
@@ -35,7 +37,7 @@ STAGES.drum = [0.3, 0.6, 1]; STAGES.hydrant = [0.3, 0.6, 1];
 
 export function initEvents(sim) {
   sim.event = null; sim.eventResult = null; sim.hitStopT = 0;
-  sim.eventStats = { wreck: 0, valet: 0, chase: 0 };
+  sim.eventStats = { wreck: 0, valet: 0, chase: 0, spot: 0 };
   sim.eventSites = Object.entries(EVENTS).map(([kind, e]) => ({ kind, name: e.name, p: e.site }));
   sim.eventBreak = (x, y, pts, severity, label) => eventBreak(sim, x, y, pts, severity, label);
   initChase(sim);                                           // BOARD CHASE: its own site (it starts on the board, not in a car)
@@ -63,6 +65,8 @@ export function startEvent(sim, kind) {
     spawnAnchors(sim);
     if (sim.stars < 1 && sim.addStars) sim.addStars(1, 'event');            // district 1: a gentle ★1 response
     sim.say('WRECK IT — 3', 1); sim.ev('vox_evt_wreck_start');
+  } else if (kind === 'spot') {
+    startSpot(sim, ev);
   } else {
     ev.bays = BAYS.map(b => ({ ...b, done: false })); ev.idx = 0; ev.spot = [ev.bays[0].x, ev.bays[0].y];
     ev.yaw = 0; ev.lastH = ev.car.h; ev.hist = []; ev.jt = -9; ev.drt = -9; ev.settle = 0; ev.bayT = 0; ev.dmg0 = ev.car.dmg; ev.scraped = false;
@@ -76,6 +80,7 @@ function endEvent(sim, text, ok, extra) {
   const ev = sim.event;
   if (!ev) return;
   if (ev.kind === 'wreck') { sim.things = sim.things.filter(t => !t.evAnchor); }
+  if (ev.kind === 'spot') endSpot(sim, ev);
   const result = { kind: ev.kind, name: ev.name, pts: ev.pts, ok, t: 6, text, ...extra };
   if (ev.kind === 'wreck') { const M = EVENTS.wreck.medals; result.medal = ev.pts >= M[2] ? 'GOLD' : ev.pts >= M[1] ? 'SILVER' : ev.pts >= M[0] ? 'BRONZE' : 'NONE'; }
   sim.event = null; sim.eventResult = result;
@@ -266,8 +271,10 @@ export function stepEvents(sim, dt) {
   if (!ev) return;
   ev.t += dt;
   if (sim.busted && ev.kind === 'chase') { endEvent(sim, 'BOARD CHASE — BUSTED', false, { cp: ev.idx, of: 4 }); return; }
+  if (sim.busted && ev.kind === 'spot') { sim.ev('vox_evt_spot_busted'); endEvent(sim, 'BUSTED', false, { hype: Math.round(ev.hype || 0), tier: ev.tier || 1 }); return; }
   if (sim.busted) { if (ev.kind === 'wreck') sim.ev('vox_evt_wreck_busted'); endEvent(sim, ev.kind === 'wreck' ? 'BUSTED — ' + ev.pts.toLocaleString() + ' PTS KEPT' : 'VALET — BUSTED', false); return; }
   if (ev.car && ev.car.wreck && ev.kind === 'valet') { endEvent(sim, 'VALET — CAR WRECKED', false, { bays: ev.n }); return; }
   if (ev.kind === 'chase') stepChase(sim, ev, dt, (text, ok, extra) => endEvent(sim, text, ok, extra), (pts, label) => pay(sim, pts, label, 2));
+  else if (ev.kind === 'spot') stepSpot(sim, ev, dt, (text, ok, extra) => endEvent(sim, text, ok, extra), (pts, label) => pay(sim, pts, label, 2));
   else if (ev.kind === 'wreck') stepWreck(sim, ev, dt); else stepValet(sim, ev, dt);
 }

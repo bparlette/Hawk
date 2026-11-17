@@ -5,7 +5,7 @@
 // Street pressure (roadblocks, spike strips, the SWAT van) lives here too.
 // Gemini's look spec: shots/PRESSURE-DELTA.md; sprites: assets/pressure/ (tools/import_pressure.mjs).
 
-import { burst, report, D } from './destruct.js';
+import { burst, report, D, spawnSpark } from './destruct.js';
 
 const ALT = 120;                         // chopper altitude (world units) — sets its shadow offset
 const POOL_R = 70;                       // searchlight pool radius on the ground
@@ -26,6 +26,8 @@ export function initPressure(sim) {
 // you hit them fast enough, so there's a risky way and a brave way through, never a wall.
 const SMASH_V = 130;         // ~45% of a car's top speed: above this a sawhorse shatters and you keep going
 const SPIKE_VMAX = 150;      // blown tyres: this is all the car will do
+const RIMS_T = 8;            // the player's grace on blown tyres: 8 s ON RIMS before the limp
+const RIMS_VMAX = 210;       // the cap at the start of the rim run, decaying to SPIKE_VMAX
 
 export function spawnRoadblock(sim, sAt, dirIn) {
   const W = sim.W, r = sim.rnd;
@@ -80,17 +82,45 @@ function stepStreet(sim, dt) {
       break;
     }
   }
-  // spike strips: any car that crosses one loses its tyres
+  // spike strips: any car that crosses one loses its tyres. Cop cars (and traffic) blow straight
+  // to the limp; the PLAYER gets 8 s ON RIMS first — sparks, a fishtail and a decaying cap — because
+  // a desperate rim run to the safe house is a better story than an instant hobble.
   for (const k of sim.spikes) {
     const ca = Math.cos(k.a), sa = Math.sin(k.a);
     for (const c of sim.cars) {
-      if (c.spiked || Math.abs(c.v) < 30) continue;
+      if (c.spiked || (c.rims || 0) > 0 || Math.abs(c.v) < 30) continue;
       const u = (c.x - k.x) * ca + (c.y - k.y) * sa, w = -(c.x - k.x) * sa + (c.y - k.y) * ca;
       if (Math.abs(u) > 22 + c.wid / 2 || Math.abs(w) > c.len / 2) continue;
-      c.spiked = true;
       burst(sim, D.TIRE, 3, c.x, c.y, Math.cos(c.h), Math.sin(c.h), 60, 1);
       sim.ev('snap');
+      if (c.driver === 'player') { c.rims = RIMS_T; sim.say('ON RIMS!', 1.6); }
+      else { c.spiked = true; }
+    }
+  }
+  // ON RIMS (player only): the cap decays 210 -> 150 over the 8 s, the back end steps out in a
+  // fishtail (heading wander + a lateral slide), and the wheels throw a stream of sparks. When the
+  // clock runs out the tyres' remains give up: the ordinary blown-tyre limp takes over.
+  for (const c of sim.cars) {
+    if (!((c.rims || 0) > 0)) continue;
+    c.rims -= dt;
+    const sp = Math.abs(c.v);
+    if (c.rims <= 0) {
+      c.rims = 0; c.spiked = true;
       if (c.driver === 'player') sim.say('TYRES BLOWN', 1.6);
+      continue;
+    }
+    const cap = SPIKE_VMAX + (RIMS_VMAX - SPIKE_VMAX) * (c.rims / RIMS_T);
+    if (sp > cap) c.v = Math.sign(c.v) * Math.max(cap, sp - 420 * dt);
+    const sway = Math.min(1, sp / 140);
+    c.h += Math.sin(sim.time * 11 + c.id * 2.7) * 0.55 * dt * sway;                       // the wheel fights, harder
+    const slide = Math.sin(sim.time * 6.3 + c.id * 1.9) * 34 * sway;                      // ...and the tail slides
+    c.x += -Math.sin(c.h) * slide * dt; c.y += Math.cos(c.h) * slide * dt;
+    if (sp > 40) {                                                                        // sparks off both rear wheels
+      const ca = Math.cos(c.h), sa = Math.sin(c.h), r = sim.fxr;
+      for (const s of [-1, 1]) {
+        const wx = c.x - ca * c.len * 0.32 - sa * s * c.wid * 0.42, wy = c.y - sa * c.len * 0.32 + ca * s * c.wid * 0.42;
+        for (let n = 0; n < 2; n++) spawnSpark(sim, wx, wy, -ca * sp * (0.25 + r() * 0.4) + (r() - 0.5) * 90, -sa * sp * (0.25 + r() * 0.4) + (r() - 0.5) * 90);
+      }
     }
   }
   // blown tyres: drag down to a limp, and the wheel fights you
@@ -168,4 +198,4 @@ export function stepPressure(sim, dt) {
 }
 
 export const CHOPPER = { ALT, POOL_R };
-export const STREET = { SMASH_V, SPIKE_VMAX };
+export const STREET = { SMASH_V, SPIKE_VMAX, RIMS_T, RIMS_VMAX };

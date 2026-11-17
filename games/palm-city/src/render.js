@@ -10,11 +10,12 @@
 import { CHUNK } from './ground.js';
 import { mulberry32 } from './world.js';
 import { TrackLayer } from './skid.js';
+import { drawWatercraft } from './watercraft.js';
 import { markers } from './activities.js';
 import { CHOPPER } from './pressure.js';
 import { JOBS } from './jobs.js';
 import { drawEventsGround } from './events_render.js';
-import { DEBRIS_CAP, SMOKE_CAP, STAGES, stageOf, FALL_T, palmReach } from './destruct.js';
+import { DEBRIS_CAP, SMOKE_CAP, SPARK_CAP, STAGES, stageOf, FALL_T, palmReach } from './destruct.js';
 
 // procedural debris colours (index = destruct.js D kind) for the kinds with no sprite
 const DEBRIS_COL = ['#d8f0ff', '#8a8f9c', '#b97a50', '#e0a878', '#2f6a22', '#7a5232', '#523420', '#b8b0a4', '#222', '#6fa844', '#ff6494'];
@@ -133,6 +134,7 @@ export class Renderer {
       out.push({ kind: 'building', x: b.x + b.w / 2, y: b.y + b.d / 2, e, id: b.id });
     }
     L.palms.forEach(([x, y], i) => out.push({ kind: 'palm', x, y, ti: i, sc: this.world.trunks[i].sc, e: M.props['palm' + (i % 3)] }));
+    if (this.world.shellPalms) this.world.shellPalms.forEach(([x, y], j) => { const ti = L.palms.length + j; out.push({ kind: 'palm', x, y, ti, sc: this.world.trunks[ti].sc, e: M.props['palm' + (j % 3)] }); });
     L.lamps.forEach(([x, y], i) => out.push({ kind: 'lamp', x, y, li: i, e: M.props.lamp }));
     for (const b of this.world.bushes) out.push({ kind: 'bush', x: b.x, y: b.y, sc: b.sc, bi: b.i, e: M.props['bush' + b.v] });
     L.props.forEach((p, i) => out.push({ kind: p.type, x: p.x, y: p.y, pi: i, e: M.props[p.type] }));
@@ -154,6 +156,45 @@ export class Renderer {
     const rank = { pier: 0, fountain: 1, lifeguard: 2, bush: 3, building: 4, lamp: 5, palm: 6 };
     out.sort((a, b) => rank[a.kind] - rank[b.kind]);
     return out;
+  }
+
+  // Extension shell facades: painted building masses, drawn flat on the ground pass in the painter's
+  // own language — an ENE shadow skirt (sun azimuth 255°), a wall tone, a lighter inset roof with
+  // seeded clutter, and a sunlit lip on the west/south edges. They carry no baked sprites and no
+  // night frames; the frame grade treats them like ground. Sample-level place-making, not final art.
+  drawShellMasses(g, vx0, vy0, vx1, vy1) {
+    const B = this.world.shellBuildings;
+    if (!B || !B.length) return;
+    const PALETTES = {
+      tower:     [['#eed0a2', '#c98d64'], ['#d9e2e8', '#93aab8'], ['#f0b48a', '#c97e56'], ['#c3cfda', '#8299ab']],
+      office:    [['#ecd3ac', '#cfa06e'], ['#ddd2c0', '#a89a84'], ['#e6b490', '#bd8460'], ['#e8cba0', '#c29468']],
+      warehouse: [['#cfc8ba', '#98917f'], ['#bfae9c', '#857a68'], ['#aeb8b4', '#78827c'], ['#c4bcb0', '#948b7a']],
+      house:     [['#f6ddae', '#d9a86e'], ['#f2c4b0', '#cf8f74'], ['#dce8c8', '#a8bc8c'], ['#f8ecd2', '#dec294']],
+    };
+    for (const b of B) {
+      if (b.x + b.w < vx0 - 220 || b.x > vx1 + 220 || b.y + b.d < vy0 - 220 || b.y > vy1 + 220) continue;
+      const pal = (PALETTES[b.kind] || PALETTES.office);
+      const [roof, wall] = pal[Math.abs(b.tone || 0) % pal.length];
+      const sx = b.h * 0.30, sy = -b.h * 0.18;                       // shadow falls east-north-east
+      g.globalAlpha = 0.30; g.fillStyle = '#241c40';
+      g.fillRect(b.x + sx, b.y + sy, b.w, b.d);
+      g.globalAlpha = 1; g.fillStyle = wall;
+      g.fillRect(b.x, b.y, b.w, b.d);
+      const inset = Math.max(3, Math.min(10, Math.min(b.w, b.d) * 0.09));
+      g.fillStyle = roof;
+      g.fillRect(b.x + inset, b.y + inset, b.w - inset * 2, b.d - inset * 2);
+      const r = mulberry32(b.seed || 1);                              // roof clutter: AC boxes, a stair bulkhead
+      g.fillStyle = wall;
+      const n = 1 + ((r() * 3) | 0);
+      for (let i = 0; i < n; i++) {
+        const cw = 8 + r() * Math.min(26, b.w * 0.22), cd = 8 + r() * Math.min(22, b.d * 0.22);
+        g.globalAlpha = 0.55;
+        g.fillRect(b.x + inset + 3 + r() * Math.max(1, b.w - inset * 2 - cw - 6), b.y + inset + 3 + r() * Math.max(1, b.d - inset * 2 - cd - 6), cw, cd);
+      }
+      g.globalAlpha = 0.5; g.fillStyle = '#fff3ce';                   // sunlit lip: west + south edges
+      g.fillRect(b.x, b.y, 2.2, b.d); g.fillRect(b.x, b.y + b.d - 2.2, b.w, 2.2);
+      g.globalAlpha = 1;
+    }
   }
 
   buildGlints() {
@@ -451,11 +492,12 @@ export class Renderer {
     g.fillRect(0, 0, vw, vh);
     worldTf(g);
     const G0 = this.ground;
-    const c0 = Math.max(0, Math.floor(vx0 / CHUNK)), c1 = Math.min(G0.cols - 1, Math.floor(vx1 / CHUNK));
-    const r0 = Math.max(0, Math.floor(vy0 / CHUNK)), r1 = Math.min(G0.rows - 1, Math.floor(vy1 / CHUNK));
+    const c0 = Math.max(G0.cx0, Math.floor(vx0 / CHUNK)), c1 = Math.min(G0.cx1 - 1, Math.floor(vx1 / CHUNK));
+    const r0 = Math.max(G0.cy0, Math.floor(vy0 / CHUNK)), r1 = Math.min(G0.cy1 - 1, Math.floor(vy1 / CHUNK));
     for (let cy = r0; cy <= r1; cy++) for (let cx = c0; cx <= c1; cx++) {
       g.drawImage(G0.get(cx, cy), cx * CHUNK, cy * CHUNK, CHUNK + 0.6, CHUNK + 0.6);
     }
+    this.drawShellMasses(g, vx0, vy0, vx1, vy1);
     this.drawOcean(g, G, t, time, vx0, vy0, vx1, vy1);
     this.tracks.draw(g, S, Math.max(0, Math.min(0.1, time - this.lastTime)), vx0, vy0, vx1, vy1);
     this.lastTime = time;
@@ -524,6 +566,7 @@ export class Renderer {
       if (b.grind) { g.shadowColor = 'rgba(255,220,140,0.9)'; g.shadowBlur = 8; }
       g.drawImage(f.img, f.ox, f.oy, f.w, f.h); g.restore();
     }
+    if (S.water) drawWatercraft(g, S, time, vx0, vy0, vx1, vy1);   // buoys, spray, the craft at the pier (rider drawn with the peds, on top)
     if (S.bushes) for (const B of S.bushes) if (B.stage >= 3 && B.x > vx0 - 20 && B.x < vx1 + 20 && B.y > vy0 - 20 && B.y < vy1 + 20) this.drawRootPit(g, B);
     if (S.lamps) for (const s of this.statics) {      // downed lamps too
       if (s.kind !== 'lamp' || !inView(s.bb, 60)) continue;
@@ -579,6 +622,22 @@ export class Renderer {
         g.globalAlpha = 1;
       }
     }
+    { // slipstream: faint wind streaks streaming nose-to-tail while the draft holds (sim.stepDraft)
+      const c = S.player.mode === 'car' ? S.player.car : null, dr = c ? (S.draft || 0) : 0;
+      if (dr > 0.25 && Math.abs(c.v) > 60) {
+        const ca = Math.cos(c.h), sa = Math.sin(c.h);
+        g.lineCap = 'round';
+        for (let i = 0; i < 7; i++) {
+          const ph = (time * (3.4 + (i % 3) * 0.6) + i * 0.53) % 1;            // each streak slides nose -> tail and fades
+          const side = ((i * 5) % 7 - 3) / 3 * (c.wid / 2 + 16), along = c.len * 0.9 - ph * (c.len + 120), len = 20 + (i % 3) * 8;
+          const x = c.x + ca * along - sa * side, y = c.y + sa * along + ca * side;
+          g.globalAlpha = dr * (1 - ph) * 0.38;
+          g.strokeStyle = '#eaf6ff'; g.lineWidth = 1.8;
+          g.beginPath(); g.moveTo(x - ca * len / 2, y - sa * len / 2); g.lineTo(x + ca * len / 2, y + sa * len / 2); g.stroke();
+        }
+        g.globalAlpha = 1;
+      }
+    }
     for (const c of S.cars) {
       if (c.x < vx0 - 50 || c.x > vx1 + 50 || c.y < vy0 - 50 || c.y > vy1 + 50) continue;
       const { m, k, rows } = this.carCell(c);
@@ -596,7 +655,8 @@ export class Renderer {
       if (inView(s.bb)) this.drawStatic(g, s, s.e.color, S);
     }
     this.drawLeaves(g, S);
-    this.drawSmoke(g, S, vx0, vy0, vx1, vy1);
+    this.drawSmoke(g, S, time, G, vx0, vy0, vx1, vy1);
+    this.drawSparks(g, S, vx0, vy0, vx1, vy1);
     for (const f of S.fx || []) {                         // hit flash: a burst of short rays
       const u = Math.min(1, f.t / 0.36), r0 = 4 + u * 9, r1 = 9 + u * 16;
       g.globalAlpha = 1 - u; g.lineCap = 'round';
@@ -651,6 +711,7 @@ export class Renderer {
     }
     this.drawNeonPuddles(lg, G, time, vx0, vy0, vx1, vy1);
     this.drawWetReflections(lg, G, time, vx0, vy0, vx1, vy1, S);
+    this.drawSunbeams(lg, G, t, time, vx0, vy0, vx1, vy1);
     if (S.chopper) this.drawSearchlight(lg, S.chopper, t, time, S.stars);
     { // activity markers carry their own light, so the plaques still read after dark
       const list = this.mk || [], al = Math.max(G.lamps, G.windows) * 0.55;
@@ -715,6 +776,20 @@ export class Renderer {
     g.globalCompositeOperation = 'source-over';
 
     P && P('bloom');
+    // WEST FLARE (polish bundle): driving into the low sun early in the day blooms the west edge
+    // of the frame; by mid-evening it's gone. Screen-space, over the light, under the vignette.
+    const fh = S.player.mode === 'car' ? S.player.car.h : S.player.ped.h;
+    const west = clamp01((-Math.cos(fh) - 0.15) / 0.85);
+    const flare = clamp01((0.30 - t) / 0.30) * west * (0.3 + 0.7 * clamp01(G.glow + G.warm * 0.5));
+    this.fxFlare = flare;
+    if (flare > 0.01) {
+      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      g.globalCompositeOperation = 'screen';
+      const fg = g.createLinearGradient(0, 0, vw * 0.62, 0);
+      fg.addColorStop(0, `rgba(255,176,92,${0.5 * flare})`); fg.addColorStop(1, 'rgba(255,176,92,0)');
+      g.fillStyle = fg; g.fillRect(0, 0, vw, vh);
+      g.globalCompositeOperation = 'source-over';
+    }
     // vignette
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.fillStyle = G.vigGrad;
@@ -799,19 +874,60 @@ export class Renderer {
     }
   }
 
-  // Smoke (look spec): dark puffs off a bent car's hood, pale grey wisps trailing a wreck.
-  drawSmoke(g, S, vx0, vy0, vx1, vy1) {
+  // The strongest light falling on a smoke puff, as [r, g, b, strength]: police flashers (red/blue
+  // by the siren phase), the chopper's beam pool (warm white), headlights (warm), neon pools (their
+  // colour). Draw-time sampling — the lights move, so the tint has to be resolved per frame.
+  smokeTint(S, p, time, G) {
+    let r = 0, g = 0, b = 0, best = 0;
+    const mix = (cr, cg, cb, s) => { if (s > best) { best = s; r = cr; g = cg; b = cb; } };
+    for (const c of S.cars) {
+      const dx = c.x - p.x, dy = c.y - p.y, d2 = dx * dx + dy * dy;
+      if (c.siren && d2 < 110 * 110) { const ph = Math.floor(time * 6) % 2; mix(ph ? 255 : 60, ph ? 40 : 110, ph ? 60 : 255, (1 - Math.sqrt(d2) / 110) * 0.95); }
+      else if (!c.parked && d2 < 55 * 55) mix(255, 190, 120, (1 - Math.sqrt(d2) / 55) * 0.55 * (0.25 + G.heads));
+    }
+    const ch = S.chopper;
+    if (ch) { const d = Math.hypot(ch.bx - p.x, ch.by - p.y), R = CHOPPER.POOL_R + 40; if (d < R) mix(255, 234, 180, (1 - d / R) * 0.9); }
+    for (const n of this.L.neonPuddles) {
+      const d = Math.hypot(n.x - p.x, n.y - p.y), R = n.r + 24;
+      if (d < R) mix(parseInt(n.color.slice(1, 3), 16), parseInt(n.color.slice(3, 5), 16), parseInt(n.color.slice(5, 7), 16), (1 - d / R) * 0.85 * G.neon);
+    }
+    return best > 0.03 ? [r, g, b, Math.min(0.6, best * 0.62)] : null;   // a tint, never a repaint
+  }
+
+  // Smoke (look spec): dark puffs off a bent car's hood, pale grey wisps trailing a wreck —
+  // tinted by whatever light is falling on them (polish bundle): siren clouds at a night chase.
+  drawSmoke(g, S, time, G, vx0, vy0, vx1, vy1) {
     const P = S.smoke;
     if (!P) return;
     for (let i = 0; i < SMOKE_CAP; i++) {
       const p = P[i];
       if (!p.on || p.x < vx0 - 40 || p.x > vx1 + 40 || p.y < vy0 - 40 || p.y > vy1 + 40) continue;
       const u = p.t / p.life, r = (4 + u * 15) * p.s;
+      const tint = this.smokeTint(S, p, time, G);
+      const base = p.dark ? [44, 36, 48] : [192, 188, 200], lite = p.dark ? [74, 62, 72] : [222, 218, 228];
+      const col = (c) => tint ? `rgb(${Math.round(c[0] + (tint[0] - c[0]) * tint[3])},${Math.round(c[1] + (tint[1] - c[1]) * tint[3])},${Math.round(c[2] + (tint[2] - c[2]) * tint[3])})` : `rgb(${c[0]},${c[1]},${c[2]})`;
       g.globalAlpha = (1 - u) * (p.dark ? 0.42 : 0.3);
-      g.fillStyle = p.dark ? '#2c2430' : 'rgb(192,188,200)';
+      g.fillStyle = col(base);
       g.beginPath(); g.arc(p.x, p.y, r, 0, 7); g.fill();
-      g.globalAlpha *= 0.7; g.fillStyle = p.dark ? '#4a3e48' : 'rgb(222,218,228)';
+      g.globalAlpha *= 0.7; g.fillStyle = col(lite);
       g.beginPath(); g.arc(p.x - r * 0.3, p.y - r * 0.3, r * 0.55, 0, 7); g.fill();
+    }
+    g.globalAlpha = 1;
+  }
+
+  // Sparks (polish bundle): the rim-run's bright streaks, each a short line along its velocity.
+  drawSparks(g, S, vx0, vy0, vx1, vy1) {
+    const P = S.sparks;
+    if (!P) return;
+    g.lineCap = 'round';
+    for (let i = 0; i < SPARK_CAP; i++) {
+      const p = P[i];
+      if (!p.on || p.x < vx0 - 20 || p.x > vx1 + 20 || p.y < vy0 - 20 || p.y > vy1 + 20) continue;
+      const u = p.t / p.life;
+      g.globalAlpha = (1 - u) * 0.95;
+      g.strokeStyle = u < 0.4 ? '#fff3cf' : '#ffb84a';
+      g.lineWidth = 1.7;
+      g.beginPath(); g.moveTo(p.x - p.vx * 0.028, p.y - p.vy * 0.028); g.lineTo(p.x, p.y); g.stroke();
     }
     g.globalAlpha = 1;
   }
@@ -1202,8 +1318,18 @@ export class Renderer {
     if (!this.reflectors) this.reflectors = this.buildReflectors();
     const W = this.world, half = W.halfRoad - 2;
     lg.lineCap = 'round';
+    let sheenSample = -1;
     for (const r of this.reflectors) {
-      const peak = r.lamp ? G.lamps * 0.44 * this.lampLight(S, r.li, time) : G.neon * 0.50;
+      let peak = r.lamp ? G.lamps * 0.44 * this.lampLight(S, r.li, time) : G.neon * 0.50;
+      // OCEAN DRIVE SHEEN (polish bundle): reflectors on the ocean-side strip breathe with the
+      // surf — the same 6.4 s cycle and travel as drawSurf — gleaming as each wave lands.
+      if (r.x > W.shoreX(r.y) - 300) {
+        const n2 = 0.5 + 0.5 * Math.sin(r.y * 0.0071 + 4);
+        let u = time / 6.4 - r.y / 1500 + n2 * 0.16; u -= Math.floor(u);
+        const pulse = Math.max(0, 1 - Math.abs(u - 0.34) / 0.22);
+        if (sheenSample < 0) sheenSample = pulse;         // fx probe: one fixed reflector's pulse
+        peak *= 1 + 1.1 * pulse;
+      }
       if (peak < 0.02 || r.x < vx0 - 40 || r.x > vx1 + 40 || r.y < vy0 - 150 || r.y > vy1 + 20) continue;
       const phase = r.x * 0.13 + r.y * 0.07;
       if (!r.grad) {                                   // the ribbon's colour ramp at peak 1; peak goes on globalAlpha
@@ -1228,6 +1354,42 @@ export class Renderer {
         lg.globalAlpha = 0.62 * peak;
         lg.beginPath(); lg.ellipse(r.x + dx, wy, rx * 0.72, 2.2, 0, 0, 7); lg.fill();
       }
+    }
+    this.fxSheen = Math.max(0, sheenSample);
+    lg.globalAlpha = 1;
+  }
+
+  // SUNBEAMS (polish bundle): in the first stretch of the day (t < ~0.3) the low western sun
+  // throws soft diagonal shafts across the streets between the villa strip and the blocks, with
+  // golden motes drifting down them — the chopper cone's hashed-mote trick, world-anchored.
+  // Drawn into the additive light layer so the bloom lifts them.
+  drawSunbeams(lg, G, t, time, vx0, vy0, vx1, vy1) {
+    const early = clamp01((0.30 - t) / 0.30) * clamp01(G.warm + G.glow * 0.6);
+    this.fxBeams = early;
+    if (early < 0.02) return;
+    const dx = 0.86, dy = 0.51, L = 1050;                       // light travels east, down-screen
+    lg.fillStyle = 'rgba(255,203,110,1)';
+    for (let i = 0; i < 7; i++) {
+      const h1 = Math.sin(i * 39.7) * 43758.5, hh = h1 - Math.floor(h1);
+      const bx = -150 + hh * 2050, by = -260 + ((i * 347) % 900);
+      if (bx + L * dx < vx0 - 80 || bx > vx1 + 80 || by > vy1 + 80 || by + L * dy < vy0 - 80) continue;
+      const wdt = 40 + hh * 56, px = -dy, py = dx;
+      lg.globalAlpha = early * (0.05 + 0.045 * hh);
+      lg.beginPath();
+      lg.moveTo(bx, by); lg.lineTo(bx + dx * L, by + dy * L);
+      lg.lineTo(bx + dx * L + px * wdt, by + dy * L + py * wdt); lg.lineTo(bx + px * wdt, by + py * wdt);
+      lg.closePath(); lg.fill();
+    }
+    lg.fillStyle = 'rgba(255,220,150,1)';
+    for (let i = 0; i < 110; i++) {
+      const h1 = Math.sin(i * 12.9898) * 43758.5453, h2 = Math.sin(i * 78.233) * 12345.678;
+      const f1 = h1 - Math.floor(h1), f2 = h2 - Math.floor(h2);
+      const u = (f1 + time * (0.008 + 0.014 * f2)) % 1;
+      const bx = -150 + ((i * 613) % 2000), by = -260 + ((i * 347) % 900);
+      const x = bx + dx * L * u + (-dy) * (f2 * 2 - 1) * 30, y = by + dy * L * u + dx * (f2 * 2 - 1) * 30;
+      if (x < vx0 || x > vx1 || y < vy0 || y > vy1) continue;
+      lg.globalAlpha = early * 0.5 * (0.3 + 0.7 * f1) * Math.sin(Math.PI * u);
+      lg.fillRect(x - 0.8, y - 0.8, 1.6, 1.6);
     }
     lg.globalAlpha = 1;
   }

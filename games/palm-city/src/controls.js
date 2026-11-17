@@ -14,6 +14,11 @@ export function buttonA(sim) {
   const P = sim.player;
   if (P.mode === 'foot' || P.mode === 'siege') return { kind: 'punch', label: 'PUNCH' };
   if (P.mode === 'board') return chaseArmed(sim) ? { kind: 'event', label: 'START BOARD CHASE' } : null;
+  if (P.mode === 'water') {                        // on a craft: TURBO, same hold-to-boost as a car
+    const cr = sim.water && sim.water.ride;
+    if (!cr) return null;
+    return { kind: 'turbo', label: cr.turboLock > 0 ? 'COOLING' : 'TURBO', cooling: cr.turboLock > 0, heat: (cr.turboHeat || 0) / TURBO.burn };
+  }
   if (P.mode !== 'car') return null;
   const jb = jobButton(sim);
   if (jb) return { kind: 'job', label: jb.label };

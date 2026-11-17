@@ -18,7 +18,7 @@ const world = new World(layout);
 let fails = 0; const check = (ok, n, i = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${n} ${i}`); if (!ok) fails++; };
 const DT = 1 / 60, inp = (o = {}) => ({ jx: 0, jy: 0, jm: 0, action: false, punch: false, turbo: false, keys: {}, ...o });
 const fresh = () => { const s = new Sim(world, M, 7, () => {}); s.spawnTraffic = () => null; return s; };
-const WANT = ['motel', 'taxi', 'tow', 'bus', 'getaway', 'wreck', 'valet', 'chase'];
+const WANT = ['motel', 'taxi', 'tow', 'bus', 'getaway', 'wreck', 'valet', 'spot', 'chase'];
 
 { const s = fresh(), rows = helpRows(s);
   check(rows.map(a => a.id).join() === WANT.join(), 'the panel lists every registered activity, in order', rows.map(a => a.name).join(' · '));

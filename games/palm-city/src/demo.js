@@ -49,6 +49,13 @@ export class DemoPilot {
       const jam = blocked(this.lane, 2);
       return { jx: dx / d, jy: dy / d, jm: jam ? 0.3 : diff > 0.6 ? 0.55 : 0.82, action: false, keys: {} };
     }
-    return none;  // 'stop': hands off, the car rolls to a halt and the police box it in
+    if (this.phase === 'stop' && P.mode === 'car') {
+      // 'stop': pull over — brake hard in place (since the polish bundle's rim run, the car is
+      // still doing ~180 when the stop comes; a hands-off coast now carries it hundreds of
+      // units off the road where the squad cars can't box it in, and the bust never lands)
+      const c = P.car;
+      if (Math.abs(c.v) > 8) return { jx: -Math.cos(c.h), jy: -Math.sin(c.h), jm: 1, action: false, keys: {} };
+    }
+    return none;  // stopped: hands off, the police box it in
   }
 }

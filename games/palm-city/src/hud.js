@@ -23,6 +23,7 @@ export function clockText(t) {
 import { siegeAction } from './siege.js';
 import { jobButton, JOBS } from './jobs.js';
 import { buttonA } from './controls.js';
+import { canDismount } from './watercraft.js';
 import { drawEventHud } from './events_render.js';
 
 export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
@@ -92,6 +93,14 @@ export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
     g.textAlign = 'right'; g.font = font(14, 800); g.fillStyle = '#fff1d8';
     g.fillText(sim.score.toLocaleString() + ' pts', vw - 16, top + 38);
   }
+  // ON RIMS (polish bundle): the rim-run clock, burning down under the stars
+  if (sim.player.mode === 'car' && (sim.player.car.rims || 0) > 0) {
+    const c = sim.player.car, w = 104, x = vw - 16 - w, y = top + 48;
+    g.fillStyle = 'rgba(20,12,40,0.55)'; g.beginPath(); g.roundRect(x, y, w, 20, 7); g.fill();
+    g.fillStyle = '#ffb84a'; g.fillRect(x + 3, y + 14, (w - 6) * Math.max(0, c.rims / 8), 3);
+    g.textAlign = 'center'; g.font = font(12, 900); g.fillStyle = '#ffd9a0';
+    g.fillText('ON RIMS!', x + w / 2, y + 10.5);
+  }
 
   // event message
   if (sim.msg) {
@@ -139,6 +148,8 @@ export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
   else if (sim.nearMotelDoor()) label = 'ENTER';
   else if (P.mode === 'car') label = Math.abs(P.car.v) < 60 ? 'EXIT' : '';
   else if (P.mode === 'board') label = Math.hypot(sim.board.vx, sim.board.vy) < 22 ? 'DROP' : sim.board.grind ? 'POP' : 'OLLIE';
+  else if (P.mode === 'water') label = canDismount(sim) ? 'HOP OFF' : '';
+  else if (P.mode === 'foot' && sim.water && sim.water.craft.some(c => Math.hypot(c.x - P.ped.x, c.y - P.ped.y) < 46)) label = 'HOP ON';
   else if (!sim.board.ridden && Math.hypot(sim.board.x - P.ped.x, sim.board.y - P.ped.y) < 26) label = 'BOARD';
   else if (sim.cars.some(c => Math.hypot(c.x - P.ped.x, c.y - P.ped.y) < 40)) label = 'JACK';
   g.globalAlpha = 1;
@@ -170,8 +181,8 @@ export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
     g.fillStyle = 'rgba(200,255,220,0.95)'; g.font = font(20, 900); g.textAlign = 'center'; g.fillText('★', f.x, f.y + 1);
     g.font = font(12, 800); g.fillStyle = '#d8ffe6'; g.fillText(ba.label, f.x, f.y - f.r - 11);
   }
-  if (ba && ba.kind === 'turbo') {                         // in a car with no job action armed: TURBO (hold)
-    const f = input.fight(), c = P.car, hot = (c.turbo || 0) > 0.05;
+  if (ba && ba.kind === 'turbo') {                         // in a car (or on a craft) with no job action armed: TURBO (hold)
+    const f = input.fight(), c = P.mode === 'water' ? sim.water.ride : P.car, hot = ((c && c.turbo) || 0) > 0.05;
     g.globalAlpha = ba.cooling ? 0.5 : 1;
     g.beginPath(); g.arc(f.x, f.y, f.r, 0, Math.PI * 2);
     g.fillStyle = hot ? 'rgba(255,170,60,0.6)' : 'rgba(255,240,220,0.16)'; g.fill();
