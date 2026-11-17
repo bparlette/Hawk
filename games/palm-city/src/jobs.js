@@ -20,6 +20,11 @@ const CABLE = { rest: 44, max: 74, k: 28, damp: 0.85, snap: 34 };
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const dxy = (o, p) => Math.hypot(o.x - p[0], o.y - p[1]);
 
+// INSTANT-START (owner rule, Nov 16): every job vehicle has a home on the Garage kerb —
+// all four advertised together at the JOBS hub — and a guardian restocks it there.
+export const JOB_HOMES = { getaway: [785, 1456, 0], tow: [860, 1456, 0], taxi: [935, 1456, 0], bus: [1010, 1456, 0] };
+const KERB = [897, 1456];   // the kerb centre the guardian watches
+
 export function initJobs(sim) {
   sim.job = null; sim.jobOffer = null; sim.jobStats = { fares: 0, tows: 0, stops: 0, heists: 0 };
   const M = sim.M.cars;
@@ -27,6 +32,30 @@ export function initJobs(sim) {
   sim.addCar(860, 1456, 0, M.tow_truck ? 'tow_truck' : 'van_sun', null, { parked: true, job: 'tow' });
   sim.addCar(1010, 1456, 0, M.bus ? 'bus' : 'van_sky', null, { parked: true, job: 'bus', heavy: true });
   for (const c of sim.cars) { if (c.model === 'taxi') c.job = 'taxi'; if (c.model === 'van_sun' && !c.job) c.job = 'getaway'; }
+  // INSTANT-START: the taxi and the getaway van move to their kerb homes; every job car gets a home
+  for (const c of sim.cars) {
+    const h = c.job && JOB_HOMES[c.job];
+    if (h) { c.x = h[0]; c.y = h[1]; c.h = h[2]; c.home = { x: h[0], y: h[1], h: h[2] }; c.waitT = 0; }
+  }
+}
+
+// the site guardian for the job fleet: a job car that is wrecked or left >200 from its kerb
+// home rolls back (repaired) once the player has been at the kerb for a continuous 10 s.
+// It only ever mutates the one flagged singleton — no car is ever spawned here.
+function guardJobCars(sim, dt) {
+  const f = sim.focus();
+  const nearKerb = Math.hypot(f.x - KERB[0], f.y - KERB[1]) < 420;
+  for (const k of ['taxi', 'tow', 'bus', 'getaway']) {
+    const c = sim.cars.find(x => x.job === k);
+    if (!c || !c.home) continue;
+    const inUse = c.driver === 'player' || sim.player.car === c || (sim.job && sim.job.car === c) || (sim.event && sim.event.car === c);
+    const away = c.wreck || Math.hypot(c.x - c.home.x, c.y - c.home.y) > 200;
+    if (!inUse && away && nearKerb) c.waitT = (c.waitT || 0) + dt; else c.waitT = 0;
+    if (c.waitT >= 10) {
+      c.x = c.home.x; c.y = c.home.y; c.h = c.home.h; c.v = 0; c.driver = null; c.parked = true;
+      c.dmg = 0; c.dent = [0, 0, 0, 0]; c.glass = [0, 0]; c.wreck = false; c.waitT = 0;
+    }
+  }
 }
 
 // what the job button does right now: { label } or null (also drives the HUD)
@@ -310,6 +339,7 @@ export function pressJobButton(sim) {
 }
 
 export function stepJobs(sim, dt, inp) {
+  guardJobCars(sim, dt);   // INSTANT-START: the kerb restocks even while no job is running
   const P = sim.player;
   if (inp && inp.punch && P.mode === 'car') pressJobButton(sim);
   const j = sim.job;

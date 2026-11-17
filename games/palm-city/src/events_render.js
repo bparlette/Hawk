@@ -1,7 +1,7 @@
 // events_render.js — drawing for the city events (events.js): beacons, the WRECK IT! district ring and
-// domino anchors, VALET bays with the alignment reticle (ground layer, under the cars), and the
-// event HUD card (clock, score, chain pill / bay progress, result banner). Procedural vector art in the
-// game's ink (#210f2e) and sunset palette; no assets.
+// domino anchors, VALET bays with the alignment reticle (ground layer, under the cars), OPEN ROAD's
+// checkpoint beacons, and the event HUD card (clock, score, chain pill / bay progress, result banner).
+// Procedural vector art in the game's ink (#210f2e) and sunset palette; no assets.
 import { EVENTS, bayAlign } from './events.js';
 
 const INK = '#210f2e';
@@ -17,7 +17,7 @@ function sprite(name) {
 export function drawEventsGround(g, S, time) {
   const ev = S.event, pulse = 0.5 + 0.5 * Math.sin(time * 4);
   if (!ev) {
-    for (const s of S.eventSites || []) beacon(g, s.p[0], s.p[1], s.kind === 'wreck' ? '#ff7a4a' : s.kind === 'spot' ? '#ffe95c' : '#6ee2ff', pulse, time);
+    for (const s of S.eventSites || []) beacon(g, s.p[0], s.p[1], s.kind === 'wreck' ? '#ff7a4a' : s.kind === 'spot' ? '#ffe95c' : s.kind === 'openroad' ? '#ffb02e' : '#6ee2ff', pulse, time);
     if (S.chaseSite) beacon(g, S.chaseSite.p[0], S.chaseSite.p[1], '#7dffa8', pulse, time);
     return;
   }
@@ -35,6 +35,10 @@ export function drawEventsGround(g, S, time) {
       g.beginPath(); g.arc(0, 0, 70, 0, 7); g.fill();
       g.restore();
     }
+    return;
+  }
+  if (ev.kind === 'openroad') {                       // the next checkpoint burns gold; the ones after it wait dim
+    ev.cps.forEach((cp, i) => { if (i >= ev.idx) beacon(g, cp.x, cp.y, i === ev.idx ? '#ffb02e' : 'rgba(255,176,46,0.55)', i === ev.idx ? pulse : 0.25, time); });
     return;
   }
   if (ev.kind === 'wreck') {
@@ -167,6 +171,40 @@ export function drawEventHud(g, vw, vh, top, S, font) {
     }
     return;
   }
+  if (ev && ev.kind === 'openroad') {                 // OPEN ROAD: the OutRun card — the clock first, then the course.
+    const w = 200, x = vw - w - 12, y = top + 96, h = 58;   // right-hand side, under the MAP button: the NEWS CAM owns the top-left
+    g.fillStyle = 'rgba(20,12,40,0.62)'; g.beginPath(); g.roundRect(x, y, w, h, 10); g.fill();
+    g.lineWidth = 2; g.strokeStyle = 'rgba(255,176,46,0.9)'; g.stroke();
+    g.textAlign = 'left'; g.font = font(13, 900); g.fillStyle = '#ffb02e'; g.fillText(ev.name, x + 12, y + 16);
+    const tt = Math.max(0, Math.ceil(ev.timer));
+    g.textAlign = 'right'; g.font = font(15, 900); g.fillStyle = ev.timer < 10 ? '#ff7a8a' : '#fff1d8';
+    g.fillText(`${Math.floor(tt / 60)}:${String(tt % 60).padStart(2, '0')}`, x + w - 12, y + 17);
+    g.textAlign = 'left'; g.font = font(12, 800); g.fillStyle = '#fff1d8';
+    g.fillText(ev.finishing === 'win' ? 'AT THE LINE!' : `CHECKPOINT ${Math.min(ev.idx + 1, 6)}/6`, x + 12, y + 34);
+    g.textAlign = 'right'; g.fillText(`${ev.pts.toLocaleString()} PTS`, x + w - 12, y + 34);
+    g.fillStyle = 'rgba(255,241,216,0.25)'; g.fillRect(x + 12, y + 45, w - 24, 6);          // the course, driven
+    g.fillStyle = '#ffb02e'; g.fillRect(x + 12, y + 45, (w - 24) * Math.min(1, (ev.idx + (ev.prog || 0)) / 6), 6);
+    const f = S.focus(), cp = ev.cps[Math.min(ev.idx, ev.cps.length - 1)], dx = cp.x - f.x, dy = cp.y - f.y, d = Math.hypot(dx, dy);
+    if (d > 150) {                                           // off screen: an arrow round the middle of the view (rotated into the chase view when it is up)
+      const a = Math.atan2(dy, dx) + (S.chase && S.chase.blend > 0.5 ? S.chase.rot : 0), ax = vw / 2 + Math.cos(a) * 130, ay = vh * 0.46 + Math.sin(a) * 150;
+      g.save(); g.translate(ax, ay); g.rotate(a);
+      g.fillStyle = '#ffb02e'; g.strokeStyle = 'rgba(33,15,46,0.9)'; g.lineWidth = 2.5;
+      g.beginPath(); g.moveTo(16, 0); g.lineTo(-9, -11); g.lineTo(-3, 0); g.lineTo(-9, 11); g.closePath(); g.fill(); g.stroke();
+      g.restore();
+      g.font = font(11, 800); g.textAlign = 'center'; g.fillStyle = '#ffe9bd'; g.fillText(`${Math.round(d / 10)} m`, ax - Math.cos(a) * 26, ay - Math.sin(a) * 26 + 4);
+    }
+    if (ev.gainT > 0) {                                      // the OutRun beat: +TIME, big and gold
+      g.globalAlpha = Math.min(1, ev.gainT / 0.5);
+      g.textAlign = 'center'; g.font = font(30, 900); g.lineWidth = 6; g.strokeStyle = 'rgba(33,15,46,0.75)';
+      const s = `+${ev.gain}s TIME`; g.strokeText(s, vw / 2, vh * 0.30); g.fillStyle = '#ffd45c'; g.fillText(s, vw / 2, vh * 0.30);
+      g.globalAlpha = 1;
+    }
+    if (ev.count > 0) {
+      g.textAlign = 'center'; g.font = font(64, 900); g.lineWidth = 7; g.strokeStyle = 'rgba(33,15,46,0.7)';
+      const n = String(Math.ceil(ev.count)); g.strokeText(n, vw / 2, vh * 0.42); g.fillStyle = '#ffd45c'; g.fillText(n, vw / 2, vh * 0.42);
+    }
+    return;
+  }
   if (ev) {
     const w = 200, x = vw / 2 - w / 2, y = top + 62, h = ev.kind === 'wreck' ? 64 : 58;
     g.fillStyle = 'rgba(20,12,40,0.62)'; g.beginPath(); g.roundRect(x, y, w, h, 10); g.fill();
@@ -194,6 +232,18 @@ export function drawEventHud(g, vw, vh, top, S, font) {
       g.textAlign = 'center'; g.font = font(64, 900); g.lineWidth = 7; g.strokeStyle = 'rgba(33,15,46,0.7)';
       const n = String(Math.ceil(ev.count)); g.strokeText(n, vw / 2, vh * 0.42); g.fillStyle = '#ffd45c'; g.fillText(n, vw / 2, vh * 0.42);
     }
+  } else if (R && R.kind === 'openroad') {            // the owner's order: the verdict, the time left, the score
+    const w = 230, x = vw / 2 - w / 2, y = vh * 0.3, h = 106;
+    g.globalAlpha = Math.min(1, R.t / 0.5);
+    g.fillStyle = 'rgba(20,12,40,0.78)'; g.beginPath(); g.roundRect(x, y, w, h, 14); g.fill();
+    g.lineWidth = 3; g.strokeStyle = R.ok ? 'rgba(255,212,92,0.95)' : 'rgba(255,122,106,0.95)'; g.stroke();
+    g.textAlign = 'center'; g.font = font(14, 900); g.fillStyle = '#fff1d8'; g.fillText(R.name, vw / 2, y + 22);
+    g.font = font(24, 900); g.fillStyle = R.text === 'FINISHED' ? '#7dffa8' : R.text === 'BUSTED' ? '#ff7a6a' : '#ffb02e';
+    g.fillText(R.text, vw / 2, y + 50);
+    const lt = R.left == null ? '—' : `${Math.floor(Math.max(0, Math.ceil(R.left)) / 60)}:${String(Math.max(0, Math.ceil(R.left)) % 60).padStart(2, '0')}`;
+    g.font = font(14, 800); g.fillStyle = '#fff1d8'; g.fillText(`TIME LEFT ${lt}`, vw / 2, y + 72);
+    g.font = font(19, 900); g.fillStyle = '#ffd45c'; g.fillText(`${R.pts.toLocaleString()} PTS`, vw / 2, y + 95);
+    g.globalAlpha = 1;
   } else if (R) {
     const w = 230, x = vw / 2 - w / 2, y = vh * 0.3, h = R.kind === 'wreck' ? 92 : 82;
     g.globalAlpha = Math.min(1, R.t / 0.5);

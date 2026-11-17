@@ -19,8 +19,12 @@ import { jobButton } from './jobs.js';
 import { buttonA } from './controls.js';
 import { drawHelp, helpHit } from './help.js';
 import { CityMap } from './map.js';
+import { NewsCam } from './newscam.js';
+import { chaseStick } from './chasecam.js';
+import { FX, fxFromQuery } from './fx.js';
 
 const Q = new URLSearchParams(location.search);
+fxFromQuery(Q);   // BEAUTY WINNERS: roof,sway,causeway,bleed,puddle,petals on by default; ?fx=none / ?fx=-name overrides (rim light cut by owner verdict)
 const DEMO = Q.has('demo');
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -82,6 +86,8 @@ const M = await loadAssets(p => loading(p * 0.8));
 renderer = new Renderer(ctx, world, ground, M);
 const siegeR = new SiegeRenderer(ctx, world, ground, M);
 const cityMap = new CityMap(world);
+const newsCam = new NewsCam(world, ground, M);          // OPEN ROAD: the Palm City News PiP — its own renderer, always the plain aerial view
+renderer.chaseOK = true;                                 // only the main renderer may run the chase cam
 renderer.resize(VIEW_W, view.h, DPR);
 if (Q.has('prof')) { renderer.prof = {}; window.__prof = renderer.prof; }
 
@@ -105,6 +111,7 @@ function onEvent(name, v) {
   if (name === 'wreck' || name === 'timber' || name === 'hood' || (name === 'crash' && v > 150)) feel.punch = 1;
   if (name === 'turbo') feel.punch = Math.max(feel.punch, 0.7);          // the boost kicks the camera
   if (name === 'wreck' && sim && sim.stars >= 4) feel.slowT = 0.45;      // pressure: a beat of slow-mo on the big hits
+  if (name === 'chopperdown') { feel.punch = 1; if (sim && sim.stars >= 4) feel.slowT = 0.45; }   // the mid-air ram: the biggest punch of all
 }
 function newRun() {
   director.reset(SEED);
@@ -205,6 +212,7 @@ function frame(now) {
   if (playing !== wasPlaying) { wasPlaying = playing; if (playing) recorder.replayStarted(); else recorder.replayEnded(); }
   if (director.play) { replayFrame(dt); requestAnimationFrame(frame); return; }
   const panel = panelMode();
+  recorder.setMenuOpen(!!panel);   // the REC/NEWS pills never cover the menu's JUMP tiles
   input.panelTap = panel ? (p) => panelAct(helpHit(p, VIEW_W, view.h, sim, panel, safeTop())) : null;
   if (feel.slowT > 0) feel.slowT -= dt;
   acc += panel ? 0 : dt * (feel.slowT > 0 ? 0.35 : 1);      // paused under a panel
@@ -213,6 +221,10 @@ function frame(now) {
     input.fightOn = !!buttonA(sim);   // PUNCH on foot, TURBO or the job action in a car
     let inp = pilot ? pilot.input(STEP) : input.read();
     if (ui.jump) { inp = { ...inp, jump: ui.jump }; ui.jump = null; }
+    // OPEN ROAD: while the chase cam is up the stick is in VIEW space (up = where the car
+    // points on screen) — remap to world space here, BEFORE the director records the input,
+    // so highlight replays re-sim the run identically.
+    if (sim.chase && sim.chase.blend > 0.02 && sim.player.mode === 'car' && !pilot) inp = chaseStick(inp, -sim.chase.rot - Math.PI / 2);
     director.record(inp);
     sim.step(STEP, inp);
     simTime += STEP;
@@ -246,13 +258,18 @@ function frame(now) {
     const cr = sim.water.ride;
     if (cr) { tx += cr.vx * 0.35; ty += cr.vy * 0.35; tz = 1 - Math.min(0.12, Math.hypot(cr.vx, cr.vy) / 470 * 0.12); }
   }
+  const hz = sim.heli ? sim.heli.zoom : 0;   // airborne: the walking camera, pulled out to ~1.7x the width (heli.js eases zoom)
+  if (hz > 0.01) {
+    if (sim.player.mode === 'air') { tx += sim.heli.vx * 0.42; ty += sim.heli.vy * 0.42; }
+    tz = 1 - 0.41 * hz;
+  }
   if (fixedCam) { tx = fixedCam[0]; ty = fixedCam[1]; tz = fixedCam[2] || 1; }
   if (sim.camSnap) { sim.camSnap = false; cam.x = tx; cam.y = ty; }   // a JUMP cuts, it doesn't swoop
   const k = fixedCam ? 1 : 1 - Math.exp(-dt * 3.2);
   cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k; cam.zoom += (tz - cam.zoom) * (fixedCam ? 1 : 1 - Math.exp(-dt * 1.5));
   const hw = VIEW_W / 2 / cam.zoom, hh = view.h / 2 / cam.zoom;
-  cam.x = Math.max(world.bounds.x0 + hw, Math.min(world.bounds.x1 - hw, cam.x));
-  cam.y = Math.max(world.bounds.y0 + hh, Math.min(world.bounds.y1 - hh, cam.y));
+  cam.x = Math.max(world.bounds.x0 + hw, Math.min(Math.max(world.bounds.x1, world.seaE || 0) - hw, cam.x));
+  cam.y = Math.max(world.bounds.y0 + hh, Math.min(Math.max(world.bounds.y1, world.seaS || 0) - hh, cam.y));
 
   // 2D camera feel (world transform only): zoom-punch on the big hits, a few degrees of roll into turns
   feel.punch *= Math.exp(-dt * 4.5);
@@ -271,6 +288,7 @@ function frame(now) {
   const t = timeOfDay();
   if (sim.siege) siegeR.draw(sim, t, simTime, VIEW_W, view.h, DPR);
   else renderer.draw(sim, cam, t, simTime);
+  if (sim.event && sim.event.kind === 'openroad') newsCam.draw(ctx, sim, t, simTime, VIEW_W, view.h, safeTop(), DPR);   // OPEN ROAD: the news PiP rides over the chase view
   input.safeTop = safeTop();
   if (sim.siege) input.mapOpen = false;
   if (input.mapOpen) cityMap.draw(ctx, VIEW_W, view.h, DPR, sim, simTime);     // live: the game runs on under the map
@@ -301,7 +319,7 @@ function replayFrame(dt) {
     p.cut = false; p.camSet = true;
     rcam.x += (tx - rcam.x) * k; rcam.y += (ty - rcam.y) * k; rcam.zoom += (tz - rcam.zoom) * (k === 1 ? 1 : 1 - Math.exp(-dt * 4));
     const hw = VIEW_W / 2 / rcam.zoom, hh = view.h / 2 / rcam.zoom;
-    rcam.x = Math.max(world.bounds.x0 + hw, Math.min(world.bounds.x1 - hw, rcam.x)); rcam.y = Math.max(world.bounds.y0 + hh, Math.min(world.bounds.y1 - hh, rcam.y));
+    rcam.x = Math.max(world.bounds.x0 + hw, Math.min(Math.max(world.bounds.x1, world.seaE || 0) - hw, rcam.x)); rcam.y = Math.max(world.bounds.y0 + hh, Math.min(Math.max(world.bounds.y1, world.seaS || 0) - hh, rcam.y));
     const tod = timeOfDay();
     if (s.siege) siegeR.draw(s, tod, p.i * STEP, VIEW_W, view.h, DPR);
     else renderer.draw(s, rcam, tod, p.i * STEP);
@@ -321,5 +339,5 @@ function replayFrame(dt) {
   if (director.done || ((inp.action || inp.punch || input.stick) && p.t > 0.6)) { director.end(); last = performance.now(); acc = 0; }
 }
 requestAnimationFrame(frame);
-window.__palm = { director, recorder, input, world, ground, cam, renderer, dpr: () => DPR, get sim() { return sim; }, M };
+window.__palm = { director, recorder, input, world, ground, cam, renderer, newscam: newsCam, fx: FX, dpr: () => DPR, get sim() { return sim; }, M };
 window.__vox = voice;          // task 8 proof/debug: the voice module + its play log

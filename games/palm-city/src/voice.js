@@ -63,6 +63,7 @@ export const HOOKS = {
   vox_evt_valet_jturn:   { f: ['evt_valet_jturn', 'val01'], p: N, cd: 8 },
   vox_evt_valet_scrape:  { f: ['evt_valet_scrape'], p: N, cd: 8 },
   vox_evt_valet_complete:{ f: ['evt_valet_complete'], p: N, cd: 8 },
+  vox_evt_openroad_cheer:{ f: ['ped01', 'ped02', 'ped04', 'ped05'], p: A, cd: 5 },
   // ---- destruction + palms (call sites added in destruct.js / events.js with this task) ----
   vox_dest_car_smash:    { f: ['dest_car_smash'], p: N, cd: 10 },
   vox_dest_car_smoke:    { f: ['dest_car_smoke'], p: N, cd: 18 },
@@ -111,6 +112,8 @@ export const DORMANT = {
   vox_palm_shade:        { f: ['palm_snap_shade'], p: N, cd: 12 },
   vox_palm_civic:        { f: ['palm_snap_civic'], p: N, cd: 20 },
   vox_swat_flashbang:    { f: ['swat_flashbang'], p: N, cd: 15 },
+  vox_heli_steal:        { f: ['heli_steal'], p: N, cd: 15 },
+  vox_heli_down:         { f: ['heli_down'], p: U, cd: 20 },
 };
 Object.assign(HOOKS, DORMANT);
 

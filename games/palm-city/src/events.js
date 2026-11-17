@@ -10,9 +10,13 @@
 // WRECK IT! rides the destruction system untouched: every break already calls destruct.report(),
 // which calls sim.eventBreak (set here) — the event only multiplies and chains. Domino anchors
 // (hydrants, fuel drums) are ordinary sim.things of two new kinds registered with destruct.js.
+//
+// OPEN ROAD v2 (openroad.js): a point-to-point race OUT of the city — the MacArthur Causeway,
+// the shell downtown leg, the port finish — under a painted OutRun chase camera (chasecam.js).
 import { hitCar, hitThing, burst, puff, report, registerKind, STAGES, D } from './destruct.js';
 import { initChase, stepChase } from './chase.js';
 import { startSpot, stepSpot, endSpot } from './spotlight.js';
+import { startOpenRoad, stepOpenRoad, stepChaseCam, ensureGridCar } from './openroad.js';
 
 const TAU = Math.PI * 2;
 const wrap = (a) => { while (a > Math.PI) a -= TAU; while (a < -Math.PI) a += TAU; return a; };
@@ -23,6 +27,7 @@ export const EVENTS = {
   wreck: { name: 'WRECK IT!', site: [1168, 470], radius: 430, time: 45, window: 2.2, medals: [2500, 5500, 9500] },
   valet: { name: 'VALET — PARK IT!', site: [760, 1690], time: 50, split: 16 },
   spot: { name: 'SPOTLIGHT RAVE', site: [1000, 560], time: 120 },
+  openroad: { name: 'OPEN ROAD', site: [372, 1275], time: 12 },   // nominal: startOpenRoad reseeds the timer from OPENROAD.bank
 };
 // valet round 1: three wide bays on the Garage's south apron (x 720..1120, y 1650..1710 is open paving
 // under the garage wall). u axis = along the stall (vertical), 34 wide x 60 deep per spec.
@@ -37,8 +42,13 @@ STAGES.drum = [0.3, 0.6, 1]; STAGES.hydrant = [0.3, 0.6, 1];
 
 export function initEvents(sim) {
   sim.event = null; sim.eventResult = null; sim.hitStopT = 0;
-  sim.eventStats = { wreck: 0, valet: 0, chase: 0, spot: 0 };
+  sim.eventStats = { wreck: 0, valet: 0, chase: 0, spot: 0, openroad: 0 };
   sim.eventSites = Object.entries(EVENTS).map(([kind, e]) => ({ kind, name: e.name, p: e.site }));
+  // INSTANT-START (owner rule, Nov 16): each car-gated ring keeps its own car inside the
+  // button radius — the floor, never the only option (any car the player brings still works)
+  sim.addCar(1225, 505, -Math.PI / 2, 'sedan_coral', null, { parked: true, ring: 'wreck', home: { x: 1225, y: 505, h: -Math.PI / 2 } });
+  sim.addCar(715, 1655, Math.PI / 2, 'sedan_cream', null, { parked: true, ring: 'valet', home: { x: 715, y: 1655, h: Math.PI / 2 } });
+  sim.addCar(955, 605, -Math.PI / 2, 'conv_mint', null, { parked: true, ring: 'spot', home: { x: 955, y: 605, h: -Math.PI / 2 } });
   sim.eventBreak = (x, y, pts, severity, label) => eventBreak(sim, x, y, pts, severity, label);
   initChase(sim);                                           // BOARD CHASE: its own site (it starts on the board, not in a car)
 }
@@ -67,6 +77,8 @@ export function startEvent(sim, kind) {
     sim.say('WRECK IT — 3', 1); sim.ev('vox_evt_wreck_start');
   } else if (kind === 'spot') {
     startSpot(sim, ev);
+  } else if (kind === 'openroad') {
+    startOpenRoad(sim, ev);
   } else {
     ev.bays = BAYS.map(b => ({ ...b, done: false })); ev.idx = 0; ev.spot = [ev.bays[0].x, ev.bays[0].y];
     ev.yaw = 0; ev.lastH = ev.car.h; ev.hist = []; ev.jt = -9; ev.drt = -9; ev.settle = 0; ev.bayT = 0; ev.dmg0 = ev.car.dmg; ev.scraped = false;
@@ -81,6 +93,12 @@ function endEvent(sim, text, ok, extra) {
   if (!ev) return;
   if (ev.kind === 'wreck') { sim.things = sim.things.filter(t => !t.evAnchor); }
   if (ev.kind === 'spot') endSpot(sim, ev);
+  if (ev.kind === 'openroad') {                        // OPEN ROAD: sweep the crowds, park the route traffic, free the tyres, let the chase cam go
+    for (const p of sim.peds) if (p.crowd) p.gone = true;
+    for (const c of sim.cars) if (c.driver === 'route') { c.driver = null; c.parked = true; c.v = 0; }
+    sim.gripMul = 1;
+    if (sim.chase) sim.chase.out = true;
+  }
   const result = { kind: ev.kind, name: ev.name, pts: ev.pts, ok, t: 6, text, ...extra };
   if (ev.kind === 'wreck') { const M = EVENTS.wreck.medals; result.medal = ev.pts >= M[2] ? 'GOLD' : ev.pts >= M[1] ? 'SILVER' : ev.pts >= M[0] ? 'BRONZE' : 'NONE'; }
   sim.event = null; sim.eventResult = result;
@@ -265,16 +283,40 @@ function stepValet(sim, ev, dt) {
 // walk away from the running event (used by JUMP); points already banked stay banked
 export function quitEvent(sim) { const ev = sim.event; if (ev) endEvent(sim, ev.name + ' OVER', false, ev.kind === 'valet' ? { bays: ev.n } : undefined); }
 
+// INSTANT-START ring guardian: a ring car that is wrecked or left >140 from its home rolls
+// back (repaired) once the player has been at its ring for a continuous 10 s. It only ever
+// mutates the one flagged singleton — no car is ever spawned here.
+function guardRingCars(sim, dt) {
+  const f = sim.focus();
+  for (const c of sim.cars) {
+    if (!c.ring || !c.home) continue;
+    const e = EVENTS[c.ring]; if (!e) continue;
+    const inUse = c.driver === 'player' || sim.player.car === c || (sim.job && sim.job.car === c) || (sim.event && sim.event.car === c);
+    const away = c.wreck || Math.hypot(c.x - c.home.x, c.y - c.home.y) > 140;
+    if (!inUse && away && Math.hypot(f.x - e.site[0], f.y - e.site[1]) < 420) c.waitT = (c.waitT || 0) + dt; else c.waitT = 0;
+    if (c.waitT >= 10) {
+      c.x = c.home.x; c.y = c.home.y; c.h = c.home.h; c.v = 0; c.driver = null; c.parked = true;
+      c.dmg = 0; c.dent = [0, 0, 0, 0]; c.glass = [0, 0]; c.wreck = false; c.waitT = 0;
+    }
+  }
+}
+
 export function stepEvents(sim, dt) {
+  guardRingCars(sim, dt);   // INSTANT-START: the rings restock even while no event is running
   if (sim.eventResult) { sim.eventResult.t -= dt; if (sim.eventResult.t <= 0) sim.eventResult = null; }
+  if (sim.chase && (!sim.event || sim.event.kind !== 'openroad')) stepChaseCam(sim, dt);   // OPEN ROAD: the chase cam drains out once the run is over
+  if (!sim.event) ensureGridCar(sim);   // OPEN ROAD's self-sufficient start: the race car waits in the circle
   const ev = sim.event;
   if (!ev) return;
   ev.t += dt;
   if (sim.busted && ev.kind === 'chase') { endEvent(sim, 'BOARD CHASE — BUSTED', false, { cp: ev.idx, of: 4 }); return; }
   if (sim.busted && ev.kind === 'spot') { sim.ev('vox_evt_spot_busted'); endEvent(sim, 'BUSTED', false, { hype: Math.round(ev.hype || 0), tier: ev.tier || 1 }); return; }
+  if (sim.busted && ev.kind === 'openroad') { endEvent(sim, 'BUSTED', false, { left: Math.max(0, ev.timer), secs: Math.round(ev.t), near: ev.near }); return; }
   if (sim.busted) { if (ev.kind === 'wreck') sim.ev('vox_evt_wreck_busted'); endEvent(sim, ev.kind === 'wreck' ? 'BUSTED — ' + ev.pts.toLocaleString() + ' PTS KEPT' : 'VALET — BUSTED', false); return; }
   if (ev.car && ev.car.wreck && ev.kind === 'valet') { endEvent(sim, 'VALET — CAR WRECKED', false, { bays: ev.n }); return; }
   if (ev.kind === 'chase') stepChase(sim, ev, dt, (text, ok, extra) => endEvent(sim, text, ok, extra), (pts, label) => pay(sim, pts, label, 2));
   else if (ev.kind === 'spot') stepSpot(sim, ev, dt, (text, ok, extra) => endEvent(sim, text, ok, extra), (pts, label) => pay(sim, pts, label, 2));
-  else if (ev.kind === 'wreck') stepWreck(sim, ev, dt); else stepValet(sim, ev, dt);
+  else if (ev.kind === 'wreck') stepWreck(sim, ev, dt);
+  else if (ev.kind === 'openroad') stepOpenRoad(sim, ev, dt, (text, ok, extra) => endEvent(sim, text, ok, extra), (pts, label) => { ev.pts += pts; pay(sim, pts, label, 2); });
+  else stepValet(sim, ev, dt);
 }
