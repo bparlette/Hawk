@@ -3,6 +3,7 @@
 // a golden-hour grade in Palm City's spirit, and the real street name you are on.
 import { CHUNK } from './lf_ground.js';
 import { poly } from './lf_areas.js';
+import * as FX from './lf_fx.js';
 
 const SUN = { x: 0.8, y: -0.3 };                       // the bake's sun: shadows fall east-north-east
 export class Renderer {
@@ -16,7 +17,8 @@ export class Renderer {
   drawCar(g, c, which) {
     const m = this.fleet[c.model], k = ((Math.round(c.h / (Math.PI * 2) * m.angles) % m.angles) + m.angles) % m.angles;
     const [img, sx, sy, sw, sh, ox, oy, w, h] = this.cell(m, k, which);
-    g.drawImage(img, sx, sy, sw, sh, c.x + ox, c.y + oy, w, h);
+    const [jx, jy] = this.time != null ? FX.shake(this.S, c, this.time) : [0, 0];   // bass cars vibrate
+    g.drawImage(img, sx, sy, sw, sh, c.x + ox + jx, c.y + oy + jy, w, h);
   }
   draw(S, cam, time) {
     const g = this.ctx, { vw, vh, dpr } = this, z = cam.zoom, hw = vw / 2 / z, hh = vh / 2 / z;
@@ -38,6 +40,7 @@ export class Renderer {
     }
     // shadows of ground-level cars, then those cars
     g.globalAlpha = 0.55; for (const c of S.cars) if (c.layer === 0 && vis(c.x, c.y)) this.drawCar(g, c, 'shadow');
+    this.S = S; this.time = time; FX.under(g, S, time);
     g.globalAlpha = 1; for (const c of S.cars) if (c.layer === 0 && vis(c.x, c.y)) this.drawCar(g, c, 'color');
     // bridge decks: cast shadow on whatever is below, then the deck (asphalt + parapets), then cars on it
     const decks = []; const seen = new Set();
@@ -51,6 +54,7 @@ export class Renderer {
     for (const e of decks) { g.strokeStyle = '#5a6272'; g.lineWidth = e.w; path(e); g.stroke(); g.strokeStyle = 'rgba(244,240,230,0.55)'; g.lineWidth = 1.6; g.setLineDash([16, 24]); path(e); g.stroke(); g.setLineDash([]); }
     g.globalAlpha = 0.55; for (const c of S.cars) if (c.layer === 1 && vis(c.x, c.y)) this.drawCar(g, c, 'shadow');
     g.globalAlpha = 1; for (const c of S.cars) if (c.layer === 1 && vis(c.x, c.y)) this.drawCar(g, c, 'color');
+    FX.over(g, S, this.mission, time);                    // bass rings, sputter, fire, pickup rings, the beat's walkers
     // hero plaques (over the cars, under the grade so they sit in the light)
     if (this.areas) for (const h of this.areas.heroes) {
       if (!vis(h.cx, h.cy, 300)) continue;
