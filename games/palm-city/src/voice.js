@@ -137,7 +137,7 @@ export class Voice {
     this.unlocked = false;
     this.reprobeT = 0;
     // ambient-director state
-    this.prevStars = 0; this.hadChopper = false; this.prevMode = 'foot'; this.prevCarDmg = 0;
+    this.prevStars = 0; this.prevBusted = false; this.hadChopper = false; this.prevMode = 'foot'; this.prevCarDmg = 0;
     this.copT = 6, this.radioT = 30, this.dspT = 25, this.pedT = 0, this.heroT = 50;
     this.boardDsp = false; this.duskSaid = false; this.pedCd = new Map();
     this.taxiFastT = 0; this.busDmg = 0; this.getDmgSaid = false;
@@ -258,17 +258,23 @@ export class Voice {
     if (this.prevStars >= 3 && sim.stars < this.prevStars && !inSiege) this.line('dsp05', N, 25);
     if (P.mode === 'board' && sim.stars >= 3 && !this.boardDsp) { if (this.line('dsp01', N, 30)) this.boardDsp = true; }
     if (sim.stars === 0 || P.mode !== 'board') this.boardDsp = false;
+    // WORLD MIX (owner, Nov 16): the normal world gets the voices too, not just jobs and events.
+    // The heat rising is a world beat: a cop answers at once instead of the world staying quiet
+    // until 2 stars, and a bust — the biggest beat in free roam — is no longer voiceless.
+    if (sim.stars > this.prevStars && !inSiege) this.copT = 0;
     this.prevStars = sim.stars;
+    if (sim.busted && !this.prevBusted && !inSiege) this.line(COPS[(Math.random() * COPS.length) | 0], N, 20);
+    this.prevBusted = !!sim.busted;
     this.dspT -= dt;
     if (this.dspT <= 0) { this.dspT = 30 + Math.random() * 20; if (sim.stars >= 4 && !sim.job && !inSiege) this.line('dsp06', A, 45); }
 
     if (inSiege || sim.busted) return;
 
-    // COP pursuit barks
+    // COP pursuit barks (from 1 star — a 1-star chase is still a chase, and it used to be silent)
     this.copT -= dt;
     if (this.copT <= 0) {
       this.copT = 8 + Math.random() * 7;
-      if (sim.stars >= 2) {
+      if (sim.stars >= 1) {
         const near = sim.cars.some((c) => c.driver === 'police' && Math.hypot(c.x - f.x, c.y - f.y) < 520);
         if (near) {
           let id;
@@ -280,12 +286,12 @@ export class Voice {
       }
     }
 
-    // PED near-miss reactions
+    // PED near-miss reactions (city speeds count too — 110 was highway-only, the world felt mute)
     this.pedT -= dt;
-    if (this.pedT <= 0 && P.mode === 'car' && Math.abs(P.car.v) > 110) {
+    if (this.pedT <= 0 && P.mode === 'car' && Math.abs(P.car.v) > 80) {
       for (const p of sim.peds) {
         if (p.hidden || p.mode === 'down' || p === P.ped) continue;
-        if (Math.hypot(p.x - P.car.x, p.y - P.car.y) > 30) continue;
+        if (Math.hypot(p.x - P.car.x, p.y - P.car.y) > 36) continue;
         if (sim.time < (this.pedCd.get(p) || 0)) continue;
         this.pedCd.set(p, sim.time + 20);
         this.pedT = 5;
@@ -322,8 +328,8 @@ export class Voice {
     if (tod !== undefined && tod < 0.3) this.duskSaid = false;
     this.radioT -= dt;
     if (this.radioT <= 0) {
-      this.radioT = 55 + Math.random() * 35;
-      if (!sim.job && !sim.event && sim.stars === 0) this.line(RADIO[(Math.random() * RADIO.length) | 0], A, 30);
+      this.radioT = 35 + Math.random() * 25;
+      if (!sim.job && !sim.event && sim.stars <= 1) this.line(RADIO[(Math.random() * RADIO.length) | 0], A, 30);
     }
   }
 }
