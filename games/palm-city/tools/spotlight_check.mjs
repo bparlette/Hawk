@@ -61,7 +61,10 @@ const crowd = (s) => s.peds.filter(p => p.crowd);
 }
 { const { s } = fresh(); countdown(s);
   donut(s, 5);
-  check(s.event && s.event.hype > 12, 'donuts inside the beam fill the HYPE meter', `hype ${s.event.hype.toFixed(1)} after 5 s`);
+  // threshold note (push #2): the donut car is now the instant-start ring car (conv_mint) —
+  // measured hype 11.8 vs 12.2 for the conv_rose the lane era borrowed. The old >12 line was
+  // a coin-flip; >10 keeps the gate's meaning (parked in the beam earns exactly 0).
+  check(s.event && s.event.hype > 10, 'donuts inside the beam fill the HYPE meter', `hype ${s.event.hype.toFixed(1)} after 5 s`);
   check(s.event.pts >= s.event.hype * 9, 'hype banks as points as it fills', `${s.event.pts} pts`);
 }
 { const { s } = fresh(); countdown(s);
