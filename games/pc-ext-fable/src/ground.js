@@ -20,11 +20,11 @@ const CPX = CHUNK * PX_PER_UNIT; // 512
 
 // Daylight albedo per surface (the time-of-day grade is applied later, in the lighting pass).
 const PAL = {
-  road:      { base: [82, 76, 86],    var: [18, 16, 18], dabs: ['#666074', '#756e80', '#544f62', '#847888', '#5e627a', '#90828c', '#464156', '#988b96'] },
+  road:      { base: [58, 66, 80],    var: [9, 9, 10], dabs: ['#4e5768', '#59627a', '#465062', '#626a7a', '#525c70', '#6b7282', '#3e4757', '#747a86'] },
   sidewalk:  { base: [242, 214, 178], var: [16, 14, 12], dabs: ['#fae4be', '#dfbe9c', '#fff0d2', '#cfa88c', '#f4d3a6', '#e8b68c'] },
   paving:    { base: [212, 118, 76],  var: [26, 18, 16], dabs: ['#e68854', '#b85a42', '#f2a46a', '#9c4c3a', '#de7458', '#f8b976', '#8a3e30'] },
   plaza:     { base: [236, 190, 138], var: [18, 14, 14], dabs: ['#fad090', '#dea274', '#f2b880', '#ce8670', '#ffe0a4', '#e89668'] },
-  parking:   { base: [62, 58, 66],    var: [12, 10, 12], dabs: ['#524e5a', '#44404c', '#66606c', '#36333e', '#746e78'] },
+  parking:   { base: [52, 58, 70],    var: [8, 8, 9], dabs: ['#48505f', '#3f4756', '#565e6c', '#363d4a', '#636a76'] },
   grass:     { base: [64, 134, 58],   var: [28, 32, 22], dabs: ['#48a03c', '#8cc846', '#2e7c44', '#b2d44c', '#266644', '#d0dc58', '#56ac36', '#72ba44'] },
   promenade: { base: [208, 138, 92],  var: [20, 16, 14], dabs: ['#d48858', '#b86c48', '#e6a06c', '#9c583c', '#f0b47c', '#c87c4e'] },
   sand:      { base: [246, 198, 126], var: [16, 15, 14], dabs: ['#ffda92', '#ecb06a', '#fff0b4', '#dc9864', '#f8c67e', '#e49e60'] },
@@ -305,7 +305,7 @@ export class GroundPainter {
           g.stroke();
           if (dabTwice) { g.globalAlpha = alpha * 0.55; g.stroke(); }   // the same stroke laid again: a hotter edge
           if (pass === 1 && r4 > 0.74) {
-            g.strokeStyle = t === 'water' ? '#bfefff' : (t === 'road' ? '#cfc6d0' : '#fff3ce');
+            g.strokeStyle = t === 'water' ? '#bfefff' : (t === 'road' ? '#c9ccd2' : '#fff3ce');
             g.globalAlpha = 0.26 * dabFade;
             g.lineWidth = Math.max(1.4, wid * 0.35);
             g.beginPath();
@@ -474,18 +474,18 @@ export class GroundPainter {
       if (t === 'road') {
         const k = rnd();
         if (k < 0.2) { // oil stain
-          g.globalAlpha = 0.18; g.fillStyle = '#2a2236';
+          g.globalAlpha = 0.18; g.fillStyle = '#24262c';
           g.beginPath(); g.ellipse(x, y, 6 + rnd() * 8, 3 + rnd() * 4, rnd() * 3, 0, 7); g.fill();
         } else if (k < 0.32) { // crack
-          g.globalAlpha = 0.35; g.strokeStyle = '#38304a'; g.lineWidth = 0.7;
+          g.globalAlpha = 0.35; g.strokeStyle = '#33363e'; g.lineWidth = 0.7;
           g.beginPath(); g.moveTo(x, y);
           let a = rnd() * 6.28, cx = x, cy = y;
           for (let i = 0; i < 6; i++) { a += (rnd() - 0.5) * 1.2; cx += Math.cos(a) * 4; cy += Math.sin(a) * 4; g.lineTo(cx, cy); }
           g.stroke();
         } else if (k < 0.35) { // manhole
-          g.globalAlpha = 0.6; g.fillStyle = '#4a4560';
+          g.globalAlpha = 0.6; g.fillStyle = '#474b55';
           g.beginPath(); g.arc(x, y, 5, 0, 7); g.fill();
-          g.globalAlpha = 0.4; g.strokeStyle = '#2a2638'; g.lineWidth = 0.8; g.stroke();
+          g.globalAlpha = 0.4; g.strokeStyle = '#292b31'; g.lineWidth = 0.8; g.stroke();
         }
       } else if (t === 'sidewalk' || t === 'plaza' || t === 'promenade') {
         g.globalAlpha = 0.12; g.strokeStyle = '#7a5a50'; g.lineWidth = 0.5;
@@ -506,11 +506,11 @@ export class GroundPainter {
       if (r.d > r.hw - 3) continue;
       const isGutter = r.d > r.hw - 24;
       g.globalAlpha = isGutter ? 0.36 : 0.20;
-      g.fillStyle = isGutter ? '#242338' : '#323046';
+      g.fillStyle = isGutter ? '#22252c' : '#2e323a';
       g.beginPath(); g.ellipse(x, y, 16 + wr() * 18, 5 + wr() * 6, Math.atan2(r.dy, r.dx), 0, 7); g.fill();
       if (isGutter) {
         g.globalAlpha = 0.24;
-        g.fillStyle = '#6e7494';
+        g.fillStyle = '#6f7682';
         g.beginPath(); g.ellipse(x - 2, y - 1, 9, 1.8, Math.atan2(r.dy, r.dx), 0, 7); g.fill();
       }
     }

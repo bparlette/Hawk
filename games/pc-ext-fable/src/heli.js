@@ -172,8 +172,9 @@ export function stepHeli(sim, dt, inp) {
   }
   H.x += H.vx * dt; H.y += H.vy * dt;
   const L = W.L;                                           // the world edge is a soft stop
-  if (H.x < 30) { H.x = 30; H.vx = Math.max(0, H.vx); } if (H.x > L.world.w - 30) { H.x = L.world.w - 30; H.vx = Math.min(0, H.vx); }
-  if (H.y < 30) { H.y = 30; H.vy = Math.max(0, H.vy); } if (H.y > L.world.h - 30) { H.y = L.world.h - 30; H.vy = Math.min(0, H.vy); }
+  const X0 = (W.bounds ? W.bounds.x0 : 0) + 30, X1 = (W.seaE || L.world.w) - 30, Y1 = (W.seaS || L.world.h) - 30;   // FIX (audit L1): the shell + the open sea
+  if (H.x < X0) { H.x = X0; H.vx = Math.max(0, H.vx); } if (H.x > X1) { H.x = X1; H.vx = Math.min(0, H.vx); }
+  if (H.y < 30) { H.y = 30; H.vy = Math.max(0, H.vy); } if (H.y > Y1) { H.y = Y1; H.vy = Math.min(0, H.vy); }
   if (inp.action) {                                        // LAND — the big button, anytime
     if (landableAt(sim, H.x, H.y)) H.state = 'landing';
     else if (H.msgCd <= 0) { sim.say('NO LANDING HERE', 1.4); H.msgCd = 1.2; sim.ev('bump'); }

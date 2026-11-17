@@ -14,6 +14,7 @@ import { quitJob } from './jobs.js';
 import { dismount, mount } from './skate.js';
 import { CHASE } from './chase.js';
 import { padPos, inRoof } from './heli.js';
+import { ensureGridCar } from './openroad.js';
 
 const JOB = {
   taxi:    { name: 'TAXI',    how: 'Get in the yellow cab and press START. Fares pay more when they stay happy.' },
@@ -100,6 +101,10 @@ export function jump(sim, id) {
   if (!a || a.group === 'hub' || P.mode === 'siege' || P.mode === 'air' || sim.siege || sim.busted) return false;
   quitJob(sim); quitEvent(sim);
   if (P.mode === 'board') dismount(sim);
+  if (P.mode === 'water' && sim.water.ride) {          // FIX (audit H1): JUMP off a craft releases it home, as a bust does
+    const cr = sim.water.ride; cr.ridden = false; cr.x = cr.home.x; cr.y = cr.home.y; cr.h = cr.home.h; cr.vx = cr.vy = 0; cr.v = 0;
+    sim.water.ride = null; sim.water.cop = null; P.mode = 'foot'; p.hidden = false;
+  }
   const leave = () => { if (P.mode === 'car') { const c = P.car; c.v = 0; c.driver = null; c.parked = true; c.fixed = false; P.mode = 'foot'; P.car = null; p.hidden = false; } };
   const seat = (c) => { leave(); c.driver = 'player'; c.parked = false; c.fixed = false; c.v = 0; c.siren = false; P.mode = 'car'; P.car = c; p.hidden = true; p.x = c.x; p.y = c.y; };
   if (a.group === 'siege') {
@@ -118,7 +123,8 @@ export function jump(sim, id) {
     // the moorings: on the pier deck right beside the jetski — one ACTION press hops on
     leave();
     const pier = sim.W.L.pier, cr = sim.water.craft[0];
-    p.x = cr.x; p.y = pier.y + pier.h - 6; p.h = Math.PI / 2; p.hidden = false;
+    if (!cr.ridden && Math.hypot(cr.x - cr.home.x, cr.y - cr.home.y) > 1) { cr.x = cr.home.x; cr.y = cr.home.y; cr.h = cr.home.h; cr.vx = cr.vy = 0; }   // FIX (audit M3): the jetski comes home first
+    p.x = Math.max(pier.x + 10, Math.min(pier.x + pier.w - 6, cr.home.x)); p.y = pier.y + pier.h - 6; p.h = Math.PI / 2; p.hidden = false;
   } else if (a.heli) {
     // the helicopter: on foot on the hospital roof, beside the pad, STEAL armed
     leave();
@@ -135,6 +141,10 @@ export function jump(sim, id) {
     } else {
       const pad = sim.W.L.hospital.pad; p.x = pad[0] - 40; p.y = pad[1]; p.h = 0; p.hidden = false;
     }
+  } else if (a.id === 'openroad') {
+    // FIX (audit M2): the designed start — on foot in the circle beside the waiting grid car, START armed
+    leave(); ensureGridCar(sim);
+    p.x = a.site.p[0] + 40; p.y = a.site.p[1] - 30; p.h = Math.PI; p.hidden = false;
   } else {
     // an event wants a car: keep the one you are in, else borrow the nearest one that still runs
     let c = P.mode === 'car' && !P.car.wreck && !P.car.job ? P.car : null;

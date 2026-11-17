@@ -106,7 +106,16 @@ export function ensureGridCar(sim) {
     if (!old.parked) { old.parked = true; old.driver = null; old.v = 0; }
     return old;
   }
-  if (old) old.openroad = false;
+  // FIX (audit H2): restore the singleton instead of breeding a new car. Bumped out of the circle by
+  // traffic (or wrecked and left) and nobody driving it: it rolls home repaired. Only a car the player
+  // drove away is released to the world (fixed=false, so the population filter can cull it) and replaced.
+  if (old && sim.cars.includes(old) && old !== sim.player.car && !old.driver && Math.hypot(old.x - SITE[0], old.y - SITE[1]) < 200) {
+    old.x = SITE[0]; old.y = SITE[1]; old.h = Math.PI; old.v = 0; old.parked = true; old.fixed = true;
+    old.dmg = 0; old.dent = [0, 0, 0, 0]; old.glass = [0, 0]; old.wreck = false;
+    return old;
+  }
+  if (old === sim.player.car) return null;                 // you are in it: nothing waits in the circle meanwhile
+  if (old) { old.openroad = false; old.fixed = false; }
   sim.openroadCar = null;
   const c = sim.addCar(SITE[0], SITE[1], Math.PI, GRID_MODEL, null, { parked: true, fixed: true, openroad: true });
   sim.openroadCar = c;

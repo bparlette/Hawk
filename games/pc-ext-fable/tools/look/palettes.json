@@ -1,0 +1,170 @@
+{
+ "natural-asphalt": {
+  "_doc": "Owner, Nov 17: 'make roads more natural color'. Mauve/lavender asphalt -> neutral charcoal with sun-faded grey dabs; oil, cracks, manholes, wet troughs and glints follow. Lane paint, curbs (plum ink) and every other surface untouched.",
+  "pal": {
+   "road": {
+    "base": [
+     72,
+     72,
+     70
+    ],
+    "var": [
+     15,
+     15,
+     14
+    ],
+    "dabs": [
+     "#5d5e5d",
+     "#6c6c69",
+     "#4e5051",
+     "#7a7973",
+     "#575a5d",
+     "#85837c",
+     "#434547",
+     "#908d85"
+    ]
+   },
+   "parking": {
+    "base": [
+     60,
+     60,
+     59
+    ],
+    "var": [
+     11,
+     11,
+     10
+    ],
+    "dabs": [
+     "#525352",
+     "#454647",
+     "#656561",
+     "#38393a",
+     "#73726c"
+    ]
+   }
+  },
+  "swaps": {
+   "#cfc6d0": "#cfccc4",
+   "#2a2236": "#262626",
+   "#38304a": "#363638",
+   "#4a4560": "#4b4b4c",
+   "#2a2638": "#2b2b2c",
+   "#242338": "#242628",
+   "#323046": "#303234",
+   "#6e7494": "#71767a"
+  }
+ },
+ "natural-asphalt-v2": {
+  "_doc": "natural-asphalt tuned against the golden-hour grade (measured: R x1.8, G x1.0, B x0.57 at t=0.1): a cool charcoal base that the warm light turns into warm grey asphalt, darker than v1 for contrast with the kerbs, and dabs held close to the base so the brushwork reads as worn tarmac, not dirt.",
+  "pal": {
+   "road": {
+    "base": [
+     58,
+     66,
+     80
+    ],
+    "var": [
+     9,
+     9,
+     10
+    ],
+    "dabs": [
+     "#4e5768",
+     "#59627a",
+     "#465062",
+     "#626a7a",
+     "#525c70",
+     "#6b7282",
+     "#3e4757",
+     "#747a86"
+    ]
+   },
+   "parking": {
+    "base": [
+     52,
+     58,
+     70
+    ],
+    "var": [
+     8,
+     8,
+     9
+    ],
+    "dabs": [
+     "#48505f",
+     "#3f4756",
+     "#565e6c",
+     "#363d4a",
+     "#636a76"
+    ]
+   }
+  },
+  "swaps": {
+   "#cfc6d0": "#c9ccd2",
+   "#2a2236": "#24262c",
+   "#38304a": "#33363e",
+   "#4a4560": "#474b55",
+   "#2a2638": "#292b31",
+   "#242338": "#22252c",
+   "#323046": "#2e323a",
+   "#6e7494": "#6f7682"
+  }
+ },
+ "original-pc-ext-fable": {
+  "_doc": "pc-ext-fable before its first palette apply (2026-11-17)",
+  "pal": {
+   "road": {
+    "base": [
+     82,
+     76,
+     86
+    ],
+    "var": [
+     18,
+     16,
+     18
+    ],
+    "dabs": [
+     "#666074",
+     "#756e80",
+     "#544f62",
+     "#847888",
+     "#5e627a",
+     "#90828c",
+     "#464156",
+     "#988b96"
+    ]
+   },
+   "parking": {
+    "base": [
+     62,
+     58,
+     66
+    ],
+    "var": [
+     12,
+     10,
+     12
+    ],
+    "dabs": [
+     "#524e5a",
+     "#44404c",
+     "#66606c",
+     "#36333e",
+     "#746e78"
+    ]
+   }
+  },
+  "swaps": {
+   "#c9ccd2": "#cfc6d0",
+   "#24262c": "#2a2236",
+   "#33363e": "#38304a",
+   "#474b55": "#4a4560",
+   "#292b31": "#2a2638",
+   "#22252c": "#242338",
+   "#2e323a": "#323046",
+   "#6f7682": "#6e7494"
+  }
+ }
+}

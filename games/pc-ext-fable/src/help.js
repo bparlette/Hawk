@@ -14,7 +14,7 @@ export const CONTROLS = [
 ];
 
 // can the player be teleported right now? (not mid-siege, not while busted)
-export const canJump = (sim) => sim.player.mode !== 'siege' && !sim.busted && !sim.siege;
+export const canJump = (sim) => sim.player.mode !== 'siege' && sim.player.mode !== 'air' && !sim.busted && !sim.siege;   // FIX (audit L2): 'air' too
 
 export function helpLayout(vw, vh, n, mode, safeTop = 0) {
   const start = mode === 'start', x = 12, w = vw - 24;

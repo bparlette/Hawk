@@ -12,7 +12,7 @@ import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath }
 import { World } from '../src/world.js'; import { Sim } from '../src/sim.js';
 import { helpRows } from '../src/activities.js'; import { helpLayout, helpHit, CONTROLS } from '../src/help.js';
 import { jobButton } from '../src/jobs.js'; import { buttonA } from '../src/controls.js';
-import { nearHeli } from '../src/heli.js'; import { nearCraft } from '../src/watercraft.js';
+import { nearHeli } from '../src/heli.js'; import { nearCraft } from '../src/watercraft.js'; import { openRoadArmed } from '../src/openroad.js';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const layout = JSON.parse(fs.readFileSync(path.join(ROOT, 'layout.json'))), M = JSON.parse(fs.readFileSync(path.join(ROOT, 'assets/manifest.json')));
 const world = new World(layout);
@@ -54,12 +54,21 @@ for (const id of WANT) {
   else if (a.board) { armed = P.mode === 'board' && A && A.label === 'START BOARD CHASE'; where = `on the board at ${Math.round(s.board.x)},${Math.round(s.board.y)}, A = ${A && A.label}`; }
   else if (a.heli) { armed = P.mode === 'foot' && !!s.player.roof && nearHeli(s); where = `on the hospital roof at ${Math.round(P.ped.x)},${Math.round(P.ped.y)}`; }
   else if (a.water) { const cr = nearCraft(s); armed = P.mode === 'foot' && !!cr; where = `on the pier at ${Math.round(P.ped.x)},${Math.round(P.ped.y)}, beside the ${cr && cr.kind}`; }
+  else if (id === 'openroad') { armed = P.mode === 'foot' && openRoadArmed(s); where = `on foot in the start circle at ${Math.round(P.ped.x)},${Math.round(P.ped.y)}, beside the grid car`; }   // FIX (audit M2): the designed start
   else { armed = P.mode === 'car' && jb && jb.kind === 'evstart' && jb.ev === id; where = `in the ${P.car && P.car.model} at ${Math.round(P.car.x)},${Math.round(P.car.y)}, A = ${A && A.label}`; }
   check(armed, `JUMP ${a.name}: you are there with it armed`, where);
   check(s.score === 1234 && s.stars === stars, `JUMP ${a.name}: free — no score or wanted change`);
   if (a.heli) { s.step(DT, inp({ action: true })); check(P.mode === 'air' && s.stars === stars + 2, `JUMP ${a.name}: the big button steals it (+2 stars)`); }
   else if (a.water) { s.step(DT, inp({ action: true })); check(P.mode === 'water' && !!s.water.ride, `JUMP ${a.name}: one press of the big button hops on`); }
   else if (a.group !== 'siege') { s.step(DT, inp({ punch: true })); check(a.group === 'job' ? !!s.job && s.job.kind === id : !!s.event && s.event.kind === id, `JUMP ${a.name}: one press of A starts it`); }
+}
+// audit H1/C2: JUMP from a ridden craft, to every entry — you always leave it, and it is always rideable again
+for (const id of ['motel', 'taxi', 'chase', 'heli', 'boats', 'wreck', 'openroad']) {
+  const s = fresh(), P = s.player, cr = s.water.craft[0], pier = layout.pier;
+  P.ped.x = cr.x; P.ped.y = pier.y + pier.h - 6; s.step(DT, inp({ action: true }));
+  for (let i = 0; i < 90; i++) s.step(DT, inp({ jx: 0, jy: 1, jm: 1 }));
+  s.step(DT, inp({ jump: id })); for (let i = 0; i < 5; i++) s.step(DT, inp({}));
+  check(P.mode !== 'water' && !s.water.ride && !s.water.craft.some(c => c.ridden), `JUMP ${id} from a jetski: off the craft, and the craft is free`, `mode ${P.mode}`);
 }
 { const s = fresh();
   s.step(DT, inp({ jump: 'taxi' })); s.step(DT, inp({ punch: true }));

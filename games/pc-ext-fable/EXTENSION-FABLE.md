@@ -107,3 +107,13 @@ Two runs each (headless software raster; compare the two builds against each oth
    green**. The `palm-city` symlink in this folder lets the browser-half checks resolve
    `../palm-city/` art on the tools' local server; the published page never follows it.
 6. **Captures:** `CHROME=<chromium> sh tools/geo/ext_shots.sh` writes the ten `shots/ext-*.png`.
+
+## Nov 17 (later): roads, audit fixes, toolkit
+
+- **Roads:** the preset `natural-asphalt-v2` (tools/look/palette.mjs) is applied to this build: cool
+  charcoal tuned against the golden grade, with calmer tarmac brushwork. Before and after:
+  `shots/roads-before-*.png` vs `shots/roads-v2-*.png`.
+- **Audit bugs H1, H2, M1, M2, M3, L1 and L2 are fixed in this build.** `tools/probes` shows 0 BUG
+  lines here and 17 on live.
+- **Every tool used, and how to reuse it** to test, fix, retune or build new parts of the game:
+  **TOOLKIT.md**, with one entry point, `sh tools/toolkit.sh`.
