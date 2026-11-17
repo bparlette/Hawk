@@ -41,6 +41,17 @@ function drawPed(g, f, time) {
   pedCell(g, img, idx, f.x, f.y - (f.dap ? Math.abs(f.dap) * 3 : 0), 39, 39, -19.5, -19.5);
   return true;
 }
+// the on-foot player (lf_foot.js state, set by main.js): the same Palm City ped,
+// with Palm City's punch jab (its render.js: a sin-arc shove of 5 units).
+let FOOTF = null;
+export function setFoot(f) { FOOTF = f; }
+function drawFootNow(g, time) {
+  if (!FOOTF || !FOOTF.active) return;
+  const F = FOOTF, jab = F.punchT > 0 ? Math.sin(Math.PI * (0.26 - F.punchT) / 0.26) * 5 : 0;
+  const f = { who: F.who, x: F.x + Math.cos(F.h) * jab, y: F.y + Math.sin(F.h) * jab, h: F.h, px: F.px, py: F.py, dap: 0 };
+  if (drawPed(g, f, time)) { F.px = f.px; F.py = f.py; }
+  g.font = '700 9px system-ui'; g.textAlign = 'center'; g.fillStyle = '#fff3dc'; g.fillText(F.who.name.split(' ')[0], F.x, F.y - 26);
+}
 const fxOf = (S, c) => (S.fxBy && S.fxBy[c.model]) || [];
 export function setFx(S, roster) {
   S.fxBy = {};
@@ -94,6 +105,7 @@ export function over(g, S, M, time) {
     }
   }
   g.globalAlpha = 1;
+  drawFootNow(g, time);
   if (!M) return;
   for (const st of M.stops) if (!st.done) {                            // pickup rings: pull in here
     const p = 0.5 + 0.5 * Math.sin(time * 3);

@@ -8,7 +8,8 @@ import { Renderer } from './lf_render.js';
 import { Input } from '../../palm-city/src/input.js';
 import { Areas, poly } from './lf_areas.js';
 import { players, startRally, stepRally } from './lf_mission.js';
-import { setFx } from './lf_fx.js';
+import { setFx, setFoot } from './lf_fx.js';
+import { createFoot, stepFoot, exitCar, nearCar, FOOT } from './lf_foot.js';
 import { Pilot } from './lf_pilot.js';
 
 const Q = new URLSearchParams(location.search);
@@ -45,9 +46,9 @@ renderer = new Renderer(ctx, W, ground, fleet, imgs, areas);
 setFx(sim, roster);
 // ---- task L2: PICK YOUR PLAYER -> RALLY THE CREW (lf_mission.js). ?free = just drive; ?player=<id> skips the pick.
 const PLAYERS = players(roster);
-let M = null, picking = !Q.has('free') && !Q.has('cam') && !Q.has('map');
+let M = null, foot = null, picking = !Q.has('free') && !Q.has('cam') && !Q.has('map');
 let pilot = null;
-function pick(id) { M = startRally(sim, roster, id); renderer.mission = M; picking = false; if (Q.has('pilot')) pilot = new Pilot(sim, W, M); }
+function pick(id) { M = startRally(sim, roster, id); renderer.mission = M; picking = false; foot = createFoot(PLAYERS.find(p => p.id === id)); setFoot(foot); if (Q.has('pilot')) pilot = new Pilot(sim, W, M); }
 if (Q.get('player')) pick(Q.get('player'));
 const pickRows = () => PLAYERS.map((p, i) => ({ p, x: 24, y: 150 + i * 62, w: VIEW_W - 48, h: 54 }));
 canvas.addEventListener('pointerdown', e => {
@@ -96,11 +97,16 @@ const STEP = 1 / 60, SPEED = Math.max(1, Math.min(16, Number(Q.get('speed')) || 
 function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000); last = now; acc += dt * SPEED;
   let n = 0;
-  while (acc >= STEP && n < 6 * SPEED) { const inp = pilot ? (input.read(), pilot.input(STEP)) : input.read(); if (picking) { acc = 0; break; } sim.step(STEP, M && M.beat ? { jx: 0, jy: 0, jm: 0, keys: {} } : inp); if (M) stepRally(sim, M, STEP); acc -= STEP; n++; }
+  while (acc >= STEP && n < 6 * SPEED) { const inp = pilot ? (input.read(), pilot.input(STEP)) : input.read(); if (picking) { acc = 0; break; }
+    const beat = M && M.beat, ZERO = { jx: 0, jy: 0, jm: 0, keys: {} };
+    if (foot && foot.active) { sim.step(STEP, ZERO); if (!beat) { stepFoot(foot, STEP, inp); if (inp.action && nearCar(foot, sim.player)) foot.active = false; } }
+    else { sim.step(STEP, beat ? ZERO : inp); if (foot && !beat && !pilot && inp.action && Math.abs(sim.player.v) < FOOT.exitV) exitCar(foot, sim.player); }
+    if (M) stepRally(sim, M, STEP); acc -= STEP; n++; }
   if (n >= 6 * SPEED) acc = 0;
   const c = sim.player;
   let tx = c.x + Math.cos(c.h) * c.v * 0.42, ty = c.y + Math.sin(c.h) * c.v * 0.42, tz = 0.62 - Math.min(0.10, Math.abs(c.v) / 290 * 0.10);   // Palm City's chase framing, pulled back (owner Nov 17: zoom out — ~68 m across instead of ~42)
   if (M && M.beat) { tx = M.beat.cx; ty = M.beat.cy; } if (M) tz *= M.camZoom;      // the arrival beat: push in on the huddle
+  if (foot && foot.active && !fixed) { tx = foot.x; ty = foot.y; tz = 1.5; }   // on foot: follow the walker, closer in
   if (fixed) { tx = fixed[0]; ty = fixed[1]; tz = fixed[2] || 1; }
   const k = fixed ? 1 : 1 - Math.exp(-dt * 3.2);
   cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k; cam.zoom += (tz - cam.zoom) * (fixed ? 1 : 1 - Math.exp(-dt * 1.5));
@@ -109,7 +115,7 @@ function frame(now) {
   const r = W.roadInfo(c.x, c.y, c.layer), name = r.e && r.d < r.hw + 30 ? (r.e.name || r.e.ref || '') : '';
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.textAlign = 'center';
   if (name) { ctx.font = '800 15px system-ui'; const w = ctx.measureText(name).width + 28; ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(VIEW_W / 2 - w / 2, 18, w, 30, 15); ctx.fill(); ctx.fillStyle = '#ffe4b0'; ctx.fillText(name, VIEW_W / 2, 38); }
-  ctx.font = '800 13px system-ui'; ctx.fillStyle = 'rgba(255,240,215,0.9)'; ctx.fillText(Math.round(Math.abs(c.v) / 10 * 2.237) + ' mph', VIEW_W / 2, 64);
+  if (!(foot && foot.active)) { ctx.font = '800 13px system-ui'; ctx.fillStyle = 'rgba(255,240,215,0.9)'; ctx.fillText(Math.round(Math.abs(c.v) / 10 * 2.237) + ' mph', VIEW_W / 2, 64); }
   // prefetch: the view + a margin + where the car will be in ~1.2 s, nearest first
   const hw = VIEW_W / 2 / cam.zoom + 320, hh = view.h / 2 / cam.zoom + 320, want = [];
   for (const [px, py] of [[cam.x, cam.y], [c.x + Math.cos(c.h) * c.v * 1.2, c.y + Math.sin(c.h) * c.v * 1.2]])
@@ -157,14 +163,49 @@ function drawMap(c) {
   ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(-7, 6); ctx.lineTo(-4, 0); ctx.lineTo(-7, -6); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
   ctx.font = '800 16px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffe4b0'; ctx.fillText('LAUREL / FULTON — tap MAP to close', VIEW_W / 2, 40);
 }
+
+// Palm City's control graphics (its hud.js), drawn over the world: the stick while
+// it is held, the big ACTION button (GET OUT / GET IN), and the A button — TURBO in
+// a car (chevrons + the car's turbo charge as the ring), PUNCH on foot (the fist).
+function drawControls() {
+  if (picking || mapOpen || !M) return;
+  const g = ctx, TAU2 = Math.PI * 2;
+  if (input.stick) { const s2 = input.stick; g.beginPath(); g.arc(s2.bx, s2.by, 56, 0, TAU2); g.fillStyle = 'rgba(255,240,220,0.16)'; g.fill(); g.lineWidth = 3; g.strokeStyle = 'rgba(255,240,220,0.55)'; g.stroke(); g.beginPath(); g.arc(s2.kx, s2.ky, 24, 0, TAU2); g.fillStyle = 'rgba(255,240,220,0.5)'; g.fill(); }
+  const b = input.button(), onFoot = foot && foot.active;
+  const label = onFoot ? (nearCar(foot, sim.player) ? 'GET IN' : '') : (Math.abs(sim.player.v) < FOOT.exitV ? 'GET OUT' : '');
+  g.beginPath(); g.arc(b.x, b.y, b.r, 0, TAU2); g.fillStyle = input.btnDown ? 'rgba(255,140,90,0.55)' : 'rgba(255,240,220,0.18)'; g.fill();
+  g.lineWidth = 3; g.strokeStyle = label ? 'rgba(255,214,120,0.95)' : 'rgba(255,240,220,0.55)'; g.stroke();
+  g.beginPath(); g.arc(b.x, b.y, b.r * 0.42, 0, TAU2); g.fillStyle = label ? 'rgba(255,214,120,0.9)' : 'rgba(255,240,220,0.5)'; g.fill();
+  if (label) { g.font = '800 13px system-ui'; g.textAlign = 'center'; g.fillStyle = '#fff4dc'; g.fillText(label, b.x, b.y - b.r - 12); }
+  const f = input.fight();
+  if (onFoot) {
+    const hot = input.fightDown || foot.punchT > 0;
+    g.beginPath(); g.arc(f.x, f.y, f.r, 0, TAU2); g.fillStyle = hot ? 'rgba(255,110,90,0.6)' : 'rgba(255,240,220,0.16)'; g.fill();
+    g.lineWidth = 3; g.strokeStyle = 'rgba(255,150,120,0.95)'; g.stroke();
+    g.fillStyle = 'rgba(255,196,170,0.95)';
+    for (let i = 0; i < 4; i++) { g.beginPath(); g.arc(f.x - 9 + i * 6, f.y - 5, 3.6, 0, TAU2); g.fill(); }
+    g.fillRect(f.x - 12, f.y - 4, 24, 12); g.beginPath(); g.arc(f.x - 12, f.y + 3, 4, 0, TAU2); g.fill();
+    g.font = '800 12px system-ui'; g.textAlign = 'center'; g.fillStyle = '#ffe2d4'; g.fillText('PUNCH', f.x, f.y - f.r - 11);
+  } else {
+    const c = sim.player, hot = (c.turbo || 0) > 0.05;
+    g.beginPath(); g.arc(f.x, f.y, f.r, 0, TAU2); g.fillStyle = hot ? 'rgba(255,170,60,0.6)' : 'rgba(255,240,220,0.16)'; g.fill();
+    g.lineWidth = 3; g.strokeStyle = 'rgba(255,196,90,0.95)'; g.stroke();
+    g.strokeStyle = 'rgba(255,226,150,0.98)'; g.lineWidth = 4; g.lineCap = 'round'; g.lineJoin = 'round';
+    for (const dx of [-7, 5]) { g.beginPath(); g.moveTo(f.x + dx - 5, f.y - 10); g.lineTo(f.x + dx + 5, f.y); g.lineTo(f.x + dx - 5, f.y + 10); g.stroke(); }
+    g.strokeStyle = 'rgba(255,120,60,0.95)'; g.lineWidth = 3.5;
+    g.beginPath(); g.arc(f.x, f.y, f.r + 5, -Math.PI / 2, -Math.PI / 2 + TAU2 * Math.max(0, Math.min(1, c.turbo || 0))); g.stroke();
+    g.font = '800 12px system-ui'; g.textAlign = 'center'; g.fillStyle = '#ffe9c4'; g.fillText('TURBO', f.x, f.y - f.r - 11);
+  }
+}
 const _draw = renderer.draw.bind(renderer);
 renderer.draw = (S, cam, t) => {
   _draw(S, cam, t);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.font = '800 13px system-ui'; ctx.textAlign = 'center';
   ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(VIEW_W - 72, 14, 60, 28, 12); ctx.fill(); ctx.fillStyle = '#ffe4b0'; ctx.fillText('MAP', VIEW_W - 42, 33);
   drawMissionHud();
+  drawControls();
   if (mapOpen) drawMap(S.player);
   if (picking) drawPick();
 };
 requestAnimationFrame(frame);
-window.__lf = { sim, W, ground, cam, input, renderer, areas, map: () => mapOpen, mission: () => M, pick, picking: () => picking, pilot: () => pilot };
+window.__lf = { sim, W, ground, cam, input, renderer, areas, map: () => mapOpen, mission: () => M, pick, picking: () => picking, pilot: () => pilot, foot: () => foot };
