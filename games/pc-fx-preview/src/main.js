@@ -89,7 +89,7 @@ if (Q.has('prof')) { renderer.prof = {}; window.__prof = renderer.prof; }
 
 const input = new Input(canvas, view);
 const audio = new Audio();
-const voice = new Voice('https://cdn.jsdelivr.net/gh/bparlette/Hawk@main/games/palm-city/assets/audio/voice/');          // task 8: the recorded lines (voice.js)
+const voice = new Voice('../palm-city/assets/audio/voice/');          // task 8: the recorded lines (voice.js)
 input.onFirst = () => { audio.start(); voice.unlock(); };
 if (DEMO) { try { audio.start(); } catch (_) {} }
 
