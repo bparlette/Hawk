@@ -127,6 +127,43 @@ function turnRadius(kind) {
   const rSki = turnRadius('jetski'), rBoat = turnRadius('boat');
   check('cigarette boat turns much wider than the jetski', rBoat > rSki * 1.7, `ski r${rSki.toFixed(0)} vs boat r${rBoat.toFixed(0)}`);
 }
+// 5b. OWNER REGRESSION (Nov 16, "boat only rotates"): the old slide response cut ALL velocity
+// x0.55 on every blocked step — slides included — so the slow-turning boat glued to the first
+// thing it touched. From its own mooring, full throttle must build real speed; a boat pinned
+// on a wall must drive off it when steered along it; and the boat is the speed king.
+function straightLineVmax(kind, secs) {
+  const { s } = fresh();
+  const cr = mountAt(s, kind);
+  toOpenWater(s, cr, 1700, 2080, -Math.PI / 2);   // the long north fetch, as block 5
+  cr.vx = cr.vy = 0;
+  let vmax = 0;
+  for (let i = 0; i < secs * 60; i++) { s.step(STEP, stick(-Math.PI / 2)); vmax = Math.max(vmax, craftSpeed(cr)); }
+  return vmax;
+}
+{
+  const vBoat = straightLineVmax('boat', 6), vSki = straightLineVmax('jetski', 6);
+  check('speed order: boat straight-line top speed beats the jetski', vBoat > vSki && vBoat > 330, `boat ${vBoat.toFixed(0)} vs ski ${vSki.toFixed(0)}`);
+}
+{
+  const { s } = fresh();
+  const cr = mountAt(s, 'boat');
+  check('boat regression: mounted at its own mooring', s.player.mode === 'water' && s.water.ride === cr);
+  let vmax = 0; const y0 = cr.y;
+  for (let i = 0; i < 360; i++) { s.step(STEP, stick(Math.PI / 2)); vmax = Math.max(vmax, craftSpeed(cr)); }
+  check('boat regression: full throttle from the mooring builds real speed', vmax > 250, `vmax ${vmax.toFixed(0)}`);
+  check('boat regression: it actually travels from the mooring', cr.y - y0 > 500, `dy ${(cr.y - y0).toFixed(0)}`);
+}
+{
+  const { s } = fresh();
+  const cr = mountAt(s, 'boat');
+  toOpenWater(s, cr, world.seaE - 20, 1400, 0);   // nose against the east sea edge
+  cr.vx = cr.vy = 0;
+  for (let i = 0; i < 90; i++) s.step(STEP, stick(0));
+  const pinned = craftSpeed(cr);
+  const y0 = cr.y;
+  for (let i = 0; i < 240; i++) s.step(STEP, stick(Math.PI / 2));   // steer south, along the edge
+  check('boat regression: a pinned boat drives off when steered along the wall', cr.y - y0 > 300, `pinned at ${pinned.toFixed(0)} -> dy ${(cr.y - y0).toFixed(0)}`);
+}
 // 6. police boat: the speed ladder leaves a clean getaway possible
 {
   check('police top speed sits below the boat turbo top, above its cruise',
@@ -184,6 +221,45 @@ function turnRadius(kind) {
   let gone = false;
   for (let i = 0; i < 1500 && !gone; i++) { s.step(STEP, idle()); gone = !s.water.cop; }
   check('police boat breaks off and despawns ashore', gone);
+}
+// 11. SEA EXTENSION (owner, Nov 16): the open water runs ~2.7x further east and 700 south of
+// the island. A craft must REACH water that was outside the old world rect (1790 / 2190),
+// the police boat must work out there, and a bust far out must still send the craft home.
+{
+  const { s } = fresh();
+  const cr = mountAt(s, 'boat');
+  toOpenWater(s, cr, 1700, 1500, 0);
+  cr.vx = cr.vy = 0;
+  for (let i = 0; i < 480; i++) s.step(STEP, stick(0));
+  check('sea: the boat sails well past the OLD east edge (1790)', cr.x > 2050, `x ${cr.x.toFixed(0)}`);
+  check('sea: still on water, inside the new east bound', onWater(s, cr) && cr.x < s.W.seaE, `x ${cr.x.toFixed(0)} seaE ${s.W.seaE}`);
+}
+{
+  const { s } = fresh();
+  const cr = mountAt(s, 'jetski');
+  toOpenWater(s, cr, 1700, 1900, Math.PI / 2);
+  cr.vx = cr.vy = 0;
+  for (let i = 0; i < 480; i++) s.step(STEP, stick(Math.PI / 2));
+  check('sea: the jetski sails well past the OLD south edge (2190)', cr.y > 2400, `y ${cr.y.toFixed(0)}`);
+  check('sea: still on water, inside the new south bound', onWater(s, cr) && cr.y < s.W.seaS, `y ${cr.y.toFixed(0)} seaS ${s.W.seaS}`);
+}
+{
+  const { s } = fresh();
+  const cr = mountAt(s, 'jetski');
+  toOpenWater(s, cr, 2250, 1500, 0);            // far out in the new sea
+  cr.vx = cr.vy = 0;
+  s.stars = 2;
+  run(s, 30, idle());
+  check('sea: police boat spawns far out in the new sea', !!s.water.cop, s.water.cop ? `cop ${s.water.cop.x.toFixed(0)},${s.water.cop.y.toFixed(0)}` : 'none');
+  if (s.water.cop) {
+    const cop = s.water.cop, d0 = Math.hypot(cop.x - cr.x, cop.y - cr.y);
+    let dMin = 1e9;
+    for (let i = 0; i < 360; i++) { s.step(STEP, stick(0)); dMin = Math.min(dMin, Math.hypot(cop.x - cr.x, cop.y - cr.y)); }
+    check('sea: police boat closes far out in the new sea', dMin < d0 * 0.6, `spawn ${d0.toFixed(0)} -> closest ${dMin.toFixed(0)}`);
+  }
+  s.busted = { t: 0 };
+  run(s, 300, idle());
+  check('sea: a bust far out still sends the craft home to its mooring', Math.hypot(cr.x - cr.home.x, cr.y - cr.home.y) < 2 && s.player.mode === 'foot', `craft ${cr.x.toFixed(0)},${cr.y.toFixed(0)} home ${cr.home.x},${cr.home.y}`);
 }
 console.log(fails ? `WATERCRAFT FAIL (${fails})` : 'WATERCRAFT OK');
 process.exit(fails ? 1 : 0);

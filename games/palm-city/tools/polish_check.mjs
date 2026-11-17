@@ -4,7 +4,8 @@
 //   C. slipstream: draft charges behind traffic only, slingshot pays on the pass
 //   D. (browser) Channel 7 frame pixels in the recorded picture, on/off via the NEWS toggle
 //   E. (browser) smoke tint sampling: flasher-lit vs neutral
-//   F. (browser) west flare / sunbeams / ocean sheen respond to day phase, heading and surf time
+//   F. (browser) west flare / sunbeams respond to day phase and heading; the Ocean Drive
+//      sheen was REMOVED by owner veto (Nov 16 23:34) — F asserts it stays gone
 // Usage: node tools/polish_check.mjs   (CHROME=/path/to/chrome optional)
 import fs from 'node:fs'; import path from 'node:path'; import os from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -152,7 +153,11 @@ async function redCount(page, y0, y1) {
     const dpr = src.width / 420;
     const img = x2.getImageData(Math.floor(12 * dpr), Math.floor(y0 * dpr), Math.floor(336 * dpr), Math.floor((y1 - y0) * dpr)).data;
     let n = 0;
-    for (let i = 0; i < img.length; i += 4) if (img[i] > 150 && img[i + 1] < 85 && img[i + 2] < 85) n++;
+    // the predicate targets the frame's own news-red (#e0232e: R 224, G 35, B 46). The old loose
+    // line (R>150, G<85) also caught the painted world's warm boardwalk/sand tones at golden
+    // hour (~1.7k px of R~168 G~84 browns in the demo opening — measured push #2, with
+    // recorder.newsLive verified false), which read as a frame leak that was never there.
+    for (let i = 0; i < img.length; i += 4) if (img[i] > 190 && img[i + 1] < 70 && img[i + 2] < 70) n++;
     return n;
   }, [y0, y1]);
 }
@@ -177,10 +182,18 @@ async function redCount(page, y0, y1) {
   await page.waitForTimeout(1200);
   const off = await redCount(page, 682, 748);          // live lower-third band
   check(off < 300, 'broadcast: live REC starts clean (frame OFF by default)', `${off} red px`);
+  // the NEWS button flips BOTH frame flags together (recorder's documented semantics: any on
+  // -> all off; all off -> all on). The shipped default is MIXED (highlight ON, live OFF), so
+  // one tap takes every frame out and the second brings the live frame in. The old one-tap
+  // expectation only ever passed because the loose red predicate counted warm world tones.
+  await tapEl(page, '#pcNewsBtn');
+  await page.waitForTimeout(800);
+  const off2 = await redCount(page, 682, 748);
+  check(off2 < 300, 'broadcast: NEWS once from the mixed default takes every frame out', `${off2} red px`);
   await tapEl(page, '#pcNewsBtn');
   await page.waitForTimeout(800);
   const on = await redCount(page, 682, 748);
-  check(on > 1500, 'broadcast: toggling NEWS brings the frame into live REC', `${on} red px`);
+  check(on > 1500, 'broadcast: NEWS again brings the frame into live REC', `${on} red px`);
   await tapEl(page, '#pcRecBtn');                      // stop the recording
   await page.close();
 }
@@ -204,7 +217,7 @@ async function redCount(page, y0, y1) {
   check(res.far === null, 'smoke tint: a puff in neutral light stays grey (no tint)', JSON.stringify(res.far));
   await page.close();
 }
-{ // F. flare / beams / sheen
+{ // F. flare / beams (sheen removed by owner veto — asserted gone below)
   const page = await newPage('?t=0.12&nostart');
   await page.waitForTimeout(1000);
   const early = await page.evaluate(() => {
@@ -225,10 +238,8 @@ async function redCount(page, y0, y1) {
   await dusk.waitForTimeout(1000);
   const beamsLate = await dusk.evaluate(() => window.__palm.renderer.fxBeams);
   check(beamsLate === 0, 'sunbeams: gone by dusk', `beams ${beamsLate}`);
-  const sheens = [];
-  for (let i = 0; i < 6; i++) { sheens.push(await dusk.evaluate(() => window.__palm.renderer.fxSheen)); await dusk.waitForTimeout(600); }
-  const spread = Math.max(...sheens) - Math.min(...sheens);
-  check(Math.max(...sheens) > 0.4 && spread > 0.05, 'sheen: Ocean Drive gleams with the surf cycle', `samples ${sheens.map(v => (v || 0).toFixed(2)).join(',')}`);
+  const sheenProbe = await dusk.evaluate(() => window.__palm.renderer.fxSheen);
+  check(sheenProbe === undefined, 'sheen: REMOVED by owner veto (Nov 16) — no fxSheen probe on the renderer', `fxSheen ${sheenProbe}`);
   await dusk.close();
 }
 check(pageErr.length === 0, 'no page errors across the browser parts', pageErr.join(' | '));

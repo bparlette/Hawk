@@ -99,7 +99,10 @@ const score = (s) => s.score || 0;
   run(s, 1, () => { c.v = 170; c.h = 0; c.y = 1444; });
   check(cop.dmg > 0.2 && score(s) - s0 >= 250 && cop.towPaid, 'the swinging payload wrecks what it hits: cruiser smashed, +250 on top of the wreck', `cruiser dmg ${cop.dmg.toFixed(2)}`);
   cop.x = -999; if (!j.hooked) { t.x = c.x - 70; t.y = c.y; press(s); }
-  run(s, 1.5, () => { c.v = 170; c.h = 0; c.y = 1444; c.x = Math.min(c.x, 1000); });
+  // the sling flight needs a clear street ahead: the Garage kerb row (y 1444) now has the whole
+  // job fleet parked on it by design (instant-start homes), so this phase stages on the open y 800 road
+  c.x = 500; c.y = 800; c.h = 0; t.x = c.x - 70; t.y = 800;
+  run(s, 1.5, () => { c.v = 170; c.h = 0; c.y = 800; c.x = Math.min(c.x, 1000); });
   check(jobButton(s).label === 'SLING', 'at speed the button reads SLING (second look)') ;
   const px = t.x; press(s); run(s, 0.8, () => { c.v = 0; });
   check(!j.hooked && t.x - px > 60, 'SLING lets the payload fly ahead on its own', `+${Math.round(t.x - px)} units`);
