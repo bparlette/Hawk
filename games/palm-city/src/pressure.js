@@ -61,7 +61,7 @@ export function spawnRoadblock(sim, sAt, dirIn) {
 
 function stepStreet(sim, dt) {
   const f = sim.focus();
-  if (sim.stars >= 4 && !sim.busted && sim.player.mode === 'car' && Math.abs(sim.player.car.v) > 80 && sim.time > sim.rbNext) {
+  if (sim.stars >= 4 && !sim.busted && !(sim.legalJob && sim.legalJob()) && sim.player.mode === 'car' && Math.abs(sim.player.car.v) > 80 && sim.time > sim.rbNext) {
     sim.rbNext = sim.time + (spawnRoadblock(sim) ? 16 : 2);
   }
   // sawhorses: smash through at speed, or get stopped short
@@ -118,7 +118,7 @@ function spawnChopper(sim, f) {
 export function stepPressure(sim, dt) {
   stepStreet(sim, dt);
   const f = sim.focus();
-  const wantChopper = sim.stars >= 3 && !sim.busted && !sim.siege;
+  const wantChopper = sim.stars >= 3 && !sim.busted && !sim.siege && !(sim.legalJob && sim.legalJob());
   let c = sim.chopper;
   if (!c && wantChopper) { spawnChopper(sim, f); c = sim.chopper; }
   if (!c) return;

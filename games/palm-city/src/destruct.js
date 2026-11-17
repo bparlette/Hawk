@@ -165,7 +165,10 @@ function wreckCar(sim, c) {
 // Impact damage by speed: a slow nudge only scuffs; it grows steeply with speed, so traffic bumps
 // leave dents, a hard crash crumples, and two or three flat-out hits make a wreck.
 // The car you're driving is the hero car: it takes HERO of what an impact would do to any other.
-const HERO = 0.6;
+// Owner (Nov 16): a driven car must absorb 3x the damage it used to before it is a wreck, so
+// HERO went 0.6 -> 0.2 (0.6 / 3). Punches never pass through HERO — punchWorld calls hitCar
+// direct — so punching a car through its stages is exactly as fast as it always was.
+const HERO = 0.2;
 export function impactDamage(sp) {
   if (sp < 30) return 0;
   const k = Math.max(0, (sp - 55) / 250);

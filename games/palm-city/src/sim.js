@@ -161,7 +161,14 @@ export class Sim {
 
   say(text, dur = 2.2) { this.msg = { text, t: dur, dur }; }
 
+  // Honest work (owner, Nov 16): while a legal job runs — TAXI, TOW, BUS — the cops leave you
+  // alone: no new stars, no pursuit, no bust. GETAWAY is a crime by design and gets no cover.
+  // (The taxi undercover-fed fare is a scripted trap with its own bust path in jobs.js; it does
+  // not come through here and still works as designed.)
+  legalJob() { return !!(this.job && this.job.kind !== 'getaway'); }
+
   addStars(n, why) {
+    if (n > 0 && this.legalJob()) return;      // on a legal job the heat cannot rise
     const before = this.stars;
     this.stars = clamp(this.stars + n, 0, 5);
     this.lostT = 0;
@@ -649,10 +656,10 @@ export class Sim {
     this.playerS = bs;
     W.loopNearestFast = () => this.playerS;
 
-    // a patrol car close by joins the chase the moment you're wanted
-    if (this.stars > 0 && !this.busted) for (const c of this.cars) if (c.patrol && c.driver === 'ai' && dist(c, f) < 650) c.driver = 'police';        // 7C: wider re-acquire
+    // a patrol car close by joins the chase the moment you're wanted (never on a legal job)
+    if (this.stars > 0 && !this.busted && !this.legalJob()) for (const c of this.cars) if (c.patrol && c.driver === 'ai' && dist(c, f) < 650) c.driver = 'police';        // 7C: wider re-acquire
     const police = this.cars.filter(c => c.driver === 'police');
-    const want = this.stars > 0 && !this.busted ? Math.min(4, this.stars + 1) : 0;
+    const want = this.stars > 0 && !this.busted && !this.legalJob() ? Math.min(4, this.stars + 1) : 0;
     if (police.length < want && this.rnd() < dt * 0.6) {
       // police arrive from behind: spawn back along the loop, opposite the way the player is heading
       let back = this.rnd() < 0.5 ? -1 : 1;
@@ -673,7 +680,7 @@ export class Sim {
         break;
       }
     }
-    if (this.stars === 0) {
+    if (this.stars === 0 || this.legalJob()) {
       for (const c of police) { c.driver = 'ai'; c.siren = false; c.cruise = 120; c.copOut = false; this.syncS(c); }
     }
     // losing the heat
@@ -683,7 +690,7 @@ export class Sim {
       if (this.lostT > 22) { this.stars--; this.lostT = 0; if (this.stars === 0) this.say('LOST THEM'); }
     } else this.lostT = 0;
     // busted?
-    if (this.busted || this.stars === 0) { this.bustT = 0; return; }
+    if (this.busted || this.stars === 0 || this.legalJob()) { this.bustT = 0; return; }
     let pinned = false;
     if (this.player.mode === 'car') {
       const c = this.player.car;
