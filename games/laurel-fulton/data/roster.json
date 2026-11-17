@@ -208,6 +208,12 @@
    "osm": "way/1233616479"
   }
  ],
+ "houses": {
+  "jimmy": "The Lazaris house",
+  "billy": "The Lazaris house",
+  "clayton": "The Floyds",
+  "zack": "The Floyds"
+ },
  "unassigned_cars": [
   {
    "model": "Chevrolet Cavalier",

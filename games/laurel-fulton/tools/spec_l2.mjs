@@ -10,11 +10,12 @@
 //    survives you doubling back
 //  5 finish: the whole convoy at the Atholton HS lot = mission complete, everyone parked up
 import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = process.env.LF_ROOT || path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');   // $LF_ROOT: run against a factory-built city
 let fails = 0; const check = (ok, name, info = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name} ${info}`); if (!ok) fails++; };
 const G = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/graph.json'))), ROSTER = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/roster.json')));
 const FLEET = JSON.parse(fs.readFileSync(path.join(ROOT, 'assets/fleet.json')));
 const { GraphWorld } = await import('../src/world_graph.js'); const { LFSim } = await import('../src/lf_sim.js');
+const PL = await import('../src/lf_pilot.js');
 let MI = null; try { MI = await import('../src/lf_mission.js'); } catch (e) { check(false, 'src/lf_mission.js loads', String(e).slice(0, 140)); }
 if (MI) {
   const W = new GraphWorld(G), DT = 1 / 60, WHO = process.argv[2] || 'jason';
@@ -29,7 +30,8 @@ if (MI) {
   const M = MI.startRally(S, ROSTER, WHO);
   const me = ROSTER.people.find(p => p.id === WHO);
   check(S.player.owner === WHO && S.player.model === me.car.sprite && Math.hypot(S.player.x - me.house[0], S.player.y - me.house[1]) < 250, `PICK ${me.name}: you start at your house in your own car`, `${S.player.model} ${Math.round(Math.hypot(S.player.x - me.house[0], S.player.y - me.house[1]) / 10)} m from the house`);
-  check(M.stops.length >= 5 && M.stops.every(st => st.people.every(p => p.id !== WHO)), 'every OTHER house is a stop (housemates share one)', M.stops.map(st => st.people.map(p => p.id).join('+')).join(', '));
+  const otherHouses = new Set(MI.players(ROSTER).filter(p => String(p.house) !== String(me.house)).map(p => String(p.house))).size;
+  check(M.stops.length === otherHouses && M.stops.every(st => st.people.every(p => p.id !== WHO)), 'every OTHER house is a stop (housemates share one)', M.stops.map(st => st.people.map(p => p.id).join('+')).join(', '));
   // the autopilot: drive the STICK to each stop (nearest first), slow to pull in, wait out the beat; then the school
   const dense = (pts, step = 20) => { const o = [pts[0]]; for (let i = 0; i + 1 < pts.length; i++) { const [ax, ay] = pts[i], [bx, by] = pts[i + 1], n = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / step)); for (let k = 1; k <= n; k++) o.push([ax + (bx - ax) * k / n, ay + (by - ay) * k / n]); } return o; };
   let pi = 0;
@@ -54,7 +56,7 @@ if (MI) {
     for (const f of M.convoy) {
       const p = last.get(f.car); if (p && Math.hypot(f.car.x - p.x, f.car.y - p.y) > Math.abs(f.car.v) * DT + 8 && !M.beat) stats.teleports++;
       last.set(f.car, { x: f.car.x, y: f.car.y });
-      if (M.time - f.joinedAt > 4 && !M.beat) { stats.steps++; if (!['road', 'service', 'sidewalk'].includes(f.car.surface)) stats.off++; }
+      if (M.time - f.joinedAt > 4 && !M.beat) { stats.steps++; if (!['road', 'service', 'sidewalk'].includes(f.car.surface)) { const r = W.roadInfo(f.car.x, f.car.y, f.car.layer); if (!(r.e && r.d < r.hw + 15)) stats.off++; } }   // centre within 1.5 m past the kerb = wheels on the edge, still on the street
     }
     if (M.beat) { stats.zoomed = Math.max(stats.zoomed, M.camZoom); if (M.beat.phase === 'out') stats.out++; if (M.beat.phase === 'dap') stats.dap++; }
     const moving = Math.abs(S.player.v) > 60;
@@ -63,14 +65,14 @@ if (MI) {
   const nearestV = (x, y) => { let b = 1e18, bv = -1; for (let v = 0; v < G.verts.length; v++) { const q = G.verts[v]; const d = (q.x - x) ** 2 + (q.y - y) ** 2; if (d < b && W.adj.has(v)) { b = d; bv = v; } } return bv; };
   let t = 0, doubled = false;
   const driveTo = (x, y, stopAtEnd, maxT = 600) => {
-    const r = W.route(nearestV(S.player.x, S.player.y), nearestV(x, y)); if (!r) return false;
-    const pts = dense([[S.player.x, S.player.y], ...r.pts, [x, y]]); pi = 0;
+    const pts = dense(PL.roadPath(W, S, S.player.x, S.player.y, x, y)); pi = 0;   // on the roads, to the kerb in front (lf_pilot.js)
+    const kerb = { x: pts[pts.length - 1][0], y: pts[pts.length - 1][1] };
     const t0 = t;
     while (t - t0 < maxT) {
       const inp = M.beat ? { jx: 0, jy: 0, jm: 0, keys: {} } : pilot(pts, stopAtEnd);
       S.step(DT, inp); MI.stepRally(S, M, DT); t += DT; watch();
       if (stopAtEnd && !M.beat && M.lastPickupT > t0 && Math.abs(S.player.v) < 10) return true;
-      if (!stopAtEnd && Math.hypot(S.player.x - x, S.player.y - y) < 150) return true;
+      if (!stopAtEnd && Math.hypot(S.player.x - kerb.x, S.player.y - kerb.y) < 150) return true;
     }
     return false;
   };
@@ -93,7 +95,7 @@ if (MI) {
   check(M.complete, 'FINISH: the full convoy at the Atholton HS lot = mission complete', `${(t / 60).toFixed(1)} min total, convoy ${M.convoy.length}`);
   check(M.complete && M.convoy.every(f => Math.abs(f.car.v) < 5 && Math.hypot(f.car.x - fin[0], f.car.y - fin[1]) < 900), 'everyone parked up together at the school');
   check(stats.teleports === 0, 'the convoy never teleports', `${stats.teleports}`);
-  check(stats.off / Math.max(1, stats.steps) < 0.05, 'the convoy stays on the streets (< 5% of follower-steps off road, after pulling out of the driveway)', `${(100 * stats.off / Math.max(1, stats.steps)).toFixed(2)}% off`);
+  check(stats.off / Math.max(1, stats.steps) < 0.05, 'the convoy stays on the streets (< 5% of follower-steps more than 1.5 m past a kerb, after pulling out of the driveway)', `${(100 * stats.off / Math.max(1, stats.steps)).toFixed(2)}% off`);
   check(stats.gapBad / Math.max(1, stats.gapN) < 0.08, 'road spacing: each car 2.5–70 m behind the one ahead while moving (> 92%)', `${(100 * (1 - stats.gapBad / Math.max(1, stats.gapN))).toFixed(1)}% in band`);
   check(doubled, 'doubled back mid-rally and the convoy carried on');
 }

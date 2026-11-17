@@ -4,7 +4,7 @@
 // grade separation, query cost. Part B (play, the forked sim): pending until the sample engine lands —
 // listed here so it cannot be forgotten.
 import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = process.env.LF_ROOT || path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');   // $LF_ROOT: run against a factory-built city
 let fails = 0, pend = 0;
 const check = (ok, name, info = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name} ${info}`); if (!ok) fails++; };
 const pending = (name) => { console.log(`PEND ${name}`); pend++; };

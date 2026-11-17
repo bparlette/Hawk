@@ -13,15 +13,16 @@
 # (cul-de-sacs), one-ways, very short edges, crossings WITHOUT a shared node (grade separation: bridges,
 # ramps over roads; the interchange problem for a 2D game), anchor snapping and a shortest path between anchors.
 import json, math, os, sys, heapq
+import sys as _s, os as _o; _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__))); import world_cfg
 from collections import Counter, defaultdict
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+ROOT = world_cfg.root()
 a = sys.argv[1:]
 def opt(k, n=1, d=None):
     if k not in a: return d
     i = a.index(k); return a[i + 1:i + 1 + n] if n > 1 else a[i + 1]
-BB = [float(v) for v in opt('--bbox', 4, [39.105, -76.942, 39.202, -76.846])]
+BB = [float(v) for v in opt('--bbox', 4, world_cfg.bbox())]
 OUT = opt('--out', d=os.path.join(ROOT, 'data', 'graph.json'))
-S0, W0, N0, E0 = 39.105, -76.942, 39.202, -76.846
+S0, W0, N0, E0 = world_cfg.bbox()
 LAT0, LON0 = (S0 + N0) / 2, (W0 + E0) / 2
 KX, KY = math.cos(math.radians(LAT0)) * 111320.0, 110540.0
 U = 10.0                                               # world units per metre
@@ -55,6 +56,7 @@ for wid, t, kp in ways:
     ow = t.get('oneway', 'no'); oneway = 1 if ow in ('yes', 'true', '1') or (hw in ('motorway', 'motorway_link') and ow != 'no') or t.get('junction') == 'roundabout' else (-1 if ow == '-1' else 0)
     lanes = int(t['lanes']) if str(t.get('lanes', '')).isdigit() else DEF_LANES.get(base, 2) // (2 if oneway and base in ('motorway', 'trunk', 'primary') else 1)
     width = round(max(1, lanes) * LANE_W * U)
+    if base == 'service' and not str(t.get('lanes', '')).isdigit(): width = round(5.0 * U)   # an untagged service way is a ~5 m alley / lot aisle, not a 3.4 m single lane
     cur = [kp[0]]
     for n, g in kp[1:]:
         cur.append((n, g))
@@ -122,12 +124,14 @@ P = json.load(open(os.path.join(ROOT, 'data', 'osm_places.json')))['elements']
 def place(f):
     for p in P:
         if f(p['tags']): return p
-ANCH = {'ledo': lambda t: t.get('name') == 'Ledo Pizza', 'atholton_hs': lambda t: t.get('name') == 'Atholton High School' and t.get('amenity') == 'school',
+CITYF = os.path.join(ROOT, 'data', 'city.json'); CITY = json.load(open(CITYF)) if os.path.exists(CITYF) else None
+ANCH = {q['id']: (lambda n: (lambda t: t.get('name') == n))(q['name']) for q in CITY['pois']} if CITY else {'ledo': lambda t: t.get('name') == 'Ledo Pizza', 'atholton_hs': lambda t: t.get('name') == 'Atholton High School' and t.get('amenity') == 'school',
         'reservoir_hs': lambda t: t.get('name') == 'Reservoir High School', }
+if CITY and opt('--route') is None: sys.argv += ['--route', CITY['pois'][0]['id'], CITY['people'][0]['id']]
 # the crew's houses come from data/roster.json (exact positions, no house numbers in the repo)
 RO = json.load(open(os.path.join(ROOT, 'data', 'roster.json')))['people'] if os.path.exists(os.path.join(ROOT, 'data', 'roster.json')) else []
 anch = {}
-houses = {q['id']: {'tags': {}, 'lat': q['lat'], 'lon': q['lon']} for q in RO if q.get('active') and q['id'] == 'brad'}
+houses = {q['id']: {'tags': {}, 'lat': q['lat'], 'lon': q['lon']} for q in RO if q.get('active') and (q['id'] == 'brad' or CITY)}
 for k, f in list(ANCH.items()) + [(h, None) for h in houses]:
     p = houses[k] if f is None else place(f)
     if not p: continue

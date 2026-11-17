@@ -10,11 +10,12 @@
 # simplification) — the same content as stage 1's osm_roads.json — plus named places / addresses that the
 # opening needs (amenities, schools, addr:* on the anchor streets).
 import os, sys, json, time, subprocess, xml.etree.ElementTree as ET
-S, W, N, E = 39.105, -76.942, 39.202, -76.846
+import sys as _s, os as _o; _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__))); import world_cfg
+S, W, N, E = world_cfg.bbox()
 args = sys.argv[1:]
 TILES = args[args.index('--tiles') + 1] if '--tiles' in args else '/tmp/lf_osm_tiles'
 K = int(args[args.index('--k') + 1]) if '--k' in args else 4
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+ROOT = world_cfg.root()
 os.makedirs(TILES, exist_ok=True)
 files = []
 for i in range(K):

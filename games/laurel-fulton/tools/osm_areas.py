@@ -7,9 +7,10 @@
 #              (drawn bigger + crisper; everything else is the faded background tier)
 #   python3 tools/osm_areas.py [--tiles DIR]          (from games/laurel-fulton/)
 import os, sys, json, math, xml.etree.ElementTree as ET
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+import sys as _s, os as _o; _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__))); import world_cfg
+ROOT = world_cfg.root()
 a = sys.argv[1:]; TILES = a[a.index('--tiles') + 1] if '--tiles' in a else '/tmp/lf_osm_tiles'
-LAT0, LON0 = (39.105 + 39.202) / 2, (-76.942 + -76.846) / 2
+LAT0, LON0 = world_cfg.LAT0, world_cfg.LON0
 KX, KY, U = math.cos(math.radians(LAT0)) * 111320.0, 110540.0, 10.0
 proj = lambda lat, lon: (round((lon - LON0) * KX * U), round(-(lat - LAT0) * KY * U))
 nodes, ways = {}, {}
@@ -50,9 +51,10 @@ seen = set()
 for p in R['people']:
     if not p.get('active') or p.get('at'): continue
     i = footprint_at(*p['house'])
-    if i is not None and i not in seen: seen.add(i); out['heroes'].append({'b': i, 'who': p['name'] if p['id'] not in ('clayton', 'zack') else 'The Floyds', 'kind': 'home'})
+    if i is not None and i not in seen: seen.add(i); out['heroes'].append({'b': i, 'who': R.get('houses', {}).get(p['id'], p['name']), 'kind': 'home'})
 P = json.load(open(os.path.join(ROOT, 'data', 'osm_places.json')))['elements']
-for name in ['Ledo Pizza', 'Atholton High School', 'Reservoir High School']:
+CITYF = os.path.join(ROOT, 'data', 'city.json')
+for name in ([q['name'] for q in json.load(open(CITYF))['pois']] if os.path.exists(CITYF) else ['Ledo Pizza', 'Atholton High School', 'Reservoir High School']):
     q = next((q for q in P if q['tags'].get('name') == name), None)
     if not q: continue
     i = footprint_at(*proj(q['lat'], q['lon']), maxd=1500)

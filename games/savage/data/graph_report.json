@@ -1,0 +1,147 @@
+{
+ "bbox": [
+  39.122,
+  -76.846,
+  39.152,
+  -76.806
+ ],
+ "units_per_m": 10.0,
+ "ways_drivable": 949,
+ "vertices": 1439,
+ "edges": 1789,
+ "km_by_class": {
+  "service": 62.5,
+  "residential": 35.5,
+  "tertiary": 12.4,
+  "motorway_link": 7.7,
+  "motorway": 6.5,
+  "primary": 5.9,
+  "unclassified": 4.5,
+  "primary_link": 0.5
+ },
+ "km_total": 135.4,
+ "extent_m": [
+  3454,
+  3316
+ ],
+ "components": [
+  1317,
+  22,
+  12,
+  9,
+  8,
+  7
+ ],
+ "largest_component_share": 0.915,
+ "dead_ends_residential": 59,
+ "oneway_edges": 238,
+ "short_edges_lt3m": 6,
+ "crossings_without_shared_node": 15,
+ "crossings_grade_separated_tagged": 15,
+ "crossings_untagged": 0,
+ "untagged_examples": [],
+ "graded_examples": [
+  {
+   "at": [
+    11775,
+    -1463
+   ],
+   "a": "motorway_link",
+   "b": "motorway_link (bridge)"
+  },
+  {
+   "at": [
+    11772,
+    -1466
+   ],
+   "a": "Washington Boulevard",
+   "b": "motorway_link (bridge)"
+  },
+  {
+   "at": [
+    11869,
+    -1648
+   ],
+   "a": "Washington Boulevard",
+   "b": "Patuxent Freeway (bridge)"
+  },
+  {
+   "at": [
+    11685,
+    -1783
+   ],
+   "a": "Patuxent Freeway (bridge)",
+   "b": "Washington Boulevard"
+  },
+  {
+   "at": [
+    11578,
+    -1607
+   ],
+   "a": "motorway_link (bridge)",
+   "b": "Washington Boulevard"
+  },
+  {
+   "at": [
+    12060,
+    -2024
+   ],
+   "a": "Washington Boulevard",
+   "b": "Patuxent Freeway (bridge)"
+  },
+  {
+   "at": [
+    12148,
+    -2210
+   ],
+   "a": "Washington Boulevard",
+   "b": "motorway_link (bridge)"
+  },
+  {
+   "at": [
+    12083,
+    -2007
+   ],
+   "a": "motorway_link",
+   "b": "Patuxent Freeway (bridge)"
+  }
+ ],
+ "anchors": {
+  "mill": {
+   "x": -430,
+   "y": 1097,
+   "v": 397,
+   "snap_m": 11.8
+  },
+  "alex": {
+   "x": 3037,
+   "y": -777,
+   "v": 1286,
+   "snap_m": 46.1
+  },
+  "sam": {
+   "x": 2994,
+   "y": 702,
+   "v": 707,
+   "snap_m": 67.4
+  },
+  "jo": {
+   "x": -1897,
+   "y": -300,
+   "v": 90,
+   "snap_m": 41.0
+  },
+  "rio": {
+   "x": 96,
+   "y": -2560,
+   "v": 1388,
+   "snap_m": 86.1
+  },
+  "kit": {
+   "x": 96,
+   "y": -2560,
+   "v": 1388,
+   "snap_m": 86.1
+  }
+ }
+}

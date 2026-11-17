@@ -17,7 +17,8 @@ spoilers, louvres, hood ornament, roof racks. Dimensions are the real cars' (met
 """
 import importlib.util, os, sys, math, json, time
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(HERE)
+sys.path.insert(0, HERE); import world_cfg
+ROOT = world_cfg.root()            # $LF_ROOT (a factory-built city) or games/laurel-fulton/
 PS = os.path.abspath(os.path.join(ROOT, '..', 'palm-city', 'tools', 'bake_sprites.py'))
 sys.argv = [sys.argv[0], '--'] + [a for a in sys.argv[1:]]
 spec = importlib.util.spec_from_file_location('palm_bake', PS)
@@ -26,7 +27,7 @@ import bpy, bmesh
 import numpy as np
 from mathutils import Vector
 
-ARGS = [a for a in sys.argv[2:] if not a.startswith('--')]
+ARGS = [a for i, a in enumerate(sys.argv[2:]) if not a.startswith('--') and sys.argv[1 + i] != '--carfile']
 PREVIEW = '--preview' in sys.argv
 OUT = os.path.join(ROOT, 'assets', 'cars'); os.makedirs(OUT, exist_ok=True)
 SHOTS = os.path.join(ROOT, 'shots'); os.makedirs(SHOTS, exist_ok=True)
@@ -97,6 +98,12 @@ CARS = {
      top=[(0, .72), (.03, .88), (.33, .95), (.36, .98), (.45, 1.40), (.70, 1.42), (.75, 1.08), (.77, 1.04), (1, .92)],
      belt=1.02, cabin=(.36, .45, .70, .75), gw=(.80, .76), roof='landau', paint='#5a1424', vinyl='#33101a', bumpers='chrome', lights=dict(head='#f2efe0', head_shape='quad', tail='vertical'), ornament=True, chrome_trim=True),
 }
+# --carfile cars.json: cars made from STATEMENTS (tools/factory/city_factory.py): {id: {base, paint, paint2?, split?, headcol?, head?}}
+if '--carfile' in sys.argv:
+    for k, v in json.load(open(sys.argv[sys.argv.index('--carfile') + 1])).items():
+        e = {kk: vv for kk, vv in v.items() if kk in ('base', 'paint', 'paint2', 'split', 'headcol')}
+        if v.get('head'): e['lights'] = dict(CARS[v['base']]['lights'], head=v['head'])
+        CARS[k] = e
 for k, v in list(CARS.items()):
     if 'base' in v:
         b = dict(CARS[v['base']]); b.update({kk: vv for kk, vv in v.items() if kk != 'base'}); CARS[k] = b

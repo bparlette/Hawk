@@ -10,8 +10,9 @@
 # activates them, never a code change. Edit PEOPLE (no numbers) and re-run.
 #   python3 tools/roster_build.py                                      (from games/laurel-fulton/)
 import json, os, math
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-LAT0, LON0 = (39.105 + 39.202) / 2, (-76.942 + -76.846) / 2
+import sys as _s, os as _o; _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__))); import world_cfg
+ROOT = world_cfg.root()
+LAT0, LON0 = world_cfg.LAT0, world_cfg.LON0
 KX, KY, U = math.cos(math.radians(LAT0)) * 111320.0, 110540.0, 10.0
 proj = lambda lat, lon: (round((lon - LON0) * KX * U), round(-(lat - LAT0) * KY * U))
 # owner's roster (tasking fable.md, task L2 state update, Nov 17; Grant corrected to Early Bud Way, Billy added)
@@ -27,6 +28,9 @@ PEOPLE = [
  {'id': 'lamar',   'name': 'Lamar',   'street': None, 'at': 'Atholton High School', 'car': {'model': '1987 Ford Mustang GT hatchback (Fox body)', 'paint': 'unstated (silver placeholder)', 'fx': ['on_fire']}, 'note': 'no house on the map; his car lives at the school, burning (the finale set piece)'},
  {'id': 'grant',   'name': 'Grant',   'street': 'Early Bud Way',      'car': {'model': 'Cadillac Brougham "USS Mino"', 'paint': 'maroon', 'fx': []}},
 ]
+CITY = json.load(open(os.path.join(ROOT, 'data', 'city.json'))) if os.path.exists(os.path.join(ROOT, 'data', 'city.json')) else None
+if CITY: PEOPLE = CITY['people']                                   # the factory's people (tools/factory/city_factory.py)
+MEET = CITY['meet'] if CITY else 'Atholton High School'
 P = json.load(open(os.path.join(ROOT, 'data', 'osm_places.json')))['elements']
 LOCAL = os.path.join(ROOT, 'data', 'addresses.local.json')
 book = json.load(open(LOCAL)) if os.path.exists(LOCAL) else {}
@@ -38,20 +42,24 @@ SPRITE = {'brad': 'camaro_brad', 'kosack': 'cavalier_kosack', 'jimmy': 'astro_ji
           'clayton': 'camaro_clayton', 'zack': 'tracer_zack', 'rigg': 'celica_rigg', 'grant': 'brougham_grant', 'lamar': 'mustang_lamar'}   # assets/fleet.json (tools/bake_fleet.py)
 for p in PEOPLE:
     p = dict(p)
-    if p.get('car') and p['id'] in SPRITE: p['car'] = dict(p['car'], sprite=SPRITE[p['id']])
+    if p.get('car') and p['id'] in SPRITE and not p['car'].get('sprite'): p['car'] = dict(p['car'], sprite=SPRITE[p['id']])
     e = dict(p); num = (book.get(p['id']) or [None])[0]
     hit = next((q for q in P if num and q['tags'].get('addr:housenumber') == num and q['tags'].get('addr:street') == p['street']), None)
     if hit: e.update(active=True, lat=round(hit['lat'], 6), lon=round(hit['lon'], 6), house=list(proj(hit['lat'], hit['lon'])), osm=f"{hit['type']}/{hit['id']}")
     elif p.get('at'):                                              # lives at a named place (Lamar: Atholton HS lot)
-        q = next(q for q in P if q['tags'].get('name') == p['at'] and q['tags'].get('amenity') == 'school')
+        q = next(q for q in P if q['tags'].get('name') == p['at'])
         e.update(active=True, lat=round(q['lat'], 6), lon=round(q['lon'], 6), house=list(proj(q['lat'], q['lon'])), osm=f"{q['type']}/{q['id']}")
+    elif p.get('street') and not num and any(q['tags'].get('addr:street') == p['street'] for q in P):   # street only (public specs): the street's middle address
+        on = sorted((q for q in P if q['tags'].get('addr:street') == p['street'] and q['tags'].get('addr:housenumber', '').isdigit()), key=lambda q: int(q['tags']['addr:housenumber']))
+        q = on[len(on) // 2] if on else next(q for q in P if q['tags'].get('addr:street') == p['street'])
+        e.update(active=True, lat=round(q['lat'], 6), lon=round(q['lon'], 6), house=list(proj(q['lat'], q['lon'])), osm=f"{q['type']}/{q['id']}", approx='street')
     elif p['id'] in prev and prev[p['id']].get('active'):          # no address book here: keep the known exact house
         e.update({k: prev[p['id']][k] for k in ('active', 'lat', 'lon', 'house', 'osm')})
     else: e.update(active=False, why='house not in the current map extent (or no local address book to geocode it)')
     out.append(e)
-school = next(q for q in P if q['tags'].get('name') == 'Atholton High School' and q['tags'].get('amenity') == 'school')
+school = next(q for q in P if q['tags'].get('name') == MEET and (CITY or q['tags'].get('amenity') == 'school'))
 roster = {'_doc': 'The ONE roster (task L2). Written by tools/roster_build.py from OSM address points. house = world units (10/m, x east, y south).',
-          'people': out, 'unassigned_cars': [{'model': 'Chevrolet Cavalier', 'paint': 'black', 'sprite': 'cavalier_black', 'note': 'no owner yet - no house, no design work until the owner names whose it is'}],
-          'meetup': {'name': 'Atholton High School', 'lat': round(school['lat'], 6), 'lon': round(school['lon'], 6), 'pos': list(proj(school['lat'], school['lon']))}}
+          'people': out, 'houses': (CITY or {}).get('houses', {'jimmy': 'The Lazaris house', 'billy': 'The Lazaris house', 'clayton': 'The Floyds', 'zack': 'The Floyds'}), 'unassigned_cars': [] if CITY else [{'model': 'Chevrolet Cavalier', 'paint': 'black', 'sprite': 'cavalier_black', 'note': 'no owner yet - no house, no design work until the owner names whose it is'}],
+          'meetup': {'name': MEET, 'lat': round(school['lat'], 6), 'lon': round(school['lon'], 6), 'pos': list(proj(school['lat'], school['lon']))}}
 json.dump(roster, open(os.path.join(ROOT, 'data', 'roster.json'), 'w'), indent=1)
 for e in out: print(f"{e['id']:8s} {'ACTIVE ' if e['active'] else 'pending'} {(e.get('street') or e.get('at')):20s} {e.get('house', '')}")
