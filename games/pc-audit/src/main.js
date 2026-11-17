@@ -24,7 +24,7 @@ import { chaseStick } from './chasecam.js';
 import { FX, fxFromQuery } from './fx.js';
 
 const Q = new URLSearchParams(location.search);
-fxFromQuery(Q);   // BEAUTY WINNERS: roof,sway,causeway,bleed,puddle,petals on by default; ?fx=none / ?fx=-name overrides (rim light cut by owner verdict)
+fxFromQuery(Q);   // BEAUTY WINNERS: roof,sway,causeway,bleed,petals on by default; ?fx=none / ?fx=-name overrides (rim light + curb puddles cut by owner verdicts)
 const DEMO = Q.has('demo');
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -292,7 +292,12 @@ function frame(now) {
   input.safeTop = safeTop();
   if (sim.siege) input.mapOpen = false;
   if (input.mapOpen) cityMap.draw(ctx, VIEW_W, view.h, DPR, sim, simTime);     // live: the game runs on under the map
-  drawHud(ctx, VIEW_W, view.h, DPR, sim, input, t, simTime, { title: titleT, demo: DEMO, hintStick: !DEMO && simTime < 8, safeTop: safeTop() });
+  // CONTROL GRAPHICS RETIRE (owner rule, Nov 17): the stick circle + movement hint show for
+  // the first 4 s of PLAY — simTime only advances while playing, never under the start
+  // panel or the help page — fade over 0.5 s, then stay off for the rest of the run. A
+  // fresh page load starts a new run (simTime = 0) and shows them again.
+  const ctrlFade = simTime < 4 ? 1 : simTime < 4.5 ? 1 - (simTime - 4) / 0.5 : 0;
+  drawHud(ctx, VIEW_W, view.h, DPR, sim, input, t, simTime, { title: titleT, demo: DEMO, hintStick: !DEMO, ctrlFade, safeTop: safeTop() });
   if (panel) drawHelp(ctx, VIEW_W, view.h, DPR, sim, panel, safeTop(), now / 1000);
   if (recorder.recording && recorder.kind === 'gameplay' && recorder.newsLive) recorder.drawBroadcast(ctx, VIEW_W, view.h, DPR, sim, false);
   audio.update(sim, cam, world);

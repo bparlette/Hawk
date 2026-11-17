@@ -17,7 +17,7 @@ import { JOBS } from './jobs.js';
 import { drawEventsGround } from './events_render.js';
 import { DEBRIS_CAP, SMOKE_CAP, SPARK_CAP, STAGES, stageOf, FALL_T, palmReach } from './destruct.js';
 import { CHASE, elevAt, easeBlend } from './chasecam.js';
-import { fxOn, PUDDLES } from './fx.js';
+import { fxOn } from './fx.js';
 
 const ROOF0 = [0, 0];   // shared zero shift for the beauty samples (never mutated)
 
@@ -89,9 +89,6 @@ export class Renderer {
     this.petals = [];                             // sample 7: slipstream petal/paper pool
     for (let i = 0; i < 160; i++) this.petals.push({ on: false, x: 0, y: 0, vx: 0, vy: 0, rot: 0, vr: 0, t: 0, life: 1, col: 0, sw: 1 });
     this.petalAcc = 0; this.petalSeed = 1234567;
-    this.pudState = PUDDLES.map(p => ({ ...p, last: -9 }));   // sample 6: puddle decals + last ripple time
-    this.pudRipples = [];
-    for (let i = 0; i < 28; i++) this.pudRipples.push({ on: false, x: 0, y: 0, t0: 0, seed: 0 });
   }
 
   // Destruction sprites (assets/destruct.json): per-model car stages and pooled debris variants.
@@ -567,7 +564,6 @@ export class Renderer {
     this.drawShellMasses(g, vx0, vy0, vx1, vy1);
     this.drawOcean(g, G, t, time, vx0, vy0, vx1, vy1);
     if (fxOn('causeway')) this.drawCausewayFx(g, time, vx0, vy0, vx1, vy1);   // BEAUTY SAMPLE 3: deck shadow + caustics
-    if (fxOn('puddle')) this.drawPuddles(g, S, time, vx0, vy0, vx1, vy1);      // BEAUTY SAMPLE 6: mirror patches + ripples
     this.tracks.draw(g, S, Math.max(0, Math.min(0.1, time - this.lastTime)), vx0, vy0, vx1, vy1);
     this.lastTime = time;
 
@@ -586,6 +582,7 @@ export class Renderer {
     }
     for (const p of S.peds) {
       if (p.x < vx0 - 60 || p.x > vx1 + 60 || p.y < vy0 - 60 || p.y > vy1 + 60 || p.hidden) continue;
+      if (p.outfit === 'player' && S.player.mode === 'water') continue;   // mounted: no walking shadow on the water — the craft's soft water shadow (watercraft.js) covers craft + rider together
       const { m, idx, rows } = this.pedCell(p);
       const lift = p.outfit === 'player' && S.board && S.board.ridden ? S.board.z * 9 : 0;
       this.drawCell(sg, m.shadow, idx, m.cols, rows, p.x + lift, p.y - lift * 0.3);
@@ -794,7 +791,6 @@ export class Renderer {
     this.drawNeonPuddles(lg, G, time, vx0, vy0, vx1, vy1);
     this.drawWetReflections(lg, G, time, vx0, vy0, vx1, vy1, S);
     this.drawSunbeams(lg, G, t, time, vx0, vy0, vx1, vy1);
-    if (fxOn('puddle')) this.drawPuddleLight(lg, G, time, vx0, vy0, vx1, vy1);   // BEAUTY SAMPLE 6 (light half)
     if (S.chopper) this.drawSearchlight(lg, S.chopper, t, time, S.stars);
     { // activity markers carry their own light, so the plaques still read after dark
       const list = this.mk || [], al = Math.max(G.lamps, G.windows) * 0.55;
@@ -1178,6 +1174,7 @@ export class Renderer {
     for (let i = 0; i < list.length; i++) {
       const m = list[i], a = m.a;
       if (m.x < vx0 - 80 || m.x > vx1 + 80 || m.y < vy0 - 40 || m.y > vy1 + 110) continue;
+      g.globalAlpha = m.alpha == null ? 1 : m.alpha;   // a retiring label fades out (labels.js)
       const bob = Math.sin(time * 2.2 + i * 1.3) * 2.5, big = a.big ? 1.25 : 1;
       const fs = 13 * big, lift = (a.group === 'hub' ? 6 : a.group === 'job' ? 38 : 46);
       g.font = `900 ${fs}px "Avenir Next", "Futura", "Trebuchet MS", system-ui, sans-serif`;
@@ -1194,6 +1191,7 @@ export class Renderer {
       g.fillStyle = '#210f2e'; g.textAlign = 'center'; g.textBaseline = 'middle';
       g.fillText(a.tag, cx, cy - 2 * big);
     }
+    g.globalAlpha = 1;
     g.textBaseline = 'alphabetic';
   }
 
@@ -1517,75 +1515,6 @@ export class Renderer {
       }
     }
     g.globalAlpha = 1;
-  }
-
-  // SAMPLE 6 (ground half) — curb puddles: a dark mirror patch, plus ripple rings and a small
-  // splash when the player drives through one. Spawning is renderer-side (the sim is never
-  // touched): the car inside a patch's ellipse at speed lays a ripple every 0.11 s.
-  drawPuddles(g, S, time, vx0, vy0, vx1, vy1) {
-    for (const p of this.pudState) {
-      if (p.x + p.rx < vx0 || p.x - p.rx > vx1 || p.y + p.ry < vy0 || p.y - p.ry > vy1) continue;
-      g.fillStyle = 'rgba(16,14,32,0.52)';
-      g.beginPath(); g.ellipse(p.x, p.y, p.rx, p.ry, 0, 0, 7); g.fill();
-      g.fillStyle = 'rgba(34,32,58,0.45)';
-      g.beginPath(); g.ellipse(p.x - p.rx * 0.18, p.y - p.ry * 0.2, p.rx * 0.68, p.ry * 0.62, 0, 0, 7); g.fill();
-    }
-    const c = S.player.mode === 'car' ? S.player.car : null;
-    if (c && Math.abs(c.v) > 25) {
-      for (const p of this.pudState) {
-        const u = ((c.x - p.x) / p.rx) ** 2 + ((c.y - p.y) / p.ry) ** 2;
-        if (u < 1 && time - p.last > 0.11) {
-          p.last = time;
-          const r = this.pudRipples.find(q => !q.on) || this.pudRipples[0];
-          r.on = true; r.x = c.x; r.y = c.y; r.t0 = time; r.seed = (time * 997) % 10;
-        }
-      }
-    }
-    g.lineCap = 'round';
-    for (const r of this.pudRipples) {
-      if (!r.on) continue;
-      const age = time - r.t0;
-      if (age > 1.1) { r.on = false; continue; }
-      if (r.x < vx0 - 40 || r.x > vx1 + 40 || r.y < vy0 - 40 || r.y > vy1 + 40) continue;
-      const a = 1 - age / 1.1, rad = 4 + age * 30;
-      g.strokeStyle = '#eaf6ff'; g.lineWidth = 1.6;
-      g.globalAlpha = a * 0.55;
-      g.beginPath(); g.ellipse(r.x, r.y, rad, rad * 0.45, 0, 0, 7); g.stroke();
-      g.globalAlpha = a * 0.4;
-      g.beginPath(); g.ellipse(r.x, r.y, rad * 0.55, rad * 0.25, 0, 0, 7); g.stroke();
-      g.fillStyle = '#eaf6ff';
-      for (let i = 0; i < 5; i++) {                                 // splash droplets on little arcs
-        const h1 = Math.sin(r.seed * 91.7 + i * 47.3) * 43758.5453, fr = h1 - Math.floor(h1);
-        const ang = fr * 6.28, dist = age * (16 + fr * 22), lift = Math.sin(Math.min(1, age * 2.4) * Math.PI) * (4 + fr * 5);
-        g.globalAlpha = a * 0.8;
-        g.beginPath(); g.arc(r.x + Math.cos(ang) * dist, r.y + Math.sin(ang) * dist * 0.5 - lift, 1.5, 0, 7); g.fill();
-      }
-    }
-    g.globalAlpha = 1;
-  }
-
-  // SAMPLE 6 (light half) — the mirror throws the nearest sign's colour back: a soft tint pool
-  // plus short wobbling streaks, the wet-reflection ribbon at decal scale, scaled by how lit
-  // the signs and lamps are (so the patch is nearly plain water at golden hour).
-  drawPuddleLight(lg, G, time, vx0, vy0, vx1, vy1) {
-    const glow = Math.max(G.neon, G.lamps * 0.8);
-    if (glow < 0.03) return;
-    lg.lineCap = 'round';
-    for (const p of this.pudState) {
-      if (p.x + p.rx < vx0 || p.x - p.rx > vx1 || p.y + p.ry < vy0 || p.y - p.ry > vy1) continue;
-      const [r, gg, b] = p.tint;
-      const rg = lg.createRadialGradient(p.x, p.y, 2, p.x, p.y, p.rx * 1.25);
-      rg.addColorStop(0, `rgba(${r},${gg},${b},0.55)`); rg.addColorStop(1, `rgba(${r},${gg},${b},0)`);
-      lg.globalAlpha = glow * 0.5; lg.fillStyle = rg;
-      lg.beginPath(); lg.ellipse(p.x, p.y, p.rx * 1.25, p.ry * 1.25, 0, 0, 7); lg.fill();
-      lg.fillStyle = `rgb(${r},${gg},${b})`;
-      for (let i = 0; i < 6; i++) {
-        const u = i / 6, dx = Math.sin(time * 2.3 + p.x + i * 1.7) * 2.2;
-        lg.globalAlpha = glow * 0.30 * (1 - u * 0.6);
-        lg.beginPath(); lg.ellipse(p.x + dx + (i % 3 - 1) * p.rx * 0.3, p.y - p.ry * 0.5 + u * p.ry, p.rx * (0.30 - u * 0.12), 1.7, 0, 0, 7); lg.fill();
-      }
-    }
-    lg.globalAlpha = 1;
   }
 
   // SAMPLE 7 — slipstream petals: past ~200 u/s the player's wake stirs loose petals and
