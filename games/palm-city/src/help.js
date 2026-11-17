@@ -1,7 +1,9 @@
 // help.js — the HELP panel and the START PAGE. One panel, two dresses: both list every activity
-// from the registry (activities.js helpRows) as icon + name + one line + a JUMP button, so a new
-// player sees what the game offers and can be standing at any of it in one tap. The game is paused
-// while either is up. Layout is a pure function so drawing and touch hit-testing can never drift.
+// from the registry (activities.js helpRows) as a TWO-COLUMN grid of compact tiles (owner,
+// Nov 16: "two rows to fit all the options on the page") — icon + name + one line + a JUMP pill
+// per tile, the whole tile tappable — so every activity fits on one phone screen with no
+// scrolling and the PLAY button stays pinned at the bottom. The game is paused while either
+// is up. Layout is a pure function so drawing and touch hit-testing can never drift.
 import { helpRows } from './activities.js';
 
 export const CONTROLS = [
@@ -18,10 +20,19 @@ export function helpLayout(vw, vh, n, mode, safeTop = 0) {
   const start = mode === 'start', x = 12, w = vw - 24;
   const head = start ? 132 : 46, foot = (start ? 0 : CONTROLS.length * 17 + 16) + 64;
   const top = safeTop + (start ? 20 : 54);
-  const rowH = Math.max(40, Math.min(54, (vh - top - head - foot - 14) / n));
+  // TWO-COLUMN GRID of compact tiles. `rows` stays the name (drawing, hit-testing and the
+  // checks all walk it) but each entry is now a tile: { x, y, w, h, jump }.
+  const cols = 2, gap = 8, pad = 6;
+  const rowsN = Math.max(1, Math.ceil(n / cols));
+  const tileW = (w - pad * 2 - gap * (cols - 1)) / cols;
+  const avail = vh - top - head - foot - 14;
+  const tileH = Math.max(52, Math.min(76, (avail - gap * (rowsN - 1)) / rowsN));
   const rows = [];
-  for (let i = 0; i < n; i++) { const y = top + head + i * rowH; rows.push({ y, h: rowH, jump: { x: x + w - 76, y: y + rowH / 2 - 16, w: 64, h: 32 } }); }
-  const endRows = top + head + n * rowH;
+  for (let i = 0; i < n; i++) {
+    const tx = x + pad + (i % cols) * (tileW + gap), ty = top + head + ((i / cols) | 0) * (tileH + gap);
+    rows.push({ x: tx, y: ty, w: tileW, h: tileH, jump: { x: tx + tileW - 58, y: ty + tileH - 26, w: 52, h: 21 } });
+  }
+  const endRows = top + head + (n ? rowsN * tileH + (rowsN - 1) * gap : 0);
   const controlsY = endRows + 10;
   const btn = { x: x + 14, y: endRows + (start ? 12 : CONTROLS.length * 17 + 22), w: w - 28, h: 46 };
   return { start, panel: { x, y: top, w, h: btn.y + btn.h + 12 - top }, head, rows, controlsY, btn };
@@ -33,17 +44,17 @@ const inside = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= 
 export function helpHit(p, vw, vh, sim, mode, safeTop = 0) {
   const rows = helpRows(sim), L = helpLayout(vw, vh, rows.length, mode, safeTop);
   if (inside(p, L.btn)) return { type: 'close' };
-  if (canJump(sim)) for (let i = 0; i < rows.length; i++) if (rows[i].live() && inside(p, { x: L.rows[i].jump.x - 8, y: L.rows[i].y, w: L.rows[i].jump.w + 20, h: L.rows[i].h })) return { type: 'jump', id: rows[i].id };
+  if (canJump(sim)) for (let i = 0; i < rows.length; i++) if (rows[i].live() && inside(p, L.rows[i])) return { type: 'jump', id: rows[i].id };   // the whole tile is the button
   if (!L.start && !inside(p, L.panel)) return { type: 'close' };          // tap outside the HELP panel: back to the game
   return null;
 }
 
-function wrapText(g, text, maxW) {
-  const words = text.split(' '), lines = [];
-  let cur = '';
-  for (const w of words) { const t = cur ? cur + ' ' + w : w; if (g.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; }
-  if (cur) lines.push(cur);
-  return lines;
+// one line, ellipsised to fit — the grid tiles carry a single line of how-to, never two
+function oneLine(g, text, maxW) {
+  if (g.measureText(text).width <= maxW) return text;
+  let t = text;
+  while (t.length && g.measureText(t + '…').width > maxW) t = t.slice(0, -1);
+  return t.trimEnd() + '…';
 }
 
 export function drawHelp(g, vw, vh, dpr, sim, mode, safeTop, time) {
@@ -70,25 +81,28 @@ export function drawHelp(g, vw, vh, dpr, sim, mode, safeTop, time) {
   const jumpOK = canJump(sim);
   for (let i = 0; i < rows.length; i++) {
     const a = rows[i], r = L.rows[i], live = a.live() && jumpOK;
-    if (i % 2 === 0) { g.fillStyle = 'rgba(210,150,110,0.16)'; g.fillRect(P.x + 6, r.y, P.w - 12, r.h); }
+    // the tile
+    g.fillStyle = i % 2 === 0 ? 'rgba(210,150,110,0.16)' : 'rgba(120,80,160,0.10)';
+    g.beginPath(); g.roundRect(r.x, r.y, r.w, r.h, 10); g.fill();
+    g.lineWidth = 1.5; g.strokeStyle = 'rgba(33,15,46,0.35)'; g.stroke();
     // icon: a colour disc with the kind's mark
-    const ix = P.x + 30, iy = r.y + r.h / 2;
-    g.fillStyle = a.color; g.beginPath(); g.arc(ix, iy, 13, 0, 7); g.fill();
+    const ix = r.x + 17, iy = r.y + 16;
+    g.fillStyle = a.color; g.beginPath(); g.arc(ix, iy, 10, 0, 7); g.fill();
     g.lineWidth = 2; g.strokeStyle = '#210f2e'; g.stroke();
-    g.fillStyle = '#210f2e'; g.font = font(14, 900);
+    g.fillStyle = '#210f2e'; g.font = font(11, 900); g.textAlign = 'center';
     g.fillText(a.group === 'siege' ? '⌂' : a.group === 'event' ? '★' : '$', ix, iy + 1);
-    // name + one line
+    // name + ONE line of how (on short tiles the line stops clear of the JUMP pill)
     g.textAlign = 'left';
-    g.font = font(15, 900); g.fillStyle = '#210f2e'; g.fillText(a.name, P.x + 52, r.y + (r.h > 46 ? 13 : 11));
-    g.font = font(10.5, 600); g.fillStyle = '#5a3c58';
-    const lines = a._lines || (a._lines = wrapText(g, a.how, P.w - 52 - 88));
-    for (let k = 0; k < Math.min(2, lines.length); k++) g.fillText(lines[k], P.x + 52, r.y + (r.h > 46 ? 29 : 25) + k * 12);
+    g.font = font(12, 900); g.fillStyle = '#210f2e';
+    g.fillText(oneLine(g, a.name, r.w - 32), r.x + 32, r.y + 16);
+    g.font = font(9, 600); g.fillStyle = '#5a3c58';
+    g.fillText(oneLine(g, a.how, r.h < 62 ? r.w - 70 : r.w - 14), r.x + 7, r.y + 31);
     g.textAlign = 'center';
-    // JUMP
+    // JUMP pill (the whole tile is tappable; the pill is the affordance)
     const j = r.jump;
     g.globalAlpha = live ? 1 : 0.35;
-    g.fillStyle = '#210f2e'; g.beginPath(); g.roundRect(j.x, j.y, j.w, j.h, 9); g.fill();
-    g.fillStyle = live ? '#ffd45c' : '#fff1d8'; g.font = font(13, 900); g.fillText(live ? 'JUMP ▸' : 'BUSY', j.x + j.w / 2, j.y + j.h / 2 + 1);
+    g.fillStyle = '#210f2e'; g.beginPath(); g.roundRect(j.x, j.y, j.w, j.h, 8); g.fill();
+    g.fillStyle = live ? '#ffd45c' : '#fff1d8'; g.font = font(11, 900); g.fillText(live ? 'JUMP ▸' : 'BUSY', j.x + j.w / 2, j.y + j.h / 2 + 1);
     g.globalAlpha = 1;
   }
   if (!L.start) {

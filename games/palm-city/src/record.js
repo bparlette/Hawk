@@ -64,6 +64,17 @@ export class Recorder {
     });
   }
 
+  // The help/start panel owns the screen while it is up: the floating REC/NEWS pills hide —
+  // they sit at the right edge mid-screen, exactly where the menu's JUMP buttons live
+  // (owner phone screenshot, Nov 16). They come back the moment the panel closes.
+  setMenuOpen(open) {
+    if (this._menuOpen === open) return;
+    this._menuOpen = open;
+    const d = open ? 'none' : '';
+    this.recBtn.style.display = d; this.newsBtn.style.display = d;
+    if (open) this.saveBtn.style.display = 'none';   // replayStarted() restores it for a highlight
+  }
+
   toast(msg) {
     this.toastEl.textContent = msg; this.toastEl.style.opacity = '1';
     clearTimeout(this.toastT); this.toastT = setTimeout(() => { this.toastEl.style.opacity = '0'; }, 2600);

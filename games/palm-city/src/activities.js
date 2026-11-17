@@ -12,6 +12,7 @@ import { EVENTS, quitEvent } from './events.js';
 import { quitJob } from './jobs.js';
 import { dismount, mount } from './skate.js';
 import { CHASE } from './chase.js';
+import { padPos, inRoof } from './heli.js';
 
 const JOB = {
   taxi:    { name: 'TAXI',    how: 'Get in the yellow cab and press START. Fares pay more when they stay happy.' },
@@ -23,9 +24,10 @@ const EVENT_HOW = {
   wreck: 'Drive onto the orange ring by the plaza and press START. Smash everything before time runs out.',
   valet: 'Drive onto the blue ring south of the Garage and press START. Park clean, park fast.',
   spot: 'Drive onto the ring by the plaza fountain and press START. Drift in the chopper light.',
+  openroad: 'Drive onto the gold ring by the causeway, press START, and race the checkpoints to the port.',
 };
-const EVENT_TAG = { wreck: 'WRECK IT!', valet: 'VALET', spot: 'SPOTLIGHT' };
-const EVENT_COL = { wreck: '#ff7a4a', valet: '#6ee2ff', spot: '#ffe95c' };
+const EVENT_TAG = { wreck: 'WRECK IT!', valet: 'VALET', spot: 'SPOTLIGHT', openroad: 'OPEN ROAD' };
+const EVENT_COL = { wreck: '#ff7a4a', valet: '#6ee2ff', spot: '#ffe95c', openroad: '#ffb02e' };
 
 export function initActivities(sim) {
   const L = sim.W.L, list = [];
@@ -52,6 +54,20 @@ export function initActivities(sim) {
     how: 'Ride the skateboard to the pier marker and press START. Hit every checkpoint to the safehouse.',
     live: () => !sim.event && !sim.job, pos: () => (sim.event ? null : sim.chaseSite.p), site: sim.chaseSite,
   });
+  if (L.hospital) list.push({
+    id: 'heli', group: 'event', name: 'HOSPITAL HELICOPTER', tag: 'HELICOPTER', color: '#ff5a5a', heli: true,
+    site: { name: 'HELICOPTER' },
+    how: 'Climb the hospital stairs (west side), STEAL the helicopter, fly anywhere. LAND on open ground.',
+    live: () => !!sim.heli && (sim.heli.state === 'pad' || sim.heli.state === 'parked'),
+    pos: () => { const H = sim.heli; if (!H || sim.event) return null; if (H.state === 'pad') return padPos(sim); if (H.state === 'parked') return [H.x, H.y]; return null; },
+  });
+  list.push({
+    id: 'boats', group: 'event', name: 'BOATS & JETSKI', tag: 'BOATS', color: '#3fa7d6', water: true,
+    site: { name: 'BOATS' },
+    how: 'Walk the pier to the moorings, hop on, and ride the bay. The boat is the fast one.',
+    live: () => !sim.busted,
+    pos: () => { if (sim.event) return null; const cr = sim.water && sim.water.craft[0]; return cr ? [cr.x, cr.y] : null; },
+  });
   const g = L.buildings.find(b => b.id === 'garage');
   if (g) list.push({ id: 'jobs', group: 'hub', name: 'JOBS', tag: 'JOBS', color: '#ffd45c', how: '', live: () => true, pos: () => [g.x + g.w / 2, g.y + g.d * 0.45], big: true });
   sim.activities = list;
@@ -73,7 +89,7 @@ export function helpRows(sim) { return (sim.activities || []).filter(a => a.grou
 // Events: in a car on the ring, START armed. Returns true if the jump happened.
 export function jump(sim, id) {
   const a = (sim.activities || []).find(q => q.id === id), P = sim.player, p = P.ped;
-  if (!a || a.group === 'hub' || P.mode === 'siege' || sim.siege || sim.busted) return false;
+  if (!a || a.group === 'hub' || P.mode === 'siege' || P.mode === 'air' || sim.siege || sim.busted) return false;
   quitJob(sim); quitEvent(sim);
   if (P.mode === 'board') dismount(sim);
   const leave = () => { if (P.mode === 'car') { const c = P.car; c.v = 0; c.driver = null; c.parked = true; c.fixed = false; P.mode = 'foot'; P.car = null; p.hidden = false; } };
@@ -90,6 +106,27 @@ export function jump(sim, id) {
     leave();
     const b = sim.board; b.x = CHASE.site[0]; b.y = CHASE.site[1]; b.vx = b.vy = 0; p.x = b.x; p.y = b.y; p.h = -Math.PI / 2; p.hidden = false;
     mount(sim);
+  } else if (a.water) {
+    // the moorings: on the pier deck right beside the jetski — one ACTION press hops on
+    leave();
+    const pier = sim.W.L.pier, cr = sim.water.craft[0];
+    p.x = cr.x; p.y = pier.y + pier.h - 6; p.h = Math.PI / 2; p.hidden = false;
+  } else if (a.heli) {
+    // the helicopter: on foot on the hospital roof, beside the pad, STEAL armed
+    leave();
+    const H = sim.heli;
+    if (H && H.state === 'parked' && !H.home) {
+      // INSTANT-START: the heli sits parked in the field — JUMP lands the player beside IT
+      let done = false;
+      for (let k = 0; k < 8 && !done; k++) {
+        const a2 = k * Math.PI / 4, x = H.x + Math.cos(a2) * 34, y = H.y + Math.sin(a2) * 34;
+        if (H.onRoof ? inRoof(sim, x, y) : sim.canStand(x, y) && Math.hypot(x - H.x, y - H.y) > 26) { p.x = x; p.y = y; done = true; }
+      }
+      if (!done) { p.x = H.x + 34; p.y = H.y; }
+      p.h = 0; p.hidden = false;
+    } else {
+      const pad = sim.W.L.hospital.pad; p.x = pad[0] - 40; p.y = pad[1]; p.h = 0; p.hidden = false;
+    }
   } else {
     // an event wants a car: keep the one you are in, else borrow the nearest one that still runs
     let c = P.mode === 'car' && !P.car.wreck && !P.car.job ? P.car : null;

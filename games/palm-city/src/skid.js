@@ -19,10 +19,12 @@ export function initSkid(sim) {
 }
 
 // How hard the tyres are slipping (0..1) and whether the fronts are marking too.
-export function slipOf(c, throttle, steer, grip, soft) {
+// gm (sim.gripMul, default 1) scales the cornering thresholds: OPEN ROAD raises it so the tyres
+// bite and the car tracks the road instead of sliding (the chase cam's easier steering feel).
+export function slipOf(c, throttle, steer, grip, soft, gm = 1) {
   const v = Math.abs(c.v), lat = v * Math.abs(steer) * 2.7 * grip;      // lateral load: speed x yaw rate
   let s = 0, front = false;
-  if (lat > 430) { s = Math.min(1, 0.35 + (lat - 430) / 300); front = lat > 600; }     // cornering at speed; a real drift marks all four
+  if (lat > 430 * gm) { s = Math.min(1, 0.35 + (lat - 430 * gm) / 300); front = lat > 600 * gm; }     // cornering at speed; a real drift marks all four
   if (throttle * c.v < 0 && v > 90) { s = Math.max(s, 0.85); front = true; }          // hard braking
   if (throttle > 0.7 && c.v >= 0 && v < 70) s = Math.max(s, 0.75 * (1 - v / 70) + 0.15);   // hard launch
   if (Math.abs(steer) > 0.9 && throttle > 0.45 && v > 12 && v < 130) c.spinT = 0.35;   // burnout / donut: full lock under power
@@ -45,7 +47,7 @@ export function layMarks(sim, c, throttle, steer, grip, dt) {
   if (c.spinT > 0) c.spinT -= dt;
   const W = sim.W, surf = W.surfaceAt(c.x, c.y), soft = surf === 'sand' || surf === 'grass';
   if (surf === 'water') { c.skidOn = 0; return; }
-  let s = slipOf(c, throttle, steer, grip, soft);
+  let s = slipOf(c, throttle, steer, grip, soft, sim.gripMul || 1);
   const front = s < 0; s = Math.abs(s);
   const wp = c.wheels || (c.wheels = new Float32Array(8));
   const ca = Math.cos(c.h), sa = Math.sin(c.h), ax = c.len * 0.3, ay = c.wid * 0.36, tw = Math.max(2.2, c.wid * 0.15);

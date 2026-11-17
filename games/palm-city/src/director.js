@@ -8,7 +8,7 @@ import { Sim } from './sim.js';
 
 const WINDOW = 20 * 60;                 // steps
 const WEIGHT = {                         // excitement per event (crash scales with speed)
-  wreck: 6, timber: 5, hood: 5, glass: 1.5, star: 3, jack: 2, snap: 2, crack: 1.5, trick: 0.6, grind: 1, ollie: 0.8,
+  wreck: 6, chopperdown: 8, timber: 5, hood: 5, glass: 1.5, star: 3, jack: 2, snap: 2, crack: 1.5, trick: 0.6, grind: 1, ollie: 0.8,
   busted: 2, lock: 1.5, chopper: 2, siren: 0.5, bail: 3, dent: 0.3, rave: 3.5, sling: 0.8,
 };
 const SHOTS = [                          // { zoom, lead (seconds of velocity), hold (seconds) }

@@ -160,13 +160,14 @@
    "seed": 15
   },
   {
-   "id": "office",
-   "style": "office",
+   "id": "hospital",
+   "style": "hospital",
    "x": 864,
    "y": 884,
    "w": 252,
    "d": 250,
    "h": 28,
+   "sign": "HOSPITAL",
    "seed": 16
   },
   {
@@ -514,6 +515,26 @@
   "w": 300,
   "h": 30,
   "id": "pier"
+ },
+ "hospital": {
+  "building": "hospital",
+  "pad": [
+   990,
+   1009
+  ],
+  "padR": 58,
+  "roof": {
+   "x": 876,
+   "y": 896,
+   "w": 228,
+   "d": 226
+  },
+  "gap": {
+   "x": 850,
+   "y": 981,
+   "w": 26,
+   "d": 56
+  }
  },
  "spawn": {
   "player": [

@@ -15,6 +15,17 @@ export const CHASE = {
 
 export function initChase(sim) { sim.chaseSite = { kind: 'chase', name: CHASE.name, p: CHASE.site }; }
 
+// INSTANT-START (owner rule, Nov 16): the board rack. The board is a singleton (sim.board) —
+// this never creates one; it recalls the one that exists to the rack beside the ring when the
+// player presses ACTION at the marker without it, so the same press then mounts it.
+export function boardRack(sim) {
+  const p = sim.player.ped, b = sim.board;
+  if (sim.player.mode !== 'foot' || !b || sim.player.board === b) return;
+  if (Math.hypot(p.x - CHASE.site[0], p.y - CHASE.site[1]) < 30 && Math.hypot(b.x - CHASE.site[0], b.y - CHASE.site[1]) > 60) {
+    b.x = CHASE.site[0]; b.y = CHASE.site[1] + 14; b.vx = 0; b.vy = 0; b.grind = null; b.z = 0; b.air = 0;
+  }
+}
+
 // is START BOARD CHASE armed? On the board, at the marker, nothing else running.
 export function chaseArmed(sim) {
   const P = sim.player, b = sim.board;
