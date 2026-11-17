@@ -7,6 +7,9 @@ import { GroundPainter, CHUNK } from './lf_ground.js';
 import { Renderer } from './lf_render.js';
 import { Input } from '../../palm-city/src/input.js';
 import { Areas, poly } from './lf_areas.js';
+import { players, startRally, stepRally } from './lf_mission.js';
+import { setFx } from './lf_fx.js';
+import { Pilot } from './lf_pilot.js';
 
 const Q = new URLSearchParams(location.search);
 const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
@@ -38,20 +41,66 @@ if (!opts.spawn) {                                       // Ledo Pizza: face out
   const r = W.route(G.anchors.ledo.v, G.anchors.brad.v);
   if (r && r.pts.length > 3) sim.player.h = Math.atan2(r.pts[3][1] - r.pts[0][1], r.pts[3][0] - r.pts[0][0]);
 }
-renderer = new Renderer(ctx, W, ground, fleet, imgs, areas); renderer.resize(VIEW_W, view.h, DPR);
+renderer = new Renderer(ctx, W, ground, fleet, imgs, areas);
+setFx(sim, roster);
+// ---- task L2: PICK YOUR PLAYER -> RALLY THE CREW (lf_mission.js). ?free = just drive; ?player=<id> skips the pick.
+const PLAYERS = players(roster);
+let M = null, picking = !Q.has('free') && !Q.has('cam') && !Q.has('map');
+let pilot = null;
+function pick(id) { M = startRally(sim, roster, id); renderer.mission = M; picking = false; if (Q.has('pilot')) pilot = new Pilot(sim, W, M); }
+if (Q.get('player')) pick(Q.get('player'));
+const pickRows = () => PLAYERS.map((p, i) => ({ p, x: 24, y: 150 + i * 62, w: VIEW_W - 48, h: 54 }));
+canvas.addEventListener('pointerdown', e => {
+  if (!picking) return;
+  const b = canvas.getBoundingClientRect(), x = (e.clientX - b.left) * VIEW_W / b.width, y = (e.clientY - b.top) * view.h / b.height;
+  const r = pickRows().find(r => x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.h);
+  if (r) { pick(r.p.id); e.stopPropagation(); }
+}, { capture: true });
+addEventListener('keydown', e => { if (picking && /^Digit[1-9]$/.test(e.code)) { const p = PLAYERS[+e.code.slice(5) - 1]; if (p) pick(p.id); } });
+function drawPick() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = 'rgba(20,12,32,0.86)'; ctx.fillRect(0, 0, VIEW_W, view.h);
+  ctx.textAlign = 'center'; ctx.fillStyle = '#ffd25c'; ctx.font = '900 30px system-ui'; ctx.fillText('PICK YOUR PLAYER', VIEW_W / 2, 70);
+  ctx.fillStyle = '#e8dcc8'; ctx.font = '600 13px system-ui'; ctx.fillText('then rally the crew — meet at Atholton High', VIEW_W / 2, 98);
+  pickRows().forEach(({ p, x, y, w, h }, i) => {
+    ctx.fillStyle = 'rgba(255,241,216,0.94)'; ctx.beginPath(); ctx.roundRect(x, y, w, h, 12); ctx.fill();
+    const m = fleet[p.car.sprite], im = imgs[m.color.file], fw = im.width / m.cols, fh = im.height / Math.ceil(m.angles / m.cols);
+    ctx.drawImage(im, 0, 0, fw, fh, x + 4, y + 4, h - 8, h - 8);                   // the car itself, side on (frame 0 = facing east)
+    ctx.textAlign = 'left'; ctx.fillStyle = '#2a1430'; ctx.font = '900 17px system-ui'; ctx.fillText(`${i + 1}  ${p.name}`, x + h + 4, y + 22);
+    ctx.font = '600 12px system-ui'; ctx.fillStyle = '#5a3c58'; ctx.fillText(`${p.car.model} · ${p.street}`, x + h + 4, y + 41);
+  });
+}
+function drawMissionHud() {
+  if (!M) return;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const n = M.convoy.length, total = M.convoy.length + M.stops.filter(s => !s.done).reduce((a, s) => a + s.people.length, 0);
+  ctx.textAlign = 'left'; ctx.font = '900 13px system-ui'; ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(12, 74, 150, 26, 12); ctx.fill();
+  ctx.fillStyle = '#ffd25c'; ctx.fillText(M.complete ? 'CREW ASSEMBLED' : `CREW ${n + 1}/${total + 1}`, 24, 92);
+  if (M.msgT > 0) { ctx.textAlign = 'center'; ctx.font = '900 22px system-ui'; ctx.fillStyle = 'rgba(27,20,48,0.7)'; const w = ctx.measureText(M.msg).width + 30; ctx.beginPath(); ctx.roundRect(VIEW_W / 2 - w / 2, view.h * 0.22 - 24, w, 38, 14); ctx.fill(); ctx.fillStyle = '#ffe4b0'; ctx.fillText(M.msg, VIEW_W / 2, view.h * 0.22 + 2); }
+  // the edge arrow: nearest pickup, then the school
+  if (M.complete || M.beat) return;
+  const c = sim.player, todo = M.stops.filter(s => !s.done);
+  const tgt = todo.length ? todo.sort((a, b) => Math.hypot(a.x - c.x, a.y - c.y) - Math.hypot(b.x - c.x, b.y - c.y))[0] : { x: M.meet.pos[0], y: M.meet.pos[1], people: [{ name: 'Atholton High' }] };
+  const dx = tgt.x - cam.x, dy = tgt.y - cam.y, a = Math.atan2(dy, dx), d = Math.hypot(dx, dy);
+  if (d * cam.zoom < VIEW_W * 0.45) return;
+  const rx = VIEW_W / 2 + Math.cos(a) * (VIEW_W / 2 - 36), ry = view.h / 2 + Math.sin(a) * (view.h / 2 - 90);
+  ctx.save(); ctx.translate(rx, ry); ctx.rotate(a); ctx.fillStyle = '#ffd25c'; ctx.strokeStyle = '#2a1430'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(16, 0); ctx.lineTo(-10, 11); ctx.lineTo(-4, 0); ctx.lineTo(-10, -11); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+  ctx.textAlign = 'center'; ctx.font = '800 11px system-ui'; ctx.fillStyle = '#fff1d8'; ctx.fillText(`${tgt.people.map(p => p.name.split(' ')[0]).join(' + ')} · ${(d / 10 / 1609).toFixed(1)} mi`, rx, ry + 26);
+} renderer.resize(VIEW_W, view.h, DPR);
 const input = new Input(canvas, view); input.fightOn = true;
 const fixed = Q.get('cam') ? Q.get('cam').split(',').map(Number) : null;
 const cam = { x: fixed ? fixed[0] : sim.player.x, y: fixed ? fixed[1] : sim.player.y, zoom: fixed && fixed[2] ? fixed[2] : 1 };
 for (let cy = -2; cy <= 2; cy++) for (let cx = -1; cx <= 1; cx++) ground.get(Math.floor(cam.x / CHUNK) + cx, Math.floor(cam.y / CHUNK) + cy);
 ground.stats.sync = 0;
-const STEP = 1 / 60; let acc = 0, last = performance.now();
+const STEP = 1 / 60, SPEED = Math.max(1, Math.min(16, Number(Q.get('speed')) || 1)); let acc = 0, last = performance.now();   // ?speed=N: N sim steps per frame (captures)
 function frame(now) {
-  const dt = Math.min(0.1, (now - last) / 1000); last = now; acc += dt;
+  const dt = Math.min(0.1, (now - last) / 1000); last = now; acc += dt * SPEED;
   let n = 0;
-  while (acc >= STEP && n < 6) { sim.step(STEP, input.read()); acc -= STEP; n++; }
-  if (n === 6) acc = 0;
+  while (acc >= STEP && n < 6 * SPEED) { const inp = pilot ? (input.read(), pilot.input(STEP)) : input.read(); if (picking) { acc = 0; break; } sim.step(STEP, M && M.beat ? { jx: 0, jy: 0, jm: 0, keys: {} } : inp); if (M) stepRally(sim, M, STEP); acc -= STEP; n++; }
+  if (n >= 6 * SPEED) acc = 0;
   const c = sim.player;
   let tx = c.x + Math.cos(c.h) * c.v * 0.42, ty = c.y + Math.sin(c.h) * c.v * 0.42, tz = 1 - Math.min(0.16, Math.abs(c.v) / 290 * 0.16);   // Palm City's chase framing
+  if (M && M.beat) { tx = M.beat.cx; ty = M.beat.cy; } if (M) tz *= M.camZoom;      // the arrival beat: push in on the huddle
   if (fixed) { tx = fixed[0]; ty = fixed[1]; tz = fixed[2] || 1; }
   const k = fixed ? 1 : 1 - Math.exp(-dt * 3.2);
   cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k; cam.zoom += (tz - cam.zoom) * (fixed ? 1 : 1 - Math.exp(-dt * 1.5));
@@ -113,7 +162,9 @@ renderer.draw = (S, cam, t) => {
   _draw(S, cam, t);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.font = '800 13px system-ui'; ctx.textAlign = 'center';
   ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(VIEW_W - 72, 14, 60, 28, 12); ctx.fill(); ctx.fillStyle = '#ffe4b0'; ctx.fillText('MAP', VIEW_W - 42, 33);
+  drawMissionHud();
   if (mapOpen) drawMap(S.player);
+  if (picking) drawPick();
 };
 requestAnimationFrame(frame);
-window.__lf = { sim, W, ground, cam, input, renderer, areas, map: () => mapOpen };
+window.__lf = { sim, W, ground, cam, input, renderer, areas, map: () => mapOpen, mission: () => M, pick, picking: () => picking, pilot: () => pilot };
