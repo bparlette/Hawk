@@ -144,6 +144,6 @@ if (GW && SIM) {
     check(phase === 2, `B4 in and back out of a real cul-de-sac (${cds.name || 'residential'})`, `${t.toFixed(1)} s, ${(100 * onR / n).toFixed(0)}% on road/kerb`);
   }
 }
-pending('B5 phone-size captures of the sample beside Palm City\'s opening (THE BAR)');
+pending('B5 THE BAR: captured (tools/lf_shots.mjs -> shots/l1-*.png) and judged BELOW THE BAR — no buildings, lots or trees yet; lawn too uniform vs the opening. Next: OSM building footprints + landuse + trees, grade toward the opening');
 console.log(fails ? `SPEC L1 FAIL (${fails}), ${pend} pending` : `SPEC L1 OK, ${pend} pending`);
 process.exit(fails ? 1 : 0);
