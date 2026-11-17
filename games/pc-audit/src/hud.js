@@ -248,15 +248,22 @@ export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
     g.font = font(12, 800); g.textAlign = 'center'; g.fillStyle = '#ffe2d4';
     g.fillText('PUNCH', f.x, f.y - f.r - 11);
   }
-  if (input.stick) {
+  // CONTROL GRAPHICS RETIRE (owner rule, Nov 17): the stick circle and the idle movement
+  // hint show only for the first seconds of a run — main.js passes ctrlFade 1 -> 0 across
+  // the fade window — and are not drawn at all after that. The stick keeps working,
+  // invisibly: input.js is untouched, only this drawing is gated.
+  const ca = opts.ctrlFade === undefined ? 1 : opts.ctrlFade;
+  if (ca > 0 && input.stick) {
     const s = input.stick;
+    g.globalAlpha = ca;
     g.beginPath(); g.arc(s.bx, s.by, input.R, 0, Math.PI * 2);
     g.fillStyle = 'rgba(255,240,220,0.12)'; g.fill();
     g.lineWidth = 2; g.strokeStyle = 'rgba(255,240,220,0.4)'; g.stroke();
     g.beginPath(); g.arc(s.kx, s.ky, 24, 0, Math.PI * 2);
     g.fillStyle = 'rgba(255,236,200,0.55)'; g.fill();
-  } else if (opts.hintStick) {
-    g.globalAlpha = 0.35 + Math.sin(time * 3) * 0.1;
+    g.globalAlpha = 1;
+  } else if (ca > 0 && opts.hintStick) {
+    g.globalAlpha = ca * (0.35 + Math.sin(time * 3) * 0.1);
     g.beginPath(); g.arc(90, vh - 130, input.R, 0, Math.PI * 2);
     g.lineWidth = 2; g.strokeStyle = 'rgba(255,240,220,0.7)'; g.stroke();
     g.globalAlpha = 1;

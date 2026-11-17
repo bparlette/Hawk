@@ -26,10 +26,9 @@ export class Recorder {
     css.textContent = `
       .pcRecBtn{position:fixed;z-index:1200;font:700 13px "Avenir Next",Futura,system-ui,sans-serif;
         color:#ffd45c;background:rgba(14,8,28,.72);border:1px solid rgba(255,212,92,.55);border-radius:999px;
-        padding:10px 14px;touch-action:none;-webkit-tap-highlight-color:transparent;cursor:pointer}
+        padding:10px 14px;touch-action:none;-webkit-tap-highlight-color:transparent;cursor:pointer;
+        box-sizing:border-box;white-space:nowrap}
       .pcRecBtn.on{color:#ff6b5e;border-color:rgba(255,107,94,.7)}
-      #pcRecBtn{right:10px;top:58%}
-      #pcNewsBtn{right:10px;top:calc(58% + 52px)}
       #pcSaveBtn{left:50%;transform:translateX(-50%);bottom:96px;display:none}
       #pcToast{position:fixed;z-index:1201;left:50%;transform:translateX(-50%);bottom:150px;max-width:86vw;
         font:600 13px "Avenir Next",Futura,system-ui,sans-serif;color:#fff1d8;background:rgba(14,8,28,.85);
@@ -50,6 +49,8 @@ export class Recorder {
     this.recBtn = mk('pcRecBtn', '● REC');
     this.newsBtn = mk('pcNewsBtn', '📺 NEWS ✓');
     this.saveBtn = mk('pcSaveBtn', 'SAVE CLIP');
+    this.layout();
+    addEventListener('resize', () => this.layout());
     this.newsBtn.addEventListener('click', () => {
       const target = !(this.newsHL || this.newsLive);   // any on -> all off; all off -> all on
       this.newsHL = target; this.newsLive = target;
@@ -64,12 +65,41 @@ export class Recorder {
     });
   }
 
-  // The help/start panel owns the screen while it is up: the floating REC/NEWS pills hide —
-  // they sit at the right edge mid-screen, exactly where the menu's JUMP buttons live
-  // (owner phone screenshot, Nov 16). They come back the moment the panel closes.
+  // REC/NEWS PLACEMENT (owner rule, Nov 17): small chips in the top-right cluster, in the
+  // MAP button's row, to its left — no longer big pills floating mid-right. MAP is drawn
+  // on the canvas at (view.w - 70, safeTop + 62, 58 x 28), so the chips are laid out in
+  // the same view units and converted through the canvas rect (the canvas is centred and
+  // letterboxed, so plain fixed CSS right/top could not track it). Same z-index (1200)
+  // and the same touchstart shield as before: they stay tappable above the touch layer.
+  layout() {
+    if (!this.recBtn || !this.canvas.width) return;
+    const r = this.canvas.getBoundingClientRect();
+    if (!r.width) return;
+    const sx = r.width / 420;                                     // CSS px per view unit
+    const vh = 420 * this.canvas.height / this.canvas.width;     // view height in units
+    const safeEl = document.getElementById('safe');
+    const safePx = safeEl ? safeEl.getBoundingClientRect().height : 0;
+    const safeTop = Math.max(0, safePx - r.top) * vh / r.height;  // main.js safeTop(), same formula
+    const y = safeTop + 59, h = 27;                               // MAP's row (62..90), a hair higher so a job card's timer stays clear
+    const place = (el, x, w) => {
+      el.style.left = (r.left + x * sx) + 'px';
+      el.style.top = (r.top + y * sx) + 'px';
+      el.style.width = (w * sx) + 'px';
+      el.style.height = (h * sx) + 'px';
+      el.style.fontSize = (12 * sx) + 'px';
+      el.style.padding = '0 4px';
+      el.style.borderRadius = (8 * sx) + 'px';
+    };
+    place(this.newsBtn, 258, 84);   // NEWS: right edge 342 — 8 units left of MAP (350..408)
+    place(this.recBtn, 190, 60);    // REC: right edge 250 — 8 units left of NEWS
+  }
+
+  // The help/start panel owns the screen while it is up: the REC/NEWS chips hide while a
+  // panel covers the top-right corner. They come back the moment the panel closes.
   setMenuOpen(open) {
     if (this._menuOpen === open) return;
     this._menuOpen = open;
+    if (!open) this.layout();   // the canvas rect may have changed while the panel was up
     const d = open ? 'none' : '';
     this.recBtn.style.display = d; this.newsBtn.style.display = d;
     if (open) this.saveBtn.style.display = 'none';   // replayStarted() restores it for a highlight
@@ -105,7 +135,7 @@ export class Recorder {
     const s = Math.floor((performance.now() - this.t0) / 1000);
     const t = `● REC ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
     if (this.kind === 'highlight') { this.saveBtn.textContent = `${t} — TAP TO STOP`; this.saveBtn.classList.add('on'); }
-    else { this.recBtn.textContent = `${t} — STOP`; this.recBtn.classList.add('on'); }
+    else { this.recBtn.textContent = `● ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; this.recBtn.classList.add('on'); }   // the small chip shows just the clock; a tap still stops
   }
 
   stop(fromTap) {

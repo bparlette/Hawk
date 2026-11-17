@@ -2,14 +2,13 @@
 // The visual half of the verification is tools/beauty_shots.mjs (paired OFF/ON stills, needs a
 // working browser). This file proves the sample logic headlessly with a recording 2D-context
 // stub (every canvas call is logged, nothing is rasterised):
-//   * fx hooks: the six winners on by default (rim light removed on the owner's verdict);
+//   * fx hooks: the five winners on by default (rim light and curb puddles removed on
+//     the owner's verdicts — the puddles read as brown spots on the roads);
 //     ?fx= parsing incl. the none / -name overrides; the bleed district's geometry
 //   * roof parallax: zero when off, height-scaled, capped at 34; the skirt sweeps solid
 //   * palm shadow sway: zero when off / for non-palms; amplitude and period bounds
 //   * causeway: shadow band rides the north edge; piling rings are emitted; rings phase-lock
 //     to the 6.4 s cycle
-//   * puddles: patch drawn; a drive-through spawns ripples that expand and die; the light
-//     half stays dark until the signs/lamps come on
 //   * petals: nothing at or below 200 u/s, a wake above it, the pool always settles
 //   * ground paint: bleed ON leaves an untreated chunk's op stream byte-identical, and in a
 //     treated chunk every dab keeps its centre (the seeded stream is untouched) while border
@@ -18,7 +17,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { FX, FX_DEFAULTS, fxOn, fxFromQuery, inBleed, PUDDLES } from '../src/fx.js';
+import { FX, FX_DEFAULTS, fxOn, fxFromQuery, inBleed } from '../src/fx.js';
 import { World } from '../src/world.js';
 import { Renderer } from '../src/render.js';
 import { GroundPainter } from '../src/ground.js';
@@ -72,8 +71,8 @@ const world = new World(layout, { ...sj, buildings: sl.buildings, palms: sl.palm
 const RP = Renderer.prototype;
 
 // ---------------------------------------------------------------- fx hooks
-check(FX.size === 6 && fxOn('roof') && fxOn('sway') && fxOn('causeway') && fxOn('bleed') && fxOn('puddle') && fxOn('petals') && !fxOn('rim'),
-  'fx defaults: the six winners are on from boot, rim is gone');
+check(FX.size === 5 && fxOn('roof') && fxOn('sway') && fxOn('causeway') && fxOn('bleed') && fxOn('petals') && !fxOn('rim') && !fxOn('puddle'),
+  'fx defaults: the five winners are on from boot, rim and puddles are gone');
 fxFromQuery(new URLSearchParams('fx=none'));
 check(FX.size === 0 && !fxOn('roof'), '?fx=none turns every winner off');
 fxFromQuery(new URLSearchParams('fx=roof, sway'));
@@ -81,7 +80,7 @@ check(fxOn('roof') && fxOn('sway') && !fxOn('causeway') && !fxOn('rim'), '?fx= p
 fxFromQuery(new URLSearchParams('fx=-sway'));
 check(fxOn('roof') && !fxOn('sway'), '?fx=-name turns a single winner off');
 FX.clear(); for (const n of FX_DEFAULTS) FX.add(n);
-check(fxOn('bleed') && fxOn('petals') && FX.size === 6, 'the live set restores to the winner defaults');
+check(fxOn('bleed') && fxOn('petals') && FX.size === 5, 'the live set restores to the winner defaults');
 check(inBleed(880, 480) && inBleed(990, 1100), 'bleed district covers the plaza and NOVA blocks');
 check(inBleed(1200, 400) && inBleed(780, 1100), 'bleed district includes the bounding roads (ring + x-780 street)');
 check(!inBleed(560, 1050) && !inBleed(520, 1750) && !inBleed(300, 1000), 'apartments/motel, police/houses and the villa strip stay untreated');
@@ -140,30 +139,7 @@ check(!inBleed(560, 1050) && !inBleed(520, 1750) && !inBleed(300, 1000), 'apartm
   check(DOC.ops.filter(o => o[0] === 'ellipse').length === 0, 'causeway: nothing is drawn with the bay off screen');
 }
 
-// ---------------------------------------------------------------- 4. curb puddles
-{
-  const fake = { pudState: PUDDLES.map(p => ({ ...p, last: -9 })), pudRipples: Array.from({ length: 28 }, () => ({ on: false, x: 0, y: 0, t0: 0, seed: 0 })) };
-  const S = { player: { mode: 'car', car: { x: PUDDLES[0].x, y: PUDDLES[0].y, v: 100 } } };
-  DOC.ops = [];
-  RP.drawPuddles.call(fake, recCtx(), S, 5.0, 1000, 800, 1400, 1250);
-  check(DOC.ops.filter(o => o[0] === 'fill').length >= 2, 'puddle: the mirror patch is painted on Ocean Drive');
-  check(fake.pudRipples.some(r => r.on), 'puddle: driving through spawns a ripple');
-  DOC.ops = [];
-  const S2 = { player: { mode: 'car', car: { x: 400, y: 400, v: 0 } } };
-  RP.drawPuddles.call(fake, recCtx(), S2, 5.5, 1000, 800, 1400, 1250);
-  const ring = DOC.ops.filter(o => o[0] === 'ellipse').map(o => o[3]);
-  check(ring.length >= 2 && Math.max(...ring) > 15, 'puddle: the ripple keeps expanding after the car leaves', `rx=${Math.max(...ring).toFixed(1)}`);
-  RP.drawPuddles.call(fake, recCtx(), S2, 7.0, 1000, 800, 1400, 1250);
-  check(fake.pudRipples.every(r => !r.on), 'puddle: ripples die after ~1.1 s');
-  DOC.ops = [];
-  RP.drawPuddleLight.call(fake, recCtx(), { neon: 0, lamps: 0 }, 6.0, 1000, 800, 1400, 1250);
-  check(DOC.ops.length === 0, 'puddle: the mirror stays dark while the signs are off');
-  DOC.ops = [];
-  RP.drawPuddleLight.call(fake, recCtx(), { neon: 0.9, lamps: 0.5 }, 6.0, 1000, 800, 1400, 1250);
-  check(DOC.ops.filter(o => o[0] === 'fill').length >= 5, 'puddle: at dusk the patch throws its tint back in streaks');
-}
-
-// ---------------------------------------------------------------- 5. slipstream petals
+// ---------------------------------------------------------------- 4. slipstream petals
 {
   const fake = { petals: Array.from({ length: 160 }, () => ({ on: false, x: 0, y: 0, vx: 0, vy: 0, rot: 0, vr: 0, t: 0, life: 1, col: 0, sw: 1 })), petalAcc: 0, petalSeed: 42 };
   const mk = (v) => ({ player: { mode: 'car', car: { x: 1200, y: 1400, h: -Math.PI / 2, v, len: 44, wid: 20 } } });
@@ -179,7 +155,7 @@ check(!inBleed(560, 1050) && !inBleed(520, 1750) && !inBleed(300, 1000), 'apartm
   check(fake.petals.every(p => !p.on), 'petals: every mote settles and dies inside its 1.3–2.3 s life');
 }
 
-// ---------------------------------------------------------------- 6. gouache edge bleed (ground paint)
+// ---------------------------------------------------------------- 5. gouache edge bleed (ground paint)
 {
   const painter = new GroundPainter(world);
   const paintOps = (cx, cy) => { DOC.ops = []; painter.paint(cx, cy); return DOC.ops; };
