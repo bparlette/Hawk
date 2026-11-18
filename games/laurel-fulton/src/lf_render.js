@@ -7,6 +7,7 @@
 // windows/lamps/neon/headlight ramps. main.js drives it with Palm City's timeOfDay() curve.
 import { CHUNK } from './lf_ground.js';
 import { poly } from './lf_areas.js';
+import { HeroArt } from './lf_heroes.js';
 import { bushesNear } from './lf_veg.js';
 import * as FX from './lf_fx.js';
 
@@ -115,6 +116,9 @@ export class Renderer {
     const vis = (x, y, m = 120) => x > vx0 - m && x < vx1 + m && y > vy0 - m && y < vy1 + m;
     // task L8 hero tier: the crew's homes + the POIs, BIGGER than real (x1.35 about the centroid), crisp,
     // inked, with a name plaque. (Placeholder roofs until the Street View hero art, L11/G12, lands.)
+    // L11 HOOK: spec-accurate hero art (src/lf_heroes.js + data/heroes.json) replaces the placeholder below when it has the hero
+    if (this.areas && (!this.heroArt || this.heroArt.areas !== this.areas)) this.heroArt = new HeroArt(this.areas, this.W, SUN);
+    if (this.heroArt && !far) this.heroArt.district(g, this.gr, vis);
     const HERO_ROOF = {
       Brad: '#e8e4dc', Kosack: '#b85d48', 'The Lazaris house': '#c49a6c', Jason: '#dcd6c8',
       'The Floyds': '#7c8c74', Rigg: '#687888', Grant: '#9e4b46', 'Ledo Pizza': '#d44a3a',
@@ -122,6 +126,7 @@ export class Renderer {
     };
     if (this.areas) for (const h of this.areas.heroes) {
       if (!vis(h.cx, h.cy, 600)) continue;
+      if (this.heroArt && this.heroArt.draw(g, h, this.gr)) continue;   // the real art; Moth's G14-tuned placeholder below is the fallback
       const S = h.kind === 'poi' ? 1.16 : 1.40, roof = HERO_ROOF[h.who] || (h.kind === 'poi' ? '#d8b480' : '#d9785a');
       g.globalAlpha = 0.44; g.fillStyle = '#1d1432'; g.save(); g.translate(SUN.x * 38, SUN.y * 38); poly(g, h.f, S, h.cx, h.cy); g.fill(); g.restore();
       g.globalAlpha = 1; g.fillStyle = roof; poly(g, h.f, S, h.cx, h.cy); g.fill();
@@ -183,6 +188,7 @@ export class Renderer {
     g.globalAlpha = 1; for (const c of S.cars) if (c.layer === 1 && vis(c.x, c.y)) this.drawCar(g, c, 'color');
     FX.over(g, S, this.mission, time);                    // bass rings, sputter, fire, pickup rings, the beat's walkers
     // hero plaques (over the cars, under the grade so they sit in the light)
+    if (this.heroArt) this.heroArt.districtPlaque(g, vis);   // L11: the Maple Lawn district plaque
     if (this.areas) for (const h of this.areas.heroes) {
       if (!vis(h.cx, h.cy, 300)) continue;
       g.font = '800 22px system-ui'; const w = g.measureText(h.who).width + 26, y = h.cy - 90;
@@ -205,5 +211,7 @@ export class Renderer {
     }
     g.fillStyle = this.warmG; g.fillRect(0, 0, vw, vh);
     g.globalCompositeOperation = 'source-over'; g.fillStyle = this.vig; g.fillRect(0, 0, vw, vh);
+    // L11 HOOK: night lights (hero windows, the OPEN sign) drawn AFTER the grade so they glow through the dusk multiply
+    if (this.heroArt && !far) { g.setTransform(dpr * z, 0, 0, dpr * z, dpr * (vw / 2 - cam.x * z), dpr * (vh / 2 - cam.y * z)); this.heroArt.lights(g); g.setTransform(dpr, 0, 0, dpr, 0, 0); }
   }
 }
