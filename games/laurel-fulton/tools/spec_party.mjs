@@ -39,8 +39,9 @@ check(!threw, 'under / over / post draw passes run at golden hour, dusk and nigh
   const { NightParty } = await import('../src/lf_party.js'); const NP = new NightParty(); NP.build(S, areas);
   const g = mock(); let ok = true; try { for (const tod of [0.1, 0.7, 0.97]) { NP.step(tod, { x: PT.sites[1].cx, y: PT.sites[1].cy }); NP.drawWorld(g, 3, () => true); NP.drawLights(g, tod, 3, () => true); } } catch (e) { ok = String(e.stack).slice(0, 200); }
   check(ok === true, 'NightParty (the live wrapper main.js calls) draws world + lights at day, dusk and night', ok === true ? '' : ok);
-  NP.step(0.97, { x: PT.sites[1].cx, y: PT.sites[1].cy }); check(NP.count() === 100 && /NIGHT PARTY · 100 GUESTS \(FLOYDS\)/.test(NP.banner()), 'the banner follows the venue you are nearer to (the Floyds here)', NP.banner());
-  NP.step(0.97, { x: PT.sites[0].cx, y: PT.sites[0].cy }); check(/KOSACK/.test(NP.banner()), 'and Kosack\'s when you are there', NP.banner());
+  NP.step(0.97, { x: PT.sites[1].cx, y: PT.sites[1].cy }); const hostA = /FLOYDS/.test(NP.banner()) ? 'floyds' : 'kosack'; check(NP.count() === 100 && /NIGHT PARTY · 100 GUESTS/.test(NP.banner()), 'a night party of 100 with a host banner', NP.banner());
+  NP.step(0.97, { x: PT.sites[0].cx, y: PT.sites[0].cy }); check((/FLOYDS/.test(NP.banner()) ? 'floyds' : 'kosack') === hostA, "the host does NOT change as you walk between the two houses (Moth's nightly rotation owns it)", NP.banner());
+  { const hosts = new Set(); for (let n = 0; n < 4; n++) { NP.step(0.1, { x: 0, y: 0 }); NP.step(0.3, { x: 0, y: 0 }); NP.step(0.97, { x: 0, y: 0 }); hosts.add(/FLOYDS/.test(NP.banner()) ? 'floyds' : 'kosack'); } check(hosts.size === 2, 'the host rotates across nights (both venues get their night)', [...hosts].join('+')); }
   NP.step(0.1, { x: 0, y: 0 }); check(NP.banner() === null, 'no banner at golden hour');
   NP.setVenue('floyds'); NP.step(0.97, { x: PT.sites[0].cx, y: PT.sites[0].cy }); check(/FLOYDS/.test(NP.banner()), '?party=floyds forces the featured venue (venue rotation off)', NP.banner());
 }
