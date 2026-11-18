@@ -1,11 +1,22 @@
 // map.js — the CITY MAP (task 5B). A MAP button under the wanted stars opens a full-screen map of
-// the whole city, painted from layout.json in the game's own palette: every surface sampled from
-// the world (the same surfaceAt the ground painter uses), buildings in their roof colours with the
-// plum ink line, palms, the pier. Labelled places, the job vehicles, the active job's target, and a
+// the whole city: since Nov 18 the base is the baked painted overview (see BAKED below — the game
+// world rendered from directly above, golden and dusk), with painted-plaque labels for the places,
+// the job vehicles, the active job's target, and a
 // live marker for the player (position + facing). The map is LIVE: the game keeps running under it
 // and the joystick still drives, so you can watch yourself move. Tap MAP / the X (or M) to close.
 import { PLACES } from './jobs.js';
 import { markers } from './activities.js';
+
+// Nov 18 (Queue 4 Task 1 — the owner's pick over Fable's flat diagram): the base is the pre-baked
+// painted overview in shots/map-redo/after (tools/build_map_redo.mjs — the live GroundPainter +
+// Renderer at golden hour and blue dusk; 900x1100 px = the whole 1800x2200 world at 0.5 px/unit,
+// so toMap() is unchanged). The sampled base in build() stays as the fallback until the sheets
+// decode, so the map can never open blank.
+const BAKED = { golden: 'shots/map-redo/after/palm-map-golden-clean.webp', dusk: 'shots/map-redo/after/palm-map-dusk-clean.webp' };
+const smooth01 = (a, b, x) => { const u = Math.max(0, Math.min(1, (x - a) / (b - a))); return u * u * (3 - 2 * u); };
+// plaque deconfliction (MAPREDO.md): px nudges for the label pairs that collided on the old map
+const LABEL_OFF = [[/^WRECK/, 0, -13], [/^SKATE PARK/, 0, 13], [/^VALET/, 0, 13], [/^PARK IT/, 0, 13], [/^POLICE/, 0, -11], [/^TOW/, -15, 0], [/^BUS/, 15, 0]];
+const labelOff = (name) => { for (const [re, dx, dy] of LABEL_OFF) if (re.test(name)) return [dx, dy]; return [0, 0]; };
 
 const SURF = {                       // painted palette, by surface type
   road: [112, 92, 104], sidewalk: [226, 196, 150], paving: [214, 178, 132], plaza: [222, 168, 120], parking: [150, 128, 132],
@@ -54,7 +65,15 @@ export function playerMarker(F, sim) {
 }
 
 export class CityMap {
-  constructor(world) { this.world = world; this.cv = null; }
+  constructor(world) {
+    this.world = world; this.cv = null;
+    this.sheets = null;
+    if (typeof Image !== 'undefined') {
+      const golden = new Image(), dusk = new Image();
+      golden.src = BAKED.golden; dusk.src = BAKED.dusk;
+      this.sheets = { golden, dusk };
+    }
+  }
 
   // the painted base, built once on first open (2 px per map unit)
   build(F) {
@@ -84,22 +103,31 @@ export class CityMap {
     this.cv = cv; this.key = w + 'x' + h;
   }
 
-  draw(g, vw, vh, dpr, sim, time) {
+  draw(g, vw, vh, dpr, sim, time, tod = 0.18) {
     const F = mapFrame(vw, vh, this.world);
-    if (!this.cv || this.key !== Math.round(F.w * 2) + 'x' + Math.round(F.h * 2)) this.build(F);
     g.setTransform(dpr, 0, 0, dpr, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
     g.fillStyle = 'rgba(24,12,40,0.9)'; g.fillRect(0, 0, vw, vh);
     // a paper edge round the painted city
     g.fillStyle = '#f6e6c4'; g.strokeStyle = INK; g.lineWidth = 2;
     g.beginPath(); g.roundRect(F.x - 6, F.y - 6, F.w + 12, F.h + 12, 8); g.fill(); g.stroke();
     g.imageSmoothingEnabled = true;
-    g.drawImage(this.cv, F.x, F.y, F.w, F.h);
+    // the baked painted overview, crossfaded golden -> dusk with the day (MAPREDO.md wiring)
+    const sh = this.sheets, ready = sh && sh.golden.complete && sh.golden.naturalWidth > 0 && sh.dusk.complete && sh.dusk.naturalWidth > 0;
+    if (ready) {
+      g.drawImage(sh.golden, F.x, F.y, F.w, F.h);
+      const du = smooth01(0.45, 0.90, tod);
+      if (du > 0) { g.globalAlpha = du; g.drawImage(sh.dusk, F.x, F.y, F.w, F.h); g.globalAlpha = 1; }
+    } else {
+      if (!this.cv || this.key !== Math.round(F.w * 2) + 'x' + Math.round(F.h * 2)) this.build(F);
+      g.drawImage(this.cv, F.x, F.y, F.w, F.h);
+    }
     g.lineJoin = 'round';
     g.textAlign = 'center'; g.textBaseline = 'middle';
     g.font = '900 20px "Avenir Next", Futura, system-ui, sans-serif';
     g.lineWidth = 5; g.strokeStyle = 'rgba(40,20,60,0.7)'; g.strokeText('PALM CITY', vw / 2, F.y - 26);
     g.fillStyle = '#ffd45c'; g.fillText('PALM CITY', vw / 2, F.y - 26);
-    // places
+    // places: painted plaques (paper + plum ink) instead of stroked text, deconflicted per MAPREDO.md
+    const labels = [];
     for (const q of mapPOIs(this.world, sim)) {
       const [x, y] = toMap(F, q.p[0], q.p[1]);
       const col = q.kind === 'door' ? '#ff5c9a' : q.kind === 'job' ? '#6ee2ff' : q.kind === 'target' ? '#6ee2ff' : '#fff1d8';
@@ -108,9 +136,24 @@ export class CityMap {
         g.fillStyle = col; g.strokeStyle = INK; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); g.stroke();
       }
       g.font = `800 ${q.kind === 'job' ? 9 : 11}px "Avenir Next", Futura, system-ui, sans-serif`;
-      const ty = q.kind === 'door' || q.kind === 'job' || q.kind === 'target' ? y - 11 : y;
-      g.lineWidth = 3.5; g.strokeStyle = 'rgba(33,15,46,0.85)'; g.strokeText(q.name, x, ty);
-      g.fillStyle = col; g.fillText(q.name, x, ty);
+      const [odx, ody] = labelOff(q.name);
+      labels.push({ name: q.name, kind: q.kind, col, tx: x + odx, ty: (q.kind === 'door' || q.kind === 'job' || q.kind === 'target' ? y - 13 : y) + ody, pw: g.measureText(q.name).width / 2 + 5, ph: q.kind === 'job' ? 8 : 9 });
+    }
+    // resolve plaque collisions vertically (the dots stay put; the plaques slide), then keep every
+    // plaque inside the frame — event targets land on top of place labels otherwise
+    for (let pass = 0; pass < 4; pass++) for (let i = 0; i < labels.length; i++) for (let j = i + 1; j < labels.length; j++) {
+      const a = labels[i], b = labels[j];
+      const ox = a.pw + b.pw + 2 - Math.abs(a.tx - b.tx), oy = a.ph + b.ph + 2 - Math.abs(a.ty - b.ty);
+      if (ox > 0 && oy > 0) { const push = oy / 2 + 0.5, s = a.ty <= b.ty ? 1 : -1; a.ty -= push * s; b.ty += push * s; }
+    }
+    for (const lb of labels) {
+      lb.tx = Math.max(F.x + lb.pw + 1, Math.min(F.x + F.w - lb.pw - 1, lb.tx));
+      lb.ty = Math.max(F.y + lb.ph + 1, Math.min(F.y + F.h - lb.ph - 1, lb.ty));
+      g.font = `800 ${lb.kind === 'job' ? 9 : 11}px "Avenir Next", Futura, system-ui, sans-serif`;
+      g.beginPath(); g.roundRect(lb.tx - lb.pw, lb.ty - lb.ph, lb.pw * 2, lb.ph * 2, 4);
+      g.fillStyle = 'rgba(246,230,196,0.94)'; g.fill();
+      g.lineWidth = 1.4; g.strokeStyle = lb.kind === 'place' || lb.kind === 'area' ? INK : lb.col; g.stroke();
+      g.fillStyle = INK; g.fillText(lb.name, lb.tx, lb.ty + 0.5);
     }
     // cops, when you're wanted
     if (sim.stars > 0) for (const c of sim.cars) if (c.driver === 'police') { const [x, y] = toMap(F, c.x, c.y); g.fillStyle = Math.floor(time * 5) % 2 ? '#ff2438' : '#369eff'; g.beginPath(); g.arc(x, y, 3, 0, 7); g.fill(); }
