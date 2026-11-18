@@ -34,10 +34,12 @@ export class Renderer {
     for (let cy = Math.floor(vy0 / CHUNK); cy <= Math.floor(vy1 / CHUNK); cy++)
       for (let cx = Math.floor(vx0 / CHUNK); cx <= Math.floor(vx1 / CHUNK); cx++) g.drawImage(this.ground.get(cx, cy), cx * CHUNK, cy * CHUNK, CHUNK + 0.6, CHUNK + 0.6);
     const vis = (x, y, m = 120) => x > vx0 - m && x < vx1 + m && y > vy0 - m && y < vy1 + m;
+    const RV = this.roof && this.roof.visible(cam, hw, hh) ? this.roof : null;   // task L5: the climbable school (lf_roof.js)
+    if (RV) { RV.cam = cam; RV.ground(g); }
     // task L8 hero tier: the crew's homes + the POIs, BIGGER than real (x1.35 about the centroid), crisp,
     // inked, with a name plaque. (Placeholder roofs until the Street View hero art, L11/G12, lands.)
     if (this.areas) for (const h of this.areas.heroes) {
-      if (!vis(h.cx, h.cy, 600)) continue;
+      if (!vis(h.cx, h.cy, 600) || h.roof) continue;     // the roof hero is drawn with height below
       const S = h.kind === 'poi' ? 1.12 : 1.35, roof = h.kind === 'poi' ? '#e8b77a' : '#d9785a';
       g.globalAlpha = 0.38; g.fillStyle = '#21183a'; g.save(); g.translate(SUN.x * 34, SUN.y * 34); poly(g, h.f, S, h.cx, h.cy); g.fill(); g.restore();
       g.globalAlpha = 1; g.fillStyle = roof; poly(g, h.f, S, h.cx, h.cy); g.fill();
@@ -48,6 +50,7 @@ export class Renderer {
     g.globalAlpha = 0.55; for (const c of S.cars) if (c.layer === 0 && vis(c.x, c.y)) this.drawCar(g, c, 'shadow');
     this.S = S; this.time = time; FX.under(g, S, time);
     g.globalAlpha = 1; for (const c of S.cars) if (c.layer === 0 && vis(c.x, c.y)) this.drawCar(g, c, 'color');
+    if (RV) { RV.holdsSide(g, false, time); RV.building(g, time); RV.holdsSide(g, true, time); }
     // bridge decks: cast shadow on whatever is below, then the deck (asphalt + parapets), then cars on it
     const decks = []; const seen = new Set();
     for (let cy = Math.floor(vy0 / 256) - 1; cy <= Math.floor(vy1 / 256) + 1; cy++) for (let cx = Math.floor(vx0 / 256) - 1; cx <= Math.floor(vx1 / 256) + 1; cx++)
@@ -61,6 +64,7 @@ export class Renderer {
     g.globalAlpha = 0.55; for (const c of S.cars) if (c.layer === 1 && vis(c.x, c.y)) this.drawCar(g, c, 'shadow');
     g.globalAlpha = 1; for (const c of S.cars) if (c.layer === 1 && vis(c.x, c.y)) this.drawCar(g, c, 'color');
     FX.over(g, S, this.mission, time);                    // bass rings, sputter, fire, pickup rings, the beat's walkers
+    if (RV) RV.plaque(g, S, time);
     // hero plaques (over the cars, under the grade so they sit in the light)
     if (this.areas) for (const h of this.areas.heroes) {
       if (!vis(h.cx, h.cy, 300)) continue;

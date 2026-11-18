@@ -77,3 +77,34 @@ collides with MD-216 below; the car turns round in a cul-de-sac; query cost < 20
   position + OSM element only; the numbers live in a git-ignored local file (tools/roster_build.py).
 - **Map extent:** Grant's street is ~292 m south of the bbox. Extending south is a fetch flag
   (`tools/osm_fetch.py`) plus a roster re-run.
+
+## 6. L5 — climb the Atholton roof (Opus, Nov 18, 2026)
+- **Data:** `python3 tools/roof_build.py ["<POI>"]` -> `data/roof.json`. Atholton HS is an OSM **multipolygon**
+  (relation 1988823: 2 storeys, 21,396 m² outer ring, 3 courtyards) that stage 1 skipped, so the hero tier had
+  been drawing a 172 m² shed. The tool fetches a ~900 m box from the OSM main API, stitches the rings, and writes the
+  roof (7.2 m), the climb chains, the worn path and a seeded rooftop kit. It also points the hero at the real outline.
+  `tools/osm_areas.py` now reads multipolygon buildings too, for the next full fetch.
+- **Logic:** `src/lf_climb.js`, pure, on top of Palm City's walker (`lf_foot.stepFoot`):
+  - step up ≤ 0.4 m;
+  - mantle ≤ 2.0 m;
+  - ledge grab ≤ 4.4 m, onto the roof only;
+  - anything taller is a wall you slide along, rounding grazed corners;
+  - off an edge: a hop at the bump launch speed (`BUMP.vz0`) and the bump gravity (`BUMP.g`), then a roll; no damage.
+  - The climb rate is Palm City's siege climb, 2.2 m/s.
+- **Look:** `src/lf_roof.js`. The school is the one building drawn with height: GTA-2-style top-down perspective,
+  window bands, brick, a membrane roof with a parapet, AC units, vents, pipes and a hatch. The holds are loud: a green
+  dumpster and a hazard-striped HVAC lip, with boot scuffs up the wall. One CLIMB plaque uses Palm City's
+  `labels.js` and retires after your first climb.
+- **The closing shot:** `lookout()`. Up on the roof, the camera frames you, Lamar's burning Mustang and the parked
+  convoy.
+- **Prove it:**
+  - `node tools/spec_l5.mjs [player]`: the chain in order, skipped holds fail, 400×16 roof pushes with no invisible
+    walls, the leap and the roll, all three courtyards escapable, then the real rally followed by the climb and the
+    framing.
+  - `CHROME=… node tools/l5_shots.mjs`: the real page, keyboard only after the autopilot finishes the rally.
+    Writes `shots/l5-*.png`.
+- **Any city:** the factory runs `roof_build.py` as step 6b. Savage Mill got a climbable roof with no code changes.
+- **Below the bar / known:**
+  - Other buildings are still not solid (you can walk through houses).
+  - A walker standing in a courtyard can draw over the near courtyard wall.
+  - The school has no Street View art yet (L11/G12).

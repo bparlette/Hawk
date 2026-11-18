@@ -35,23 +35,40 @@ function drawPed(g, f, time) {
   f.px = f.x; f.py = f.y;
   let a = Math.round((f.h || 0) / TAU * 16) % 16; if (a < 0) a += 16;
   const pose = moving ? [0, 1, 2, 1][Math.floor(time * 7) % 4] : 1, idx = a * 3 + pose;
+  if (!f.noShadow) {
   g.save(); g.translate(f.x, f.y + 5); g.scale(1, 0.45);
   const gr = g.createRadialGradient(0, 0, 1, 0, 0, 11);
   gr.addColorStop(0, 'rgba(24,30,18,0.34)'); gr.addColorStop(1, 'rgba(24,30,18,0)');
   g.fillStyle = gr; g.beginPath(); g.arc(0, 0, 11, 0, TAU); g.fill(); g.restore();
+  }
   pedCell(g, img, idx, f.x, f.y - (f.dap ? Math.abs(f.dap) * 3 : 0), 39, 39, -19.5, -19.5);
   return true;
 }
 // the on-foot player (lf_foot.js state, set by main.js): the same Palm City ped,
 // with Palm City's punch jab (its render.js: a sin-arc shove of 5 units).
-let FOOTF = null;
+let FOOTF = null, FOOTPROJ = null;
 export function setFoot(f) { FOOTF = f; }
+// L5 heights (lf_climb.js): the renderer hands over its projection, so a walker up on the Atholton roof draws ON the
+// roof (the same top-down perspective the building is drawn in), looms a little, and keeps a shadow on whatever is below
+export function setFootProject(fn) { FOOTPROJ = fn; }
 function drawFootNow(g, time) {
   if (!FOOTF || !FOOTF.active) return;
-  const F = FOOTF, jab = F.punchT > 0 ? Math.sin(Math.PI * (0.26 - F.punchT) / 0.26) * 5 : 0;
-  const f = { who: F.who, x: F.x + Math.cos(F.h) * jab, y: F.y + Math.sin(F.h) * jab, h: F.h, px: F.px, py: F.py, dap: 0 };
-  if (drawPed(g, f, time)) { F.px = f.px; F.py = f.py; }
-  g.font = '700 9px system-ui'; g.textAlign = 'center'; g.fillStyle = '#fff3dc'; g.fillText(F.who.name.split(' ')[0], F.x, F.y - 26);
+  const F = FOOTF, jab = F.punchT > 0 ? Math.sin(Math.PI * (0.26 - F.punchT) / 0.26) * 5 : 0, z = F.z || 0;
+  const P = FOOTPROJ && z > 0 ? FOOTPROJ(F.x, F.y, z) : { x: F.x, y: F.y, k: 1 };
+  if (z > 0) {                                            // the shadow stays on the surface below you
+    const sp = FOOTPROJ ? FOOTPROJ(F.x, F.y, F.sup || 0) : { x: F.x, y: F.y };
+    g.save(); g.translate(sp.x, sp.y + 5); g.scale(1, 0.45); g.globalAlpha = Math.max(0.35, 1 - (z - (F.sup || 0)) / 90);
+    g.fillStyle = 'rgba(24,30,18,0.4)'; g.beginPath(); g.arc(0, 0, 10, 0, TAU); g.fill(); g.restore();
+  }
+  const f = { who: F.who, x: P.x + Math.cos(F.h) * jab, y: P.y + Math.sin(F.h) * jab, h: F.h, px: F.px, py: F.py, dap: 0, noShadow: z > 0 };
+  g.save();
+  if (P.k !== 1 || F.land > 0) {                          // loom with height; a landing roll tumbles you once
+    g.translate(f.x, f.y); g.scale(P.k, P.k); if (F.land > 0) g.rotate((1 - F.land / 0.35) * Math.PI * 2); g.translate(-f.x, -f.y);
+  }
+  f.px = f.x - (F.x - (F.px ?? F.x)); f.py = f.y - (F.y - (F.py ?? F.y));   // drawPed reads motion from px/py: the walker's true step
+  if (drawPed(g, f, time)) { F.px = F.x; F.py = F.y; }
+  g.restore();
+  g.font = '700 9px system-ui'; g.textAlign = 'center'; g.fillStyle = '#fff3dc'; g.fillText(F.who.name.split(' ')[0], P.x, P.y - 26 * P.k);
 }
 const fxOf = (S, c) => (S.fxBy && S.fxBy[c.model]) || [];
 export function setFx(S, roster) {

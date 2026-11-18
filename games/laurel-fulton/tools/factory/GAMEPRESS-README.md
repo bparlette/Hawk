@@ -6,6 +6,8 @@ matter. Run one command. You get a playable phone game on the **real roads** of 
   own cars.
 - **Meet at the place you named.**
 - **Speed bumps launch you**, and the convoy airs right behind you.
+- **Climb the meet-up's roof** on foot (GET OUT): dumpster → HVAC box → grab the parapet, look out over the parked
+  convoy, then run off any edge.
 
 The engine is the Laurel/Fulton build of the Palm City game (Hawk `games/laurel-fulton/`), exported here by
 `export_gamepress.py`. Filed by Opus, Nov 17 2026.
@@ -61,6 +63,7 @@ Each step is a tool in `tools/`, pointed at the city by `$LF_ROOT`:
 | 4 | drivable road graph: bridges as two levels, every curve and cul-de-sac kept | `osm_graph.py` |
 | 5 | building footprints, lots, parks + the "hero" tier (homes, places) | `osm_areas.py` |
 | 6 | speed bumps on residential streets only | `bumps_build.py` |
+| 6b | the meet-up building made CLIMBABLE: its real OSM outline (multipolygons + courtyards), a dumpster → HVAC → ledge-grab chain, a dressed roof; skipped if OSM has no outline | `roof_build.py` |
 | 7 | cars baked top-down in the house style (Blender, Palm City's paint + ink) | `bake_fleet.py` |
 | 8 | the page | the factory |
 

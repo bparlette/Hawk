@@ -13,12 +13,16 @@ a = sys.argv[1:]; TILES = a[a.index('--tiles') + 1] if '--tiles' in a else '/tmp
 LAT0, LON0 = world_cfg.LAT0, world_cfg.LON0
 KX, KY, U = math.cos(math.radians(LAT0)) * 111320.0, 110540.0, 10.0
 proj = lambda lat, lon: (round((lon - LON0) * KX * U), round(-(lat - LAT0) * KY * U))
-nodes, ways = {}, {}
+nodes, ways, rels, allways = {}, {}, [], {}
 for f in sorted(os.listdir(TILES)):
     if not f.endswith('.osm'): continue
     root = ET.parse(os.path.join(TILES, f)).getroot()
     for nd in root.iter('node'): nodes[nd.get('id')] = (float(nd.get('lat')), float(nd.get('lon')))
+    for r in root.iter('relation'):                     # L5 fix: buildings mapped as MULTIPOLYGON relations (big schools, malls) —
+        t = {x.get('k'): x.get('v') for x in r.iter('tag')}   # stage 1 skipped these, so Atholton HS showed a 172 m2 shed
+        if t.get('type') == 'multipolygon' and 'building' in t: rels.append([(m.get('role'), m.get('ref')) for m in r.iter('member') if m.get('type') == 'way'])
     for w in root.iter('way'):
+        allways[w.get('id')] = [x.get('ref') for x in w.iter('nd')]
         tags = {t.get('k'): t.get('v') for t in w.iter('tag')}
         if 'building' in tags or tags.get('amenity') == 'parking' or tags.get('leisure') in ('park', 'pitch', 'golf_course', 'playground') or tags.get('landuse') in ('grass', 'forest', 'meadow', 'recreation_ground') or tags.get('natural') == 'wood':
             ways[w.get('id')] = (tags, [x.get('ref') for x in w.iter('nd')])
@@ -30,6 +34,20 @@ for wid, (tags, refs) in ways.items():
     if 'building' in tags: bid[wid] = len(out['buildings']); out['buildings'].append(flat)
     elif tags.get('amenity') == 'parking': out['parking'].append(flat)
     else: out['green'].append(flat)
+def stitch(parts):                                      # join open member ways end to end into closed rings
+    rings, parts = [], [p[:] for p in parts]
+    while parts:
+        cur = parts.pop(0)
+        while cur[0] != cur[-1]:
+            for i, q in enumerate(parts):
+                if q[0] == cur[-1]: cur += q[1:]; parts.pop(i); break
+                if q[-1] == cur[-1]: cur += q[::-1][1:]; parts.pop(i); break
+            else: break
+        if cur[0] == cur[-1] and len(cur) > 3: rings.append(cur)
+    return rings
+for mem in rels:                                         # each OUTER ring of a building relation is a footprint (courtyards: data/roof.json)
+    for refs in stitch([allways[w] for role, w in mem if role == 'outer' and w in allways]):
+        if all(r in nodes for r in refs): out['buildings'].append([v for r in refs[:-1] for v in proj(*nodes[r])])
 def inside(px, py, f):
     n, c = len(f) // 2, False
     for i in range(n):
