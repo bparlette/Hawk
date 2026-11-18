@@ -8,7 +8,7 @@
 // Protocol (JSON over one WebSocket):
 //   S->C hello {crew:[{id,name,human}], t}        C->S pick {id}          S->C you {id, state} | taken {id}
 //   C->S car {x,y,h,v,z,vz,layer} (~15 Hz, the picker's machine is authoritative for its own car — friends only, so trusted)
-//   S->C snap {t, cars:[[id,x,y,h,v,z,layer,human]...]} at 10 Hz          C->S leave {} | socket close -> the CPU takes back over
+//   S->C snap {t, cars:[[id,x,y,h,v,z,layer,human,inside]...]} (inside = [house,floor,x] | 0) at 10 Hz          C->S leave {} | socket close -> the CPU takes back over
 import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath, pathToFileURL } from 'node:url';
 import { WebSocketServer } from 'ws';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -25,7 +25,9 @@ export async function start({ port = Number(process.env.PORT) || 2580, friends =
   const src = (f) => pathToFileURL(path.join(HERE, '..', 'src', f)).href;
   const { GraphWorld } = await import(src('world_graph.js')); const { CrewWorld } = await import(src('lf_world.js'));
   const bumps = fs.existsSync(path.join(root, 'data/bumps.json')) ? J('data/bumps.json').bumps : [];
-  const WD = new CrewWorld(new GraphWorld(J('data/graph.json')), J('data/roster.json'), J('assets/fleet.json'), { bumps, autoRally: Number(process.env.AUTO_RALLY) || 300 });
+  const kits = {}; const ix = path.join(root, 'data/interiors/index.json');    // L7: crew houses with an interior kit — their CPU idles indoors when home
+  if (fs.existsSync(ix)) for (const id of J('data/interiors/index.json')) kits[id] = J('data/interiors/' + id + '.json');
+  const WD = new CrewWorld(new GraphWorld(J('data/graph.json')), J('data/roster.json'), J('assets/fleet.json'), { bumps, kits, autoRally: Number(process.env.AUTO_RALLY) || 300 });
   const wss = new WebSocketServer({ port });
   const seats = new Map();                                  // socket -> crew id it drives
   const send = (ws, m) => { if (ws.readyState === 1) ws.send(JSON.stringify(m)); };
