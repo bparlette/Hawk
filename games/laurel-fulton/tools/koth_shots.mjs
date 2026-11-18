@@ -36,6 +36,12 @@ const sacName = await p.evaluate(() => {
   S.player.x = sac.x; S.player.y = sac.y; S.player.v = 0;   // the camera follows the player: centre-frame the ring
   return sac.name;
 });
+// the BUTTON shot: crew sitting in the ring, crown button on screen, no round yet
+await p.evaluate(() => { const lf = window.__lf, cam = lf.cam, K = lf.koth(), sac = K.sacs.find(s => s.name === 'Dulaney Place') || K.sacs[0]; cam.x = sac.x; cam.y = sac.y; cam.zoom = 0.62; });
+await p.waitForTimeout(1500);
+await p.screenshot({ path: path.join(ROOT, 'shots/koth-0-button.png') });
+console.log('0 button shot, state:', await p.evaluate(() => window.__lf.koth().state));
+await p.evaluate(() => { const lf = window.__lf; lf.koth().tryStart(lf.sim); });
 await p.waitForFunction(() => window.__lf.koth().state === 'round', null, { timeout: 90000 });
 await p.evaluate(() => { const K = window.__lf.koth(); window.__lf.cam.x = K.sac.x; window.__lf.cam.y = K.sac.y; });   // snap the camera onto the ring (on this starved VM its flight takes ~a minute of wall time)
 await p.waitForTimeout(2600);   // let the camera finish its flight to the ring before the shot
