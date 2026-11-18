@@ -10,6 +10,10 @@
 //   6 pick: free -> yours; already picked -> TAKEN; two friends drive two crew members and SEE each other (crossed paths)
 //   7 a friend drops mid-drive -> that crew member is CPU again within a snapshot and keeps moving
 //   8 persistent: the world keeps running with nobody connected
+// L7 remainder (Nov 18) — CPU crew idle INSIDE their house when home (kit cpuIdle; CrewWorld B.inside/B.spot; snapshot [8]):
+//   9 at start Brad (and Rigg) are 'inside' at their kit's idle spot (Brad: lower level, by the fire); crew with no kit are not
+//  10 the snapshot says so: [8] = [house, floor, x] for them, 0 for everyone else
+//  11 whenever a CPU is inside they are home + free (never while driving / in a rally / taken over), and Brad comes OUT when he leaves
 import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url'; import { createRequire } from 'node:module';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let fails = 0; const check = (ok, name, info = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name} ${info}`); if (!ok) fails++; };
@@ -18,13 +22,21 @@ const G = J('data/graph.json'), ROSTER = J('data/roster.json'), FLEET = J('asset
 const { GraphWorld } = await import('../src/world_graph.js');
 let CW = null; try { CW = await import('../src/lf_world.js'); } catch (e) { check(false, 'src/lf_world.js loads', String(e).slice(0, 160)); }
 if (CW) {
-  const W = new GraphWorld(G), WD = new CW.CrewWorld(W, ROSTER, FLEET, { bumps: BUMPS }), DT = 1 / 30;
+  const KITS = {}; for (const id of J('data/interiors/index.json')) KITS[id] = J('data/interiors/' + id + '.json');
+  const W = new GraphWorld(G), WD = new CW.CrewWorld(W, ROSTER, FLEET, { bumps: BUMPS, kits: KITS }), DT = 1 / 30;
   const crewIds = ROSTER.people.filter(p => p.active && p.car && p.car.sprite && FLEET[p.car.sprite]).map(p => p.id);
   check(WD.crew.size === crewIds.length && WD.who().every(c => c.human === null), '1 every crew member is in the world, all CPU', `${WD.crew.size} crew: ${crewIds.join(' ')}`);
   const last = new Map(), st = { teleports: 0, drive: 0, off: 0 }; const fire = [...WD.crew.values()].find(B => B.still);
   const fire0 = fire && { x: fire.car.x, y: fire.car.y };
+  const ins = { viol: 0, sawIn: new Set(), leftOut: new Set() };
+  WD.step(DT);
+  { const b = WD.crew.get('brad'), r = WD.crew.get('rigg'), snap = WD.snapshot(), sb = snap.find(c => c[0] === 'brad'), sk = snap.find(c => c[0] === 'kosack');
+    check(b.inside === 'brad' && b.spot.floor === KITS.brad.cpuIdle.floor && b.spot.x === KITS.brad.cpuIdle.x && KITS.brad.cpuIdle.floor === 'lower' && r.inside === 'rigg' && r.spot.floor === 'lower' && !WD.crew.get('kosack').inside,
+      '9 CPU Brad home = INSIDE his house, by the fire (kit cpuIdle); Rigg idles at his basement computer; crew without a kit are not inside', `brad ${b.inside}@${b.spot && b.spot.floor}:${b.spot && b.spot.x}, rigg ${r.inside}@${r.spot && r.spot.floor}:${r.spot && r.spot.x}`);
+    check(Array.isArray(sb[8]) && sb[8][0] === 'brad' && sb[8][1] === 'lower' && sk[8] === 0 && sb.length === 9, '10 the snapshot carries it: [8] = [house, floor, x] for Brad, 0 for Kosack', JSON.stringify(sb[8])); }
   const watch = () => {
     for (const B of WD.crew.values()) {
+      if (B.inside) { ins.sawIn.add(B.id); if (B.state !== 'home' || B.human || B.rallying || B.still) ins.viol++; } else if (ins.sawIn.has(B.id) && B.state === 'drive') ins.leftOut.add(B.id);
       const c = B.car, p = last.get(B.id);
       if (p && !B.human && !c.parked && Math.hypot(c.x - p.x, c.y - p.y) > Math.abs(c.v) * DT + 8) { st.teleports++; if (process.env.DBG) console.log('JUMP', B.id, B.state, Math.round(c.v), Math.round(Math.hypot(c.x - p.x, c.y - p.y)), (WD.S.time / 60).toFixed(1)); }   // (parked cars settling apart at the meet-up are not jumps)
       last.set(B.id, { x: c.x, y: c.y });
@@ -36,6 +48,7 @@ if (CW) {
   const movers = [...WD.crew.values()].filter(B => !B.still), tripped = movers.filter(B => B.trips >= 2);
   check(tripped.length >= movers.length - 1, '1 the crew LIVE: out to somewhere real and back home again, with nobody connected', `${tripped.length}/${movers.length} made 2+ trips in 12 game-min (${movers.map(B => B.id + ':' + B.trips).join(' ')})`);
   check(st.teleports === 0 && st.off / Math.max(1, st.drive) < 0.05, '2 CPU driving: no teleports, on the streets (< 5% of moving steps past a kerb)', `${st.teleports} jumps, ${(100 * st.off / Math.max(1, st.drive)).toFixed(2)}% off over ${st.drive} steps`);
+  check(ins.viol === 0 && ins.sawIn.has('brad') && ins.leftOut.has('brad'), '11 inside only while home + free CPU; Brad walks out of the house when he heads out on a trip', `${ins.viol} violations, inside seen: ${[...ins.sawIn].join(' ')}; left: ${[...ins.leftOut].join(' ')}`);
   check(!fire || Math.hypot(fire.car.x - fire0.x, fire.car.y - fire0.y) < 1, '2 the burning Mustang stays parked burning', fire ? fire.id : 'none');
   // 3 takeover mid-drive
   const ok3 = run(240, () => [...WD.crew.values()].some(B => B.state === 'drive' && B.car.v > 120));

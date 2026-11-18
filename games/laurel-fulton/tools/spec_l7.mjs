@@ -17,6 +17,7 @@ const F = Object.fromEntries(K.floors.map(f => [f.id, f])), P = (k) => K.props.f
 const up = F.main.z - F.landing.z, dn = F.landing.z - F.lower.z;
 check(K.door.floor === 'landing' && up > 1 && up < 1.6 && dn > 1 && dn < 1.6 && F.lower.z < K.grade && K.links.length === 2, '1 a TRUE split foyer: door -> mid landing, half-flight UP, half-flight DOWN to a half-sunk lower level', `up ${up.toFixed(2)} m, down ${dn.toFixed(2)} m, lower floor ${F.lower.z} m below grade`);
 check(P('recliner')[0]?.floor === 'main' && K.teter?.name === 'Teter' && P('cooler')[0]?.floor === 'main', '1 upstairs living room: Teter\'s recliner + a cooler of beer');
+check(P('computer')[0]?.floor === 'lower' && P('computer')[0].screen === 'eDonkey', '1 Brad\'s basement COMPUTER is in the kit, its screen says eDonkey (the cutaway draws it: l7b shots)');
 check(P('weights')[0]?.floor === 'lower' && P('fireplace')[0]?.floor === 'lower' && P('fireplace')[0].mantle === 6 && K.dogs === 2, '1 downstairs: weights, a fireplace with 6 beers on the mantle; two golden retrievers');
 if (IN) {
   const I = new IN.Interior(K, { who: { id: 'brad', name: 'Brad' } }), DT = 1 / 60, h = I.hero;
@@ -50,6 +51,6 @@ if (IN) {
   check(pe === 'EXIT' && out === 'exit', '6 out the front door');
 }
 const tmp = fs.mkdtempSync('/tmp/l7-'); fs.mkdirSync(path.join(tmp, 'data'));
-execFileSync('python3', [path.join(ROOT, 'tools/interior_build.py'), 'brad', 'split-foyer', 'up', 'couch,cooler,tv,fridge,rug,picture,lamp,plant', 'down', 'weights,fireplace,couch,rug,picture,lamp', 'mantle-beers', '6', 'dogs', '2', 'mom', 'Teter'], { env: { ...process.env, LF_ROOT: tmp } });
+execFileSync('python3', [path.join(ROOT, 'tools/interior_build.py'), 'brad', 'split-foyer', 'up', 'couch,cooler,tv,fridge,rug,picture,lamp,plant', 'down', 'weights,fireplace,couch,rug,picture,lamp,computer', 'mantle-beers', '6', 'dogs', '2', 'mom', 'Teter'], { env: { ...process.env, LF_ROOT: tmp } });
 check(fs.readFileSync(path.join(tmp, 'data/interiors/brad.json'), 'utf8') === fs.readFileSync(path.join(ROOT, 'data/interiors/brad.json'), 'utf8'), '6 the factory statement (interior brad split-foyer ...) reproduces this interior byte-for-byte');
 console.log(fails ? `SPEC L7 FAIL (${fails})` : 'SPEC L7 OK'); process.exit(fails ? 1 : 0);

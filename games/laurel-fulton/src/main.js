@@ -18,6 +18,8 @@ import { Pilot } from './lf_pilot.js';
 import { Net } from './lf_net.js';
 import { Interior } from './lf_interior.js';
 import { InteriorRenderer } from './lf_interior_render.js';
+import { placeVan, mergedSupport, hopLift } from './lf_van.js';        // L7 remainder: David Klink's Scooby-Doo van by Rigg's house (steppable exhaust tip)
+import { Barker, bubbleAt } from './lf_riggisms.js';                   // L7 remainder: Rigg-isms (IGURT GOGURT / fuck shit diesel)
 
 const Q = new URLSearchParams(location.search);
 const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
@@ -90,21 +92,35 @@ let KOTH = null;   // Cul-de-Sac King of the Hill lands in phase 2 with its data
     areas = new Areas(AJ, W); ground.areas = areas; ground.cache.clear(); ground.job = null;
     if (renderer) renderer.areas = areas;
     sim.setBuildings(AJ.buildings); sim.setGreens(AJ.green); mapCv = null; tick('houses');
+    if (!van) { van = placeVan(sim, 'rigg', inHouse); setFootProject(footProj); }   // L7: the Scooby-Doo van parks by Rigg's house once the footprints are known
   }).catch(e => { if (globalThis.showErr) showErr('houses failed to load: ' + e.message); });
   fetch('assets/ground-tiles/manifest.json').then(r => r.ok ? r.json() : null).then(man => { if (man) ground.setPainted(man); }).catch(() => {});   // the painted ground: tiles stream in lazily from here (lf_ground.js); a city without them just stays procedural
-  fetch('data/roof.json').then(r => r.ok ? r.json() : null).then(RJ => { if (RJ) { RF = new Roof(RJ); renderer.roof = new RoofView(RF); setFootProject((x, y, z) => project(x, y, z, cam)); } }).catch(() => {});   // task L5: a city without a climbable roof just has none
+  fetch('data/roof.json').then(r => r.ok ? r.json() : null).then(RJ => { if (RJ) { RF = new Roof(RJ); renderer.roof = new RoofView(RF); setFootProject(footProj); } }).catch(() => {});   // task L5: a city without a climbable roof just has none
   j('data/culdesacs.json').then(sacs => { KOTH = new KingOfTheHill(sacs); }).catch(() => {});
   const ids = await fetch('data/interiors/index.json').then(r => r.ok ? r.json() : []).catch(() => []);
   for (const id of ids) { try { KITS[id] = await j('data/interiors/' + id + '.json'); } catch (e) {} }
+  // ?player=<id> picks at module time, BEFORE the kits stream in (the load split): a run as someone with a house kit still STARTS inside — go in the moment the kit lands
+  if (pendingIn && KITS[pendingIn] && !inside && foot && !foot.active && Math.abs(sim.player.v) < 1) goIn(pendingIn, foot.who);
 })();
-let inside = null; const IR = new InteriorRenderer(ctx);
-const goIn = (id, who) => { inside = new Interior(KITS[id], { who }); if (foot) foot.active = false; };
+let pendingIn = null, inside = null, insideId = null; const IR = new InteriorRenderer(ctx);
+// ---- L7 remainder hooks: the van's step-up support (merged with the roof's), its screen lift, Rigg's ambient barks
+let van = null; const SUP = mergedSupport(() => RF, () => van); const footProj = (x, y, z) => hopLift(project(x, y, z, cam), foot);
+const RIGGB = new Barker();
+// GO IN works at ANY crew house with an interior kit, for whoever is on foot there (Brad's, Rigg's, ...). Crew CPUs home there (CrewWorld
+// B.inside, via the net snapshot) — or, solo, whose car is parked at the house — are in the house with a beer: they come in as `guests`.
+const goIn = (id, who) => {
+  const P = roster.people.find(p => p.id === id) || { name: id }, car = sim.cars.find(c => c.owner === id), home = P.house && car && Math.hypot(car.x - P.house[0], car.y - P.house[1]) < 260 && Math.abs(car.v) < 25 && !car.follower;
+  const guests = id !== who.id && home && (!net || car.inside === id) ? [{ id, name: P.name }] : [];
+  insideId = id; inside = new Interior(KITS[id], { who, house: P.name, guests }); if (foot) foot.active = false;
+};
 const goOut = () => {                                     // out the front door: on foot on the front walk, your car in the driveway
-  inside = null; const me = PLAYERS.find(p => foot && p.id === foot.who.id) || foot.who, [hx, hy] = me.house, c = sim.player;
+  const hp = roster.people.find(p => p.id === insideId) || PLAYERS.find(p => foot && p.id === foot.who.id) || foot.who, [hx, hy] = hp.house; inside = null; insideId = null;
+  let c = sim.player; if (Math.hypot(c.x - hx, c.y - hy) > 400) { const r = W.roadInfo(hx, hy, 0); c = r.e ? sim.nearPt(hx, hy, r) : { x: hx + 60, y: hy }; }   // your car is elsewhere: out onto the front walk facing the street
   foot.active = true; foot.x = hx + (c.x - hx) * 0.35; foot.y = hy + (c.y - hy) * 0.35; foot.h = Math.atan2(c.y - hy, c.x - hx); foot.px = foot.x; foot.py = foot.y; foot.z = 0;
   cam.x = foot.x; cam.y = foot.y;
 };
-const atMyDoor = () => foot && foot.active && !(foot.z > 4) && KITS[foot.who.id] && foot.who.house && Math.hypot(foot.x - foot.who.house[0], foot.y - foot.who.house[1]) < 90;
+const doorOf = () => { if (!(foot && foot.active) || foot.z > 4) return null; for (const id of Object.keys(KITS)) { const P = roster.people.find(p => p.id === id); if (P && P.house && Math.hypot(foot.x - P.house[0], foot.y - P.house[1]) < 90) return id; } return null; };   // the crew house whose front door you are at
+const atMyDoor = () => !!doorOf();
 // is (x, y) inside a house footprint? (GET OUT never leaves you standing inside a wall —
 // if the driver's side is inside a house, you step out the other side instead.)
 const inHouse = (x, y) => { if (!sim || !sim.houses) return false; for (const f of sim.houses) { let ins = false; for (let k = 0; k < f.length; k += 2) { const ax = f[k], ay = f[k + 1], ex = f[(k + 2) % f.length], ey = f[(k + 3) % f.length]; if ((ay > y) !== (ey > y) && x < (ex - ax) * (y - ay) / (ey - ay) + ax) ins = !ins; } if (ins) return true; } return false; };
@@ -125,6 +141,7 @@ if (net) net.onYou = (id, st) => {                        // take over that crew
 function pick(id) { if (net) { if (!net.takenBy(id)) net.pick(id); return; }
   M = startRally(sim, roster, id); renderer.mission = M; picking = false; foot = createFoot(PLAYERS.find(p => p.id === id)); setFoot(foot);
   if (KITS[id] && !Q.has('pilot')) goIn(id, foot.who);   // PICK Brad -> you start in his house
+  else if (!Q.has('pilot')) pendingIn = id;               // (?player=: the kits have not landed yet)
   foot.onClimb = (c) => { learnLabel(sim, 'lf_roof'); if (c.onto === 'roof' && !foot.summited && M) { foot.summited = true; M.msg = 'THE LOOKOUT'; M.msgT = 3.5; } }; if (Q.has('pilot')) pilot = new Pilot(sim, W, M); startIntro(); }
 // the opening (owner, Nov 17): the game starts zoomed out on the WHOLE MAP, then
 // flies in to the picked person's house. Any tap skips it. Captures (?speed/?cam/
@@ -228,8 +245,10 @@ function frame(now) {
   while (acc >= STEP && n < 6 * SPEED) { const inp = pilot ? (input.read(), pilot.input(STEP)) : input.read(); if (picking) { acc = 0; break; }
     const beat = (M && M.beat) || intro, ZERO = { jx: 0, jy: 0, jm: 0, keys: {} };
     if (inside) { sim.step(STEP, ZERO); if (inside.step(STEP, inp) === 'exit') goOut(); }
-    else if (foot && foot.active) { sim.step(STEP, ZERO); if (!beat) { stepOnFoot(foot, STEP, inp, RF); const nc = inp.action ? nearAnyCar(foot, sim.cars) : null; if (nc) { if (nc !== sim.player) swapPlayerCar(sim, M, nc); foot.active = false; } else if (inp.action && atMyDoor()) goIn(foot.who.id, foot.who); } }
+    else if (foot && foot.active) { sim.step(STEP, ZERO); if (!beat) { stepOnFoot(foot, STEP, inp, SUP); const nc = inp.action ? nearAnyCar(foot, sim.cars) : null; if (nc) { if (nc !== sim.player) swapPlayerCar(sim, M, nc); foot.active = false; } else if (inp.action && atMyDoor()) goIn(doorOf(), foot.who); } }
     else { sim.step(STEP, beat ? ZERO : inp); if (foot && !beat && !pilot && inp.action && Math.abs(sim.player.v) < FOOT.exitV) { exitCar(foot, sim.player); if (inHouse(foot.x, foot.y)) { const c = sim.player, a = c.h + Math.PI / 2, d = (c.wid || 20) / 2 + 7; foot.x = c.x + Math.cos(a) * d; foot.y = c.y + Math.sin(a) * d; foot.px = foot.x; foot.py = foot.y; } } }
+    if (van) van.step(STEP, foot);
+    if (!inside && !picking) RIGGB.step(STEP);   // Rigg-isms: the street-side barker (indoors, the interior has its own)
     if (KOTH) KOTH.step(sim, STEP); if (M) stepRally(sim, M, STEP); simTime += STEP; acc -= STEP; n++; }
   if (n >= 6 * SPEED) acc = 0;
   if (net) net.frame(sim, dt);
@@ -390,6 +409,10 @@ renderer.draw = (S, cam, t, tod) => {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.font = '800 13px system-ui'; ctx.textAlign = 'center';
   ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(VIEW_W - 72, 14, 60, 28, 12); ctx.fill(); ctx.fillStyle = '#ffe4b0'; ctx.fillText('MAP', VIEW_W - 42, 33);
   drawMissionHud();
+  if (!inside && RIGGB.sayT > 0) {                          // Rigg-isms over Rigg: on foot (you are Rigg) or over his car (you or the CPU)
+    const rf = foot && foot.active && foot.who.id === 'rigg' ? foot : S.cars.find(c => c.owner === 'rigg');
+    if (rf) { const x = (rf.x - cam.x) * cam.zoom + VIEW_W / 2, y = (rf.y - cam.y) * cam.zoom + view.h / 2 - (rf === foot ? 36 : 34); if (x > -60 && x < VIEW_W + 60 && y > 30 && y < view.h) bubbleAt(ctx, x, y, RIGGB.said, Math.min(1, RIGGB.sayT * 2), VIEW_W); }
+  }
   if (net) {                                               // L6: who's who — a tag over every car a FRIEND is driving, and the online pill
     ctx.font = '800 12px system-ui'; ctx.textAlign = 'center';
     for (const c of S.cars) if (c.human || (c === S.player && net.me)) {
@@ -416,4 +439,4 @@ renderer.draw = (S, cam, t, tod) => {
   if (picking) drawPick();
 };
 requestAnimationFrame(frame);
-window.__lf = { get areas() { return areas; }, inside: () => inside, setSpeed: (k) => { SPEED = k; }, roof: () => RF, sim, W, ground, cam, input, renderer, map: () => mapOpen, mission: () => M, koth: () => KOTH, pick, picking: () => picking, pilot: () => pilot, foot: () => foot, tod: () => timeOfDay(), simTime: () => simTime };
+window.__lf = { door: () => doorOf(), van: () => van, get areas() { return areas; }, inside: () => inside, setSpeed: (k) => { SPEED = k; }, roof: () => RF, sim, W, ground, cam, input, renderer, map: () => mapOpen, mission: () => M, koth: () => KOTH, pick, picking: () => picking, pilot: () => pilot, foot: () => foot, tod: () => timeOfDay(), simTime: () => simTime };

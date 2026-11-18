@@ -62,7 +62,7 @@ def parse(path):
         elif k == 'house':
             for pid in t[2:]: houses[pid] = t[1]
         elif k == 'mission': meet = t[t.index('meet') + 1]
-        elif k == 'interior': INTERIORS.append(t[1:])          # L7: interior <id> <type> [up a,b] [down c,d] [mantle-beers n] [dogs n] [mom "Name"]
+        elif k == 'interior': INTERIORS.append(t[1:])          # L7: interior <id> <type> [up a,b] [down c,d] [upper e,f] [mantle-beers n] [dogs n] [mom "Name"] [dad "Name"] [son "Name"]   (types: split-foyer, two-story-entry)
     assert city and people and meet, 'a spec needs city, at least one person and the mission meet'
     return city, pois, people, houses, meet
 
