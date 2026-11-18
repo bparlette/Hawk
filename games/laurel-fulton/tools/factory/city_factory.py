@@ -119,6 +119,7 @@ def main():
     print('[4]', run(['python3', 'tools/osm_graph.py', '--out', os.path.join(out, 'data', 'graph.json')], env)[:0] + 'graph built')
     rep = json.load(open(os.path.join(out, 'data', 'graph_report.json')))
     print(f"    {rep['edges']} edges, {rep['km_total']} km, largest component {rep['largest_component_share']}, anchors {sorted(rep['anchors'])}")
+    print('[4b]', run(['python3', 'tools/graph_pack.py'], env).strip())
     print('[5]', run(['python3', 'tools/osm_areas.py', '--tiles', tiles], env).strip())
     print('[6]', run(['python3', 'tools/bumps_build.py'], env).strip())
     if INTERIORS:
@@ -131,7 +132,7 @@ def main():
     elif cars: print('[7] SKIPPED: no --bpy python given — cars are specified in data/cars.json, sprites not baked')
     # 8 the page
     lf_rel = os.path.relpath(os.path.join(LF, 'src', 'main.js'), out)
-    page = open(os.path.join(LF, 'play.html')).read().replace('src="src/main.js"', f'src="{lf_rel}"').replace('<title>Laurel / Fulton</title>', f"<title>{city['name']}</title>")
+    page = open(os.path.join(LF, 'play.html')).read().replace('src="src/main.js"', f'src="{lf_rel}"').replace('href="src/', 'href="' + lf_rel.rsplit('/', 1)[0] + '/').replace('<title>Laurel / Fulton</title>', f"<title>{city['name']}</title>")
     open(os.path.join(out, 'play.html'), 'w').write(page)
     ro = json.load(open(os.path.join(out, 'data', 'roster.json')))
     lines = [f"# {city['name']} — built by the city-game factory", '', f"Spec: {os.path.basename(spec_path)} · bbox {city['bbox']} · play: play.html", '',

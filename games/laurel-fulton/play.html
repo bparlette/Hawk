@@ -7,6 +7,32 @@
 <meta name="theme-color" content="#1b1430">
 <title>Laurel / Fulton</title>
 <link rel="icon" href="data:,">
+<!-- LOAD (Nov 18): fetch every module + the boot data IN PARALLEL from the first byte, instead of the import waterfall -->
+<link rel="modulepreload" href="src/lf_areas.js">
+<link rel="modulepreload" href="src/lf_climb.js">
+<link rel="modulepreload" href="src/lf_foot.js">
+<link rel="modulepreload" href="src/lf_fx.js">
+<link rel="modulepreload" href="src/lf_ground.js">
+<link rel="modulepreload" href="src/lf_interior.js">
+<link rel="modulepreload" href="src/lf_interior_render.js">
+<link rel="modulepreload" href="src/lf_koth.js">
+<link rel="modulepreload" href="src/lf_mission.js">
+<link rel="modulepreload" href="src/lf_net.js">
+<link rel="modulepreload" href="src/lf_pilot.js">
+<link rel="modulepreload" href="src/lf_render.js">
+<link rel="modulepreload" href="src/lf_roof.js">
+<link rel="modulepreload" href="src/lf_sim.js">
+<link rel="modulepreload" href="src/lf_skid.js">
+<link rel="modulepreload" href="src/lf_world.js">
+<link rel="modulepreload" href="src/main.js">
+<link rel="modulepreload" href="src/world_graph.js">
+<link rel="modulepreload" href="../palm-city/src/input.js">
+<link rel="modulepreload" href="../palm-city/src/labels.js">
+<link rel="modulepreload" href="../palm-city/src/world.js">
+<link rel="preload" as="fetch" crossorigin href="data/graph.min.json">
+<link rel="preload" as="fetch" crossorigin href="data/roster.json">
+<link rel="preload" as="fetch" crossorigin href="assets/fleet.json">
+<link rel="preload" as="fetch" crossorigin href="data/bumps.json">
 <style>
   html,body{margin:0;height:100%;background:#120c22;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}

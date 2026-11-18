@@ -44,12 +44,12 @@ const j = async (f) => { const r = await fetch(f); if (!r.ok) throw new Error(f 
 const TITLE = (document.title || 'LAUREL / FULTON').toUpperCase(), got = [];
 const tick = (what) => { got.push(what); msg(TITLE + ' — loading… ' + got.join(' · ')); };
 const [G, roster, fleet, BJ] = await Promise.all([
-  j('data/graph.json').then(v => (tick('roads'), v)),
+  j('data/graph.min.json').catch(() => j('data/graph.json')).then(v => (tick('roads'), v)),   // the packed graph (tools/graph_pack.py), 24% smaller
   j('data/roster.json').then(v => (tick('crew'), v)),
   j('assets/fleet.json').then(v => (tick('cars'), v)),
   j('data/bumps.json').then(v => (tick('bumps'), v)),
 ]);
-const files = new Set(); for (const m of Object.values(fleet)) for (const k of ['color', 'shadow', 'light']) files.add(m[k].file);
+const files = new Set(); for (const m of Object.values(fleet)) for (const k of ['color', 'shadow']) files.add(m[k].file);   // the 'light' sheets are never drawn: not loaded (11 fewer files at boot)
 const imgs = {};
 const BLANK = new Image(); BLANK.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 await Promise.all([...files].map(async (f) => { const im = new Image(); im.src = 'assets/' + f; try { await im.decode(); imgs[f] = im; } catch (e) { imgs[f] = BLANK; } }));   // a bad sprite must not kill the game
