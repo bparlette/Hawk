@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scaggsville — Map to Assets</title>
+<style>
+ body{margin:0;background:#101418;color:#e8ecf1;font-family:-apple-system,'Segoe UI',Roboto,sans-serif}
+ header{padding:14px 16px 6px} h1{margin:0;font-size:22px} .sub{color:#9fb0c3;font-size:13px;margin-top:4px}
+ a{color:#7cc4ff}
+ .mapwrap{position:relative;margin:10px 12px;border:1px solid #2a3442;border-radius:10px;overflow:hidden}
+ .mapwrap img{display:block;width:100%}
+ .mk{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#ffd23e;border:2px solid #101418;box-shadow:0 0 0 2px #ffd23e88}
+ .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;padding:6px 12px 20px}
+ .card{display:flex;gap:12px;background:#171d24;border:1px solid #2a3442;border-radius:10px;padding:12px}
+ .cell{width:64px;height:64px;background-size:800% 400%;background-position:0 0;image-rendering:auto;background-color:#0b0e11;border-radius:8px}
+ .nosp{width:64px;height:64px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:10px;color:#8fa1b5;background:#0b0e11;border-radius:8px;padding:4px;box-sizing:border-box}
+ h3{margin:0 0 2px;font-size:16px} .kind{color:#9fb0c3;font-size:12px} .car{font-size:13px;margin-top:4px}
+ .pos{color:#7d8ea3;font-size:12px;margin-top:2px} ul.files{margin:8px 0 0;padding-left:16px;font-size:12px;color:#c6d2df;word-break:break-all}
+ ul.files span,ul.files .dim{color:#7d8ea3} ul.files li.none{color:#e0a23e;list-style:none;margin-left:-16px}
+ .notes{font-size:12.5px;color:#b9c7d6;margin:8px 0 0}
+ .chip{font-size:10px;padding:2px 7px;border-radius:20px;vertical-align:2px}
+ .chip.live{background:#1d4d2b;color:#8ff0ae} .chip.spec{background:#4d3d1d;color:#ffd98f} .chip.tbd{background:#4d1d2a;color:#ff9fb2}
+ footer{padding:0 16px 24px;color:#7d8ea3;font-size:12px}
+</style></head><body>
+<header><h1>SCAGGSVILLE — map → assets</h1>
+<div class="sub">Every named place on the painted map, and the asset files that render it. Tap a gold dot to jump to its card. <a href="./">▶ Play the game</a></div></header>
+<div class="mapwrap"><img src="assets/ground-painted.webp" alt="Scaggsville painted map"><a class="mk" href="#brad" style="left:77.36%;top:82.16%" title="Brad"></a><a class="mk" href="#kosack" style="left:78.66%;top:47.35%" title="Kosack"></a><a class="mk" href="#jimmy" style="left:48.96%;top:60.08%" title="Jimmy"></a><a class="mk" href="#jason" style="left:70.82%;top:72.93%" title="Jason"></a><a class="mk" href="#clayton" style="left:85.91%;top:86.62%" title="Clayton Floyd"></a><a class="mk" href="#zack" style="left:85.91%;top:86.62%" title="Zack Floyd"></a><a class="mk" href="#rigg" style="left:57.89%;top:54.73%" title="Rigg"></a><a class="mk" href="#billy" style="left:48.96%;top:60.08%" title="Billy"></a><a class="mk" href="#lamar" style="left:62.89%;top:14.80%" title="Lamar"></a><a class="mk" href="#grant" style="left:48.47%;top:65.23%" title="Grant"></a><a class="mk" href="#atholton" style="left:62.89%;top:14.80%" title="Atholton High School"></a><a class="mk" href="#ledo" style="left:20.45%;top:51.24%" title="Ledo Pizza"></a><a class="mk" href="#reservoir" style="left:30.89%;top:51.42%" title="Reservoir High School"></a><a class="mk" href="#maple" style="left:24.99%;top:51.00%" title="Maple Lawn"></a><a class="mk" href="#weis" style="left:91.11%;top:82.45%" title="Weis Markets — Whiskey Bottom"></a><a class="mk" href="#klink-van" style="left:57.89%;top:54.73%" title="David Klink&#x27;s Scooby-Doo van"></a></div>
+<div class="grid"><section class="card" id="brad">
+  <div class="thumb"><div class="cell" style="background-image:url('assets/cars/car_camaro_brad.webp')" title="camaro_brad"></div></div>
+  <div class="body">
+    <h3>Brad <span class="chip live">LIVE</span></h3>
+    <div class="kind">CREW HOUSE — Stansfield Road</div>
+    <div class="car">1987 Chevrolet Camaro — two-tone: front half white, rear half maroon</div>
+    <div class="pos">world [11998, 18074]</div>
+    <ul class="files"><li>assets/cars/car_camaro_brad.webp <span>(color)</span></li><li>assets/cars/car_camaro_brad_light.webp <span>(light)</span></li><li>assets/cars/car_camaro_brad_sh.webp <span>(shadow)</span></li><li class='dim'>fleet.json: camaro_brad — 32 angles, 48.8u long</li></ul>
+    <p class="notes">Interior built (data/interiors/brad.json).</p>
+  </div>
+</section><section class="card" id="kosack">
+  <div class="thumb"><div class="cell" style="background-image:url('assets/cars/car_cavalier_kosack.webp')" title="cavalier_kosack"></div></div>
+  <div class="body">
+    <h3>Kosack <span class="chip live">LIVE</span></h3>
+    <div class="kind">CREW HOUSE — Derby Drive</div>
+    <div class="car">1996 Chevrolet Cavalier sedan (third gen) — red</div>
+    <div class="pos">world [12570, -1479]</div>
+    <ul class="files"><li>assets/cars/car_cavalier_kosack.webp <span>(color)</span></li><li>assets/cars/car_cavalier_kosack_light.webp <span>(light)</span></li><li>assets/cars/car_cavalier_kosack_sh.webp <span>(shadow)</span></li><li class='dim'>fleet.json: cavalier_kosack — 32 angles, 46.0u long</li></ul>
+    <p class="notes">House in world; interior spec queued (L11).</p>
+  </div>
+</section><section class="card" id="jimmy">
+  <div class="thumb"><div class="cell" style="background-image:url('assets/cars/car_astro_jimmy.webp')" title="astro_jimmy"></div></div>
+  <div class="body">
+    <h3>Jimmy <span class="chip live">LIVE</span></h3>
+    <div class="kind">CREW HOUSE — Sweet Cherry Lane</div>
+    <div class="car">1996 Chevrolet Astro — silver</div>
+    <div class="pos">world [-454, 5674]</div>
+    <ul class="files"><li>assets/cars/car_astro_jimmy.webp <span>(color)</span></li><li>assets/cars/car_astro_jimmy_light.webp <span>(light)</span></li><li>assets/cars/car_astro_jimmy_sh.webp <span>(shadow)</span></li><li class='dim'>fleet.json: astro_jimmy — 32 angles, 48.2u long</li></ul>
+    <p class="notes">House in world; interior spec queued (L11).</p>
+  </div>
+</section><section class="card" id="jason">
+  <div class="thumb"><div class="cell" style="background-image:url('assets/cars/car_camry_jason.webp')" title="camry_jason"></div></div>
+  <div class="body">
+    <h3>Jason <span class="chip live">LIVE</span></h3>
+    <div class="kind">CREW HOUSE — Susini Drive</div>
+    <div class="car">1989 Toyota Camry — white</div>
+    <div class="pos">world [9130, 12888]</div>
+    <ul class="files"><li>assets/cars/car_camry_jason.webp <span>(color)</span></li><li>assets/cars/car_camry_jason_light.webp <span>(light)</span></li><li>assets/cars/car_camry_jason_sh.webp <span>(shadow)</span></li><li class='dim'>fleet.json: camry_jason — 32 angles, 45.2u long</li></ul>
+    <p class="notes">House in world; interior spec queued (L11).</p>
+  </div>
+</section><section class="card" id="clayton">
+  <div class="thumb"><div class="cell" style="background-image:url('assets/cars/car_camaro_clayton.webp')" title="camaro_clayton"></div></div>
+  <div class="body">
+    <h3>Clayton Floyd <span class="chip live">LIVE</span></h3>
+    <div class="kind">CREW HOUSE — Hughes Avenue</div>
+    <div class="car">Chevrolet Camaro — green</div>
+    <div class="pos">world [15748, 20580]</div>
+    <ul class="files"><li>assets/cars/car_camaro_clayton.webp <span>(color)</span></li><li>assets/cars/car_camaro_clayton_light.webp <span>(light)</span></li><li>assets/cars/car_camaro_clayton_sh.webp <span>(shadow)</span></li><li class='dim'>fleet.json: camaro_clayton — 32 angles, 48.8u long</li></ul>
+    <p class="notes">House in world; interior spec queued (L11).</p>
+  </div>
+</section><section class="card" id="zack">
+  <div class="thumb"><div class="cell" style="background-image:url('assets/cars/car_tracer_zack.webp')" title="tracer_zack"></div></div>
+  <div class="body">
+    <h3>Zack Floyd <span class="chip live">LIVE</span></h3>
+    <div class="kind">CREW HOUSE — Hughes Avenue</div>
+    <div class="car">Mercury Tracer — green</div>
+    <div class="pos">world [15748, 20580]</div>
+    <ul class="files"><li>assets/cars/car_tracer_zack.webp <span>(color)</span></li><li>assets/cars/car_tracer_zack_light.webp <span>(light)</span></li><li>assets/cars/car_tracer_zack_sh.webp <span>(shadow)</span></li><li class='dim'>fleet.json: tracer_zack — 32 angles, 41.7u long</li></ul>
+    <p class="notes">House in world; interior spec queued (L11).</p>
+  </div>
+</section><section class="card" id="rigg">
+  <div class="thumb"><div class="cell" style="background-image:url('assets/cars/car_celica_rigg.webp')" title="celica_rigg"></div></div>
+  <div class="body">
+    <h3>Rigg <span class="chip live">LIVE</span></h3>
+    <div class="kind">CREW HOUSE — Mossy Stone Court</div>
+    <div class="car">1987 Toyota Celica GT (fourth gen, pop-up headlights) — blue</div>
+    <div class="pos">world [3464, 2666]</div>
+    <ul class="files"><li>assets/cars/car_celica_rigg.webp <span>(color)</span></li><li>assets/cars/car_celica_rigg_light.webp <span>(light)</span></li><li>assets/cars/car_celica_rigg_sh.webp <span>(shadow)</span></li><li class='dim'>fleet.json: celica_rigg — 32 angles, 43.7u long</li></ul>
+    <p class="notes">House in world; interior spec queued (L11).</p>
+  </div>
+</section><section class="card" id="billy">
+  <div class="thumb"><div class="cell" style="background-image:url('assets/cars/car_astro_billy.webp')" title="astro_billy"></div></div>
+  <div class="body">
+    <h3>Billy <span class="chip live">LIVE</span></h3>
+    <div class="kind">CREW HOUSE — Sweet Cherry Lane</div>
+    <div class="car">1994 Chevrolet Astro (first gen) — teal-blue</div>
+    <div class="pos">world [-454, 5674]</div>
+    <ul class="files"><li>assets/cars/car_astro_billy.webp <span>(color)</span></li><li>assets/cars/car_astro_billy_light.webp <span>(light)</span></li><li>assets/cars/car_astro_billy_sh.webp <span>(shadow)</span></li><li class='dim'>fleet.json: astro_billy — 32 angles, 48.2u long</li></ul>
+    <p class="notes">House in world; interior spec queued (L11).</p>
+  </div>
+</section><section class="card" id="lamar">
+  <div class="thumb"><div class="cell" style="background-image:url('assets/cars/car_mustang_lamar.webp')" title="mustang_lamar"></div></div>
+  <div class="body">
+    <h3>Lamar <span class="chip live">LIVE</span></h3>
+    <div class="kind">CREW — AT ATHOLTON HS — no house — his Mustang is at the school</div>
+    <div class="car">1987 Ford Mustang GT hatchback (Fox body) — unstated (silver placeholder)</div>
+    <div class="pos">world [5654, -19763]</div>
+    <ul class="files"><li>assets/cars/car_mustang_lamar.webp <span>(color)</span></li><li>assets/cars/car_mustang_lamar_light.webp <span>(light)</span></li><li>assets/cars/car_mustang_lamar_sh.webp <span>(shadow)</span></li><li class='dim'>fleet.json: mustang_lamar — 32 angles, 45.6u long</li></ul>
+    <p class="notes">House in world; interior spec queued (L11).</p>
+  </div>
+</section><section class="card" id="grant">
+  <div class="thumb"><div class="cell" style="background-image:url('assets/cars/car_brougham_grant.webp')" title="brougham_grant"></div></div>
+  <div class="body">
+    <h3>Grant <span class="chip live">LIVE</span></h3>
+    <div class="kind">CREW HOUSE — Early Bud Way</div>
+    <div class="car">Cadillac Brougham &quot;USS Mino&quot; — maroon</div>
+    <div class="pos">world [-670, 8564]</div>
+    <ul class="files"><li>assets/cars/car_brougham_grant.webp <span>(color)</span></li><li>assets/cars/car_brougham_grant_light.webp <span>(light)</span></li><li>assets/cars/car_brougham_grant_sh.webp <span>(shadow)</span></li><li class='dim'>fleet.json: brougham_grant — 32 angles, 56.2u long</li></ul>
+    <p class="notes">House in world; interior spec queued (L11).</p>
+  </div>
+</section><section class="card" id="cavalier_black">
+  <div class="thumb"><div class="cell" style="background-image:url('assets/cars/car_cavalier_black.webp')" title="cavalier_black"></div></div>
+  <div class="body">
+    <h3>Black Cavalier <span class="chip tbd">TBD</span></h3>
+    <div class="kind">UNASSIGNED CAR — no house yet</div>
+    <div class="car">Chevrolet Cavalier — black</div>
+    <div class="pos">placement TBD</div>
+    <ul class="files"><li>assets/cars/car_cavalier_black.webp <span>(color)</span></li><li>assets/cars/car_cavalier_black_light.webp <span>(light)</span></li><li>assets/cars/car_cavalier_black_sh.webp <span>(shadow)</span></li><li class='dim'>fleet.json: cavalier_black — 32 angles, 45.0u long</li></ul>
+    <p class="notes">no owner yet - no house, no design work until the owner names whose it is</p>
+  </div>
+</section><section class="card" id="atholton">
+  <div class="thumb"><div class="cell" style="background-image:url('assets/cars/car_mustang_lamar.webp')" title="mustang_lamar"></div></div>
+  <div class="body">
+    <h3>Atholton High School <span class="chip live">LIVE</span></h3>
+    <div class="kind">POI / MEETUP — the rally finish</div>
+    <div class="car">Lamar&#x27;s 1987 Mustang GT — ON FIRE here</div>
+    <div class="pos">world [5654, -19763]</div>
+    <ul class="files"><li>assets/cars/car_mustang_lamar.webp <span>(color)</span></li><li>assets/cars/car_mustang_lamar_light.webp <span>(light)</span></li><li>assets/cars/car_mustang_lamar_sh.webp <span>(shadow)</span></li><li class='dim'>fleet.json: mustang_lamar — 32 angles, 45.6u long</li></ul>
+    <p class="notes">Opening mission ends here. Lamar has no house; his Mustang burns at the school.</p>
+  </div>
+</section><section class="card" id="ledo">
+  <div class="thumb"><div class="nosp">no sprite yet</div></div>
+  <div class="body">
+    <h3>Ledo Pizza <span class="chip spec">SPEC QUEUED</span></h3>
+    <div class="kind">POI</div>
+    
+    <div class="pos">world [-12953, 708]</div>
+    <ul class="files"><li class="none">no assets yet</li></ul>
+    <p class="notes">Crew pizza spot (spec: g12/SPECS.md).</p>
+  </div>
+</section><section class="card" id="reservoir">
+  <div class="thumb"><div class="nosp">no sprite yet</div></div>
+  <div class="body">
+    <h3>Reservoir High School <span class="chip spec">SPEC QUEUED</span></h3>
+    <div class="kind">POI</div>
+    
+    <div class="pos">world [-8374, 810]</div>
+    <ul class="files"><li class="none">no assets yet</li></ul>
+    <p class="notes">The other school (spec: g12/SPECS.md).</p>
+  </div>
+</section><section class="card" id="maple">
+  <div class="thumb"><div class="nosp">no sprite yet</div></div>
+  <div class="body">
+    <h3>Maple Lawn <span class="chip spec">SPEC QUEUED</span></h3>
+    <div class="kind">POI</div>
+    
+    <div class="pos">world [-10962, 572]</div>
+    <ul class="files"><li class="none">no assets yet</li></ul>
+    <p class="notes">The new development (spec: g12/SPECS.md).</p>
+  </div>
+</section><section class="card" id="weis">
+  <div class="thumb"><div class="nosp">no sprite yet</div></div>
+  <div class="body">
+    <h3>Weis Markets — Whiskey Bottom <span class="chip spec">SPEC QUEUED</span></h3>
+    <div class="kind">POI — Whiskey Bottom, Laurel</div>
+    
+    <div class="pos">world [18027, 18238]</div>
+    <ul class="files"><li class="none">no assets yet</li></ul>
+    <p class="notes">L12: go-inside interior. Jason security · Brad pizzas · Brian fired (&quot;Fuck Scott&quot;).</p>
+  </div>
+</section><section class="card" id="scott">
+  <div class="thumb"><div class="nosp">no sprite yet</div></div>
+  <div class="body">
+    <h3>Scott <span class="chip tbd">TBD</span></h3>
+    <div class="kind">CREW HOUSE — Whiskey Bottom</div>
+    <div class="car">Honda Civic — for now</div>
+    <div class="pos">placement TBD</div>
+    <ul class="files"><li class="none">no assets yet</li></ul>
+    <p class="notes">A RANDOM house in Whiskey Bottom is Scott&#x27;s (builders pick it). The name in Rigg&#x27;s Weis line: &quot;Fuck Scott.&quot; No sprite yet.</p>
+  </div>
+</section><section class="card" id="klink-van">
+  <div class="thumb"><div class="nosp">no sprite yet</div></div>
+  <div class="body">
+    <h3>David Klink&#x27;s Scooby-Doo van <span class="chip spec">SPEC QUEUED</span></h3>
+    <div class="kind">SET-PIECE — parked by Rigg&#x27;s house</div>
+    <div class="car">Mystery-Machine-style panel van (prop)</div>
+    <div class="pos">world [3464, 2666]</div>
+    <ul class="files"><li class="none">no assets yet</li></ul>
+    <p class="notes">Exhaust tip is steppable on foot (step-up hop + puff). No sprite yet.</p>
+  </div>
+</section><section class="card" id="gringada">
+  <div class="thumb"><div class="nosp">no sprite yet</div></div>
+  <div class="body">
+    <h3>Gringada (1998) <span class="chip spec">SPEC QUEUED</span></h3>
+    <div class="kind">POI — a Columbia shopping center</div>
+    
+    <div class="pos">placement TBD</div>
+    <ul class="files"><li class="none">no assets yet</li></ul>
+    <p class="notes">Mexican restaurant, gone now — existed in 1998. Brad works there; Jimmy + Clayton steal food. Memory build, not in today&#x27;s map data.</p>
+  </div>
+</section><section class="card" id="astro-108">
+  <div class="thumb"><div class="nosp">no sprite yet</div></div>
+  <div class="body">
+    <h3>The Astro on Route 108 <span class="chip spec">SPEC QUEUED</span></h3>
+    <div class="kind">SET-PIECE — parked on MD-108</div>
+    <div class="car">Chevrolet Astro (random, parked)</div>
+    <div class="pos">placement TBD</div>
+    <ul class="files"><li class="none">no assets yet</li></ul>
+    <p class="notes">Jason robs its parking lights. Placement on Route 108 at build time.</p>
+  </div>
+</section></div>
+<footer>20 places mapped · 11 car sprite sets · 33 car asset files · painted ground: 168 tiles (assets/ground-tiles/) + ground-painted.webp · data: roster.json, areas.json (22821 buildings), graph.json · generated by tools/map_assets_gen.py from the game's own data.</footer>
+</body></html>
