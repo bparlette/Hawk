@@ -102,6 +102,12 @@
    "x": 6.6
   },
   {
+   "kind": "puddle",
+   "floor": "main",
+   "x": 5.35,
+   "w": 2.1
+  },
+  {
    "kind": "picture",
    "floor": "main",
    "x": 6.4
@@ -189,6 +195,35 @@
   ]
  },
  "dogs": 2,
+ "dogHomes": [
+  {},
+  {
+   "floor": "main",
+   "x": 7.35,
+   "stay": true,
+   "brows": true,
+   "face": -1
+  }
+ ],
+ "barks": [
+  {
+   "who": "rigg",
+   "name": "Rigg",
+   "floor": "lower",
+   "x": 6.1,
+   "text": "ZOOOOEEEYYYY",
+   "at": 1.5,
+   "every": 6.5
+  },
+  {
+   "who": "jason",
+   "name": "Jason",
+   "floor": "main",
+   "x": 6.5,
+   "brush": true,
+   "face": 1
+  }
+ ],
  "cpuIdle": {
   "floor": "lower",
   "x": 9.799999999999999

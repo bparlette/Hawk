@@ -16,6 +16,10 @@
 // stairs to climb, DOWN at the top / at the cellar door to descend. THE BEAT: you walk in on the first floor, the old guy (Brian's dad)
 // yells "Brrrrrriiiiiiaaaaannnn", and Brian comes down the stairs from his bedroom (skipped when YOU are Brian).
 // GUESTS: crew CPUs idling here (CrewWorld B.inside, lf_world.js) are drawn at their kit cpuIdle spot with a beer — CPU Brad is by the fire.
+// BRAD'S HOUSE (Nov 18, owner's beats): Brian (Rigg) stands DOWNSTAIRS and ALWAYS yells "ZOOOOEEEYYYY" for the dog — a bark entry
+// with `every` reschedules itself forever; Zooey's GIANT PEE PUDDLE is a `puddle` floor prop in the upstairs living room; and JASON
+// stands upstairs by the OTHER dog painting GIANT BROWN EYEBROWS on it — a bark entry with NO text only places its speaker (he gets
+// no invented line), `brush` puts the paintbrush in his hand, and the kit's `dogHomes` pins that dog beside him wearing the brows.
 // RIGG-ISMS: when Rigg is the one walking about, he barks IGURT GOGURT / fuck shit diesel at random (lf_riggisms.js) — hero.said.
 import { Barker } from './lf_riggisms.js';
 export const MOVE = { walk: 4.4, stair: 2.7, reach: 0.9, drink: 2.4, dog: 1.7, dogRun: 3.6 };
@@ -36,8 +40,8 @@ export class Interior {
     // L14: the kit's generic BARK BEAT (`barks`: who / floor / x / text / at seconds) — Kosack's "Chinese food is here." exchange.
     // A line whose speaker is YOU is said by you; everyone else stands where the kit puts them (kept near the door: in frame).
     this.callers = (K.barks || []).filter((b, i, a) => b.who !== this.hero.who.id && a.findIndex(c => c.who === b.who) === i)
-      .map(b => ({ id: b.who, name: b.name || b.who, floor: b.floor, x: b.x, z: this.F[b.floor].z, face: -1, link: null, t: 0, walk: 0, moving: false, sayT: 0, said: null, queue: [] }));
-    this.barkI = 0; this.arcadeT = 0;
+      .map(b => ({ id: b.who, name: b.name || b.who, floor: b.floor, x: b.x, z: this.F[b.floor].z, face: b.face != null ? b.face : -1, link: null, t: 0, walk: 0, moving: false, sayT: 0, said: null, queue: [], brush: !!b.brush }));
+    this.barkI = 0; this.barkNext = []; this.arcadeT = 0;
     // guests: crew CPUs home here idle at the kit's cpuIdle spot with a beer (a sip every few
     // seconds); night-party guests (g.party) carry their own placement — floor / x / facing /
     // cutaway cell — from lf_party.interiorGuests() and are drawn from the party sheet.
@@ -50,8 +54,9 @@ export class Interior {
     this.barker = this.hero.who.id === 'rigg' ? new Barker(opts.seed || 1998) : null;
     this.dogs = [];
     for (let i = 0; i < (K.dogs || 0); i++) {
-      const fl = i % 2 ? 'lower' : 'main', f = this.F[fl] || this.F[K.door.floor];
-      this.dogs.push({ i, floor: f.id, x: f.x0 + 1.5 + i * 2.5, z: f.z, face: 1, link: null, t: 0, walk: 0, goal: null, mode: 'lounge', wait: 1 + i * 2, patT: 0, rooms: new Set([f.id]) });
+      const home = (K.dogHomes || [])[i] || {};              // a kit may pin a dog: {floor, x, stay, brows} — Brad's brow dog stays by Jason
+      const fl = home.floor || (i % 2 ? 'lower' : 'main'), f = this.F[fl] || this.F[K.door.floor];
+      this.dogs.push({ i, floor: f.id, x: home.x != null ? home.x : f.x0 + 1.5 + i * 2.5, z: f.z, face: home.face || 1, link: null, t: 0, walk: 0, goal: null, mode: 'lounge', wait: 1 + i * 2, patT: 0, stay: !!home.stay, brows: !!home.brows, rooms: new Set([f.id]) });
     }
   }
   // the floor graph: which link leaves floor a toward floor b (landing is the hub)
@@ -142,10 +147,14 @@ export class Interior {
     this.tickSay(this.teter || {}, dt);
     this.stepBeat(dt);
     if (this.arcadeT > 0) this.arcadeT -= dt;
-    const BK = this.K.barks || [];                          // L14: the bark beat, line by line
-    while (this.barkI < BK.length && this.time >= BK[this.barkI].at) {
-      const b = BK[this.barkI++], sp = b.who === h.who.id ? h : this.callers.find(c => c.id === b.who);
+    const BK = this.K.barks || [];                          // L14: the bark beat, line by line. An entry with `every` reschedules
+    for (let i = 0; i < BK.length; i++) {                    // itself forever (Brian ALWAYS yells for Zooey); an entry with no
+      const b = BK[i]; if (!b.text) { this.barkI = Math.max(this.barkI, i + 1); continue; }   // text never speaks — it only places its speaker (Jason, painting).
+      if (this.barkNext[i] == null) this.barkNext[i] = b.at || 0;
+      if (this.time < this.barkNext[i]) continue;
+      const sp = b.who === h.who.id ? h : this.callers.find(c => c.id === b.who);
       if (sp) { sp.said = b.text; sp.sayT = 2.1; this.events.push({ kind: 'bark', who: b.who, text: b.text, t: this.time }); }
+      this.barkNext[i] = b.every ? this.time + b.every : Infinity; this.barkI = Math.max(this.barkI, i + 1);
     }
     for (const c of this.callers) if (c.sayT > 0) { c.sayT -= dt; if (c.sayT <= 0) c.said = null; }
     if (this.barker) { const b = this.barker.step(dt); if (b) { h.said = b; h.sayT = this.barker.hold; this.events.push({ kind: 'rigg_bark', text: b, t: this.time }); } }
@@ -175,6 +184,7 @@ export class Interior {
   stepDog(d, dt) {
     const h = this.hero;
     if (d.patT > 0) { d.patT -= dt; return; }
+    if (d.stay) return;                                      // a pinned dog holds its spot and sits for its portrait (tail still wags — the draw reads time, not mode)
     if (d.mode === 'lounge') { if ((d.wait -= dt) > 0) return; d.mode = 'go'; }
     // trail you when you're about (60% of the time), else wander to a random spot in a random room
     if (!d.goal) {
