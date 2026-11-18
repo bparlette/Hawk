@@ -228,12 +228,12 @@ export function drawOpenRoad3D(R, S, G, t, time, ease) {
     // rumble edges (warm white / coral, swapping by band) + a pale edge line inside
     const rw1 = L1.scale * 3.4 * vw / 2, rw2 = L2.scale * 3.4 * vw / 2;
     ctx.fillStyle = band ? '#e8e0d0' : '#d94f3d';
-    quad(ctx, L1.x - rw1, L1.y, L1.x, L1.y, L2.x, L2.y, L2.x - rw2, L2.y);
-    quad(ctx, R1.x, R1.y, R1.x + rw1, R1.y, R2.x + rw2, R2.y, R2.x, R2.y);
+    quad(ctx, L1.x - rw1, y1, L1.x, y1, L2.x, y2, L2.x - rw2, y2);
+    quad(ctx, R1.x, y1, R1.x + rw1, y1, R2.x + rw2, y2, R2.x, y2);
     ctx.fillStyle = 'rgba(255,244,214,0.45)';
     const ew1 = Math.max(0.7, L1.scale * 0.8 * vw / 2), ew2 = Math.max(0.7, L2.scale * 0.8 * vw / 2);
-    quad(ctx, L1.x, L1.y, L1.x + ew1, L1.y, L2.x + ew2, L2.y, L2.x, L2.y);
-    quad(ctx, R1.x - ew1, R1.y, R1.x, R1.y, R2.x, R2.y, R2.x - ew2, R2.y);
+    quad(ctx, L1.x, y1, L1.x + ew1, y1, L2.x + ew2, y2, L2.x, y2);
+    quad(ctx, R1.x - ew1, y1, R1.x, y1, R2.x, y2, R2.x - ew2, y2);
     // lane dashes on the light bands: centre gold, lane lines pale. Corner heights are the
     // strip's AVERAGED edge heights (y1/y2), not the left edge's: on a slanted edge the
     // left-only heights shear the quad, and where the slant flips (S-bends) the dashes
