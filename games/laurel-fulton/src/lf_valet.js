@@ -21,11 +21,12 @@ export class ValetLots {
   }
 
   attachPlaces(PL) {
-    if (!PL || !PL.places) return;
-    const weis = PL.places.find(p => p.id === 'weis' || /weis/i.test(p.name || ''));
-    if (weis && weis.pos) {
+    const list = PL && (PL.places || PL.PJ?.places);
+    if (!list) return;
+    const weis = list.find(p => p.id === 'weis' || /weis/i.test(p.name || ''));
+    if (weis && weis.door) {
       const b = this.bays.find(q => q.id === 'weis');
-      if (b) { b.x = weis.pos[0] + 64; b.y = weis.pos[1] + 54; }
+      if (b) { b.x = weis.door[0] + 64; b.y = weis.door[1] + 54; }
     }
   }
 
