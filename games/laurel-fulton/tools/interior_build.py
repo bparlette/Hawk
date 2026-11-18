@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 """interior_build.py — task L7: an INTERIOR from a statement, the way the factory states a car -> data/interiors/<id>.json
   python3 tools/interior_build.py <person-id> split-foyer [up <furn,...>] [down <furn,...>] [mantle-beers N] [dogs N] [mom "<Name>"]
-  (also a factory statement:  interior brad split-foyer up couch,tv,cooler down weights,fireplace,couch mantle-beers 6 dogs 2 mom "Teter")
+  (also a factory statement:  interior brad split-foyer up couch,cooler,tv,fridge,rug,picture,lamp,plant down weights,fireplace,couch,rug,picture,lamp mantle-beers 6 dogs 2 mom "Teter" — the polished Brad statement; spec_l7 proves it reproduces data/interiors/brad.json byte-for-byte)
 
 THE KIT (metres; x runs front door -> back wall, z up from the yard grade; the game draws it as a SIDE CUTAWAY):
   floors   walkable spans {id, z, x0, x1}            links  stairs {id, a, ax, b, bx} joining floor a at ax to floor b at bx
   rooms    {floor, x0, x1, name, wall, floorc}       props  {kind, floor, x, ...} — the furniture, in a fixed library:
            couch tv cooler fridge weights fireplace (+ mantle beers) recliner (mom's chair) table lamp
+           decor (Moth's polish pass, Nov 17): rug picture lamp plant — placed by the PLACE map below, drawn by the
+           renderer; they carry no spots, they make the room read as lived-in. THE STANDARD for how a cutaway must
+           look and feel lives in tools/INTERIOR-SPEC.md — camera, light, labels, life. Read it before touching
+           either this file or the renderer; a house that follows the spec comes out polished in ONE build.
   spots    what ACTION does where: GRAB BEER (cooler / fridge / mantle) and EXIT (the front door); DRINK is anywhere once
            you hold one; PAT is next to a dog. house type 'split-foyer' = true to the type: the front door opens onto a mid
            landing, a half-flight UP to the main level, a half-flight DOWN to the half-sunk lower level.
@@ -26,11 +30,15 @@ def split_foyer(pid, up, down, beers, dogs, mom):
                    {'floor': 'main', 'x0': 9.2, 'x1': W, 'name': 'kitchen', 'wall': '#e6dcb8', 'floorc': '#c9b99a'},
                    {'floor': 'lower', 'x0': 3.6, 'x1': W, 'name': 'downstairs living room', 'wall': '#8a6446', 'floorc': '#6e5a4c'}],
          'props': [], 'spots': [{'act': 'EXIT', 'floor': 'landing', 'x': 0.35}]}
+    # placement is BY KIND, not by statement order (polish pass): a statement lists what a room HAS; the kit decides
+    # where it sits, the way a room would actually be arranged. Unknown kinds fall back to the slot row.
+    PLACE = {'main': {'recliner': 4.3, 'plant': 3.95, 'couch': 6.6, 'rug': 6.6, 'picture': 6.4, 'cooler': 8.3, 'lamp': 9.05, 'tv': 10.2, 'fridge': 11.3, 'table': 7.6},
+             'lower': {'weights': 5.0, 'picture': 5.2, 'fireplace': 8.6, 'rug': 9.6, 'couch': 10.8, 'lamp': 11.65, 'plant': 4.1, 'table': 7.2}}
     lay = {'main': [4.3, 6.6, 8.3, 10.2, 11.3], 'lower': [5.0, 8.6, 10.8, 6.9, 11.5]}
     if mom: up = ['recliner'] + [u for u in up if u != 'recliner']
     for fl, items in (('main', up), ('lower', down)):
         for i, kind in enumerate(items):
-            x = lay[fl][i] if i < len(lay[fl]) else 4 + i * 1.5
+            x = PLACE[fl].get(kind, lay[fl][i] if i < len(lay[fl]) else 4 + i * 1.5)
             p = {'kind': kind, 'floor': fl, 'x': x}
             if kind == 'fireplace': p['mantle'] = beers
             k['props'].append(p)

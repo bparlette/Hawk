@@ -97,6 +97,26 @@
    "x": 11.3
   },
   {
+   "kind": "rug",
+   "floor": "main",
+   "x": 6.6
+  },
+  {
+   "kind": "picture",
+   "floor": "main",
+   "x": 6.4
+  },
+  {
+   "kind": "lamp",
+   "floor": "main",
+   "x": 9.05
+  },
+  {
+   "kind": "plant",
+   "floor": "main",
+   "x": 3.95
+  },
+  {
    "kind": "weights",
    "floor": "lower",
    "x": 5.0
@@ -111,6 +131,21 @@
    "kind": "couch",
    "floor": "lower",
    "x": 10.8
+  },
+  {
+   "kind": "rug",
+   "floor": "lower",
+   "x": 9.6
+  },
+  {
+   "kind": "picture",
+   "floor": "lower",
+   "x": 5.2
+  },
+  {
+   "kind": "lamp",
+   "floor": "lower",
+   "x": 11.65
   }
  ],
  "spots": [

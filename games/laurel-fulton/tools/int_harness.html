@@ -1,0 +1,21 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>interior harness</title>
+<style>html,body{margin:0;background:#111}canvas{width:420px;height:860px;display:block}</style>
+<canvas id="c" width="840" height="1720"></canvas>
+<script type="module">
+import { Interior } from '../src/lf_interior.js';
+import { InteriorRenderer } from '../src/lf_interior_render.js';
+const K = await (await fetch('../data/interiors/brad.json')).json();
+const I = new Interior(K, { who: { id: 'brad', name: 'Brad' } });
+const ctx = document.getElementById('c').getContext('2d');
+const R = new InteriorRenderer(ctx);
+let inp = { jx: 0, jy: 0, jm: 0, keys: {}, action: false };
+window.__h = { I, R, setInp: (o) => { inp = { jx: 0, jy: 0, jm: 0, keys: {}, action: false, ...o }; } };
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  I.step(dt, inp);
+  R.draw(I, 420, 860, 2, now / 1000);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
