@@ -1,0 +1,144 @@
+{
+ "bbox": [
+  38.978,
+  -76.958,
+  39.004,
+  -76.922
+ ],
+ "units_per_m": 10.0,
+ "ways_drivable": 1686,
+ "vertices": 2231,
+ "edges": 2793,
+ "km_by_class": {
+  "service": 63.8,
+  "residential": 45.0,
+  "primary": 14.5,
+  "tertiary": 10.2,
+  "unclassified": 5.1,
+  "secondary": 5.1,
+  "primary_link": 3.6,
+  "secondary_link": 0.1,
+  "tertiary_link": 0.1
+ },
+ "km_total": 147.6,
+ "extent_m": [
+  3115,
+  2874
+ ],
+ "components": [
+  2140,
+  58,
+  10,
+  4,
+  3,
+  2
+ ],
+ "largest_component_share": 0.959,
+ "dead_ends_residential": 74,
+ "oneway_edges": 612,
+ "short_edges_lt3m": 13,
+ "crossings_without_shared_node": 3,
+ "crossings_grade_separated_tagged": 3,
+ "crossings_untagged": 0,
+ "untagged_examples": [],
+ "graded_examples": [
+  {
+   "at": [
+    7729,
+    -11685
+   ],
+   "a": "primary_link",
+   "b": "Baltimore Avenue (bridge)"
+  },
+  {
+   "at": [
+    7724,
+    -11656
+   ],
+   "a": "Baltimore Avenue (bridge)",
+   "b": "University Boulevard East"
+  },
+  {
+   "at": [
+    7704,
+    -11523
+   ],
+   "a": "Baltimore Avenue (bridge)",
+   "b": "University Boulevard East"
+  }
+ ],
+ "anchors": {
+  "bentleys": {
+   "x": 2097,
+   "y": 11611,
+   "v": 1116,
+   "snap_m": 17.1
+  },
+  "looneys": {
+   "x": 4712,
+   "y": 146,
+   "v": 1075,
+   "snap_m": 25.7
+  },
+  "cornerstone": {
+   "x": 2099,
+   "y": 11418,
+   "v": 852,
+   "snap_m": 31.3
+  },
+  "turf": {
+   "x": 1402,
+   "y": 10916,
+   "v": 1097,
+   "snap_m": 13.0
+  },
+  "montgomery": {
+   "x": 434,
+   "y": 9343,
+   "v": 834,
+   "snap_m": 7.1
+  },
+  "washington": {
+   "x": -1270,
+   "y": 10128,
+   "v": 409,
+   "snap_m": 59.3
+  },
+  "frederick": {
+   "x": -622,
+   "y": 9926,
+   "v": 204,
+   "snap_m": 50.9
+  },
+  "dre": {
+   "x": 1483,
+   "y": 10297,
+   "v": 1101,
+   "snap_m": 12.7
+  },
+  "tess": {
+   "x": 127,
+   "y": 5482,
+   "v": 53,
+   "snap_m": 50.9
+  },
+  "moe": {
+   "x": 3758,
+   "y": 11988,
+   "v": 1065,
+   "snap_m": 33.9
+  },
+  "juno": {
+   "x": 3068,
+   "y": 6668,
+   "v": 626,
+   "snap_m": 41.3
+  },
+  "pike": {
+   "x": 3758,
+   "y": 11988,
+   "v": 1065,
+   "snap_m": 33.9
+  }
+ }
+}

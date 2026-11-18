@@ -1,0 +1,125 @@
+{
+ "_doc": "The ONE roster (task L2). Written by tools/roster_build.py from OSM address points. house = world units (10/m, x east, y south).",
+ "people": [
+  {
+   "id": "dre",
+   "name": "Dre",
+   "street": "Lehigh Road",
+   "car": {
+    "model": "1989 Honda Accord maroon",
+    "paint": "1989 Honda Accord maroon",
+    "fx": [
+     "bass"
+    ],
+    "sprite": "dre_camry"
+   },
+   "active": true,
+   "lat": 38.981685,
+   "lon": -76.938286,
+   "house": [
+    1483,
+    10297
+   ],
+   "osm": "way/93685970",
+   "approx": "street"
+  },
+  {
+   "id": "tess",
+   "name": "Tess",
+   "street": "Regents Drive",
+   "car": {
+    "model": "1988 Ford Escort red",
+    "paint": "1988 Ford Escort red",
+    "fx": [],
+    "sprite": "tess_tracer"
+   },
+   "active": true,
+   "lat": 38.986041,
+   "lon": -76.939853,
+   "house": [
+    127,
+    5481
+   ],
+   "osm": "way/23544752",
+   "approx": "street"
+  },
+  {
+   "id": "moe",
+   "name": "Moe",
+   "street": "Knox Road",
+   "car": {
+    "model": "1987 Chevrolet Camaro blue two-tone blue/silver",
+    "paint": "1987 Chevrolet Camaro blue two-tone blue/silver",
+    "fx": [
+     "underglow_blue"
+    ],
+    "sprite": "moe_camaro"
+   },
+   "active": true,
+   "lat": 38.980155,
+   "lon": -76.935657,
+   "house": [
+    3758,
+    11988
+   ],
+   "osm": "way/604775395",
+   "approx": "street"
+  },
+  {
+   "id": "juno",
+   "name": "Juno",
+   "street": "Baltimore Avenue",
+   "car": {
+    "model": "1990 Chevrolet Astro white",
+    "paint": "1990 Chevrolet Astro white",
+    "fx": [],
+    "sprite": "juno_astro"
+   },
+   "active": true,
+   "lat": 38.984968,
+   "lon": -76.936454,
+   "house": [
+    3068,
+    6668
+   ],
+   "osm": "way/23988568",
+   "approx": "street"
+  },
+  {
+   "id": "pike",
+   "name": "Pike",
+   "street": "Knox Road",
+   "car": {
+    "model": "1989 Cadillac Brougham black",
+    "paint": "1989 Cadillac Brougham black",
+    "fx": [
+     "tailpipe_sputter"
+    ],
+    "sprite": "pike_brougham"
+   },
+   "active": true,
+   "lat": 38.980155,
+   "lon": -76.935657,
+   "house": [
+    3758,
+    11988
+   ],
+   "osm": "way/604775395",
+   "approx": "street"
+  }
+ ],
+ "houses": {
+  "moe": "The Knox Road house",
+  "pike": "The Knox Road house"
+ },
+ "unassigned_cars": [],
+ "meetup": {
+  "name": "R.J. Bentley's",
+  "lat": 38.980496,
+  "lon": -76.937576,
+  "pos": [
+   2097,
+   11611
+  ]
+ }
+}
