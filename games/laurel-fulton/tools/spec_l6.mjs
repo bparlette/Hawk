@@ -11,7 +11,7 @@
 //   7 a friend drops mid-drive -> that crew member is CPU again within a snapshot and keeps moving
 //   8 persistent: the world keeps running with nobody connected
 // L7 remainder (Nov 18) — CPU crew idle INSIDE their house when home (kit cpuIdle; CrewWorld B.inside/B.spot; snapshot [8]):
-//   9 at start Brad (and Rigg) are 'inside' at their kit's idle spot (Brad: lower level, by the fire); crew with no kit are not
+//   9 at start Brad, Rigg and Jason are 'inside' at their kit's idle spot (Brad: lower level, by the fire; Jason: his basement); crew with no kit are not
 //  10 the snapshot says so: [8] = [house, floor, x] for them, 0 for everyone else
 //  11 whenever a CPU is inside they are home + free (never while driving / in a rally / taken over), and Brad comes OUT when he leaves
 import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url'; import { createRequire } from 'node:module';
@@ -30,10 +30,10 @@ if (CW) {
   const fire0 = fire && { x: fire.car.x, y: fire.car.y };
   const ins = { viol: 0, sawIn: new Set(), leftOut: new Set() };
   WD.step(DT);
-  { const b = WD.crew.get('brad'), r = WD.crew.get('rigg'), snap = WD.snapshot(), sb = snap.find(c => c[0] === 'brad'), sk = snap.find(c => c[0] === 'jason');
-    check(b.inside === 'brad' && b.spot.floor === KITS.brad.cpuIdle.floor && b.spot.x === KITS.brad.cpuIdle.x && KITS.brad.cpuIdle.floor === 'lower' && r.inside === 'rigg' && r.spot.floor === 'lower' && !WD.crew.get('jason').inside,
-      '9 CPU Brad home = INSIDE his house, by the fire (kit cpuIdle); Rigg idles at his basement computer; crew without a kit are not inside', `brad ${b.inside}@${b.spot && b.spot.floor}:${b.spot && b.spot.x}, rigg ${r.inside}@${r.spot && r.spot.floor}:${r.spot && r.spot.x}`);
-    check(Array.isArray(sb[8]) && sb[8][0] === 'brad' && sb[8][1] === 'lower' && sk[8] === 0 && sb.length === 9, '10 the snapshot carries it: [8] = [house, floor, x] for Brad, 0 for Jason (no kit)', JSON.stringify(sb[8])); }
+  { const b = WD.crew.get('brad'), r = WD.crew.get('rigg'), j = WD.crew.get('jason'), snap = WD.snapshot(), sb = snap.find(c => c[0] === 'brad'), sk = snap.find(c => c[0] === 'jason'), sg = snap.find(c => c[0] === 'grant');
+    check(b.inside === 'brad' && b.spot.floor === KITS.brad.cpuIdle.floor && b.spot.x === KITS.brad.cpuIdle.x && KITS.brad.cpuIdle.floor === 'lower' && r.inside === 'rigg' && r.spot.floor === 'lower' && j.inside === 'jason' && j.spot.floor === KITS.jason.cpuIdle.floor && j.spot.x === KITS.jason.cpuIdle.x && !WD.crew.get('grant').inside,
+      '9 CPU Brad home = INSIDE his house, by the fire (kit cpuIdle); Rigg idles at his basement computer; Jason idles in his basement (kit cpuIdle); crew without a kit (Grant) are not inside', `brad ${b.inside}@${b.spot && b.spot.floor}:${b.spot && b.spot.x}, rigg ${r.inside}@${r.spot && r.spot.floor}:${r.spot && r.spot.x}, jason ${j.inside}@${j.spot && j.spot.floor}:${j.spot && j.spot.x}`);
+    check(Array.isArray(sb[8]) && sb[8][0] === 'brad' && sb[8][1] === 'lower' && Array.isArray(sk[8]) && sk[8][0] === 'jason' && sk[8][1] === KITS.jason.cpuIdle.floor && sk[8][2] === KITS.jason.cpuIdle.x && sg[8] === 0 && sb.length === 9, '10 the snapshot carries it: [8] = [house, floor, x] for Brad and Jason (both have kits), 0 for Grant (no kit)', JSON.stringify(sb[8])); }
   const watch = () => {
     for (const B of WD.crew.values()) {
       if (B.inside) { ins.sawIn.add(B.id); if (B.state !== 'home' || B.human || B.rallying || B.still) ins.viol++; } else if (ins.sawIn.has(B.id) && B.state === 'drive') ins.leftOut.add(B.id);

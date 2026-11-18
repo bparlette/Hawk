@@ -198,7 +198,7 @@ export function reorder(M) {
 
 export function stepRally(S, M, dt) {
   M.time += dt; if (M.msgT > 0) M.msgT -= dt;
-  stepConvoy(S, M, dt);                                    // L17: bumps -> "RUBBIN' IS RACING", the rolling "COLE TRICKLE", ones / pens / pennies
+  stepConvoy(S, M, dt);                                    // L17: bumps -> "rubbin is racing", the rolling "Cole Trickle", ones / pens / pennies
   const P = S.player;
   if (!M.beat) { pushTrail(M, P.x, P.y); if ((M._ro = (M._ro || 0) + dt) > 0.5) { M._ro = 0; reorder(M); } }
   // the arrival beat (stepBeat above): the join lands when the beat ends

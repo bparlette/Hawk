@@ -1,5 +1,5 @@
 // lf_barks.js — Laurel/Fulton's BARK system + THROWN OBJECTS (owner, Nov 18: the convoy is a race with barks, not a parade).
-//   - speech bubbles over cars ("COLE TRICKLE!", "RUBBIN' IS RACING!", the fake-cop target's "OFFICER?!"...) with per-car, per-line cooldowns
+//   - speech bubbles over cars ("Cole Trickle!", "rubbin is racing", the fake-cop target's "OFFICER?!"...) with per-car, per-line cooldowns
 //   - thrown things: ONES (dollar bills) flutter out of the window at the cars; PENS and PENNIES arc between the convoy cars
 // Pure logic + two draw calls (no sim edits): the world pass (particles, drawn with the cars) and the screen pass (bubbles, always
 // readable at any zoom). Everything is data in this.log / this.stats so tools/spec_convoy.mjs can prove it happened.
