@@ -1,0 +1,473 @@
+{
+ "_note": "L11 hero art, hand-authored from tasking/g12/SPECS.md. Street names only, no house numbers. Local frame per hero: x across the front wall, y toward the road (front wall at +hd, back at -hd); detail sizes are in world units (10/m) and deliberately exaggerated (hero is bigger than real). Anything SPECS marks NOT ON RECORD stays neutral.",
+ "style": {
+  "houseScale": 1.35,
+  "poiScale": 1.12,
+  "backFade": "areas.json background footprints stay faded (lf_ground); G8 numbers not found in tasking docs, L8 first-pass scale kept"
+ },
+ "heroes": {
+  "5608": {
+   "id": "brad",
+   "kind": "home",
+   "storeys": 2,
+   "wall": "#f6f3ec",
+   "roof": {
+    "type": "gable",
+    "ridge": "long",
+    "c1": "#a6adb8",
+    "c2": "#727a88"
+   },
+   "details": [
+    {
+     "t": "drive",
+     "x": 0.45,
+     "w": 26,
+     "len": 70,
+     "color": "#b9b5ae"
+    },
+    {
+     "t": "door",
+     "x": -0.2,
+     "color": "#6d5a4a",
+     "w": 12
+    },
+    {
+     "t": "windows"
+    }
+   ]
+  },
+  "15666": {
+   "id": "kosack",
+   "kind": "home",
+   "wall": "#a4573f",
+   "brick": true,
+   "roof": {
+    "type": "gable",
+    "ridge": "long",
+    "c1": "#938d8b",
+    "c2": "#797675"
+   },
+   "details": [
+    {
+     "t": "wing",
+     "x0": 0.15,
+     "x1": 1.0,
+     "y0": 0.05,
+     "y1": 1.0,
+     "ridge": "y",
+     "c1": "#96908d",
+     "c2": "#7c7876"
+    },
+    {
+     "t": "drive",
+     "x": 0.55,
+     "w": 40,
+     "len": 95,
+     "color": "#b5b0a8"
+    },
+    {
+     "t": "garage",
+     "x": 0.58,
+     "w": 44,
+     "doors": 2,
+     "color": "#d8d2c4"
+    },
+    {
+     "t": "door",
+     "x": -0.45,
+     "color": "#5d4636",
+     "w": 12
+    },
+    {
+     "t": "pool",
+     "x": -0.1,
+     "w": 70,
+     "h": 40,
+     "gap": 24
+    },
+    {
+     "t": "windows"
+    }
+   ]
+  },
+  "8582": {
+   "id": "lazaris",
+   "kind": "home",
+   "storeys": 2,
+   "wall": "#a8573f",
+   "brick": true,
+   "roof": {
+    "type": "gable",
+    "ridge": "long",
+    "c1": "#a09894",
+    "c2": "#807b79"
+   },
+   "details": [
+    {
+     "t": "wing",
+     "x0": -1.0,
+     "x1": -0.05,
+     "y0": 0.0,
+     "y1": 1.0,
+     "ridge": "y",
+     "c1": "#a59f9a",
+     "c2": "#847e7b"
+    },
+    {
+     "t": "drive",
+     "x": -0.52,
+     "w": 46,
+     "len": 100,
+     "color": "#c1bcb3"
+    },
+    {
+     "t": "garage",
+     "x": -0.52,
+     "w": 52,
+     "doors": 2,
+     "color": "#fbfaf5"
+    },
+    {
+     "t": "door",
+     "x": 0.45,
+     "color": "#d6232a",
+     "w": 18,
+     "beacon": true
+    },
+    {
+     "t": "windows"
+    }
+   ]
+  },
+  "9575": {
+   "id": "jason",
+   "kind": "home",
+   "storeys": 2,
+   "wall": "#f6f4ee",
+   "roof": {
+    "type": "gable",
+    "ridge": "long",
+    "c1": "#a0a7b2",
+    "c2": "#6d7480"
+   },
+   "details": [
+    {
+     "t": "wing",
+     "x0": 0.1,
+     "x1": 1.0,
+     "y0": 0.1,
+     "y1": 1.0,
+     "ridge": "y",
+     "c1": "#a39f9c",
+     "c2": "#827f7e"
+    },
+    {
+     "t": "drive",
+     "x": 0.55,
+     "w": 36,
+     "len": 95,
+     "color": "#a9a59e"
+    },
+    {
+     "t": "garage",
+     "x": 0.55,
+     "w": 40,
+     "doors": 1,
+     "color": "#cfcac0"
+    },
+    {
+     "t": "door",
+     "x": -0.35,
+     "color": "#2a2a30",
+     "w": 14,
+     "contrast": true
+    },
+    {
+     "t": "windows"
+    }
+   ]
+  },
+  "5313": {
+   "id": "floyds",
+   "kind": "home",
+   "wall": "#f4f1ea",
+   "roof": {
+    "type": "gable",
+    "ridge": "long",
+    "c1": "#a4abb6",
+    "c2": "#707886"
+   },
+   "details": [
+    {
+     "t": "drive",
+     "x": -0.35,
+     "w": 28,
+     "len": 105,
+     "color": "#b4b0a9"
+    },
+    {
+     "t": "hoop",
+     "x": -0.35,
+     "y": 112
+    },
+    {
+     "t": "neighbor",
+     "gap": 30,
+     "wall": "#c0412f",
+     "roof1": "#8a4b44",
+     "roof2": "#5c322e",
+     "drive": 0.35
+    },
+    {
+     "t": "door",
+     "x": 0.3,
+     "color": "#4a4038",
+     "w": 12
+    },
+    {
+     "t": "windows"
+    }
+   ]
+  },
+  "8249": {
+   "id": "grant",
+   "kind": "home",
+   "wall": "#f7f5ef",
+   "roof": {
+    "type": "gable",
+    "ridge": "long",
+    "c1": "#a2a8b2",
+    "c2": "#6e7480"
+   },
+   "details": [
+    {
+     "t": "wing",
+     "x0": -1.0,
+     "x1": -0.35,
+     "y0": -0.2,
+     "y1": 1.0,
+     "ridge": "y",
+     "c1": "#aaa7a2",
+     "c2": "#8a8683"
+    },
+    {
+     "t": "drive",
+     "x": 0.7,
+     "w": 36,
+     "len": 110,
+     "color": "#aeaaa3"
+    },
+    {
+     "t": "shutters",
+     "color": "#17171c"
+    },
+    {
+     "t": "door",
+     "x": 0.05,
+     "color": "#2a2a30",
+     "w": 14
+    },
+    {
+     "t": "windows"
+    }
+   ]
+  },
+  "8912": {
+   "id": "rigg",
+   "kind": "home",
+   "storeys": 2,
+   "wall": "#d9d0c0",
+   "roof": {
+    "type": "gable",
+    "ridge": "long",
+    "c1": "#acacaf",
+    "c2": "#898a8d"
+   },
+   "details": [
+    {
+     "t": "wing",
+     "x0": -1.0,
+     "x1": 0.1,
+     "y0": 0.1,
+     "y1": 1.05,
+     "ridge": "y",
+     "c1": "#7e7c7e",
+     "c2": "#696869",
+     "garage": true
+    },
+    {
+     "t": "curvedrive",
+     "x": -0.5,
+     "w": 30,
+     "len": 230,
+     "bend": 90,
+     "color": "#3a383c"
+    },
+    {
+     "t": "garage",
+     "x": -0.5,
+     "w": 40,
+     "doors": 2,
+     "color": "#cfcac0"
+    },
+    {
+     "t": "deck",
+     "x": 0.0,
+     "w": 78,
+     "d": 46,
+     "color": "#8c4a34"
+    },
+    {
+     "t": "door",
+     "x": 0.55,
+     "color": "#5b4636",
+     "w": 12
+    },
+    {
+     "t": "trees",
+     "list": [
+      [
+       -110,
+       -50,
+       34
+      ],
+      [
+       110,
+       -40,
+       38
+      ],
+      [
+       130,
+       40,
+       30
+      ],
+      [
+       -120,
+       60,
+       32
+      ],
+      [
+       0,
+       -110,
+       40
+      ],
+      [
+       60,
+       -120,
+       30
+      ]
+     ]
+    },
+    {
+     "t": "windows"
+    }
+   ]
+  },
+  "7046": {
+   "id": "ledo",
+   "kind": "poi",
+   "wall": "#a95b44",
+   "brick": true,
+   "roof": {
+    "type": "flat",
+    "c1": "#a3a9b4",
+    "c2": "#8a909c"
+   },
+   "details": [
+    {
+     "t": "lot",
+     "w": 1.9,
+     "depth": 100,
+     "gap": 8
+    },
+    {
+     "t": "storefront"
+    },
+    {
+     "t": "sign",
+     "text": "OPEN",
+     "x": 0.0,
+     "y": 22,
+     "w": 46,
+     "h": 18
+    },
+    {
+     "t": "hvac",
+     "list": [
+      [
+       -0.4,
+       -0.3
+      ],
+      [
+       0.35,
+       -0.2
+      ]
+     ]
+    }
+   ]
+  },
+  "7406": {
+   "id": "reservoir",
+   "kind": "poi",
+   "inset": 0.94,
+   "wall": "#a55c47",
+   "brick": true,
+   "roof": {
+    "type": "flat",
+    "c1": "#a3a9b4",
+    "c2": "#8a909c"
+   },
+   "details": [
+    {
+     "t": "lot",
+     "w": 1.15,
+     "depth": 190,
+     "gap": 14
+    },
+    {
+     "t": "windowband",
+     "step": 34
+    },
+    {
+     "t": "hvac",
+     "list": [
+      [
+       -0.5,
+       -0.2
+      ],
+      [
+       -0.1,
+       0.3
+      ],
+      [
+       0.45,
+       -0.4
+      ],
+      [
+       0.5,
+       0.35
+      ],
+      [
+       -0.6,
+       0.5
+      ]
+     ]
+    }
+   ]
+  }
+ },
+ "district": {
+  "id": "maple-lawn",
+  "who": "Maple Lawn",
+  "center": [
+   -5450,
+   2900
+  ],
+  "radius": 1500,
+  "minArea": 8000,
+  "maxArea": 90000,
+  "wall": "#a35b45",
+  "roof1": "#6f9a56",
+  "roof2": "#8db26a"
+ }
+}
