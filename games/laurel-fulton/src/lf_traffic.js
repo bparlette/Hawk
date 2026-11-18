@@ -18,9 +18,9 @@
 // Palm City's traffic DENSITY and numbers do not transfer (it is a busy city); every number here is a named constant.
 import { roadPath } from './lf_pilot.js';
 
-export const AMBIENT_MAX = 1;                         // alive ambient cars, hard cap (owner, Nov 18: halved twice — was 4, then 2)
+export const AMBIENT_MAX = 2;                         // alive ambient cars, hard cap (owner, Nov 18: "half as many car traffic" — was 4)
 export const FIRST_SPAWN = [4, 9];                    // s until the first car after boot
-export const SPAWN_GAP = [48, 128];                   // s between spawns (was [24, 64], originally [10, 26]; stretched with each halving so the MEAN alive count halves too, not just the cap)
+export const SPAWN_GAP = [24, 64];                    // s between spawns (was [10, 26]; stretched with the halving so the MEAN alive count halves too, not just the cap)
 export const SPAWN_R = [900, 1700];                   // spawn ring around the player, world units (10/m): beyond the screen (half-height ~ 700)
 export const DESPAWN_R = 2400;                        // an ambient car this far behind is removed
 export const VISIBLE_R = 950;                         // inside this a car is "on screen": never popped away
@@ -52,6 +52,7 @@ export class Traffic {
     this.S = S; this.W = W; this.rnd = rngOf(opts.seed || 20261118); this.t = 0; this.cars = []; this.enabled = true;
     this.quiet = !!opts.quiet;                         // no automatic spawns (tests that place cars by hand)
     this.models = (opts.models || ['camry_jason', 'tracer_zack', 'brougham_grant']).filter(m => S.fleet[m]);   // generic bodies from assets/fleet.json (no new bakes)
+    if (!this.models.length) this.models = Object.keys(S.fleet);   // a city whose fleet holds none of the Laurel bodies (College Park) drives its OWN cars as the generic traffic: an empty list made spawn() pick models[0] === undefined, and addCar() threw on fleet[undefined].length inside the frame loop — car frozen at spawn, error banner up (owner's phone, Nov 18)
     this.vkeys = [...W.adj.keys()].filter(v => (W.adj.get(v) || []).some(([, , ei]) => SPAWN_CLASSES.includes(W.edges[ei].hw) && W.edges[ei].L === 0));
     this.vgrid = new Map(); for (const v of this.vkeys) { const q = W.verts[v], k = Math.floor(q.x / VCELL) * 100003 + Math.floor(q.y / VCELL); let l = this.vgrid.get(k); if (!l) this.vgrid.set(k, l = []); l.push(v); }
     this.nextSpawn = FIRST_SPAWN[0] + this.rnd() * (FIRST_SPAWN[1] - FIRST_SPAWN[0]); this.sweepT = 0;
@@ -97,6 +98,7 @@ export class Traffic {
   // kind 'ambient' (the light traffic) or 'patrol' (a cruising cop, lf_cops.js). Out of sight, routed to pass by the player, then on.
   spawn(kind = 'ambient', model = null) {
     const S = this.S, P = S.player; if (!P || !this.enabled) return null;
+    if (!model && !this.models.length) return null;   // no usable body in this city's fleet: skip the spawn rather than throw inside the frame loop
     if (kind === 'ambient' && this.ambient.length >= AMBIENT_MAX) return null;
     for (let tries = 0; tries < 12; tries++) {
       const q = this.pickVertex(P, SPAWN_R[0], SPAWN_R[1]); if (!q) continue;
