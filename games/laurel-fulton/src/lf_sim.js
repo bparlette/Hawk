@@ -142,9 +142,15 @@ export class LFSim {
   unstick(c) {
     const r = this.W.roadInfo(c.x, c.y, 0);
     let tx = null, ty = null;
-    if (r && r.e) { const p = this.nearPt(c.x, c.y, r); tx = p.x; ty = p.y; }
+    // a target only counts if the car would be CLEAR of the houses there. The nearest
+    // centreline point can sit in the same pocket that wedged the car (a service aisle
+    // threading a slot between two footprints narrower than the car — Dre's driveway,
+    // College Park, Nov 18): dropping it back there re-wedges it on the spot, the
+    // anti-stuck fires forever, and no input ever gets the player out.
+    const clearAt = (x, y) => { const px = c.x, py = c.y; c.x = x; c.y = y; const t = this.touchingHouse(c); c.x = px; c.y = py; return !t; };
+    if (r && r.e) { const p = this.nearPt(c.x, c.y, r); if (clearAt(p.x, p.y)) { tx = p.x; ty = p.y; } }
     if (tx === null) for (let ring = 60; ring <= 900 && tx === null; ring += 60)
-      for (let k = 0; k < 24; k++) { const x = c.x + Math.cos(k / 24 * Math.PI * 2) * ring, y = c.y + Math.sin(k / 24 * Math.PI * 2) * ring; if (this.W.surfaceAt(x, y, 0) === 'road') { tx = x; ty = y; break; } }
+      for (let k = 0; k < 24; k++) { const x = c.x + Math.cos(k / 24 * Math.PI * 2) * ring, y = c.y + Math.sin(k / 24 * Math.PI * 2) * ring; if (this.W.surfaceAt(x, y, 0) === 'road' && clearAt(x, y)) { tx = x; ty = y; break; } }
     if (tx === null) return;
     c.x = tx; c.y = ty; c.v = 0; c.z = 0; c.vz = 0; c.wreck = false;
     this.events.push({ t: this.time, kind: 'unstuck', model: c.model });
