@@ -75,12 +75,12 @@ if (only.has('van')) {
 // ---- the van: you are Jason on foot by Rigg's house; walk into the exhaust tip
 p = await page('?player=jason&nointro');
 await p.waitForFunction(() => window.__lf && window.__lf.foot() && window.__lf.van(), null, { timeout: 120000 }); await p.waitForTimeout(1500);
-const ex = await p.evaluate(() => { const L = window.__lf, v = L.van(), e = v.exhaust(), f = L.foot(); f.active = true; f.x = e.x - 28; f.y = e.y; f.px = f.x; f.py = f.y; f.z = 0; f.h = 0; return { x: e.x, y: e.y, vx: v.car.x, vy: v.car.y, h: v.car.h }; });
+const ex = await p.evaluate(() => { const L = window.__lf, v = L.van(), e = v.exhaust(), f = L.foot(); f.active = true; const ux = e.x - v.car.x, uy = e.y - v.car.y, d = Math.hypot(ux, uy); f.x = e.x + ux / d * 26 + (Math.abs(uy) > Math.abs(ux) ? 0 : 0); f.y = e.y + uy / d * 26; f.px = f.x; f.py = f.y; f.z = 0; return { x: e.x, y: e.y, vx: v.car.x, vy: v.car.y, h: v.car.h, key: Math.abs(ux) > Math.abs(uy) ? (ux > 0 ? 'ArrowLeft' : 'ArrowRight') : (uy > 0 ? 'ArrowUp' : 'ArrowDown') }; });
 console.log('van', JSON.stringify(ex));
 const fz = () => p.evaluate(() => { const f = window.__lf.foot(); return JSON.stringify({ z: f.z, x: +f.x.toFixed(1), y: +f.y.toFixed(1), climb: !!f.climb, puffs: window.__lf.van().puffs.length, count: window.__lf.van().count || 0 }); });
 await p.waitForTimeout(1500); await p.screenshot({ path: path.join(ROOT, 'shots/l7b-van-1-approach.png') }); console.log('approach', await fz());
-await p.keyboard.down('ArrowRight'); await p.waitForTimeout(330); await p.screenshot({ path: path.join(ROOT, 'shots/l7b-van-2-hop.png') }); console.log('hop', await fz());
-await p.waitForTimeout(250); await p.keyboard.up('ArrowRight'); await p.waitForTimeout(150); await p.screenshot({ path: path.join(ROOT, 'shots/l7b-van-3-puff.png') }); console.log('on the tip', await fz());
+await p.keyboard.down(ex.key); await p.waitForTimeout(330); await p.screenshot({ path: path.join(ROOT, 'shots/l7b-van-2-hop.png') }); console.log('hop', await fz());
+await p.waitForTimeout(250); await p.keyboard.up(ex.key); await p.waitForTimeout(150); await p.screenshot({ path: path.join(ROOT, 'shots/l7b-van-3-puff.png') }); console.log('on the tip', await fz());
 await p.waitForTimeout(1300); await p.screenshot({ path: path.join(ROOT, 'shots/l7b-van-4-chuff.png') }); console.log('chuff', await fz());
 await p.close();
 }

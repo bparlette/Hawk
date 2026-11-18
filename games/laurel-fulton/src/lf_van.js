@@ -33,7 +33,7 @@ export class ScoobyVan {
   }
   puff(n = 6) {
     const e = this.exhaust();
-    for (let i = 0; i < n; i++) this.puffs.push({ x: e.x - e.fx * 2, y: e.y - e.fy * 2, vx: -e.fx * (14 + Math.random() * 16) + (Math.random() - 0.5) * 14, vy: -e.fy * (14 + Math.random() * 16) + (Math.random() - 0.5) * 14 - 10, r: 3 + Math.random() * 2, life: 0, max: 0.9 + Math.random() * 0.5 });
+    for (let i = 0; i < n; i++) this.puffs.push({ x: e.x - e.fx * 2, y: e.y - e.fy * 2, vx: -e.fx * (14 + Math.random() * 16) + (Math.random() - 0.5) * 14, vy: -e.fy * (14 + Math.random() * 16) + (Math.random() - 0.5) * 14 - 10, r: 4.5 + Math.random() * 3, life: 0, max: 0.9 + Math.random() * 0.5 });
     this.pop = 0.9; this.count = (this.count || 0) + 1;
   }
   // every frame: are you standing on the tip? a fresh step-on = a burst; stand there and it chuffs
@@ -76,7 +76,7 @@ export class ScoobyVan {
     g.fillStyle = '#6a3a1a'; g.beginPath(); g.ellipse(-20.5, 3.2, 1.9, 1.5, 0, 0, TAU); g.fill(); for (const [dx, dy] of [[-3.3, 1.8], [-3.6, 4.4], [-1.8, 5.6], [-0.4, 4.2]]) { g.beginPath(); g.arc(-20.5 - dx * 0.7, 3.2 + (dy - 3.2) * 0.9, 0.85, 0, TAU); g.fill(); }
     g.restore();
     // the exhaust puffs: grey-black clouds that swell and thin out
-    for (const p of this.puffs) { const u = p.life / p.max; g.globalAlpha = 0.55 * (1 - u); g.fillStyle = u < 0.3 ? '#4a4648' : '#8a8688'; g.beginPath(); g.arc(p.x, p.y, p.r, 0, TAU); g.fill(); }
+    for (const p of this.puffs) { const u = p.life / p.max; g.globalAlpha = 0.75 * (1 - u); g.fillStyle = u < 0.3 ? '#4a4648' : '#8a8688'; g.beginPath(); g.arc(p.x, p.y, p.r, 0, TAU); g.fill(); }
     g.globalAlpha = 1;
     if (this.pop > 0) { const e = this.exhaust(); g.save(); g.globalAlpha = Math.min(1, this.pop * 2); g.font = '900 11px system-ui'; g.textAlign = 'center'; g.lineWidth = 3; g.strokeStyle = 'rgba(27,20,48,0.85)'; g.fillStyle = '#ffe9c4'; const y = e.y - 16 - (0.9 - this.pop) * 14; g.strokeText('pfft!', e.x, y); g.fillText('pfft!', e.x, y); g.restore(); }
   }

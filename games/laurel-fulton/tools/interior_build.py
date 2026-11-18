@@ -74,7 +74,7 @@ def two_story_entry(pid, up, down, beers, dogs, mom, o):
                    {'floor': 'upper', 'x0': 9.0, 'x1': W, 'name': "Brian's bedroom", 'wall': '#5f6f8c', 'floorc': '#6e5a4c'},
                    {'floor': 'lower', 'x0': 3.4, 'x1': W, 'name': "Brian's basement", 'wall': '#7b6a58', 'floorc': '#5e5448'}],
          'props': [], 'spots': [{'act': 'EXIT', 'floor': 'main', 'x': 0.35}]}
-    PLACE = {'main': {'chandelier': 2.9, 'picture': 3.6, 'plant': 4.9, 'tv': 6.1, 'couch': 7.6, 'rug': 7.6, 'lamp': 5.8, 'recliner': 8.9, 'fridge': 11.0, 'table': 10.2, 'cooler': 10.0},
+    PLACE = {'main': {'chandelier': 2.9, 'picture': 3.6, 'plant': 4.9, 'tv': 6.1, 'couch': 7.1, 'rug': 7.1, 'lamp': 5.8, 'recliner': 8.95, 'fridge': 11.0, 'table': 10.2, 'cooler': 10.0},
              'upper': {'door': 9.0, 'picture': 6.6, 'plant': 5.9, 'lamp': 8.4, 'speaker': 10.0, 'bed': 12.0, 'table': 10.9},
              'lower': {'cooler': 3.9, 'computer': 5.3, 'cdwriter': 6.7, 'rug': 7.7, 'lamp': 8.2, 'couch': 7.9, 'picture': 4.4}}
     upper = o('upper', '').split(',') if o('upper') else []
@@ -93,7 +93,7 @@ def two_story_entry(pid, up, down, beers, dogs, mom, o):
     if o('dad') and rec: k['dad'] = {'name': o('dad'), 'floor': 'main', 'x': rec['x'], 'yell': 'Brrrrrriiiiiiaaaaannnn'}
     if o('son'): k['son'] = {'name': o('son'), 'floor': 'upper', 'x': 11.2}
     cd = next((p for p in k['props'] if p['kind'] == 'computer'), None)
-    k['cpuIdle'] = {'floor': 'lower', 'x': (cd['x'] + 0.95) if cd else 6.0}                 # CPU-Brian idles at his computer
+    k['cpuIdle'] = {'floor': 'lower', 'x': (cd['x'] - 1.15) if cd else 6.0}                 # CPU-Brian idles at his computer
     return k
 
 TYPES = {'split-foyer': split_foyer, 'two-story-entry': two_story_entry}
