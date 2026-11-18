@@ -2,7 +2,8 @@
 //   node tools/spec_traffic.mjs        (from games/laurel-fulton/)   exit 0 = green
 // A long headless run: the player cruises the real roads on lf_pilot's stick autopilot (so cars spawn/despawn around a MOVING
 // player) while the ambient population is sampled every step. Proves: alive-count never above AMBIENT_MAX (and the street is not
-// empty either: it peaks at 2+), spawns are sparse and out of sight, cars keep to the road (no teleports, <5% off-road, in the
+// empty either: it still reaches the cap of 2, mean in the ~1 band — owner, Nov 18: half as many car traffic), spawns are sparse
+// and out of sight, cars keep to the road (no teleports, <5% off-road, in the
 // right-hand lane), nothing stays wedged, passing cars do not wreck each other, ambient cars are not GET-IN-able, sim.unstick is reused.
 import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -16,7 +17,7 @@ if (TR) {
   const W = new GraphWorld(G), DT = 1 / 60, MIN = Number(process.env.TRAFFIC_MIN || 12);
   const S = new LFSim(W, ROSTER, FLEET, { bumps: BUMPS, buildings: AREAS.buildings, greens: AREAS.green });
   const T = new TR.Traffic(S, W, { seed: 7 });
-  check(TR.AMBIENT_MAX >= 2 && TR.AMBIENT_MAX <= 4, 'AMBIENT_MAX is a named constant in 2..4', String(TR.AMBIENT_MAX));
+  check(TR.AMBIENT_MAX === 2, 'AMBIENT_MAX is a named constant = 2 (owner, Nov 18: half as many car traffic)', String(TR.AMBIENT_MAX));
   check(/unstick/.test(fs.readFileSync(path.join(ROOT, 'src/lf_traffic.js'), 'utf8')), 'wedge recovery reuses sim.unstick');
   const pilot = new Pilot(S, W, null), places = [...Object.values(G.anchors).map(a => W.verts[a.v]), ...ROSTER.people.filter(p => p.house).map(p => ({ x: p.house[0], y: p.house[1] }))];
   let pi = 0; const goTo = () => { const q = places[pi++ % places.length]; pilot.plan(q.x, q.y, false); };
@@ -42,8 +43,8 @@ if (TR) {
   function rightOf(W, c, r) { const ex = r.e, P = ex.pts; let best = 1e18, nx = 0, ny = 0; for (let k = 0; k + 1 < P.length; k++) { const vx = P[k + 1][0] - P[k][0], vy = P[k + 1][1] - P[k][1], L2 = vx * vx + vy * vy || 1, t = Math.max(0, Math.min(1, ((c.x - P[k][0]) * vx + (c.y - P[k][1]) * vy) / L2)), px = P[k][0] + vx * t, py = P[k][1] + vy * t, d = (px - c.x) ** 2 + (py - c.y) ** 2; if (d < best) { best = d; nx = c.x - px; ny = c.y - py; } } return nx * -r.dy + ny * r.dx; }   // side of the centreline in the edge's own direction (+ = right when y is down)
   const st = T.stats, mph = Math.round(aliveSum / samples * 100) / 100;
   check(maxAlive <= TR.AMBIENT_MAX, `alive ambient never exceeds the cap over ${MIN} sim-minutes`, `peak ${maxAlive} / ${TR.AMBIENT_MAX}`);
-  check(maxAlive >= 2, 'the street is not dead: the population peaks at 2+', `peak ${maxAlive}`);
-  check(aliveSum / samples <= 3.2, 'light traffic: the average alive count stays low', `mean ${mph}`);
+  check(maxAlive >= 2, 'the street is not dead: the population still reaches the cap of 2', `peak ${maxAlive}`);
+  check(mph >= 0.4 && mph <= 1.6, 'light traffic: the average alive count sits in the ~1 band (half of the old 2.09)', `mean ${mph}`);
   check(st.spawns.length >= 4, 'cars do spawn over a long drive', `${st.spawns.length} spawns, ${firstSeen} seen`);
   check(st.spawns.every(s => s.d >= 800), 'every spawn is out of sight of the player (>= 80 m)', `min ${Math.min(...st.spawns.map(s => s.d)) | 0}`);
   const gaps = st.spawns.slice(1).map((s, k) => s.t - st.spawns[k].t);
