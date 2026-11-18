@@ -146,11 +146,19 @@ export class GroundPainter {
       tg2.drawImage(ptile.img, M.ax * ox + M.bx - rec.px[0], M.ay * oy + M.by - rec.px[1], M.ax * CHUNK, M.ay * CHUNK, 0, 0, CPX, CPX);
       const mk = this._ptMask || (this._ptMask = Object.assign(document.createElement('canvas'), { width: gw, height: gw }));
       const mg = mk.getContext('2d'), mid = mg.createImageData(gw, gw), md = mid.data, GI = TYPES.indexOf('grass');
-      for (let n = 0; n < gw * gw; n++) md[n * 4 + 3] = tg[n] === GI ? 255 : 0;
+      for (let j = 0; j < gw; j++) for (let i = 0; i < gw; i++) {
+        const n = j * gw + i;
+        if (tg[n] !== GI) { md[n * 4 + 3] = 0; continue; }
+        const edge = (i > 0 && tg[n - 1] !== GI) || (i + 1 < gw && tg[n + 1] !== GI) || (j > 0 && tg[n - gw] !== GI) || (j + 1 < gw && tg[n + gw] !== GI);
+        md[n * 4 + 3] = edge ? 145 : 255;            // feather verge borders seamlessly
+      }
       mg.putImageData(mid, 0, 0);
+      tg2.globalCompositeOperation = 'source-atop';
+      tg2.fillStyle = 'rgba(246, 202, 132, 0.12)';     // warm golden-hour tie-in across satellite tiles
+      tg2.fillRect(0, 0, CPX, CPX);
       tg2.globalCompositeOperation = 'destination-in';
       tg2.drawImage(mk, 0, 0, gw, gw, 0, 0, CPX + S, CPX + S);
-      g.drawImage(tc, 0, 0);
+      g.globalAlpha = 0.84; g.drawImage(tc, 0, 0); g.globalAlpha = 1;
       cv._pt = 1;                                 // stamp: this chunk's canvas carries the painting (harness waits on it)
     }
     yield;
@@ -168,10 +176,11 @@ export class GroundPainter {
             const px = (wx - ox) * PX, py = (wy - oy) * PX;
             if (px < -30 || py < -30 || px > CPX + 30 || py > CPX + 30) continue;
             const sf = W.surfaceAt(wx, wy, 0), t = kind(sf), p = PAL[t];
-            if (t === 'grass' && this._paintedAt(wx, wy)) continue;   // painted grass needs no procedural dabs (decided per world point, so chunk seams can't disagree)
+            const paintedGrass = t === 'grass' && this._paintedAt(wx, wy);
+            if (paintedGrass && r1 > 0.25) continue;   // weave 25% of grass brush dabs across the satellite layer
             let ang, len, wid, al;
             if (t === 'road' || t === 'parking') { const r = W.roadInfo(wx, wy, 0), ra = Math.atan2(r.dy, r.dx); ang = curlAngle(wx, wy, 0.015, 11, ra) * 0.3 + ra * 0.7 + (r1 - 0.5) * 0.3; len = (pass ? 12 : 20) + r2 * 14; wid = (pass ? 5.5 : 9) + r3 * 4.5; al = (pass ? 0.4 : 0.32) + r4 * 0.24; }
-            else if (t === 'grass') { ang = curlAngle(wx, wy, 0.026, 31, fbm(wx * 0.015, wy * 0.015, 4, 2) * Math.PI * 3); len = 10 + r2 * 10; wid = (pass ? 5 : 8) + r3 * 4; al = 0.45 + r4 * 0.35; }
+            else if (t === 'grass') { ang = curlAngle(wx, wy, 0.026, 31, fbm(wx * 0.015, wy * 0.015, 4, 2) * Math.PI * 3); len = 10 + r2 * 10; wid = (pass ? 5 : 8) + r3 * 4; al = (0.45 + r4 * 0.35) * (paintedGrass ? 0.45 : 1); }
             else { ang = curlAngle(wx, wy, 0.018, 19, 0) + (r1 - 0.5) * 0.35; len = (pass ? 11 : 17) + r2 * 11; wid = (pass ? 5.5 : 8.5) + r3 * 4; al = 0.3 + r4 * 0.26; }
             const cxs = Math.cos(ang) * len / 2, sys = Math.sin(ang) * len / 2, bend = (r6 - 0.5) * 0.36;
             g.strokeStyle = p.dabs[(r5 * p.dabs.length) | 0]; g.globalAlpha = al; g.lineWidth = wid;
