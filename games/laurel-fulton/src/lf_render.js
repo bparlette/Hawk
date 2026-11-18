@@ -72,10 +72,31 @@ export class Renderer {
       gr.addColorStop(0, `rgba(45,95,255,${(0.55 * (0.7 + 0.3 * (this.gr ? this.gr.heads : 0))).toFixed(3)})`); gr.addColorStop(1, 'rgba(45,95,255,0)');
       g.fillStyle = gr; g.beginPath(); g.ellipse(c.x, c.y, r, Wd * 1.35, c.h, 0, Math.PI * 2); g.fill();
     }
+    if (c.model === 'cavalier_kosack') {   // G17 / M-B: Kosack's always-on 6.4 Hz alternating red/blue fake-cop dash strobes + cones
+      const t = this.time || 0, tick = Math.floor(t * 6.4), redOn = (tick % 2) === 0, strobe = (tick % 8) < 2;
+      const rCol = 'rgba(255,46,56,', bCol = 'rgba(56,130,255,', aVis = (0.72 + (strobe ? 0.25 : 0)) * (0.65 + 0.35 * (this.gr ? this.gr.heads : 0));
+      for (const side of [-1, 1]) {
+        const isRed = side < 0 ? redOn : !redOn, col = isRed ? rCol : bCol;
+        const wx = c.x + fx * (L * 0.16) + px * side * (Wd * 0.22), wy = c.y + fy * (L * 0.16) + py * side * (Wd * 0.22);
+        const rg = g.createRadialGradient(wx, wy, 1, wx, wy, 22);
+        rg.addColorStop(0, col + Math.min(1, aVis).toFixed(3) + ')'); rg.addColorStop(1, col + '0)');
+        g.fillStyle = rg; g.beginPath(); g.arc(wx, wy, 22, 0, Math.PI * 2); g.fill();
+        g.fillStyle = isRed ? '#ff2e38' : '#3882ff';
+        g.save(); g.translate(wx, wy); g.rotate(c.h); g.fillRect(-2, -3.5, 4, 7); g.restore();
+      }
+      const ax = c.x + fx * (L * 0.65), ay = c.y + fy * (L * 0.65), hCol = redOn ? rCol : bCol;
+      const ag = g.createRadialGradient(ax, ay, 2, ax, ay, L * 0.85);
+      ag.addColorStop(0, hCol + (0.28 + 0.22 * (this.gr ? this.gr.heads : 0)).toFixed(3) + ')'); ag.addColorStop(1, hCol + '0)');
+      g.fillStyle = ag; g.beginPath(); g.arc(ax, ay, L * 0.85, 0, Math.PI * 2); g.fill();
+    }
     const hf = 0.55 + 0.45 * (this.gr ? this.gr.heads : 0);   // Palm City's headlight ramp: always clearly on (owner: the colours must be OBVIOUS), full strength by dusk
-    const col = c.model === 'celica_rigg' ? ['rgba(55,105,255,', 0.68 * hf] : c.model === 'camaro_brad' ? ['rgba(255,200,50,', 0.58 * hf] : ['rgba(255,240,200,', 0.3 * hf];
+    const kRed = c.model === 'cavalier_kosack' && ((Math.floor((this.time || 0) * 6.4) % 2) === 0);
     const beamL = L * 2.6, beamW = Wd * 0.95;
     for (const s of [-1, 1]) {
+      const col = c.model === 'celica_rigg' ? ['rgba(55,105,255,', 0.68 * hf]
+        : c.model === 'camaro_brad' ? ['rgba(255,200,50,', 0.58 * hf]
+        : c.model === 'cavalier_kosack' ? ((s < 0 ? kRed : !kRed) ? [s < 0 ? 'rgba(255,46,56,' : 'rgba(56,130,255,', 0.72 * hf] : ['rgba(255,240,200,', 0.36 * hf])
+        : ['rgba(255,240,200,', 0.3 * hf];
       const ox = c.x + fx * (L / 2) + px * s * Wd * 0.30, oy = c.y + fy * (L / 2) + py * s * Wd * 0.30;
       const tx = ox + fx * beamL, ty = oy + fy * beamL;
       const gr = g.createLinearGradient(ox, oy, tx, ty);
@@ -189,6 +210,7 @@ export class Renderer {
     for (const c of S.cars) if (c.layer === 1 && vis(c.x, c.y)) this.drawGlow(g, c);
     g.globalAlpha = 1; for (const c of S.cars) if (c.layer === 1 && vis(c.x, c.y)) this.drawCar(g, c, 'color');
     if (this.placeFx) this.placeFx(g, S, this.gr, time, vis);   // L12/L13 hook (lf_places_render.js): the 108 Astro's parking lights, Scott's tag, the bark
+    if (this.worldFx) this.worldFx(g, S, time, vis, vx0, vy0, vx1, vy1);   // M-B/M-C + valet + curb destruct world overlays
     FX.over(g, S, this.mission, time);                    // bass rings, sputter, fire, pickup rings, the beat's walkers
     // hero plaques (over the cars, under the grade so they sit in the light)
     if (this.heroArt) this.heroArt.districtPlaque(g, vis);   // L11: the Maple Lawn district plaque
@@ -214,7 +236,27 @@ export class Renderer {
     }
     g.fillStyle = this.warmG; g.fillRect(0, 0, vw, vh);
     g.globalCompositeOperation = 'source-over'; g.fillStyle = this.vig; g.fillRect(0, 0, vw, vh);
-    // L11 HOOK: night lights (hero windows, the OPEN sign) drawn AFTER the grade so they glow through the dusk multiply
-    if (this.heroArt && !far) { g.setTransform(dpr * z, 0, 0, dpr * z, dpr * (vw / 2 - cam.x * z), dpr * (vh / 2 - cam.y * z)); this.heroArt.lights(g); g.setTransform(dpr, 0, 0, dpr, 0, 0); }
+    // L11 HOOK: night lights (hero windows, the OPEN sign) + residential streetlamps drawn AFTER the grade so they glow through the dusk multiply
+    if (!far) {
+      g.setTransform(dpr * z, 0, 0, dpr * z, dpr * (vw / 2 - cam.x * z), dpr * (vh / 2 - cam.y * z));
+      if (gr.lamps > 0.10) {
+        g.save(); g.globalCompositeOperation = 'lighter';
+        const seenL = new Set();
+        for (let cy = Math.floor(vy0 / 256); cy <= Math.floor(vy1 / 256); cy++) for (let cx = Math.floor(vx0 / 256); cx <= Math.floor(vx1 / 256); cx++) {
+          for (const si of this.W.grid[0].get(cx * 100003 + cy) || []) {
+            const e = this.W.seg[si].e; if (seenL.has(e) || e.hw === 'service' || e.len < 90) continue; seenL.add(e);
+            const [lx, ly] = e.pts[e.pts.length >> 1]; if (!vis(lx, ly, 90)) continue;
+            const r = e.hw === 'residential' || e.hw === 'unclassified' ? 54 : 68;
+            const lg = g.createRadialGradient(lx, ly, 2, lx, ly, r);
+            lg.addColorStop(0, `rgba(255,210,128,${(0.32 * gr.lamps).toFixed(3)})`); lg.addColorStop(1, 'rgba(255,210,128,0)');
+            g.fillStyle = lg; g.beginPath(); g.arc(lx, ly, r, 0, Math.PI * 2); g.fill();
+          }
+        }
+        g.restore();
+      }
+      if (this.heroArt) this.heroArt.lights(g);
+      if (this.postLights) this.postLights(g, S, this.gr, time, vis);
+      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
   }
 }

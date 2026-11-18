@@ -7,7 +7,7 @@ import { GroundPainter, CHUNK } from './lf_ground.js';
 import { Renderer } from './lf_render.js';
 import { Input } from '../../palm-city/src/input.js';
 import { Areas, poly } from './lf_areas.js';
-import { players, startRally, stepRally, swapPlayerCar } from './lf_mission.js';
+import { players, startRally, stepRally, swapPlayerCar, pushTrail } from './lf_mission.js';
 import { KingOfTheHill } from './lf_koth.js';
 import { setFx, setFoot, setFootProject } from './lf_fx.js';
 import { Roof, stepOnFoot, lookout, project } from './lf_climb.js';
@@ -22,6 +22,11 @@ import { Places, PlaceInterior, doorPoint } from './lf_places.js';           // 
 import { PlaceRenderer, heroStyle, worldFx } from './lf_places_render.js';
 import { placeVan, mergedSupport, hopLift } from './lf_van.js';        // L7 remainder: David Klink's Scooby-Doo van by Rigg's house (steppable exhaust tip)
 import { Barker, bubbleAt } from './lf_riggisms.js';                   // L7 remainder: Rigg-isms (IGURT GOGURT / fuck shit diesel)
+import { FakeCop } from './lf_fakecop.js';                               // M-B: Kosack's fake-cop pull-over minigame
+import { NightParty } from './lf_party.js';                              // M-C: 100-guest night party (Kosack / Floyds)
+import { ValetLots } from './lf_valet.js';                               // Palm City easy win: PARK IT! (Ledo / Weis / Atholton)
+import { CurbDestruct } from './lf_destruct.js';                         // Palm City easy win: breakable curbside props + combo
+import { LFHelp } from './lf_help.js';                                   // Palm City easy win: '?' HELP / JUMP quick-teleporter
 
 const Q = new URLSearchParams(location.search);
 const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
@@ -92,7 +97,7 @@ let KOTH = null;   // Cul-de-Sac King of the Hill lands in phase 2 with its data
 (async () => {
   const PJP = j('data/places.json').catch(() => null);   // L12/L13: the enterable places (data/places.json)
   Promise.all([j('data/areas.json'), PJP]).then(async ([AJ, PJ]) => {
-    if (PJ) { PL = new Places(PJ); AJ.heroes.push(...PL.heroes()); PL.attach(sim); renderer.heroStyle = heroStyle; renderer.placeFx = (g, S, gr, t, vis) => worldFx(g, S, PL, gr, t, vis); for (const p of PJ.places) { try { KITS[p.interior] = await j('data/interiors/' + p.interior + '.json'); } catch (e) {} } }
+    if (PJ) { PL = new Places(PJ); AJ.heroes.push(...PL.heroes()); PL.attach(sim); valet.attachPlaces(PL); renderer.heroStyle = heroStyle; renderer.placeFx = (g, S, gr, t, vis) => worldFx(g, S, PL, gr, t, vis); for (const p of PJ.places) { try { KITS[p.interior] = await j('data/interiors/' + p.interior + '.json'); } catch (e) {} } }
     areas = new Areas(AJ, W); ground.areas = areas; ground.cache.clear(); ground.job = null;
     if (renderer) renderer.areas = areas;
     sim.setBuildings(AJ.buildings); sim.setGreens(AJ.green); mapCv = null; tick('houses');
@@ -115,6 +120,8 @@ const RIGGB = new Barker();
 const goIn = (id, who) => {
   const P = roster.people.find(p => p.id === id) || { name: id }, car = sim.cars.find(c => c.owner === id), home = P.house && car && Math.hypot(car.x - P.house[0], car.y - P.house[1]) < 260 && Math.abs(car.v) < 25 && !car.follower;
   const guests = id !== who.id && home && (!net || car.inside === id) ? [{ id, name: P.name }] : [];
+  const pGuests = party.indoorGuests(id);
+  for (let i = 0; i < Math.min(18, pGuests.length); i++) guests.push({ id: pGuests[i].id, name: '' });
   insideId = id; inside = new Interior(KITS[id], { who, house: P.name, guests }); if (foot) foot.active = false;
 };
 const goInPlace = (pl, who) => { inside = new PlaceInterior(KITS[pl.interior], { who, exitAt: pl }); if (foot) foot.active = false; };   // L12/L13: a public building, anyone
@@ -132,6 +139,28 @@ const atMyDoor = () => !!doorOf();
 const inHouse = (x, y) => { if (!sim || !sim.houses) return false; for (const f of sim.houses) { let ins = false; for (let k = 0; k < f.length; k += 2) { const ax = f[k], ay = f[k + 1], ex = f[(k + 2) % f.length], ey = f[(k + 3) % f.length]; if ((ay > y) !== (ey > y) && x < (ex - ax) * (y - ay) / (ey - ay) + ax) ins = !ins; } if (ins) return true; } return false; };
 // (the roof wiring lives in phase 2 below — it lands with roof.json)
 setFx(sim, roster);
+const fakeCop = new FakeCop(sim, W);
+const party = new NightParty(); if (Q.get('party')) party.setVenue(Q.get('party'));
+const valet = new ValetLots(W, roster);
+const destruct = new CurbDestruct(W);
+const help = new LFHelp();
+let forcedTod = null;
+function jumpTo(it) {
+  if (!it || !it.pos) return;
+  if (inside) inside = null;
+  if (foot) foot.active = false;
+  if (it.carModel) {
+    const kc = sim.cars.find(c => c.model === it.carModel);
+    if (kc && kc !== sim.player) swapPlayerCar(sim, M, kc);
+  }
+  const r = W.roadInfo(it.pos[0], it.pos[1], 0);
+  const pt = r.e ? sim.nearPt(it.pos[0], it.pos[1], r) : { x: it.pos[0], y: it.pos[1] };
+  sim.player.x = pt.x; sim.player.y = pt.y; sim.player.v = 0; sim.player.layer = 0;
+  if (r.e) sim.player.h = Math.atan2(r.dy, r.dx);
+  if (it.night) forcedTod = 0.88;
+  cam.x = sim.player.x; cam.y = sim.player.y; cam.zoom = 0.62;
+  if (M) pushTrail(M, sim.player.x, sim.player.y, true);
+}
 // ---- task L2: PICK YOUR PLAYER -> RALLY THE CREW (lf_mission.js). ?free = just drive; ?player=<id> skips the pick.
 const PLAYERS = players(roster);
 let M = null, foot = null, picking = !Q.has('free') && !Q.has('cam') && !Q.has('map');
@@ -220,6 +249,7 @@ const STEP = 1 / 60; let SPEED = Math.max(1, Math.min(16, Number(Q.get('speed'))
 let simTime = 0;
 const fixedT = Q.has('t') ? Math.min(1, Math.max(0, Number(Q.get('t')))) : null;
 function timeOfDay() {
+  if (forcedTod !== null) return forcedTod;
   if (fixedT !== null) return fixedT;
   return Math.min(0.97, 0.18 + simTime / 200);  // ~3 minutes from golden hour into blue dusk, then holds (Palm City main.js, verbatim)
 }
@@ -255,7 +285,12 @@ function frame(now) {
     else { sim.step(STEP, beat ? ZERO : inp); if (foot && !beat && !pilot && inp.action && Math.abs(sim.player.v) < FOOT.exitV) { exitCar(foot, sim.player); if (inHouse(foot.x, foot.y)) { const c = sim.player, a = c.h + Math.PI / 2, d = (c.wid || 20) / 2 + 7; foot.x = c.x + Math.cos(a) * d; foot.y = c.y + Math.sin(a) * d; foot.px = foot.x; foot.py = foot.y; } } }
     if (van) van.step(STEP, foot);
     if (!inside && !picking) RIGGB.step(STEP);   // Rigg-isms: the street-side barker (indoors, the interior has its own)
-    if (PL) PL.step(STEP); if (KOTH) KOTH.step(sim, STEP); if (M) stepRally(sim, M, STEP); simTime += STEP; acc -= STEP; n++; }
+    if (PL) PL.step(STEP); if (KOTH) KOTH.step(sim, STEP); if (M) stepRally(sim, M, STEP);
+    party.step(timeOfDay());
+    fakeCop.step(STEP, !!(sim.player.model === 'cavalier_kosack' && ((inp.action && Math.abs(sim.player.v) >= FOOT.exitV) || sirenKey)));
+    valet.step(sim, STEP);
+    destruct.step(sim, STEP);
+    simTime += STEP; acc -= STEP; n++; }
   if (n >= 6 * SPEED) acc = 0;
   if (net) net.frame(sim, dt);
   const c = sim.player;
@@ -288,7 +323,7 @@ function frame(now) {
   // in the sim and black (not dirt-brown) skid marks. setPave no-ops until the sac changes.
   ground.setPave(KOTH && KOTH.state !== 'done' ? (KOTH.state === 'idle' ? (KOTH.candidate ? KOTH.candidate(sim) : null) : KOTH.sac) : null);
   const tod = timeOfDay();
-  renderer.draw(sim, cam, now / 1000, tod); drawStreetLabels();
+  renderer.draw(sim, cam, now / 1000, tod); if (!picking && !mapOpen && !help.open) drawStreetLabels();
   // Cul-de-Sac King of the Hill: the ring, the crown, the banner (screen space, over the world).
   // In idle the ring of the cul-de-sac you're sitting in shows DIM — it never starts itself.
   const ringSac = KOTH && KOTH.state !== 'done' ? (KOTH.state === 'idle' ? (KOTH.candidate ? KOTH.candidate(sim) : null) : KOTH.sac) : null;
@@ -306,13 +341,17 @@ function frame(now) {
   }
   const kb = KOTH && KOTH.banner();
   if (kb) { ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.textAlign = 'center'; let fs = 20; ctx.font = `900 ${fs}px system-ui`; let w = ctx.measureText(kb).width + 30; if (w > VIEW_W - 16) { fs = Math.max(13, Math.floor(fs * (VIEW_W - 16) / w)); ctx.font = `900 ${fs}px system-ui`; w = ctx.measureText(kb).width + 30; } ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(VIEW_W / 2 - w / 2, view.h * 0.22 - 24, w, 38, 14); ctx.fill(); ctx.fillStyle = '#ffd25c'; ctx.fillText(kb, VIEW_W / 2, view.h * 0.22 + 2); }
-  // HUD: the real street under you + speed (≤ 15% of the screen)
-  const r = W.roadInfo(c.x, c.y, c.layer); if ((cornerT -= dt) < 0) { cornerT = 0.4; cornerS = r.e && r.d < r.hw + 30 ? areas.cornerNear(c.x, c.y, c.layer) : ''; }
-  const name = cornerS;                                   // L10: "corner of X & Y" — the street you are on and the nearest cross street
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.textAlign = 'center';
-  if (name) { ctx.font = '800 15px system-ui'; const w = ctx.measureText(name).width + 28; ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(VIEW_W / 2 - w / 2, 18, w, 30, 15); ctx.fill(); ctx.fillStyle = '#ffe4b0'; ctx.fillText(name, VIEW_W / 2, 38); }
-  ctx.font = '800 13px system-ui'; ctx.fillStyle = 'rgba(255,240,215,0.9)';
-  ctx.fillText((foot && foot.active) ? clockText(tod) : Math.round(Math.abs(c.v) / 10 * 2.237) + ' mph · ' + clockText(tod), VIEW_W / 2, 64);   // Palm City's clock rides the HUD line: 6:38 PM -> 7:48 PM as dusk falls
+  // HUD: the real street under you + speed (<= 15% of the screen) — hidden on pick screen so MD-216 sign stays crisp
+  if (!picking) {
+    const r = W.roadInfo(c.x, c.y, c.layer); if ((cornerT -= dt) < 0) { cornerT = 0.4; cornerS = r.e && r.d < r.hw + 30 ? areas.cornerNear(c.x, c.y, c.layer) : ''; }
+    const name = cornerS;                                   // L10: "corner of X & Y" — the street you are on and the nearest cross street
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.textAlign = 'center';
+    if (name) { ctx.font = '800 15px system-ui'; const w = ctx.measureText(name).width + 28; ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(VIEW_W / 2 - w / 2, 18, w, 30, 15); ctx.fill(); ctx.fillStyle = '#ffe4b0'; ctx.fillText(name, VIEW_W / 2, 38); }
+    ctx.font = '800 13px system-ui'; ctx.fillStyle = 'rgba(255,240,215,0.9)';
+    ctx.fillText((foot && foot.active) ? clockText(tod) : Math.round(Math.abs(c.v) / 10 * 2.237) + ' mph · ' + clockText(tod), VIEW_W / 2, 64);   // Palm City's clock rides the HUD line: 6:38 PM -> 7:48 PM as dusk falls
+    const pb = party.banner();
+    if (pb) { ctx.font = '900 11px system-ui'; const pw = ctx.measureText(pb).width + 20; ctx.fillStyle = 'rgba(27,20,48,0.82)'; ctx.beginPath(); ctx.roundRect(VIEW_W - pw - 12, 74, pw, 24, 10); ctx.fill(); ctx.fillStyle = '#d48aff'; ctx.textAlign = 'center'; ctx.fillText(pb, VIEW_W - pw / 2 - 12, 90); }
+  }
   // prefetch: the view + a margin + where the car will be in ~1.2 s, nearest first
   const hw0 = VIEW_W / 2 / cam.zoom + 320, hh0 = view.h / 2 / cam.zoom + 320, want = [], hwf = Math.min(hw0, 1400), hhf = Math.min(hh0, 1800);
   const hw = hwf, hh = hhf, farOut = hw0 * hh0 > 4e6;                           // zoomed right out: prefetch only round the car (the view's ground is drawn as roads, renderer FAR_CHUNKS)
@@ -323,9 +362,19 @@ function frame(now) {
 }
 // ---- task L10: the whole-area MAP (M key, or the MAP pill top-right): every real road, the footprints, the
 // crew's homes and the POIs labelled "corner of X & Y", you as a live arrow. Painted once, then just blitted.
-let mapOpen = Q.has('map');
-addEventListener('keydown', e => { if (e.code === 'KeyM') mapOpen = !mapOpen; });
-canvas.addEventListener('pointerdown', e => { const b = canvas.getBoundingClientRect(), x = (e.clientX - b.left) * VIEW_W / b.width, y = (e.clientY - b.top) * view.h / b.height; if (x > VIEW_W - 76 && y > 12 && y < 46) { mapOpen = !mapOpen; e.stopPropagation(); } }, { capture: true });
+let mapOpen = Q.has('map'), sirenKey = false;
+addEventListener('keydown', e => {
+  if (e.code === 'KeyM') mapOpen = !mapOpen;
+  if (e.code === 'KeyH') sirenKey = true;
+});
+addEventListener('keyup', e => { if (e.code === 'KeyH') sirenKey = false; });
+canvas.addEventListener('pointerdown', e => {
+  if (picking) return;
+  const b = canvas.getBoundingClientRect(), x = (e.clientX - b.left) * VIEW_W / b.width, y = (e.clientY - b.top) * view.h / b.height;
+  const hit = help.tap(x, y, view.h, help.items(sim, roster, PL, party));
+  if (hit) { if (hit.type === 'jump') jumpTo(hit.item); e.stopPropagation(); return; }
+  if (x > VIEW_W - 76 && y > 12 && y < 46) { mapOpen = !mapOpen; e.stopPropagation(); }
+}, { capture: true });
 canvas.addEventListener('pointerdown', e => { if (!KOTH || KOTH.state !== 'idle' || picking || mapOpen || inside || (foot && foot.active) || !KOTH.candidate || !KOTH.candidate(sim)) return; const b = canvas.getBoundingClientRect(), x = (e.clientX - b.left) * VIEW_W / b.width, y = (e.clientY - b.top) * view.h / b.height, kb2 = kothBtnPos(); if (Math.hypot(x - kb2.x, y - kb2.y) <= kb2.r + 8) { KOTH.tryStart(sim); e.stopPropagation(); } }, { capture: true });
 addEventListener('keydown', e => { if (e.code === 'KeyK' && KOTH && !inside) KOTH.tryStart(sim); });
 let mapCv = null, mapK = 0, mapO = [0, 0];
@@ -373,7 +422,7 @@ function drawControls() {
   const g = ctx, TAU2 = Math.PI * 2;
   if (input.stick) { const s2 = input.stick; g.beginPath(); g.arc(s2.bx, s2.by, 56, 0, TAU2); g.fillStyle = 'rgba(255,240,220,0.16)'; g.fill(); g.lineWidth = 3; g.strokeStyle = 'rgba(255,240,220,0.55)'; g.stroke(); g.beginPath(); g.arc(s2.kx, s2.ky, 24, 0, TAU2); g.fillStyle = 'rgba(255,240,220,0.5)'; g.fill(); }
   const b = input.button(), onFoot = foot && foot.active;
-  const label = inside ? (inside.prompt() || '') : onFoot ? ((PL && PL.label(foot, sim)) || (nearAnyCar(foot, sim.cars) ? 'GET IN' : atMyDoor() ? 'GO IN' : '')) : (Math.abs(sim.player.v) < FOOT.exitV ? 'GET OUT' : '');
+  const label = inside ? (inside.prompt() || '') : onFoot ? ((PL && PL.label(foot, sim)) || (nearAnyCar(foot, sim.cars) ? 'GET IN' : atMyDoor() ? 'GO IN' : '')) : (Math.abs(sim.player.v) < FOOT.exitV ? 'GET OUT' : (sim.player.model === 'cavalier_kosack' ? 'SIREN' : ''));
   g.beginPath(); g.arc(b.x, b.y, b.r, 0, TAU2); g.fillStyle = input.btnDown ? 'rgba(255,140,90,0.55)' : 'rgba(255,240,220,0.18)'; g.fill();
   g.lineWidth = 3; g.strokeStyle = label ? 'rgba(255,214,120,0.95)' : 'rgba(255,240,220,0.55)'; g.stroke();
   g.beginPath(); g.arc(b.x, b.y, b.r * 0.42, 0, TAU2); g.fillStyle = label ? 'rgba(255,214,120,0.9)' : 'rgba(255,240,220,0.5)'; g.fill();
@@ -409,12 +458,24 @@ function drawControls() {
     g.font = '800 12px system-ui'; g.fillStyle = '#ffe9c4'; g.fillText('KING', kb2.x, kb2.y - kb2.r - 11);
   }
 }
+renderer.worldFx = (g, S, t, vis, vx0, vy0, vx1, vy1) => {
+  destruct.draw(g, vx0, vy0, vx1, vy1);
+  valet.drawWorld(g, t);
+  party.drawWorld(g, t, vis);
+};
+renderer.postLights = (g, S, gr, t, vis) => {
+  party.drawLights(g, timeOfDay(), t, vis);
+  fakeCop.drawWorld(g, t);
+};
 const _draw = renderer.draw.bind(renderer);
 renderer.draw = (S, cam, t, tod) => {
   _draw(S, cam, t, tod);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.font = '800 13px system-ui'; ctx.textAlign = 'center';
   ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(VIEW_W - 72, 14, 60, 28, 12); ctx.fill(); ctx.fillStyle = '#ffe4b0'; ctx.fillText('MAP', VIEW_W - 42, 33);
   drawMissionHud();
+  fakeCop.drawHud(ctx, VIEW_W);
+  valet.drawHud(ctx, VIEW_W);
+  destruct.drawHud(ctx, VIEW_W);
   if (!inside && RIGGB.sayT > 0) {                          // Rigg-isms over Rigg: on foot (you are Rigg) or over his car (you or the CPU)
     const rf = foot && foot.active && foot.who.id === 'rigg' ? foot : S.cars.find(c => c.owner === 'rigg');
     if (rf) { const x = (rf.x - cam.x) * cam.zoom + VIEW_W / 2, y = (rf.y - cam.y) * cam.zoom + view.h / 2 - (rf === foot ? 36 : 34); if (x > -60 && x < VIEW_W + 60 && y > 30 && y < view.h) bubbleAt(ctx, x, y, RIGGB.said, Math.min(1, RIGGB.sayT * 2), VIEW_W); }
@@ -441,8 +502,9 @@ renderer.draw = (S, cam, t, tod) => {
     }
   }
   drawControls();
+  if (!picking && !mapOpen) help.draw(ctx, view.h, help.items(sim, roster, PL, party));
   if (mapOpen) drawMap(S.player);
   if (picking) drawPick();
 };
 requestAnimationFrame(frame);
-window.__lf = { places: () => PL, goInPlace, door: () => doorOf(), van: () => van, get areas() { return areas; }, inside: () => inside, setSpeed: (k) => { SPEED = k; }, roof: () => RF, sim, W, ground, cam, input, renderer, map: () => mapOpen, mission: () => M, koth: () => KOTH, pick, picking: () => picking, pilot: () => pilot, foot: () => foot, tod: () => timeOfDay(), simTime: () => simTime };
+window.__lf = { places: () => PL, goInPlace, door: () => doorOf(), van: () => van, get areas() { return areas; }, inside: () => inside, setSpeed: (k) => { SPEED = k; }, roof: () => RF, sim, W, ground, cam, input, renderer, map: () => mapOpen, mission: () => M, koth: () => KOTH, fakeCop: () => fakeCop, party: () => party, valet: () => valet, destruct: () => destruct, help: () => help, jumpTo, pick, picking: () => picking, pilot: () => pilot, foot: () => foot, tod: () => timeOfDay(), simTime: () => simTime };
