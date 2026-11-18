@@ -50,6 +50,6 @@ if (IN) {
   check(pe === 'EXIT' && out === 'exit', '6 out the front door');
 }
 const tmp = fs.mkdtempSync('/tmp/l7-'); fs.mkdirSync(path.join(tmp, 'data'));
-execFileSync('python3', [path.join(ROOT, 'tools/interior_build.py'), 'brad', 'split-foyer', 'up', 'couch,cooler,tv,fridge', 'down', 'weights,fireplace,couch', 'mantle-beers', '6', 'dogs', '2', 'mom', 'Teter'], { env: { ...process.env, LF_ROOT: tmp } });
+execFileSync('python3', [path.join(ROOT, 'tools/interior_build.py'), 'brad', 'split-foyer', 'up', 'couch,cooler,tv,fridge,rug,picture,lamp,plant', 'down', 'weights,fireplace,couch,rug,picture,lamp', 'mantle-beers', '6', 'dogs', '2', 'mom', 'Teter'], { env: { ...process.env, LF_ROOT: tmp } });
 check(fs.readFileSync(path.join(tmp, 'data/interiors/brad.json'), 'utf8') === fs.readFileSync(path.join(ROOT, 'data/interiors/brad.json'), 'utf8'), '6 the factory statement (interior brad split-foyer ...) reproduces this interior byte-for-byte');
 console.log(fails ? `SPEC L7 FAIL (${fails})` : 'SPEC L7 OK'); process.exit(fails ? 1 : 0);

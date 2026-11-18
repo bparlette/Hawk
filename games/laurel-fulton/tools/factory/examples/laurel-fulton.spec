@@ -16,5 +16,5 @@ person lamar "Lamar" at "Atholton High School" car "1987 Ford Mustang silver" tr
 person grant "Grant" street "Early Bud Way" car "Cadillac Brougham maroon"
 house "The Lazaris house" jimmy billy
 house "The Floyds" clayton zack
-interior brad split-foyer up couch,cooler,tv,fridge down weights,fireplace,couch mantle-beers 6 dogs 2 mom "Teter"
+interior brad split-foyer up couch,cooler,tv,fridge,rug,picture,lamp,plant down weights,fireplace,couch,rug,picture,lamp mantle-beers 6 dogs 2 mom "Teter"
 mission rally meet "Atholton High School"
