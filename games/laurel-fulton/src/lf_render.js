@@ -245,11 +245,24 @@ export class Renderer {
         for (let cy = Math.floor(vy0 / 256); cy <= Math.floor(vy1 / 256); cy++) for (let cx = Math.floor(vx0 / 256); cx <= Math.floor(vx1 / 256); cx++) {
           for (const si of this.W.grid[0].get(cx * 100003 + cy) || []) {
             const e = this.W.seg[si].e; if (seenL.has(e) || e.hw === 'service' || e.len < 90) continue; seenL.add(e);
-            const [lx, ly] = e.pts[e.pts.length >> 1]; if (!vis(lx, ly, 90)) continue;
             const r = e.hw === 'residential' || e.hw === 'unclassified' ? 54 : 68;
-            const lg = g.createRadialGradient(lx, ly, 2, lx, ly, r);
-            lg.addColorStop(0, `rgba(255,210,128,${(0.32 * gr.lamps).toFixed(3)})`); lg.addColorStop(1, 'rgba(255,210,128,0)');
-            g.fillStyle = lg; g.beginPath(); g.arc(lx, ly, r, 0, Math.PI * 2); g.fill();
+            // Nov 18 (lamp density): a pool every ~140 wu along the edge's polyline, not one
+            // at its midpoint — one-per-edge averaged a pool per ~518 wu and left ~3/4 of
+            // residential street unlit at dusk, where Palm City runs near-continuous pools.
+            let acc = 0, next = 70;
+            for (let pi = 0; pi + 1 < e.pts.length; pi++) {
+              const ax = e.pts[pi][0], ay = e.pts[pi][1], bx = e.pts[pi + 1][0], by = e.pts[pi + 1][1], seg = Math.hypot(bx - ax, by - ay);
+              while (acc + seg >= next && next < e.len - 20) {
+                const u = seg > 0 ? (next - acc) / seg : 0, lx = ax + (bx - ax) * u, ly = ay + (by - ay) * u;
+                if (vis(lx, ly, r)) {
+                  const lg = g.createRadialGradient(lx, ly, 2, lx, ly, r);
+                  lg.addColorStop(0, `rgba(255,210,128,${(0.32 * gr.lamps).toFixed(3)})`); lg.addColorStop(1, 'rgba(255,210,128,0)');
+                  g.fillStyle = lg; g.beginPath(); g.arc(lx, ly, r, 0, Math.PI * 2); g.fill();
+                }
+                next += 140;
+              }
+              acc += seg;
+            }
           }
         }
         g.restore();
