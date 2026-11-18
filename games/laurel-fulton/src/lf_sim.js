@@ -31,14 +31,11 @@ export class LFSim {
     // task L3: speed bumps (data/bumps.json), indexed by 256-unit cell for the crossing test
     this.bumps = opts.bumps || []; this.bumpGrid = new Map();
     this.bumps.forEach((b, i) => { const k = Math.floor(b.x / 256) * 100003 + Math.floor(b.y / 256); let l = this.bumpGrid.get(k); if (!l) this.bumpGrid.set(k, l = []); l.push(i); });
-    // houses (owner, Nov 17): the painted generic footprints are SOLID — you drive around them and bounce off
-    this.houses = opts.buildings || []; this.houseGrid = new Map(); this.houseBox = [];
-    this.houses.forEach((f, i) => {
-      let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-      for (let k = 0; k < f.length; k += 2) { x0 = Math.min(x0, f[k]); x1 = Math.max(x1, f[k]); y0 = Math.min(y0, f[k + 1]); y1 = Math.max(y1, f[k + 1]); }
-      this.houseBox.push([x0, y0, x1, y1]);
-      for (let cx = Math.floor(x0 / 256); cx <= Math.floor(x1 / 256); cx++) for (let cy = Math.floor(y0 / 256); cy <= Math.floor(y1 / 256); cy++) { const key = cx * 100003 + cy; let l = this.houseGrid.get(key); if (!l) this.houseGrid.set(key, l = []); l.push(i); }
-    });
+    // houses (owner, Nov 17): the painted generic footprints are SOLID — you drive around them and
+    // bounce off. Indexed by setBuildings (not only the ctor) because main.js now boots BEFORE
+    // areas.json lands (the load split) and calls it again on arrival.
+    this.houses = []; this.houseGrid = new Map(); this.houseBox = [];
+    if (opts.buildings) this.setBuildings(opts.buildings);
     // every crew car parked at its owner's house, nose toward the street
     for (const p of roster.people) {
       if (!p.active || !p.car || !p.car.sprite || !fleet[p.car.sprite]) continue;
@@ -95,6 +92,16 @@ export class LFSim {
   // Palm City's hitCar, verbatim amounts: the struck panel dents at amt x 1.7, front/rear glass
   // cracks at amt x 1.5 on a hard panel hit, dmg climbs to the wreck at 1. A hit under 0.004
   // doesn't count — and doesn't restart the self-heal clock.
+  setBuildings(buildings) {
+    this.houses = buildings || []; this.houseGrid = new Map(); this.houseBox = [];
+    this.houses.forEach((f, i) => {
+      let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+      for (let k = 0; k < f.length; k += 2) { x0 = Math.min(x0, f[k]); x1 = Math.max(x1, f[k]); y0 = Math.min(y0, f[k + 1]); y1 = Math.max(y1, f[k + 1]); }
+      this.houseBox.push([x0, y0, x1, y1]);
+      for (let cx = Math.floor(x0 / 256); cx <= Math.floor(x1 / 256); cx++) for (let cy = Math.floor(y0 / 256); cy <= Math.floor(y1 / 256); cy++) { const key = cx * 100003 + cy; let l = this.houseGrid.get(key); if (!l) this.houseGrid.set(key, l = []); l.push(i); }
+    });
+  }
+
   hitCar(c, amt, dx, dy) {
     if (amt <= 0.004 || this.time - c.hitT < 0.3) return;
     const before = stageOfCar(c.dmg);
