@@ -27,6 +27,31 @@ export class Renderer {
     if (which === 'shadow' && c.z > 0) { g.save(); g.globalAlpha *= Math.max(0.3, 1 - c.z / 50); g.drawImage(img, sx, sy, sw, sh, c.x + ox + c.z * 0.8, c.y + oy + c.z * 0.25, w, h); g.restore(); return; }   // the shadow stays on the road, sliding down-sun
     g.drawImage(img, sx, sy, sw, sh, c.x + ox + jx, c.y + oy + jy, w, h);
   }
+  drawGlow(g, c) {   // headlight beams + underglow (owner, Nov 18): Rigg's beam is BLUE, Brad's is YELLOW, Jimmy's Astro has BLUE NEON under the car. The authored 'light' sheets are near-empty streaks, so the beams are drawn as gradient cones — the colours are the point, and they must be OBVIOUS.
+    if (c.z > 1) return;
+    const m = this.fleet[c.model]; if (!m) return;
+    const fx = Math.cos(c.h), fy = Math.sin(c.h), px = -fy, py = fx;
+    const L = m.length || 46, Wd = m.width || 20;
+    g.save(); g.globalCompositeOperation = 'lighter';
+    if (c.model === 'astro_jimmy') {   // blue neon underglow
+      const r = L * 0.72, gr = g.createRadialGradient(c.x, c.y, 2, c.x, c.y, r);
+      gr.addColorStop(0, 'rgba(45,95,255,0.55)'); gr.addColorStop(1, 'rgba(45,95,255,0)');
+      g.fillStyle = gr; g.beginPath(); g.ellipse(c.x, c.y, r, Wd * 1.35, c.h, 0, Math.PI * 2); g.fill();
+    }
+    const col = c.model === 'celica_rigg' ? ['rgba(55,105,255,', 0.68] : c.model === 'camaro_brad' ? ['rgba(255,200,50,', 0.58] : ['rgba(255,240,200,', 0.3];
+    const beamL = L * 2.6, beamW = Wd * 0.95;
+    for (const s of [-1, 1]) {
+      const ox = c.x + fx * (L / 2) + px * s * Wd * 0.30, oy = c.y + fy * (L / 2) + py * s * Wd * 0.30;
+      const tx = ox + fx * beamL, ty = oy + fy * beamL;
+      const gr = g.createLinearGradient(ox, oy, tx, ty);
+      gr.addColorStop(0, col[0] + col[1] + ')'); gr.addColorStop(1, col[0] + '0)');
+      g.fillStyle = gr; g.beginPath();
+      g.moveTo(ox + px * 2.5, oy + py * 2.5); g.lineTo(ox - px * 2.5, oy - py * 2.5);
+      g.lineTo(tx - px * beamW / 2, ty - py * beamW / 2); g.lineTo(tx + px * beamW / 2, ty + py * beamW / 2);
+      g.closePath(); g.fill();
+    }
+    g.restore();
+  }
   farRoads(g, z, x0, y0, x1, y1) {                       // every real road in view as a line (min 2 px wide on screen), kerb pass then asphalt
     g.lineCap = 'round'; g.lineJoin = 'round';
     for (const pass of [0, 1]) {
@@ -95,6 +120,7 @@ export class Renderer {
     }
     // shadows of ground-level cars, then those cars
     g.globalAlpha = 0.55; for (const c of S.cars) if (c.layer === 0 && vis(c.x, c.y)) this.drawCar(g, c, 'shadow');
+    for (const c of S.cars) if (c.layer === 0 && vis(c.x, c.y)) this.drawGlow(g, c);
     this.S = S; this.time = time; FX.under(g, S, time, [cam.x - hw - 60, cam.y - hh - 60, cam.x + hw + 60, cam.y + hh + 60]);
     g.globalAlpha = 1; for (const c of S.cars) if (c.layer === 0 && vis(c.x, c.y)) this.drawCar(g, c, 'color');
     // bridge decks: cast shadow on whatever is below, then the deck (asphalt + parapets), then cars on it
@@ -108,6 +134,7 @@ export class Renderer {
     for (const e of decks) { g.strokeStyle = '#d9cbb3'; g.lineWidth = e.w + 9; path(e); g.stroke(); }
     for (const e of decks) { g.strokeStyle = '#5a6272'; g.lineWidth = e.w; path(e); g.stroke(); g.strokeStyle = 'rgba(244,240,230,0.55)'; g.lineWidth = 1.6; g.setLineDash([16, 24]); path(e); g.stroke(); g.setLineDash([]); }
     g.globalAlpha = 0.55; for (const c of S.cars) if (c.layer === 1 && vis(c.x, c.y)) this.drawCar(g, c, 'shadow');
+    for (const c of S.cars) if (c.layer === 1 && vis(c.x, c.y)) this.drawGlow(g, c);
     g.globalAlpha = 1; for (const c of S.cars) if (c.layer === 1 && vis(c.x, c.y)) this.drawCar(g, c, 'color');
     FX.over(g, S, this.mission, time);                    // bass rings, sputter, fire, pickup rings, the beat's walkers
     // hero plaques (over the cars, under the grade so they sit in the light)
