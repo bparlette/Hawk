@@ -12,6 +12,7 @@ export class Net {
       else if (m.type === 'taken') { this.crew = m.crew; this.status = m.id.toUpperCase() + ' IS TAKEN'; }
       else if (m.type === 'you') { this.me = m.id; this.status = 'online'; if (this.onYou) this.onYou(m.id, m.state); }
       else if (m.type === 'snap') {
+        this.rally = m.rally || null;
         this.snaps.push({ at: performance.now(), cars: new Map(m.cars.map(c => [c[0], c])) }); if (this.snaps.length > 8) this.snaps.shift();
         for (const c of m.cars) { const p = this.crew.find(q => q.id === c[0]); if (p) p.human = c[7] || null; }
       }

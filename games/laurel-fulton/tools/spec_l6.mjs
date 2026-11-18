@@ -26,7 +26,7 @@ if (CW) {
   const watch = () => {
     for (const B of WD.crew.values()) {
       const c = B.car, p = last.get(B.id);
-      if (p && !B.human && Math.hypot(c.x - p.x, c.y - p.y) > Math.abs(c.v) * DT + 8) st.teleports++;
+      if (p && !B.human && !c.parked && Math.hypot(c.x - p.x, c.y - p.y) > Math.abs(c.v) * DT + 8) { st.teleports++; if (process.env.DBG) console.log('JUMP', B.id, B.state, Math.round(c.v), Math.round(Math.hypot(c.x - p.x, c.y - p.y)), (WD.S.time / 60).toFixed(1)); }   // (parked cars settling apart at the meet-up are not jumps)
       last.set(B.id, { x: c.x, y: c.y });
       if (B.state === 'drive' && !B.human && Math.abs(c.v) > 40) { st.drive++; const r = W.roadInfo(c.x, c.y, c.layer); if (!(r.e && r.d < r.hw + 15)) st.off++; }
     }
@@ -51,12 +51,25 @@ if (CW) {
     if (Math.hypot(B.car.x - mine.x, B.car.y - mine.y) > 0.5) follow = false;
   }
   check(follow, '3 while picked, the car goes exactly where the friend drives it (the CPU has let go)');
-  // 4 hand back mid-drive
+  // 4 hand back mid-drive: the friend LEAVES while leading the rally -> the CPU keeps leading from exactly there
   mine.v = 200; WD.drive(B.id, mine); const at = { x: B.car.x, y: B.car.y };
-  WD.release(B.id); for (const o of WD.crew.values()) last.set(o.id, { x: o.car.x, y: o.car.y }); st.teleports = 0;   // fresh baseline: the takeover steps above were not watched
-  const home = run(8 * 60, () => B.state === 'home' && B.car.parked);
-  check(st.teleports === 0 && home !== undefined && WD.who().find(c => c.id === B.id).human === null, '4 HAND BACK mid-drive: the CPU carries on from exactly there, no jump');
-  check(home && Math.hypot(B.car.x - B.home.x, B.car.y - B.home.y) < 250, `4 ... and drives ${B.name} home`, `parked ${Math.round(Math.hypot(B.car.x - B.home.x, B.car.y - B.home.y) / 10)} m from the driveway spot, from ${Math.round(Math.hypot(at.x - B.home.x, at.y - B.home.y) / 10)} m away`);
+  const R0 = WD.rally; check(!!R0 && R0.leader === B.id, '4 picking a crew member started THEIR rally (they lead it)', `${B.id} leads, ${R0 ? R0.M.stops.length : 0} houses to collect`);
+  WD.release(B.id); for (const o of WD.crew.values()) last.set(o.id, { x: o.car.x, y: o.car.y }); st.teleports = 0;
+  check(WD.rally && WD.rally.leader === B.id && WD.who().find(c => c.id === B.id).human === null, '4 HAND BACK mid-rally: the CPU keeps leading, same rally, same place');
+  let max = 0; const done = run(40 * 60, () => { max = Math.max(max, WD.rally ? WD.rally.M.convoy.length : max); return WD.rally && WD.rally.M.complete; });
+  check(done && st.teleports === 0, '4 the CPU finishes the rally the friend started: every house collected, THE CREW IS ASSEMBLED, no jumps', `${max} in the convoy, ${(WD.S.time / 60).toFixed(1)} game-min`);
+  const members = [...WD.crew.values()].filter(o => o.rallying || o.id === B.id), seen = new Set();
+  run(14 * 60, () => { for (const o of members) if (o.state === 'home' && o.car.parked && Math.hypot(o.car.x - o.home.x, o.car.y - o.home.y) < 250) seen.add(o.id); return !WD.rally && seen.size === members.length; });
+  check(!WD.rally && seen.size === members.length, '4 ... then the crew hang out and EVERY member drives home', `${seen.size}/${members.length} back at their own driveways`);
+  // 4b a CPU-led rally (no friends at all), and a friend taking over the leader MID-rally
+  const WD2 = new CW.CrewWorld(W, ROSTER, FLEET, { bumps: BUMPS, autoRally: 5, firstWait: 1e9 });
+  let t2 = 0; while (t2 < 600 && !WD2.rally) { WD2.step(DT); t2 += DT; }
+  const lead = WD2.rally && WD2.rally.leader; let n2 = 0; while (t2 < 3000 && WD2.rally && WD2.rally.M.convoy.length < 3) { WD2.step(DT); t2 += DT; }
+  check(!!lead && WD2.rally && WD2.rally.M.convoy.length >= 3, '4b CPU crew rally themselves: a CPU leads and collects the crew with nobody connected', `${lead} leads, ${WD2.rally ? WD2.rally.M.convoy.length : 0} in the convoy`);
+  const snap = WD2.state(WD2.crew.get(lead).car), took = WD2.takeover(lead, 'Friend C');
+  check(took && took.x === snap.x && WD2.rally.leader === lead && WD2.rally.M.convoy.length >= 3, '4b a friend takes over the CPU leader MID-rally: same spot, same rally, same convoy (a mixed convoy)');
+  const lc = WD2.crew.get(lead).car, lp = { x: lc.x, y: lc.y }; for (let i = 0; i < 600; i++) { WD2.S.stickDrive(lc, { jx: 1, jy: 0, jm: 1, keys: {} }, DT); WD2.drive(lead, lc); WD2.step(DT); }
+  const f0 = WD2.rally.M.convoy[0].car; check(Math.hypot(f0.x - lc.x, f0.y - lc.y) < 2500 && Math.hypot(lc.x - lp.x, lc.y - lp.y) > 100 && Math.abs(f0.v) > 20, '4b the CPU followers follow the FRIEND\'s path', `${Math.round(Math.hypot(f0.x - lc.x, f0.y - lc.y) / 10)} m behind`);
 }
 // B — real sockets
 let WS = null; try { WS = createRequire(path.join(ROOT, 'server/package.json'))('ws'); } catch (e) { check(false, 'server deps installed (cd server && npm install)', String(e).slice(0, 100)); }

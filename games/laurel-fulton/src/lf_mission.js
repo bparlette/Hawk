@@ -42,13 +42,13 @@ export function startRally(S, roster, id) {
   return M;
 }
 
-function pushTrail(M, x, y, force) {
+export function pushTrail(M, x, y, force) {
   const T = M.trail, n = T.x.length;
   if (!force && n && Math.hypot(x - T.x[n - 1], y - T.y[n - 1]) < 10) return;
   T.s.push(n ? T.s[n - 1] + Math.hypot(x - T.x[n - 1], y - T.y[n - 1]) : 0); T.x.push(x); T.y.push(y);
 }
 
-function join(S, M, person, car) {
+export function join(S, M, person, car) {
   car.parked = false; car.follower = true;
   const f = { car, person, joinedAt: M.time, ti: -1 };
   M.convoy.unshift(f);                                    // the newest member slots in right behind you
@@ -64,7 +64,7 @@ function locate(M, f) {
   return bi;
 }
 
-function follow(S, M, f, dt) {
+export function follow(S, M, f, dt) {
   const c = f.car, T = M.trail, n = T.x.length;
   if (M.beat || M.complete || n < 2) { S.driveCar(c, c.v > 5 ? -1 : 0, 0, dt, 380); return; }
   f.ti = locate(M, f);
@@ -90,7 +90,7 @@ function follow(S, M, f, dt) {
 }
 
 // convoy order = actual progress along your path (a stalled car can never deadlock the cars behind it)
-function reorder(M) {
+export function reorder(M) {
   if (M.convoy.length < 2 || !M.trail.s.length) return;
   for (const f of M.convoy) if (f.ti < 0) f.ti = locate(M, f);
   M.convoy.sort((a, b) => M.trail.s[b.ti] - M.trail.s[a.ti]);
