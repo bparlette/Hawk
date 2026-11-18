@@ -15,14 +15,18 @@ import * as FX from './lf_fx.js';
 const lerp = (a, b, u) => a + (b - a) * u;
 const clamp01 = (x) => x < 0 ? 0 : x > 1 ? 1 : x;
 const smooth = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
-// Grade keyframes over time of day t (0 = golden hour, 1 = blue dusk) — Palm City's KEYS, verbatim.
+// Grade keyframes over time of day t (0 = golden hour, 1 = blue dusk) — Palm City's KEYS, verbatim
+// EXCEPT the two night keys (t 0.86 / 1.00): owner Nov 18 — Palm City's night multiply (down to
+// rgb(24,38,108) + 0.70 vignette) rendered Laurel near-black on her phone ("way too dark at
+// night"), so the night floor is lifted here: mul ~3x brighter, vignette capped ~0.5. Laurel-only
+// divergence; day/dusk keys and all ramps stay at parity.
 const KEYS = [
   { t: 0.00, mul: [255, 246, 224], roofMul: [255, 248, 228], warm: 0.62, glow: 0.48, shadow: 0.68, shadowCol: [108, 68, 56], vigCol: [62, 34, 24], vigAlpha: 0.18, eastGlow: [248, 162, 112] },
   { t: 0.35, mul: [255, 236, 200], roofMul: [255, 240, 208], warm: 0.64, glow: 0.46, shadow: 0.66, shadowCol: [104, 62, 58], vigCol: [58, 32, 26], vigAlpha: 0.22, eastGlow: [244, 152, 116] },
   { t: 0.55, mul: [242, 186, 152], roofMul: [248, 198, 166], warm: 0.50, glow: 0.34, shadow: 0.60, shadowCol: [88, 52, 74],  vigCol: [48, 26, 42], vigAlpha: 0.32, eastGlow: [220, 128, 138] },
   { t: 0.72, mul: [162, 118, 174], roofMul: [204, 160, 208], warm: 0.24, glow: 0.14, shadow: 0.52, shadowCol: [46, 38, 108], vigCol: [24, 18, 58], vigAlpha: 0.48, eastGlow: [158, 94, 200] },
-  { t: 0.86, mul: [52, 68, 148],   roofMul: [128, 132, 206], warm: 0.05, glow: 0.04, shadow: 0.44, shadowCol: [22, 26, 78],  vigCol: [10, 14, 42], vigAlpha: 0.62, eastGlow: [150, 90, 200] },
-  { t: 1.00, mul: [24, 38, 108],   roofMul: [108, 120, 198], warm: 0.02, glow: 0.00, shadow: 0.42, shadowCol: [20, 25, 74],  vigCol: [8, 12, 38],  vigAlpha: 0.70, eastGlow: [150, 90, 200] },
+  { t: 0.86, mul: [100, 114, 180], roofMul: [152, 154, 218], warm: 0.05, glow: 0.04, shadow: 0.44, shadowCol: [22, 26, 78],  vigCol: [16, 22, 56], vigAlpha: 0.50, eastGlow: [150, 90, 200] },
+  { t: 1.00, mul: [82, 100, 166],  roofMul: [140, 148, 214], warm: 0.02, glow: 0.00, shadow: 0.42, shadowCol: [20, 25, 74],  vigCol: [14, 20, 52], vigAlpha: 0.52, eastGlow: [150, 90, 200] },
 ];
 export function grade(t) {
   let i = 0;
