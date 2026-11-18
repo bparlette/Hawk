@@ -49,7 +49,7 @@ export class InteriorRenderer {
     if (I.teter) this.teter(g, I.teter, time);
     if (I.dad) this.dad(g, I.dad, time);                 // Rigg's house: the old guy in his recliner
     for (const d of I.dogs) this.dog(g, d, time);
-    for (const gu of I.guests) this.guest(g, gu, time);  // CPU crew idling at home (CrewWorld B.inside): a beer by the fire
+    for (const gu of I.guests) this.guest(g, gu, time, I.partyImgs && I.partyImgs.cut);  // CPU crew idling at home (CrewWorld B.inside): a beer by the fire; party guests: the G18 cutaway sheet
     if (I.son) this.son(g, I.son, time);                 // Brian, coming down the stairs
     for (const c of I.callers || []) this.person(g, c, time, (c.id.length * 61) % 300 + 30);   // L14: the bark-beat speakers (Kosack up top, Rigg below)
     this.hero(g, I.hero, time);
@@ -357,10 +357,25 @@ export class InteriorRenderer {
     g.fillStyle = '#d8ccb4'; for (const [u, w] of [[-1.1, 0.22], [-0.7, 0.14], [0.9, 0.2], [1.2, 0.12]]) g.fillRect(SX(x + u), SY(z + 0.06), w * k, 0.06 * k);   // chunks on the floor
   }
   son(g, S, time) { this.person(g, S, time, 150); }
-  guest(g, gu, time) {                                     // CPU crew idling at home: by the fire with a beer; they sip now and then
+  guest(g, gu, time, cut) {                              // CPU crew idling at home: by the fire with a beer; they sip now and then
+    if (gu.party && cut && cut.complete && cut.naturalWidth) { this.partyGuest(g, gu, time, cut); return; }   // a party guest wears the cutaway sheet, not a hue-shifted clone of you
     this.person(g, { ...gu, moving: false, walk: 0 }, time, (gu.id.length * 47) % 300 + 20);
     const { SX, SY, k } = this, u = gu.drinkT > 0 ? Math.min(1, (MOVE_DRINK - gu.drinkT) / 0.4) : 0, tilt = gu.drinkT > 0 ? Math.min(1, (MOVE_DRINK - gu.drinkT) / 0.6) * 1.9 : 0;
     g.save(); g.translate(SX(gu.x + gu.face * 0.22), SY(gu.z + 0.95 + u * 0.62)); g.rotate(-gu.face * tilt * 0.6); g.fillStyle = '#c9ccd2'; g.fillRect(-0.035 * k, -0.13 * k, 0.07 * k, 0.13 * k); g.fillStyle = '#c42b2b'; g.fillRect(-0.035 * k, -0.09 * k, 0.07 * k, 0.04 * k); g.restore();
+  }
+  // a night-party guest from the G18 cutaway sheet (party_crowd_cutaway.webp: an 8x2 grid of
+  // 80x120 side-view partygoers, DESIGN-G18 §2) — the sheet lf_party.js always loaded but
+  // nobody drew. Drawn at the house person height (~1.8 m, the hero's scale), feet on the
+  // floor slab, dancers/cheerers bobbing on their placement phase.
+  partyGuest(g, gu, time, cut) {
+    const { SX, SY, k } = this;
+    this.shadow(g, gu.x, gu.z, 0.55, 0.3);
+    const cols = 8, rows = 2, cw = cut.width / cols, ch = cut.height / rows, cell = ((gu.cell || 0) % (cols * rows) + cols * rows) % (cols * rows);
+    const h = 1.8 * k * (gu.scale || 1), w = h * (cw / ch);
+    const bob = (gu.pose === 'dance' || gu.pose === 'cheer') ? Math.abs(Math.sin(time * 2.6 + (gu.bobPhase || 0))) * 0.07 * k : 0;
+    g.save(); g.translate(SX(gu.x), SY(gu.z) - bob); if ((gu.face || 1) < 0) g.scale(-1, 1);
+    g.drawImage(cut, (cell % cols) * cw, Math.floor(cell / cols) * ch, cw, ch, -w / 2, -h, w, h);
+    g.restore();
   }
   teter(g, T, time) {                                      // Brad's mom in her recliner: grey-blonde set hair, a lilac cardigan, slippers up
     const { SX, SY, k } = this, x = T.x, z = T.z, bob = Math.sin(time * 1.3) * 0.01;

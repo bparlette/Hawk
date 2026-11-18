@@ -81,6 +81,30 @@ export class NightParty {
     return v.slots.filter(s => s.layer === 'indoor');
   }
 
+  cutSheet() { const im = this.imgs && this.imgs.cut; return im && im.complete && im.naturalWidth ? im : null; }
+
+  // Nov 18 leftover fix (re-based onto the L17 port): the raw indoor slots above were fed
+  // to the interior as generic figures — capped at 18, all stood in a row at the host CPU's
+  // idle spot, and the cutaway sheet loaded above was never drawn. Map EVERY indoor slot of
+  // the HOST venue onto the entered house's kit: the placement floors are DESIGN-G18's
+  // ("basement"/"lower" = the party floor, "landing" = the entry floor); a slot naming a
+  // floor the kit actually has wins outright. Guests gather only at the night's HOST house
+  // (the rotation this class owns; the pre-L17 shipped behaviour) — the port's outdoor
+  // crowd already honours the host the same way.
+  interiorGuests(houseId, K) {
+    if (!K || !K.floors) return [];
+    const key = houseId === 'kosack' ? 'kosack' : (houseId === 'clayton' || houseId === 'zack' || houseId === 'floyds') ? 'floyds' : null;
+    if (!key || key !== this.venueKey) return [];
+    const slots = this.indoorGuests(houseId); if (!slots.length) return [];
+    const F = {}; for (const f of K.floors) F[f.id] = f;
+    const partyFl = (K.party && F[K.party.floor]) ? K.party.floor : (K.cpuIdle && F[K.cpuIdle.floor]) ? K.cpuIdle.floor : K.floors[0].id;
+    const doorFl = (K.door && F[K.door.floor]) ? K.door.floor : partyFl;
+    return slots.map(s => {
+      const fl = F[s.floor] ? s.floor : (s.floor === 'landing' ? doorFl : partyFl), F2 = F[fl];
+      return { id: s.id, name: '', party: true, floor: fl, x: Math.max(F2.x0 + 0.3, Math.min(F2.x1 - 0.3, s.x)), face: s.facing || 1, scale: s.scale || 1, cell: s.sheetIdx || 0, pose: s.pose || '', bobPhase: s.bobPhase || 0 };
+    });
+  }
+
   drawWorld(g, time, vis) { this.crowd.under(g, null, null, time, { vis, tod: this.tod || 0, host: this.venueKey }); }          // pool + patio: real at the house, day and night
 
   drawLights(g, tod, time, vis) { this.crowd.post(g, null, null, time, { vis, tod, host: this.venueKey }); }                         // the crowd, the lights and the music rings (world space, after the grade)
