@@ -22,11 +22,12 @@ IDS = {'camaro_brad': 'camaro_87_twotone', 'camaro_clayton': 'camaro_87', 'caval
 NAMES = ['Clayton Floyd', 'Zack Floyd', 'The Floyds', 'Floyds', 'Floyd', 'Lazaris', 'Brad', 'Kosack', 'Jimmy', 'Billy', 'Jason', 'Clayton', 'Zack', 'Rigg', 'Grant', 'Lamar', 'Teter']
 STREETS = ['Stansfield Road', 'Stansfield Rd', 'Derby Drive', 'Derby Dr', 'Sweet Cherry Lane', 'Sweet Cherry Ln', 'Susini Drive', 'Susini Dr', 'Hughes Avenue', 'Hughes Ave',
            'Mossy Stone Court', 'Early Bud Way', 'Stansfield', 'Derby', 'Sweet Cherry', 'Susini', 'Hughes', 'Mossy Stone', 'Early Bud']
-LOWER_IDS = ['teter', 'brad', 'kosack', 'jimmy', 'billy', 'jason', 'clayton', 'zack', 'rigg', 'grant', 'lamar']
+LOWER_IDS = ['floyds', 'floyd', 'lazaris', 'teter', 'brad', 'kosack', 'jimmy', 'billy', 'jason', 'clayton', 'zack', 'rigg', 'grant', 'lamar']
 def sanitize(text):
     for a, b in IDS.items(): text = text.replace(a, b)
     for s in STREETS: text = text.replace(s, 'a crew street')
-    for n in NAMES: text = re.sub(r'\b' + re.escape(n) + r"('s)?\b", 'a crew member' + (r'\1' if False else ''), text)
+    for n in NAMES: text = re.sub(r'(?<=[{,\s])' + re.escape(n) + r'(?=\s*:)', "'crew'", text)   # an unquoted object key (Brad: '#e8e4dc') stays valid JS
+    for n in NAMES: text = re.sub(r'\b' + re.escape(n) + r"('s)?\b", lambda m: m.group(0) if m.group(0).islower() else 'A CREW MEMBER' if m.group(0).isupper() else 'a crew member', text, flags=re.I)   # any case (BRAD, Rigg's, ...)
     for n in LOWER_IDS: text = re.sub(r"(?<![A-Za-z_])'" + n + r"'", "'crew'", text); text = re.sub(r'\b' + n + r'\b', 'crew', text)   # ids, keys and any lowercase mention
     return re.sub(r'\bTETER\b', 'THE MOM', text)
 if os.path.exists(OUT): shutil.rmtree(OUT)
