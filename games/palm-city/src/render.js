@@ -714,6 +714,10 @@ export class Renderer {
       }
     }
     for (const c of S.cars) {
+      // HERO CAR HOOK: once the chase blend is nearly full, the composite draws the hero car
+      // itself (drawChaseHeroCar) — the frame's own copy would double it. Its shadow pass
+      // above still draws, which grounds the composited car.
+      if (chase && CHASE.heroCar && ease > 0.85 && c === S.player.car) continue;
       if (c.x < vx0 - 50 || c.x > vx1 + 50 || c.y < vy0 - 50 || c.y > vy1 + 50) continue;
       const { m, k, rows } = this.carCell(c);
       const st = c.dmg >= STAGES.car[0] ? stageOf(c.dmg, 'car') : 0, e = st ? this.carStage[c.model][st] : null;
@@ -896,24 +900,37 @@ export class Renderer {
     if (chase) {
       // the frame is complete (grade, light, vignette and all): lay it onto the real canvas
       // in strips under the sky, then hand the renderer its real fields back
-      this.compositeChase(saved, chase, ease, zoom, G, time);
+      this.compositeChase(saved, chase, ease, zoom, G, time, S);
       this.ctx = saved.ctx; this.vw = saved.vw; this.vh = saved.vh; this.fw = saved.fw; this.fh = saved.fh;
       this.shadowCv = saved.shadowCv; this.lightCv = saved.lightCv; this.bloomA = saved.bloomA; this.bloomB = saved.bloomB;
     }
   }
 
   // OPEN ROAD chase composite: the painted sky band above the horizon, then the chase frame in
-  // CHASE.strips horizontal strips, each strip's source shifted vertically by the course
-  // elevation ahead of the car (elevAt(routeS + ahead) - elevAt(routeS), gained and blended) —
-  // straights rise toward the horizon and the road falls away past a crest. The vertical
-  // squash (CHASE.squash at full blend) is the oblique tilt: screen distance below the horizon
-  // maps to frame distance / squash, with the car anchored CHASE.anchor down the screen.
-  // Ground, cars, crowds and smoke all live in the one frame, so everything rides the same
-  // per-strip offsets — nothing floats or sinks against the ground it sits on. A strip whose
-  // source would run off the frame's top/bottom edge is clamped to the frame edge instead
-  // (the far field compresses at the horizon, which is what a horizon does; the silhouette
-  // strip drawn over the seam hides the join).
-  compositeChase(saved, chase, ease, zoom, G, time) {
+  // CHASE.strips horizontal strips under a TRUE perspective warp (the old version was a uniform
+  // vertical squash with a fixed horizontal crop — a tilted top-down map: road edges parallel,
+  // no vanishing point).
+  //
+  // THE WARP. For a screen row y, let o = y - HY (px below the horizon) and oa = anchorY - HY
+  // (the car's depth below the horizon). The frame distance ahead of the car shown at that row is
+  //   D(o) = CHASE.perspFar * (oa - o) / (oa + CHASE.perspM * o)
+  // — 0 at the car, perspFar at the horizon, negative behind the car at the screen bottom, with
+  // |dD/do| ~28x larger at the horizon than at the bottom: far rows compress, near rows stretch.
+  // Each strip ALSO resamples horizontally: its source width is vw * (D + perspD0) / perspD0
+  // (1:1 at the car, wider toward the horizon, narrower at the bumper), centred on the car's
+  // frame column — that is what makes the road's edges converge. The course elevation shift
+  // (elevAt(routeS + ahead) - elevAt(routeS), gained and blended) rides on top, so straights
+  // still rise toward the horizon and the road falls away past a crest.
+  //
+  // NO TEARS: source rows are computed at strip BOUNDARIES and shared by the strips on both
+  // sides, so the sampling is one continuous piecewise warp — a curve crossing a boundary
+  // cannot step or split (the old per-strip centres + edge clamping could). Ground, cars,
+  // crowds and smoke all live in the one frame, so everything rides the same warp.
+  //
+  // BLEND-IN: at ease 0 the mapping is exactly the old linear one (plain frame, car centred);
+  // source row and source width lerp to the perspective values with ease, so the picture
+  // morphs into the chase view instead of popping.
+  compositeChase(saved, chase, ease, zoom, G, time, S) {
     const ctx = saved.ctx, vw = saved.vw, vh = saved.vh, dpr = this.dpr;
     const sq = lerp(1, CHASE.squash, ease);
     const anchorY = lerp(vh / 2, vh * CHASE.anchor, ease);
@@ -925,20 +942,68 @@ export class Renderer {
     if (HY > 0.5) this.drawChaseSky(ctx, vw, HY, G, chase, time, ease);
     const frame = this.chaseCv;
     const carFrameX = CHASE.frameW / 2, carFrameY = CHASE.frameH / 2 + CHASE.lead * zoom;
-    const sx = Math.max(0, Math.min(CHASE.frameW - vw, carFrameX - vw / 2));
-    const sw = Math.min(vw, CHASE.frameW - sx), dx = (vw - sw) / 2;
     const N = CHASE.strips, yTop = Math.max(0, HY), stripH = (vh - yTop) / N;
+    const oa = Math.max(1, anchorY - HY);                        // the car's depth below the horizon (px)
     const e0 = elevAt(chase.routeS);
+    // Source row at a screen row y (boundary-exact; shared by neighbouring strips).
+    const srcYAt = (y) => {
+      const o = y - HY;
+      const D = CHASE.perspFar * (oa - o) / (oa + CHASE.perspM * Math.max(0, o));
+      const off = (elevAt(chase.routeS + D / zoom) - e0) * CHASE.elevGain * ease;
+      const persp = carFrameY - D + off / sq;
+      const lin = carFrameY + (y - anchorY + off) / sq;
+      return lerp(lin, persp, ease);
+    };
+    // Source width sampled at a screen row y: 1:1 at the car, wider far, narrower near.
+    const srcWAt = (y) => {
+      const o = y - HY;
+      const D = CHASE.perspFar * (oa - o) / (oa + CHASE.perspM * Math.max(0, o));
+      return Math.max(90, Math.min(CHASE.frameW, lerp(vw, vw * (D + CHASE.perspD0) / CHASE.perspD0, ease)));
+    };
+    const rows = new Float32Array(N + 1);
+    for (let j = 0; j <= N; j++) {
+      let v = srcYAt(yTop + j * stripH);
+      v = Math.max(0, Math.min(CHASE.frameH - 1, v));
+      if (j > 0) v = Math.max(v, rows[j - 1] + 0.25);            // monotonic: no strip may fold back over its neighbour
+      rows[j] = v;
+    }
     for (let i = 0; i < N; i++) {
-      const y = yTop + i * stripH, mid = y + stripH / 2;
-      const ahead = (anchorY - mid) / (sq * zoom);                 // world units ahead of the car this strip shows
-      const off = (elevAt(chase.routeS + ahead) - e0) * CHASE.elevGain * ease;
-      const srcH = stripH / sq;
-      let srcY = carFrameY + (y - anchorY + off) / sq;
-      srcY = Math.max(0, Math.min(CHASE.frameH - srcH, srcY));
-      ctx.drawImage(frame, sx * dpr, srcY * dpr, sw * dpr, srcH * dpr, dx, y, sw, stripH + 1);
+      const y = yTop + i * stripH;
+      const srcY = rows[i], srcH = Math.max(0.25, rows[i + 1] - rows[i]);
+      const sw = srcWAt(y + stripH / 2);
+      const sx = Math.max(0, Math.min(CHASE.frameW - sw, carFrameX - sw / 2));
+      ctx.drawImage(frame, sx * dpr, srcY * dpr, sw * dpr, srcH * dpr, 0, y, vw, stripH + 2);   // +2 overlap: the next strip overdraws the seam, softening the scale kink at the boundary
     }
     if (HY > 0.5) this.drawChaseSilhouette(ctx, vw, HY, chase, ease);
+    if (CHASE.heroCar && S && S.player.mode === 'car' && S.player.car) this.drawChaseHeroCar(ctx, vw, anchorY, chase, ease, zoom, S.player.car);
+  }
+
+  // === HERO CAR HOOK (STAND-IN — NOT the final look) ===
+  // Draws the hero car over the warped world, centred on the anchor — the "low and large, from
+  // directly behind" slot of the Nov 16 frame. STAND-IN ONLY: it reuses the player's existing
+  // TOP-DOWN sheet cell (the same cell the world pass draws, rotated by chase.rot so it points
+  // up-screen exactly as it does in the frame) scaled by CHASE.heroScale, fading/growing in
+  // across the top half of the blend; past ease 0.85 the world pass skips its own copy (see the
+  // car loop in draw()). It exists so the framing — size, anchor height, road room around the
+  // car — can be judged in captures before the real asset exists.
+  // WHEN THE REAR-VIEW SPRITE LANDS: draw it here instead (upright, no rotation, anchored by
+  // its rear bumper at anchorY), keep the fade/scale envelope, and remove the world-pass skip.
+  drawChaseHeroCar(ctx, vw, anchorY, chase, ease, zoom, car) {
+    const ramp = Math.max(0, Math.min(1, (ease - 0.45) / 0.4));
+    if (ramp <= 0) return;
+    const { m, k, rows } = this.carCell(car);
+    const f = m.color, img = f.img;
+    const cw = img.width / m.cols, ch = img.height / rows;
+    const cx = (k % m.cols) * cw, cy = ((k / m.cols) | 0) * ch;
+    const sc = lerp(zoom, CHASE.heroScale, Math.max(0, Math.min(1, (ease - 0.45) / 0.55)));
+    ctx.save();
+    ctx.globalAlpha = ramp;
+    ctx.translate(vw / 2, anchorY);
+    ctx.rotate(chase.rot);
+    ctx.scale(sc, sc);
+    ctx.drawImage(img, cx, cy, cw, ch, f.ox, f.oy, f.w, f.h);
+    ctx.restore();
+    ctx.globalAlpha = 1;
   }
 
   // The chase sky: a dusk gradient in the grade's own palette — saturated blue at the top at
