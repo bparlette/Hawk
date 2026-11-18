@@ -33,6 +33,12 @@ export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
   g.globalAlpha = 1;
   const font = (px, w = 800) => `${w} ${px}px "Avenir Next", "Futura", "Trebuchet MS", system-ui, sans-serif`;
   const top = (opts.safeTop || 0) + 14;
+  // OPEN ROAD chase view up (blend past half, in the car): the picture owns the screen — the
+  // title card + tutorial line, the clock and the ? / MAP chrome retire. Kept: the wanted
+  // stars, the event HUD (drawEventHud: the OutRun card, countdown, results), messages, trick
+  // callouts and every touch control. Drawing only — input hit areas are untouched, same
+  // pattern as the ctrlFade retire below.
+  const chaseUp = !!(sim.chase && sim.chase.blend > 0.5 && sim.player.mode === 'car');
 
   // wanted stars, top right
   for (let i = 0; i < 5; i++) {
@@ -41,16 +47,18 @@ export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
     star(g, vw - 22 - (4 - i) * 26, top + 12, flash ? 12.5 : 11, on);
   }
   // clock, top left
-  g.font = font(15, 700);
-  g.textAlign = 'left';
-  g.textBaseline = 'middle';
-  g.fillStyle = 'rgba(20,12,40,0.45)';
-  g.fillText(clockText(t), 17, top + 13);
-  g.fillStyle = '#fff1d8';
-  g.fillText(clockText(t), 16, top + 12);
+  if (!chaseUp) {
+    g.font = font(15, 700);
+    g.textAlign = 'left';
+    g.textBaseline = 'middle';
+    g.fillStyle = 'rgba(20,12,40,0.45)';
+    g.fillText(clockText(t), 17, top + 13);
+    g.fillStyle = '#fff1d8';
+    g.fillText(clockText(t), 16, top + 12);
+  }
 
-  // title card at start
-  if (opts.title > 0) {
+  // title card at start (never over the chase view)
+  if (opts.title > 0 && !chaseUp) {
     const a = Math.min(1, opts.title / 0.8);
     g.globalAlpha = a;
     g.textAlign = 'center';
@@ -126,14 +134,14 @@ export function drawHud(g, vw, vh, dpr, sim, input, t, time, opts) {
   }
 
   // HELP, top-left under the clock: pauses and lists everything there is to do
-  if (!sim.siege) {
+  if (!sim.siege && !chaseUp) {
     const q = input.helpBtn();
     g.fillStyle = 'rgba(20,12,40,0.5)'; g.beginPath(); g.roundRect(q.x, q.y, q.w, q.h, 8); g.fill();
     g.lineWidth = 2; g.strokeStyle = 'rgba(255,214,120,0.95)'; g.stroke();
     g.font = font(16, 900); g.textAlign = 'center'; g.fillStyle = '#ffe9b0'; g.fillText('?', q.x + q.w / 2, q.y + q.h / 2 + 1);
   }
   // MAP toggle, under the stars
-  if (!sim.siege) {
+  if (!sim.siege && !chaseUp) {
     const m = input.mapBtn();
     g.fillStyle = input.mapOpen ? 'rgba(255,212,92,0.9)' : 'rgba(20,12,40,0.5)'; g.beginPath(); g.roundRect(m.x, m.y, m.w, m.h, 8); g.fill();
     g.lineWidth = 2; g.strokeStyle = 'rgba(255,214,120,0.95)'; g.stroke();

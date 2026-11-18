@@ -270,7 +270,7 @@ function frame(now) {
   if (playing !== wasPlaying) { wasPlaying = playing; if (playing) recorder.replayStarted(); else recorder.replayEnded(); }
   if (director.play) { replayFrame(dt); requestAnimationFrame(frame); return; }
   const panel = panelMode();
-  recorder.setMenuOpen(!!panel);   // the REC/NEWS pills never cover the menu's JUMP tiles
+  recorder.setMenuOpen(!!panel || !!(sim.chase && sim.chase.blend > 0.5 && sim.player.mode === 'car'));   // the REC/NEWS pills never cover the menu's JUMP tiles — nor the Open Road chase view (the news PiP itself still rides, drawn below)
   input.panelTap = panel ? (p) => panelAct(helpHit(p, VIEW_W, view.h, sim, panel, safeTop())) : null;
   if (feel.slowT > 0) feel.slowT -= dt;
   acc += panel ? 0 : dt * (feel.slowT > 0 ? 0.35 : 1);      // paused under a panel
