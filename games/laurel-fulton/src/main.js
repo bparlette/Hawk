@@ -33,7 +33,11 @@ function resize() {
   if (renderer) renderer.resize(VIEW_W, view.h, DPR);
 }
 addEventListener('resize', resize); resize();
-const msg = (t) => { ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = '#1b1430'; ctx.fillRect(0, 0, VIEW_W, view.h); ctx.fillStyle = '#ffe4b0'; ctx.font = '800 22px system-ui'; ctx.textAlign = 'center'; ctx.fillText(t, VIEW_W / 2, view.h / 2); };
+const msg = (t) => {                                   // the loading line, WRAPPED to the screen (it used to run off both edges, hiding what was loading)
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = '#1b1430'; ctx.fillRect(0, 0, VIEW_W, view.h); ctx.fillStyle = '#ffe4b0'; ctx.font = '800 17px system-ui'; ctx.textAlign = 'center';
+  const lines = []; let cur = ''; for (const w of String(t).split(' ')) { if (ctx.measureText(cur + ' ' + w).width > VIEW_W - 40 && cur) { lines.push(cur); cur = w; } else cur = cur ? cur + ' ' + w : w; } lines.push(cur);
+  lines.forEach((l, i) => ctx.fillText(l, VIEW_W / 2, view.h / 2 + (i - (lines.length - 1) / 2) * 24));
+};
 msg((document.title || 'LAUREL / FULTON').toUpperCase() + ' — loading the real roads…');   // any factory city: its own name (play.html <title>)
 const j = async (f) => { const r = await fetch(f); if (!r.ok) throw new Error(f + ' failed to load (' + r.status + ')'); return r.json(); };
 // LOAD SPLIT (Moth, Nov 17 — the owner's phone said "doesn't load"): boot used to await EVERYTHING —
@@ -53,6 +57,7 @@ const files = new Set(); for (const m of Object.values(fleet)) for (const k of [
 const imgs = {};
 const BLANK = new Image(); BLANK.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 await Promise.all([...files].map(async (f) => { const im = new Image(); im.src = 'assets/' + f; try { await im.decode(); imgs[f] = im; } catch (e) { imgs[f] = BLANK; } }));   // a bad sprite must not kill the game
+msg(TITLE + ' — building the map…'); await new Promise(r => setTimeout(r, 0));   // paint that line before the heavy setup
 const W = new GraphWorld(G);
 let areas = new Areas({ buildings: [], parking: [], green: [], heroes: [] }, W);   // real areas land in phase 2
 const ground = new GroundPainter(W, 64, areas, BJ.bumps);
