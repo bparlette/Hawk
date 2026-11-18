@@ -168,7 +168,7 @@ export function follow(S, M, f, dt) {
   // FOLLOWER ANTI-STUCK (Nov 18): a follower that has made no progress along your path for 6 s while it should be moving
   // (wedged reversing into a rail, bush or house) is lifted back onto the nearest road point — the player's own rule (lf_sim)
   const prog = T.s[f.ti] || 0;
-  if (gap > SP && prog <= (f.bestS || 0) + 5) { f.noProg = (f.noProg || 0) + dt; } else { f.noProg = 0; f.bestS = Math.max(f.bestS || 0, prog); }
+  if (gap > SP && Math.abs(c.v) < 25 && prog <= (f.bestS || 0) + 5) { f.noProg = (f.noProg || 0) + dt; } else { f.noProg = 0; f.bestS = Math.max(f.bestS || 0, prog); }
   if (f.noProg > 6 && S.unstick) { f.noProg = 0; S.unstick(c); f.ti = -1; f.lost = true; }   // lifted: re-find its place on the WHOLE trail (once)
 }
 
