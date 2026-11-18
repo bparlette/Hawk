@@ -41,7 +41,7 @@ const imgs = {};
 await Promise.all([...files].map(async (f) => { const im = new Image(); im.src = 'assets/' + f; try { await im.decode(); } catch (e) { throw new Error('sprite failed to decode: assets/' + f); } imgs[f] = im; }));
 const RJ = await fetch('data/roof.json').then(r => r.ok ? r.json() : null).catch(() => null);   // task L5: a city without a climbable roof just has none
 const W = new GraphWorld(G), areas = new Areas(AJ, W), ground = new GroundPainter(W, 64, areas, BJ.bumps);
-const opts = { bumps: BJ.bumps };
+const opts = { bumps: BJ.bumps, buildings: AJ.buildings };
 if (Q.get('spawn')) { const [x, y, h] = Q.get('spawn').split(',').map(Number); opts.spawn = { x, y }; opts.h = h || 0; }
 if (Q.get('model')) opts.model = Q.get('model');
 const sim = new LFSim(W, roster, fleet, opts);
@@ -78,7 +78,17 @@ if (net) net.onYou = (id, st) => {                        // take over that crew
 function pick(id) { if (net) { if (!net.takenBy(id)) net.pick(id); return; }
   M = startRally(sim, roster, id); renderer.mission = M; picking = false; foot = createFoot(PLAYERS.find(p => p.id === id)); setFoot(foot);
   if (KITS[id] && !Q.has('pilot')) goIn(id, foot.who);   // PICK Brad -> you start in his house
-  foot.onClimb = (c) => { learnLabel(sim, 'lf_roof'); if (c.onto === 'roof' && !foot.summited && M) { foot.summited = true; M.msg = 'THE LOOKOUT'; M.msgT = 3.5; } }; if (Q.has('pilot')) pilot = new Pilot(sim, W, M); }
+  foot.onClimb = (c) => { learnLabel(sim, 'lf_roof'); if (c.onto === 'roof' && !foot.summited && M) { foot.summited = true; M.msg = 'THE LOOKOUT'; M.msgT = 3.5; } }; if (Q.has('pilot')) pilot = new Pilot(sim, W, M); startIntro(); }
+// the opening (owner, Nov 17): the game starts zoomed out on the WHOLE MAP, then
+// flies in to the picked person's house. Any tap skips it. Captures (?speed/?cam/
+// ?pilot) and ?nointro skip it so their framing stays deterministic, and so does
+// a pick that starts indoors (L7: Brad's house — you begin in the cutaway).
+let intro = null;
+function startIntro() {
+  if (inside || Q.has('cam') || Q.has('pilot') || Q.has('speed') || Q.has('nointro')) return;   // NOT `fixed`: pick() can run before that const exists
+  intro = { t: 0, dur: 3.0, x1: sim.player.x, y1: sim.player.y, z1: 0.62 };   // from = the camera's spot on the first frame (pick() can run before cam exists)
+}
+canvas.addEventListener('pointerdown', () => { if (intro) intro.t = intro.dur; });
 if (Q.get('player')) pick(Q.get('player'));
 const pickRows = () => PLAYERS.map((p, i) => ({ p, x: 24, y: 150 + i * 62, w: VIEW_W - 48, h: 54 }));
 canvas.addEventListener('pointerdown', e => {
@@ -121,16 +131,25 @@ function drawMissionHud() {
 } renderer.resize(VIEW_W, view.h, DPR);
 const input = new Input(canvas, view); input.fightOn = true;
 const fixed = Q.get('cam') ? Q.get('cam').split(',').map(Number) : null;
-const cam = { x: fixed ? fixed[0] : sim.player.x, y: fixed ? fixed[1] : sim.player.y, zoom: fixed && fixed[2] ? fixed[2] : 0.62 };   // owner Nov 17: zoom out, more world
+const B0 = W.bounds, fitZ = Math.min(VIEW_W / (B0.x1 - B0.x0), view.h / (B0.y1 - B0.y0)) * 0.98;
+const cam = fixed ? { x: fixed[0], y: fixed[1], zoom: fixed[2] || 1 }
+  : (picking || Q.get('player')) && !Q.has('speed') && !Q.has('pilot') && !Q.has('nointro')
+    ? { x: (B0.x0 + B0.x1) / 2, y: (B0.y0 + B0.y1) / 2, zoom: fitZ }   // open on the whole map
+    : { x: sim.player.x, y: sim.player.y, zoom: 0.62 };   // owner Nov 17: zoom out, more world
+// WORLD PULSE (owner, Nov 17): while driving, every so often the camera eases
+// FAR out (~0.14 — about 300 m across) to show the world, holds, then eases
+// back to the normal chase zoom. Skipped for captures, beats, foot and intro.
+const PULSE = { far: 0.14, out: 3.0, hold: 3.0, back: 3.0, rest: 27.0 };
+let pulseT = -PULSE.rest;
 for (let cy = -2; cy <= 2; cy++) for (let cx = -1; cx <= 1; cx++) ground.get(Math.floor(cam.x / CHUNK) + cx, Math.floor(cam.y / CHUNK) + cy);
 ground.stats.sync = 0;
 const STEP = 1 / 60; let SPEED = Math.max(1, Math.min(16, Number(Q.get('speed')) || 1)); let acc = 0, last = performance.now();   // ?speed=N: N sim steps per frame (captures)
 function frame(now) {
-  const dt = Math.min(0.1, (now - last) / 1000); last = now; acc += dt * SPEED;
+  const dt = Math.max(0, Math.min(0.1, (now - last) / 1000)); last = now; acc += dt * SPEED;   // dt clamped at 0 too: a rAF timestamp can predate the module-eval performance.now() (startup clock skew sent the intro's t negative and the zoom with it)
   let n = 0;
   if (pilot && M && M.complete) pilot = null;            // the autopilot's job ends at the finish: the stick is yours again
   while (acc >= STEP && n < 6 * SPEED) { const inp = pilot ? (input.read(), pilot.input(STEP)) : input.read(); if (picking) { acc = 0; break; }
-    const beat = M && M.beat, ZERO = { jx: 0, jy: 0, jm: 0, keys: {} };
+    const beat = (M && M.beat) || intro, ZERO = { jx: 0, jy: 0, jm: 0, keys: {} };
     if (inside) { sim.step(STEP, ZERO); if (inside.step(STEP, inp) === 'exit') goOut(); }
     else if (foot && foot.active) { sim.step(STEP, ZERO); if (!beat) { stepOnFoot(foot, STEP, inp, RF); if (inp.action && nearCar(foot, sim.player)) foot.active = false; else if (inp.action && atMyDoor()) goIn(foot.who.id, foot.who); } }
     else { sim.step(STEP, beat ? ZERO : inp); if (foot && !beat && !pilot && inp.action && Math.abs(sim.player.v) < FOOT.exitV) exitCar(foot, sim.player); }
@@ -141,12 +160,26 @@ function frame(now) {
   let tx = c.x + Math.cos(c.h) * c.v * 0.42, ty = c.y + Math.sin(c.h) * c.v * 0.42, tz = 0.62 - Math.min(0.10, Math.abs(c.v) / 290 * 0.10);   // Palm City's chase framing, pulled back (owner Nov 17: zoom out — ~68 m across instead of ~42)
   if (M && M.beat) { tx = M.beat.cx; ty = M.beat.cy; } if (M) tz *= M.camZoom;      // the arrival beat: push in on the huddle
   if (foot && foot.active && !fixed) {                   // on foot: follow the walker, closer in
-    tx = foot.x; ty = foot.y; tz = foot.climb ? 1.1 : 1.5;
+    tx = foot.x; ty = foot.y; tz = foot.climb ? 1.1 : 1.8;   // on foot (owner, Nov 17): 20% closer than the old 1.5
     if (RF && foot.z >= RF.h - 2 && !foot.air && !foot.climb) { const L = lookout(foot, RF, sim, M, view); tx = L.x; ty = L.y; tz = L.zoom; }   // L5: up top, the closing shot
   }
   if (fixed) { tx = fixed[0]; ty = fixed[1]; tz = fixed[2] || 1; }
-  const k = fixed ? 1 : 1 - Math.exp(-dt * 3.2);
-  cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k; cam.zoom += (tz - cam.zoom) * (fixed ? 1 : 1 - Math.exp(-dt * 1.5));
+  const pulseOK = !fixed && !(foot && foot.active) && !intro && !pilot && !Q.has('speed') && !(M && M.beat);
+  if (pulseOK) { pulseT += dt; if (pulseT > PULSE.out + PULSE.hold + PULSE.back) pulseT = -PULSE.rest; }
+  if (pulseOK && pulseT >= 0) {
+    const p = pulseT, u = p < PULSE.out ? p / PULSE.out : p < PULSE.out + PULSE.hold ? 1 : 1 - (p - PULSE.out - PULSE.hold) / PULSE.back;
+    const e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+    tz = tz + (PULSE.far - tz) * e;
+  }
+  if (intro) {
+    if (intro.x0 === undefined) { intro.x0 = cam.x; intro.y0 = cam.y; intro.z0 = cam.zoom; }
+    intro.t += dt; const u = Math.min(1, intro.t / intro.dur), e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+    cam.x = intro.x0 + (intro.x1 - intro.x0) * e; cam.y = intro.y0 + (intro.y1 - intro.y0) * e; cam.zoom = intro.z0 + (intro.z1 - intro.z0) * e;
+    if (u >= 1) intro = null;
+  } else {
+    const k = fixed ? 1 : 1 - Math.exp(-dt * 3.2);
+    cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k; cam.zoom += (tz - cam.zoom) * (fixed ? 1 : 1 - Math.exp(-dt * 1.5));
+  }
   if (inside) { IR.draw(inside, VIEW_W, view.h, DPR, now / 1000); drawControls(); requestAnimationFrame(frame); return; }
   renderer.draw(sim, cam, now / 1000);
   // HUD: the real street under you + speed (≤ 15% of the screen)
