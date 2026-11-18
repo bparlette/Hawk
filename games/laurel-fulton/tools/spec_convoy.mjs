@@ -119,14 +119,15 @@ if (MI) {
   check(stats.gapBad / Math.max(1, stats.gapN) < 0.08, 'road spacing: each car 2.5–70 m behind the one ahead while moving (> 92%)', `${(100 * (1 - stats.gapBad / Math.max(1, stats.gapN))).toFixed(1)}% in band`);
   check(doubled, 'doubled back mid-rally and the convoy carried on');
   const B = M.barks, L = B ? B.log : [], says = (k) => L.filter(e => e.key === k), thrown = (k) => L.filter(e => e.thrown === k);
+  const CANON_COLE = ['Cole Trickle!', 'Cole Trickle!!', 'Cole Trickle! Cole!'], CANON_RUB = ['rubbin is racing', "rubbin is racin'", 'rubbin is racing, baby!'];   // owner canon (tasking abe38df9): the barks must match these strings EXACTLY, case included — all-caps is a fail
   check(X.alongside > 120 && X.passes >= 3, 'RACING: followers surge alongside you and PASS you (measured from outside)', `${X.passes} passes, ${X.alongside} alongside-steps, you at ${X.passV.slice(0, 5).join('/')} u/s`);
   check(M.race.events.filter(e => e.ev === 'pass').length >= 3 && new Set(M.race.events.filter(e => e.ev === 'pass').map(e => e.id)).size >= 2, 'more than one crew member goes for the pass', [...new Set(M.race.events.filter(e => e.ev === 'pass').map(e => e.id))].join(' '));
   check(X.racingSteps / Math.max(1, stats.steps) > 0.05 && X.racingSteps / Math.max(1, stats.steps) < 0.7, 'it is a race WITH a parade in it (racing 5–70% of follower-steps, the rest in formation)', `${(100 * X.racingSteps / Math.max(1, stats.steps)).toFixed(0)}%`);
-  check(says('cole').length >= 6, 'they yell "Cole Trickle" (rolling bark)', `${says('cole').length} times; e.g. ${says('cole').slice(0, 2).map(e => e.model + ': ' + e.text).join(' | ')}`);
+  check(says('cole').length >= 6 && says('cole').every(e => CANON_COLE.includes(e.text)), 'they yell "Cole Trickle" — canon case, exact strings (rolling bark)', `${says('cole').length} times; e.g. ${says('cole').slice(0, 2).map(e => e.model + ': ' + e.text).join(' | ')}`);
   const rub = says('rub');
   const inSync = rub.filter(r => X.contacts.some(ct => Math.abs(ct - r.t) < 0.2)).length;
   check(rub.length > 0 && inSync / rub.length > 0.9, 'every "rubbin is racing" lands on an actual contact (same moment, a car touching a car)', `${inSync}/${rub.length}`);
-  check(X.bumps >= 3 && rub.length >= 3 && rub.every(e => e.text.includes("RUBBIN'")), `bumps make them yell "rubbin is racing"`, `${X.bumps} bumps (outside count), ${rub.length} "RUBBIN' IS RACING" barks`);
+  check(X.bumps >= 3 && rub.length >= 3 && rub.every(e => CANON_RUB.includes(e.text)), `bumps make them yell "rubbin is racing" — canon case, exact strings`, `${X.bumps} bumps (outside count), ${rub.length} "rubbin is racing" barks`);
   const cd = (() => { let bad = 0; const by = new Map(); for (const e of L) if (e.key === 'cole') { const p = by.get(e.model); if (p !== undefined && e.t - p < 0.0001) bad++; by.set(e.model, e.t); } return bad; })();
   check(cd === 0, 'bark cooldowns hold (no car repeats a line inside its cooldown)');
   check(thrown('bill').length >= 4, 'they throw ONES (dollar bills) out the window at the cars', `${thrown('bill').length} bills (${B.stats.hits} thrown things landed on a car, all kinds)`);

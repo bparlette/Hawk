@@ -5,8 +5,8 @@
 //   raceTune(S, M, f, dt, k)   called from lf_mission.follow() for every follower, every step -> null (drive the slot as usual) or
 //                              { ax, ay, want } = steer at (ax, ay), hold `want` u/s. Runs on the SAME physics (driveCar) and the
 //                              same road-snapping, so a racer never leaves the street. Used by the solo rally AND the one world.
-//   stepConvoy(S, M, dt)       called from lf_mission.stepRally (client side): bump detection -> "RUBBIN' IS RACING", the rolling
-//                              "COLE TRICKLE", ones / pens / pennies, and the Barks (lf_barks.js) step. M.barks holds it all.
+//   stepConvoy(S, M, dt)       called from lf_mission.stepRally (client side): bump detection -> "rubbin is racing", the rolling
+//                              "Cole Trickle", ones / pens / pennies, and the Barks (lf_barks.js) step. M.barks holds it all.
 //
 // A follower's RACE is a small state machine: idle -> pull (surge up alongside, a lane off yours) -> pass (nose ahead of you) ->
 // gloat (holds the lead ~2 s, bills out the window) -> drop (lifts, falls back to its slot) -> idle. Two racers at most; slow
@@ -80,7 +80,7 @@ export function raceTune(S, M, f, dt, k) {
 }
 
 // ---- the client-side layer: bumps, barks, throws --------------------------------------------------------------------------
-const LINES = { cole: ['COLE TRICKLE!', 'COLE TRICKLE!!', 'COLE TRICKLE! COLE!'], rub: ["RUBBIN' IS RACING!", "RUBBIN' IS RACIN'!", "RUBBIN' IS RACING, BABY!"] };
+const LINES = { cole: ['Cole Trickle!', 'Cole Trickle!!', 'Cole Trickle! Cole!'], rub: ['rubbin is racing', "rubbin is racin'", 'rubbin is racing, baby!'] };
 const REACH = (a, b) => (a.len + b.len) / 4 + (a.wid + b.wid) / 4;
 
 export function stepConvoy(S, M, dt) {
@@ -89,7 +89,7 @@ export function stepConvoy(S, M, dt) {
   R.t = (R.t || 0) + dt;
   const cars = M.convoy.map(f => ({ f, c: f.car }));
   const pick = (arr) => arr[Math.floor(R.rnd() * arr.length)];
-  // RUBBIN' IS RACING: a follower makes contact with you (or another follower) -> it yells it, with a cooldown per car
+  // rubbin is racing: a follower makes contact with you (or another follower) -> it yells it, with a cooldown per car
   const touch = (a, b, fa) => {
     const d = Math.hypot(a.x - b.x, a.y - b.y); if (d > REACH(a, b) + 3 || a.layer !== b.layer) return;
     if (B.say(a, pick(LINES.rub), { key: 'rub', cd: 3.5, urgent: true, ttl: 2.1 })) { R.bumps++; R.events.push({ t: M.time, ev: 'bump', id: fa.person && fa.person.id }); }
@@ -108,7 +108,7 @@ export function stepConvoy(S, M, dt) {
     f.bark = (f.bark ?? (3 + R.rnd() * 6)) - dt;
     if (f.bark <= 0 && B.say(c, pick(LINES.cole), { key: 'cole', cd: 6 })) f.bark = 7 + R.rnd() * 8;
     else if (f.bark <= 0) f.bark = 1.5;
-    if (st.st === 'gloat' && !st.cheered) { st.cheered = true; B.say(c, 'COLE TRICKLE!', { key: 'cole', cd: 0, urgent: true }); }
+    if (st.st === 'gloat' && !st.cheered) { st.cheered = true; B.say(c, 'Cole Trickle!', { key: 'cole', cd: 0, urgent: true }); }
     if (st.st !== 'gloat') st.cheered = false;
     // ones out the window at the cars; pens + pennies at each other (convoy cars, you included)
     const others = [P, ...cars.filter(o => o.c !== c).map(o => o.c)].filter(o => Math.hypot(o.x - c.x, o.y - c.y) < 520 && Math.hypot(o.x - c.x, o.y - c.y) > 30);
