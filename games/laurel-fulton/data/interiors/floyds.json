@@ -1,0 +1,199 @@
+{
+ "id": "floyds",
+ "type": "split-foyer",
+ "width": 12.0,
+ "grade": 0.0,
+ "ceiling": 2.5,
+ "floors": [
+  {
+   "id": "landing",
+   "z": 0.3,
+   "x0": 0.0,
+   "x1": 1.7
+  },
+  {
+   "id": "main",
+   "z": 1.55,
+   "x0": 3.6,
+   "x1": 12.0
+  },
+  {
+   "id": "lower",
+   "z": -0.95,
+   "x0": 3.6,
+   "x1": 12.0
+  }
+ ],
+ "links": [
+  {
+   "id": "up",
+   "a": "landing",
+   "ax": 1.7,
+   "b": "main",
+   "bx": 3.6
+  },
+  {
+   "id": "down",
+   "a": "landing",
+   "ax": 1.7,
+   "b": "lower",
+   "bx": 3.6
+  }
+ ],
+ "door": {
+  "floor": "landing",
+  "x": 0.35
+ },
+ "rooms": [
+  {
+   "floor": "main",
+   "x0": 3.6,
+   "x1": 9.2,
+   "name": "upstairs living room",
+   "wall": "#d9c79c",
+   "floorc": "#9c6b44"
+  },
+  {
+   "floor": "main",
+   "x0": 9.2,
+   "x1": 12.0,
+   "name": "kitchen",
+   "wall": "#e6dcb8",
+   "floorc": "#c9b99a"
+  },
+  {
+   "floor": "lower",
+   "x0": 3.6,
+   "x1": 12.0,
+   "name": "downstairs living room",
+   "wall": "#8a6446",
+   "floorc": "#6e5a4c"
+  }
+ ],
+ "props": [
+  {
+   "kind": "recliner",
+   "floor": "main",
+   "x": 4.3
+  },
+  {
+   "kind": "couch",
+   "floor": "main",
+   "x": 6.6
+  },
+  {
+   "kind": "rug",
+   "floor": "main",
+   "x": 6.6
+  },
+  {
+   "kind": "picture",
+   "floor": "main",
+   "x": 6.4
+  },
+  {
+   "kind": "lamp",
+   "floor": "main",
+   "x": 9.05
+  },
+  {
+   "kind": "plant",
+   "floor": "main",
+   "x": 3.95
+  },
+  {
+   "kind": "cooler",
+   "floor": "main",
+   "x": 8.3
+  },
+  {
+   "kind": "tv",
+   "floor": "main",
+   "x": 10.2
+  },
+  {
+   "kind": "fridge",
+   "floor": "main",
+   "x": 11.3
+  },
+  {
+   "kind": "fireplace",
+   "floor": "lower",
+   "x": 8.6,
+   "mantle": 6
+  },
+  {
+   "kind": "couch",
+   "floor": "lower",
+   "x": 10.8
+  },
+  {
+   "kind": "rug",
+   "floor": "lower",
+   "x": 9.6
+  },
+  {
+   "kind": "tv",
+   "floor": "lower",
+   "x": 6.9
+  },
+  {
+   "kind": "picture",
+   "floor": "lower",
+   "x": 5.2
+  },
+  {
+   "kind": "lamp",
+   "floor": "lower",
+   "x": 11.65
+  }
+ ],
+ "spots": [
+  {
+   "act": "EXIT",
+   "floor": "landing",
+   "x": 0.35
+  },
+  {
+   "act": "GRAB BEER",
+   "floor": "main",
+   "x": 8.3,
+   "src": "cooler"
+  },
+  {
+   "act": "GRAB BEER",
+   "floor": "main",
+   "x": 11.3,
+   "src": "fridge"
+  },
+  {
+   "act": "GRAB BEER",
+   "floor": "lower",
+   "x": 8.6,
+   "src": "mantle"
+  }
+ ],
+ "teter": {
+  "name": "Mom",
+  "floor": "main",
+  "x": 4.3,
+  "lines": [
+   "you owe me money for the broken butter churner."
+  ]
+ },
+ "dogs": 0,
+ "cpuIdle": {
+  "floor": "lower",
+  "x": 9.799999999999999
+ },
+ "son": {
+  "name": "Dad",
+  "floor": "lower",
+  "x": 7.7
+ },
+ "party": {
+  "floor": "lower",
+  "x0": 3.9,
+  "x1": 11.7
+ }
+}

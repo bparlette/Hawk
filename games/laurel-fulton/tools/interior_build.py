@@ -20,6 +20,13 @@ THE KIT (metres; x runs front door -> back wall, z up from the yard grade; the g
            door down to the basement = his computer + CD writer) takes  upper <furn,...> dad "<Name>" son "<Name>"; its flights
            are `press` links (stairs overlap a floor: push UP/DOWN at the foot to take them). `dad`+`son` = the house BEAT: you
            walk in, the dad yells for the son, the son comes down the stairs.
+  Nov 18 (the Floyds): split-foyer takes  mom-lines "<l1>|<l2>"  (a mom with her OWN line, not Brad's mom's),  dad "<Name>"
+           (a dad DOWNSTAIRS GAMING by the fireplace who has NO line in canon: he rides the engine's silent-resident slot —
+           the `son` key — because the engine's `dad` slot is hard-wired to Rigg's yell beat and this dad never speaks; he
+           stands at the downstairs TV, by the fire),  party 1  (the night party's indoor room is the lower level, M-C), and
+           house <id>  (a SHARED house — the Floyds is Clayton AND Zack's: the kit is built once per brother so the loader's
+           person-keyed entry works for both, and every copy carries the HOUSE id, so figures keyed off the kit id behave
+           the same whoever you play).
 A new house type is a new layout function below; new furniture is a new kind in src/lf_interior_render.js."""
 import os, sys, json, shlex
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); import world_cfg
@@ -56,6 +63,13 @@ def split_foyer(pid, up, down, beers, dogs, mom, o=None):
     k['dogs'] = dogs
     fp = next((p for p in k['props'] if p['kind'] == 'fireplace'), None)
     k['cpuIdle'] = {'floor': fp['floor'], 'x': fp['x'] + 1.2} if fp else {'floor': 'main', 'x': 6.6}   # CPU-you idles with a beer by the fire
+    if mom and o and o('mom-lines'): k['teter']['lines'] = o('mom-lines').split('|')      # the Floyds' mom has her own line (the butter churner)
+    if o and o('dad'):                                                                    # the Floyds' dad: downstairs gaming by the fireplace, silent (see header)
+        tv = next((p for p in k['props'] if p['kind'] == 'tv' and p['floor'] == 'lower'), None)
+        k['son'] = {'name': o('dad'), 'floor': 'lower', 'x': round((tv['x'] + 0.8) if tv else (fp['x'] - 0.9), 2)}
+    if o and o('party'):                                                                  # the night party's indoor guests belong in the lower level (M-C)
+        lf = next(f for f in k['floors'] if f['id'] == 'lower'); k['party'] = {'floor': 'lower', 'x0': lf['x0'] + 0.3, 'x1': lf['x1'] - 0.3}
+    if o and o('house'): k['id'] = o('house')                                              # a shared house: every person-keyed copy carries the house id
     return k
 
 def two_story_entry(pid, up, down, beers, dogs, mom, o):
