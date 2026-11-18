@@ -11,13 +11,16 @@
 //   B.inside / B.spot  (L7 remainder, Nov 18)   a CPU who is HOME is not "just a parked car": if their house has an interior kit (opts.kits,
 //                      data/interiors/<id>.json) they idle INSIDE — B.inside = 'brad', B.spot = the kit's cpuIdle {floor, x} (Brad: by the
 //                      fire with a beer). It clears the moment they leave (drive, rally, a friend's takeover). In the snapshot as [8].
+//   M-D (Nov 18)       the rally runs the ARRIVAL BEAT here (M.beat via lf_mission.stepBeat): a pickup takes the beat's 4.7 s,
+//                      the house's crew enlist when it ends, and rallyState().beat carries {huddle, cast, seconds in} to the clients.
+//                      A friend ON FOOT is shared too: B.foot (from their car report's f) goes out in the snap as w: [[id, x, y, h]...].
 //
 // THE CPU LIFE (no Palm City equivalent: Palm City's traffic is anonymous; its DRIVER is reused — lf_pilot's stick
 // autopilot, the same input path a thumb uses): home (parked, a while) -> drive to somewhere real (a POI or another crew
 // house) -> hang out -> drive home -> repeat. Lamar stays parked burning at the school (owner: his car is on fire).
 import { LFSim } from './lf_sim.js';
 import { Pilot } from './lf_pilot.js';
-import { join, follow, pushTrail, reorder, players } from './lf_mission.js';
+import { join, follow, pushTrail, reorder, players, makeBeat, stepBeat } from './lf_mission.js';
 
 const rngOf = (seed) => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 
@@ -64,10 +67,23 @@ export class CrewWorld {
   stepRally(dt) {
     const R = this.rally; if (!R) return; const M = R.M, L = this.crew.get(R.leader), P = L.car; M.time += dt; if (R.msgT > 0) R.msgT -= dt;
     R.S2.player = P; pushTrail(M, P.x, P.y); if ((R._ro = (R._ro || 0) + dt) > 0.5) { R._ro = 0; reorder(M); }
-    if (!M.complete) for (const st of M.stops) {                    // pulled in slow at a crew house: they climb in behind you
+    // M-D: THE ARRIVAL BEAT runs in the world too. Pulling in slow at a crew house no longer enlists
+    // instantly: the beat runs on the solo timing (lf_mission.stepBeat) — followers brake on M.beat
+    // (follow() already does), the leader is damped and not driven (step()), the house's crew climb in
+    // when the beat ENDS, and rallyState() carries the beat so every client plays it on its own screen.
+    if (M.beat) {
+      P.v *= Math.pow(0.02, dt);
+      const st = M.beat.stop;
+      if (stepBeat(M, dt)) {
+        st.done = true; for (let i = 0; i < st.people.length; i++) this.enlist(R, st.people[i], st.cars[i]);
+        R.msg = st.people.map(p => p.name.split(' ')[0]).join(' + ') + (st.people.length > 1 ? ' ARE IN' : ' IS IN'); R.msgT = 2.5;
+      }
+    } else if (!M.complete) for (const st of M.stops) {             // pulled in slow at a crew house: the beat starts
       if (st.done || Math.min(Math.hypot(P.x - st.x, P.y - st.y), Math.hypot(P.x - st.kx, P.y - st.ky)) > 190 || Math.abs(P.v) > 45) continue;
-      st.done = true; for (let i = 0; i < st.people.length; i++) this.enlist(R, st.people[i], st.cars[i]);
-      R.msg = st.people.map(p => p.name.split(' ')[0]).join(' + ') + (st.people.length > 1 ? ' ARE IN' : ' IS IN'); R.msgT = 2.5; break;
+      const hx = (P.x + st.x) / 2, hy = (P.y + st.y) / 2;           // the huddle: between the leader's car and the house, as solo
+      M.beat = makeBeat([], hx, hy, st); M.beat.at = M.time;
+      M.beat.who = [R.leader, ...M.convoy.map(f => f.person.id), ...st.people.map(p => p.id)];   // the cast, for the clients' figures
+      break;
     }
     if (!M.complete && M.stops.every(s => s.done)) {
       const [mx, my] = M.meet.pos;
@@ -111,7 +127,7 @@ export class CrewWorld {
       else { B.back = true; this.go(B, B.home.x, B.home.y); }        // 'stay' is over: head home
     }
     const R = this.rally, L = R && this.crew.get(R.leader);
-    if (L && !L.human) { R.S2.player = L.car; L.car.parked = false; if (!R.pilot || L.pilot !== R.pilot) this.setPilot(R); const inp = R.pilot.input(dt); this.S.stickDrive(L.car, inp, dt);
+    if (L && !L.human && !(R.M && R.M.beat)) { R.S2.player = L.car; L.car.parked = false; if (!R.pilot || L.pilot !== R.pilot) this.setPilot(R); const inp = R.pilot.input(dt); this.S.stickDrive(L.car, inp, dt);
       // a CPU LEADER wedged (stick held, < 8 u/s for 5 s, not braking at the end of its plan) is lifted onto the road and re-plans (Nov 18)
       if ((inp.jm || 0) > 0.15 && Math.abs(L.car.v) < 8 && !R.M.complete) { if ((R.stuckT = (R.stuckT || 0) + dt) > 5) { R.stuckT = 0; this.S.unstick(L.car); R.pilot.goal = null; } } else R.stuckT = 0; }   // a CPU leader drives the rally on the stick autopilot
     this.S.step(dt, null); this.stepRally(dt); this.syncInside();
@@ -127,7 +143,7 @@ export class CrewWorld {
   state(c) { return { x: c.x, y: c.y, h: c.h, v: c.v, z: c.z || 0, vz: c.vz || 0, layer: c.layer, dirx: c.dirx ?? Math.cos(c.h), diry: c.diry ?? Math.sin(c.h) }; }
   takeover(id, who) {
     const B = this.crew.get(id); if (!B || B.human) return null;
-    B.human = who; B.car.remote = true; B.car.parked = false; B.car.follower = false;
+    B.human = who; B.foot = null; B.car.remote = true; B.car.parked = false; B.car.follower = false;
     if (!this.rally && !B.still && players(this.roster).some(p => p.id === id)) this.startRally(id);   // pick a crew member -> their rally starts (a friend leads their own)
     return this.state(B.car);
   }
@@ -135,10 +151,11 @@ export class CrewWorld {
     const B = this.crew.get(id); if (!B || !B.human) return;
     const c = B.car; for (const k of ['x', 'y', 'h', 'v', 'z', 'vz', 'layer']) if (Number.isFinite(st[k])) c[k] = st[k];
     c.dirx = Math.cos(c.h); c.diry = Math.sin(c.h);
+    B.foot = Array.isArray(st.f) && st.f.length >= 3 ? { x: +st.f[0], y: +st.f[1], h: +st.f[2] } : null;   // M-D: on foot right now (st.f rides the car report)
   }
   release(id) {                                            // back to the CPU from wherever the human left it, still rolling
     const B = this.crew.get(id); if (!B || !B.human) return;
-    B.human = null; B.car.remote = false;
+    B.human = null; B.foot = null; B.car.remote = false;
     if (this.rally && this.rally.leader === id) { B.car.parked = false; this.setPilot(this.rally); return; }   // the leader left: the CPU keeps leading the rally from right there
     if (B.rallying) { B.state = 'follow'; B.car.parked = false; return; }
     if (B.still) { B.car.parked = true; return; }
@@ -146,7 +163,8 @@ export class CrewWorld {
     if (atHome && Math.abs(B.car.v) < 20) { B.state = 'home'; B.t = 10 + this.rnd() * 30; B.car.parked = true; B.car.v = 0; return; }
     B.back = true; this.go(B, B.home.x, B.home.y);                // the character carries on: drives home from there
   }
-  rallyState() { const R = this.rally; return R ? { leader: R.leader, crew: R.M.convoy.length + 1, total: R.M.convoy.length + 1 + R.M.stops.filter(s => !s.done).reduce((a, s) => a + s.people.length, 0), msg: R.msgT > 0 ? R.msg : '', complete: R.M.complete } : null; }
+  rallyState() { const R = this.rally; return R ? { leader: R.leader, crew: R.M.convoy.length + 1, total: R.M.convoy.length + 1 + R.M.stops.filter(s => !s.done).reduce((a, s) => a + s.people.length, 0), msg: R.msgT > 0 ? R.msg : '', complete: R.M.complete, beat: R.M.beat ? { x: Math.round(R.M.beat.cx), y: Math.round(R.M.beat.cy), who: R.M.beat.who, t: +(R.M.time - R.M.beat.at).toFixed(2) } : null } : null; }   // beat (M-D): the huddle + cast + seconds in — clients play the arrival beat from it
+  walkers() { return [...this.crew.values()].filter(B => B.human && B.foot).map(B => [B.id, Math.round(B.foot.x), Math.round(B.foot.y), +B.foot.h.toFixed(3)]); }   // M-D: friends on foot, shared (their car alone used to be)
   who() { return [...this.crew.values()].map(B => ({ id: B.id, name: B.name, human: B.human })); }
   snapshot() { return [...this.crew.values()].map(B => { const c = B.car; return [B.id, Math.round(c.x), Math.round(c.y), +c.h.toFixed(3), Math.round(c.v), Math.round(c.z || 0), c.layer, B.human || 0, B.inside ? [B.inside, B.spot.floor, +B.spot.x.toFixed(2)] : 0]; }); }   // [7] = the friend driving it, or 0 = CPU; [8] = [house, floor, x] while idling indoors, else 0
 }
