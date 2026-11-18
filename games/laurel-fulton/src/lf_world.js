@@ -107,7 +107,9 @@ export class CrewWorld {
       else { B.back = true; this.go(B, B.home.x, B.home.y); }        // 'stay' is over: head home
     }
     const R = this.rally, L = R && this.crew.get(R.leader);
-    if (L && !L.human) { R.S2.player = L.car; L.car.parked = false; if (!R.pilot || L.pilot !== R.pilot) this.setPilot(R); this.S.stickDrive(L.car, R.pilot.input(dt), dt); }   // a CPU leader drives the rally on the stick autopilot
+    if (L && !L.human) { R.S2.player = L.car; L.car.parked = false; if (!R.pilot || L.pilot !== R.pilot) this.setPilot(R); const inp = R.pilot.input(dt); this.S.stickDrive(L.car, inp, dt);
+      // a CPU LEADER wedged (stick held, < 8 u/s for 5 s, not braking at the end of its plan) is lifted onto the road and re-plans (Nov 18)
+      if ((inp.jm || 0) > 0.15 && Math.abs(L.car.v) < 8 && !R.M.complete) { if ((R.stuckT = (R.stuckT || 0) + dt) > 5) { R.stuckT = 0; this.S.unstick(L.car); R.pilot.goal = null; } } else R.stuckT = 0; }   // a CPU leader drives the rally on the stick autopilot
     this.S.step(dt, null); this.stepRally(dt);
     if (!this.rally && this.autoRally && this.S.time > (this.nextRally ?? this.autoRally)) { const c = [...this.crew.values()].filter(B => !B.still && !B.human && B.state === 'home' && players(this.roster).some(p => p.id === B.id)); if (c.length) this.startRally(c[Math.floor(this.rnd() * c.length)].id); else this.nextRally = this.S.time + 30; }
   }

@@ -1,0 +1,137 @@
+{
+ "dre_camry": {
+  "angles": 32,
+  "color": {
+   "file": "cars/car_dre_camry.webp",
+   "h": 64.0,
+   "ox": -32.0,
+   "oy": -32.0,
+   "w": 64.0
+  },
+  "cols": 8,
+  "length": 45.2,
+  "light": {
+   "file": "cars/car_dre_camry_light.webp",
+   "h": 220.0,
+   "ox": -35.0,
+   "oy": -160.0,
+   "w": 70.0
+  },
+  "shadow": {
+   "file": "cars/car_dre_camry_sh.webp",
+   "h": 96.0,
+   "ox": -36.41,
+   "oy": -51.11,
+   "w": 96.0
+  },
+  "width": 16.9
+ },
+ "juno_astro": {
+  "angles": 32,
+  "color": {
+   "file": "cars/car_juno_astro.webp",
+   "h": 64.0,
+   "ox": -32.0,
+   "oy": -32.0,
+   "w": 64.0
+  },
+  "cols": 8,
+  "length": 48.2,
+  "light": {
+   "file": "cars/car_juno_astro_light.webp",
+   "h": 220.0,
+   "ox": -35.0,
+   "oy": -160.0,
+   "w": 70.0
+  },
+  "shadow": {
+   "file": "cars/car_juno_astro_sh.webp",
+   "h": 96.0,
+   "ox": -36.41,
+   "oy": -51.11,
+   "w": 96.0
+  },
+  "width": 19.7
+ },
+ "moe_camaro": {
+  "angles": 32,
+  "color": {
+   "file": "cars/car_moe_camaro.webp",
+   "h": 64.0,
+   "ox": -32.0,
+   "oy": -32.0,
+   "w": 64.0
+  },
+  "cols": 8,
+  "length": 48.8,
+  "light": {
+   "file": "cars/car_moe_camaro_light.webp",
+   "h": 220.0,
+   "ox": -35.0,
+   "oy": -160.0,
+   "w": 70.0
+  },
+  "shadow": {
+   "file": "cars/car_moe_camaro_sh.webp",
+   "h": 96.0,
+   "ox": -36.41,
+   "oy": -51.11,
+   "w": 96.0
+  },
+  "width": 18.3
+ },
+ "pike_brougham": {
+  "angles": 32,
+  "color": {
+   "file": "cars/car_pike_brougham.webp",
+   "h": 64.0,
+   "ox": -32.0,
+   "oy": -32.0,
+   "w": 64.0
+  },
+  "cols": 8,
+  "length": 56.2,
+  "light": {
+   "file": "cars/car_pike_brougham_light.webp",
+   "h": 220.0,
+   "ox": -35.0,
+   "oy": -160.0,
+   "w": 70.0
+  },
+  "shadow": {
+   "file": "cars/car_pike_brougham_sh.webp",
+   "h": 96.0,
+   "ox": -36.41,
+   "oy": -51.11,
+   "w": 96.0
+  },
+  "width": 19.5
+ },
+ "tess_tracer": {
+  "angles": 32,
+  "color": {
+   "file": "cars/car_tess_tracer.webp",
+   "h": 64.0,
+   "ox": -32.0,
+   "oy": -32.0,
+   "w": 64.0
+  },
+  "cols": 8,
+  "length": 41.7,
+  "light": {
+   "file": "cars/car_tess_tracer_light.webp",
+   "h": 220.0,
+   "ox": -35.0,
+   "oy": -160.0,
+   "w": 70.0
+  },
+  "shadow": {
+   "file": "cars/car_tess_tracer_sh.webp",
+   "h": 96.0,
+   "ox": -36.41,
+   "oy": -51.11,
+   "w": 96.0
+  },
+  "width": 16.5
+ }
+}

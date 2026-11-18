@@ -100,10 +100,17 @@ export function follow(S, M, f, dt) {
   let want = clamp(Math.abs(P.v) + gap * 1.3, 0, Math.min(380, vCorner)) * (1 - Math.min(0.6, Math.abs(diff) / 2.5));
   if (dAhead < 42) want = 0;
   let throttle = c.v < want - 8 ? 1 : c.v > want + 12 ? -1 : 0, steer = clamp(diff * 2.6, -1, 1);
-  if (Math.abs(diff) > 2.0 && c.v < 70 && gap > -SP) {   // the path is behind (nose-in in a driveway): back out — Palm City's own stick rule
+  const backing = Math.abs(diff) > 2.0 && c.v < 70 && gap > -SP && (f.backT || 0) < 2.5;   // Nov 18: back-out is a SHORT manoeuvre (it used to never end: a car reversed the whole route)
+  f.backT = backing ? (f.backT || 0) + dt : Math.abs(diff) < 1.2 ? 0 : (f.backT || 0);
+  if (backing) {   // the path is behind (nose-in in a driveway): back out — Palm City's own stick rule
     throttle = -0.7; steer = clamp(-wrap(ta + Math.PI - c.h) * 2.2, -1, 1);
   }
   S.driveCar(c, throttle, steer, dt, 380);
+  // FOLLOWER ANTI-STUCK (Nov 18): a follower that has made no progress along your path for 6 s while it should be moving
+  // (wedged reversing into a rail, bush or house) is lifted back onto the nearest road point — the player's own rule (lf_sim)
+  const prog = T.s[f.ti] || 0;
+  if (gap > SP && prog <= (f.bestS || 0) + 5) { f.noProg = (f.noProg || 0) + dt; } else { f.noProg = 0; f.bestS = Math.max(f.bestS || 0, prog); }
+  if (f.noProg > 6 && S.unstick) { f.noProg = 0; S.unstick(c); f.ti = -1; }
 }
 
 // convoy order = actual progress along your path (a stalled car can never deadlock the cars behind it)

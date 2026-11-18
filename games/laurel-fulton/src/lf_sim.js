@@ -340,7 +340,7 @@ export class LFSim {
       if (a.layer !== b.layer) continue;
       const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy), reach = (a.len + b.len) / 4 + (a.wid + b.wid) / 4;
       if (d > reach || d < 0.01) continue;
-      const push = reach - d, nx = dx / d, ny = dy / d, ma = a.remote ? 1e9 : a.parked ? 3 : 1, mb = b.remote ? 1e9 : b.parked ? 3 : 1;   // L6: a car another machine drives is immovable here (its own machine resolves its contacts)
+      const push = Math.min(reach - d, 8), nx = dx / d, ny = dy / d, ma = a.remote ? 1e9 : a.parked ? 3 : 1, mb = b.remote ? 1e9 : b.parked ? 3 : 1;   // L6: a car another machine drives is immovable here (its own machine resolves its contacts)
       a.x -= nx * push * mb / (ma + mb); a.y -= ny * push * mb / (ma + mb); b.x += nx * push * ma / (ma + mb); b.y += ny * push * ma / (ma + mb);
       if (Math.abs(a.v - b.v) > 60) this.events.push({ t: this.time, kind: 'bump', a: a.model, b: b.model });
       // Palm City carsCollide: damage from the closing speed along the contact normal, shared
