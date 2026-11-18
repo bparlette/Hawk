@@ -93,6 +93,41 @@ export function shake(S, c, time) {
 export function over(g, S, M, time) {
   for (const c of S.cars) {
     const fx = fxOf(S, c), ca = Math.cos(c.h), sa = Math.sin(c.h);
+    // CAR DAMAGE (Palm City stages, drawn over the sprite): panels scuff where they were hit,
+    // glass frosts where it cracked; stage 2 smokes, a wreck burns — ember glow + dark smoke
+    // (Palm City's fire ruling: embers, never flame tongues). All of it vanishes when the
+    // car's 10 s self-heal lands, because the sim zeroes the state it reads.
+    if (c.dent && (c.dmg > 0 || c.wreck)) {
+      const L = c.len / 2, Wd = c.wid / 2;
+      const panelXY = [[L * 0.55, 0], [-L * 0.55, 0], [0, -Wd * 0.8], [0, Wd * 0.8]];
+      for (let p = 0; p < 4; p++) if (c.dent[p] > 0.03) {
+        const [pu, pv] = panelXY[p];
+        g.globalAlpha = 0.16 + 0.4 * c.dent[p]; g.fillStyle = '#241d18';
+        g.beginPath(); g.ellipse(c.x + ca * pu - sa * pv, c.y + sa * pu + ca * pv, L * 0.42, Wd * 0.52, c.h, 0, TAU); g.fill();
+      }
+      for (let p = 0; p < 2; p++) if (c.glass[p] > 0.03) {
+        const pu = p === 0 ? L * 0.22 : -L * 0.28;
+        g.globalAlpha = 0.35 * c.glass[p]; g.fillStyle = '#dfeaf2';
+        g.beginPath(); g.ellipse(c.x + ca * pu, c.y + sa * pu, L * 0.2, Wd * 0.62, c.h, 0, TAU); g.fill();
+      }
+      if (c.dmg >= 0.6) for (let k = 0; k < 6; k++) {                  // stage 2+: smoke off the engine
+        const ph = (time * 0.5 + k / 6 + (c.x % 7) * 0.01) % 1;
+        g.globalAlpha = (1 - ph) * (c.wreck ? 0.55 : 0.34); g.fillStyle = '#38323c';
+        g.beginPath(); g.arc(c.x + ca * L * 0.5 + ph * 46, c.y + sa * L * 0.5 - ph * 40, 5 + ph * 20, 0, TAU); g.fill();
+      }
+      if (c.wreck) {                                                   // stage 3: burning — embers + glow
+        const fl = 0.75 + 0.25 * Math.sin(time * 23 + c.x);
+        const r = g.createRadialGradient(c.x, c.y, 2, c.x, c.y, c.len * 0.62);
+        r.addColorStop(0, `rgba(255,120,30,${0.5 * fl})`); r.addColorStop(0.6, `rgba(220,60,15,${0.28 * fl})`); r.addColorStop(1, 'rgba(200,50,10,0)');
+        g.globalAlpha = 1; g.fillStyle = r; g.beginPath(); g.arc(c.x, c.y, c.len * 0.62, 0, TAU); g.fill();
+        for (let k = 0; k < 7; k++) {
+          const ph = (time * (1.1 + (k % 3) * 0.3) + k * 0.29) % 1, ox = Math.sin(k * 5.7) * c.len * 0.3, oy = Math.cos(k * 2.9) * c.wid * 0.3;
+          g.globalAlpha = (1 - ph) * 0.95; g.fillStyle = ph < 0.4 ? '#ffd76a' : '#ff7a26';
+          g.beginPath(); g.arc(c.x + ca * ox - sa * oy + ph * 10, c.y + sa * ox + ca * oy - ph * 16, 1.6 + (1 - ph) * 2.2, 0, TAU); g.fill();
+        }
+      }
+      g.globalAlpha = 1;
+    }
     if (fx.includes('bass')) for (let k = 0; k < 3; k++) {               // rings off the kick
       const u = ((time * 2.1 + k / 3) % 1), r = c.len * 0.45 + u * 70;
       g.globalAlpha = (1 - u) * 0.55; g.strokeStyle = k % 2 ? '#ffe9a8' : '#ffffff'; g.lineWidth = 2.6 * (1 - u) + 0.6;

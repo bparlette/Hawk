@@ -15,12 +15,30 @@ export const TOP = 290, TURBO_MULT = 1.4;
 // ground with vz = vz0 + (speed - launch) * k under game gravity g — arc height/length scale with entry speed.
 export const BUMP = { launch: 135, jolt: 0.72, vz0: 55, k: 0.9, g: 620 };                 // Palm City: 290 u/s top, turbo x1.4
 
+// Car damage — Palm City's destruct.js, exact numbers (owner, Nov 17: "beat each other's cars
+// exact same way as palm city even fire"): one dmg number 0..1, stages at [0.25, 0.6, 1] =
+// dented / crumpled (smoking) / wreck (burning, dead). The driven car is the hero: HERO 0.2 of
+// any impact (Palm City's Nov 16 tuning: absorbs 3x). Laurel's twist, also the owner's: SELF-
+// HEALING — 10 s after the last hit a car is back to normal, no matter what stage it was in.
+export const STAGES_CAR = [0.25, 0.6, 1];
+export const stageOfCar = (d) => d >= STAGES_CAR[2] ? 3 : d >= STAGES_CAR[1] ? 2 : d >= STAGES_CAR[0] ? 1 : 0;
+export const HERO = 0.2, HEAL_AFTER = 10;
+export function impactDamage(sp) { if (sp < 30) return 0; const k = Math.max(0, (sp - 55) / 250); return 0.012 + 0.6 * k * Math.sqrt(k); }
+
 export class LFSim {
   constructor(W, roster, fleet, opts = {}) {
     this.W = W; this.roster = roster; this.fleet = fleet; this.time = 0; this.cars = []; this.events = [];
     // task L3: speed bumps (data/bumps.json), indexed by 256-unit cell for the crossing test
     this.bumps = opts.bumps || []; this.bumpGrid = new Map();
     this.bumps.forEach((b, i) => { const k = Math.floor(b.x / 256) * 100003 + Math.floor(b.y / 256); let l = this.bumpGrid.get(k); if (!l) this.bumpGrid.set(k, l = []); l.push(i); });
+    // houses (owner, Nov 17): the painted generic footprints are SOLID — you drive around them and bounce off
+    this.houses = opts.buildings || []; this.houseGrid = new Map(); this.houseBox = [];
+    this.houses.forEach((f, i) => {
+      let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+      for (let k = 0; k < f.length; k += 2) { x0 = Math.min(x0, f[k]); x1 = Math.max(x1, f[k]); y0 = Math.min(y0, f[k + 1]); y1 = Math.max(y1, f[k + 1]); }
+      this.houseBox.push([x0, y0, x1, y1]);
+      for (let cx = Math.floor(x0 / 256); cx <= Math.floor(x1 / 256); cx++) for (let cy = Math.floor(y0 / 256); cy <= Math.floor(y1 / 256); cy++) { const key = cx * 100003 + cy; let l = this.houseGrid.get(key); if (!l) this.houseGrid.set(key, l = []); l.push(i); }
+    });
     // every crew car parked at its owner's house, nose toward the street
     for (const p of roster.people) {
       if (!p.active || !p.car || !p.car.sprite || !fleet[p.car.sprite]) continue;
@@ -59,7 +77,7 @@ export class LFSim {
 
   addCar(model, x, y, h, extra = {}) {
     const m = this.fleet[model];
-    const c = { model, x, y, h, v: 0, layer: 0, z: 0, vz: 0, len: m.length, wid: m.width, turbo: 0, ...extra };
+    const c = { model, x, y, h, v: 0, layer: 0, z: 0, vz: 0, len: m.length, wid: m.width, turbo: 0, dirx: Math.cos(h), diry: Math.sin(h), dmg: 0, dent: [0, 0, 0, 0], glass: [0, 0], wreck: false, hitT: -9, ...extra };
     this.cars.push(c); return c;
   }
 
@@ -74,11 +92,75 @@ export class LFSim {
             Math.abs(r1.dx * c.dirx + r1.dy * c.diry) < 0.6) ? 0 : 1;   // a ground road you are driving ALONG wins over a deck crossing above it
   }
 
+  // Palm City's hitCar, verbatim amounts: the struck panel dents at amt x 1.7, front/rear glass
+  // cracks at amt x 1.5 on a hard panel hit, dmg climbs to the wreck at 1. A hit under 0.004
+  // doesn't count — and doesn't restart the self-heal clock.
+  hitCar(c, amt, dx, dy) {
+    if (amt <= 0.004 || this.time - c.hitT < 0.3) return;
+    const before = stageOfCar(c.dmg);
+    const ca = Math.cos(c.h), sa = Math.sin(c.h);
+    const u = -(dx * ca + dy * sa), v = -(-dx * sa + dy * ca);          // where the blow lands, in the car's frame (Palm City panelFor)
+    const panel = Math.abs(u) * 0.6 > Math.abs(v) ? (u > 0 ? 0 : 1) : (v < 0 ? 2 : 3);
+    c.dent[panel] = Math.min(1, c.dent[panel] + amt * 1.7);
+    if (panel < 2 && amt > 0.06) c.glass[panel] = Math.min(1, c.glass[panel] + amt * 1.5);
+    c.dmg = Math.min(1, c.dmg + amt);
+    c.hitT = this.time;
+    const after = stageOfCar(c.dmg);
+    if (after > before) this.events.push({ t: this.time, kind: after >= 3 ? 'wreck' : after >= 2 ? 'crumple' : 'dent', model: c.model, stage: after });
+    if (c.dmg >= 1 && !c.wreck) { c.wreck = true; c.v = 0; this.events.push({ t: this.time, kind: 'wrecked', model: c.model }); }
+  }
+
+  // houses: a moving car (circle, R from its size) against the footprint polygons in nearby cells.
+  // On contact: push out through the nearest wall and reflect the heading off it — an arcade
+  // bounce that keeps 45% of the speed. Parked cars are exempt (they sit in driveways by design),
+  // and so are remote cars (L6: their own machine resolves their contacts).
+  houseCollide() {
+    if (!this.houses.length) return;
+    for (const c of this.cars) {
+      if (c.parked || c.layer !== 0 || c.remote) continue;
+      const R = (c.len + c.wid) / 4, seen = new Set();
+      for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++)
+        for (const hi of this.houseGrid.get((Math.floor(c.x / 256) + i) * 100003 + Math.floor(c.y / 256) + j) || []) {
+          if (seen.has(hi)) continue; seen.add(hi);
+          const f = this.houses[hi], bb = this.houseBox[hi];
+          if (c.x < bb[0] - R || c.x > bb[2] + R || c.y < bb[1] - R || c.y > bb[3] + R) continue;
+          let best = 1e18, bx = 0, by = 0, inside = false;
+          for (let k = 0; k < f.length; k += 2) {
+            const ax = f[k], ay = f[k + 1], ex = f[(k + 2) % f.length], ey = f[(k + 3) % f.length];
+            const vx = ex - ax, vy = ey - ay, L2 = vx * vx + vy * vy || 1;
+            const t = clamp(((c.x - ax) * vx + (c.y - ay) * vy) / L2, 0, 1), px = ax + vx * t, py = ay + vy * t, d = (px - c.x) ** 2 + (py - c.y) ** 2;
+            if (d < best) { best = d; bx = px; by = py; }
+            if ((ay > c.y) !== (ey > c.y) && c.x < (ex - ax) * (c.y - ay) / (ey - ay) + ax) inside = !inside;
+          }
+          const dist = Math.sqrt(best);
+          if (!inside && dist >= R) continue;
+          let nx = c.x - bx, ny = c.y - by; const nl = Math.hypot(nx, ny) || 1; nx /= nl; ny /= nl;
+          if (inside) { nx = -nx; ny = -ny; c.x = bx + nx * (R + 1); c.y = by + ny * (R + 1); }
+          else { c.x += nx * (R - dist); c.y += ny * (R - dist); }
+          const dot = c.dirx * nx + c.diry * ny;
+          if (dot < 0) { const rx = c.dirx - 2 * dot * nx, ry = c.diry - 2 * dot * ny; c.h = Math.atan2(ry, rx); c.dirx = Math.cos(c.h); c.diry = Math.sin(c.h); }
+          if (Math.abs(c.v) > 40) this.events.push({ t: this.time, kind: 'house', model: c.model, v: Math.abs(c.v) });
+          // Palm City carImpact: running into something solid dents the leading panel too
+          const sp = Math.abs(c.v), sgn = c.v >= 0 ? 1 : -1;
+          this.hitCar(c, impactDamage(sp) * (c === this.player && !c.parked ? HERO : 1), -(c.dirx || 1) * sgn, -(c.diry || 0) * sgn);
+          c.v *= 0.45; if (c.z > 0) c.vz = Math.min(c.vz, 0);
+          c.jolt = 0.22;
+        }
+    }
+  }
+
   step(dt, inp = {}) {
     this.time += dt;
     if (this.player && inp) this.stickDrive(this.player, inp, dt);
     for (const o of this.cars) if (o !== this.player && !o.parked && !o.remote && o.driveFn) o.driveFn(o, dt);
     this.collide();
+    this.houseCollide();
+    // SELF-HEALING (owner, Nov 17): 10 s after a car's last hit it is back to normal — dents,
+    // glass, damage and even the wreck itself, whatever stage it had reached.
+    for (const o of this.cars) if ((o.dmg > 0 || o.wreck) && this.time - o.hitT >= HEAL_AFTER) {
+      o.dmg = 0; o.dent = [0, 0, 0, 0]; o.glass = [0, 0];
+      if (o.wreck) { o.wreck = false; this.events.push({ t: this.time, kind: 'healed', model: o.model }); }
+    }
   }
 
   // Palm City's stick -> throttle/steer, for ANY car (the player, or a CPU crew member driven by lf_pilot — task L6)
@@ -111,6 +193,8 @@ export class LFSim {
 
   // Palm City driveCar, verbatim numbers — plus the L3 airborne state (z, vz)
   driveCar(c, throttle, steer, dt, vmax) {
+    if (c.wreck) { throttle = 0; steer = 0; }             // a wreck goes nowhere (Palm City) — until Laurel's 10 s self-heal revives it
+    vmax *= 1 - 0.4 * (c.dmg || 0);                       // a battered car is slower (Palm City: vmax x (1 - 0.4 dmg))
     if (c.z > 0) {                                        // airborne: no grip, no throttle — you keep the line you left on
       c.z += c.vz * dt; c.vz -= BUMP.g * dt; c.airSteer += Math.abs(steer) * dt;
       c.x += c.dirx * c.v * dt; c.y += c.diry * c.v * dt;
@@ -155,7 +239,23 @@ export class LFSim {
       const push = reach - d, nx = dx / d, ny = dy / d, ma = a.remote ? 1e9 : a.parked ? 3 : 1, mb = b.remote ? 1e9 : b.parked ? 3 : 1;   // L6: a car another machine drives is immovable here (its own machine resolves its contacts)
       a.x -= nx * push * mb / (ma + mb); a.y -= ny * push * mb / (ma + mb); b.x += nx * push * ma / (ma + mb); b.y += ny * push * ma / (ma + mb);
       if (Math.abs(a.v - b.v) > 60) this.events.push({ t: this.time, kind: 'bump', a: a.model, b: b.model });
+      // Palm City carsCollide: damage from the closing speed along the contact normal, shared
+      // between the two cars; the one you're driving takes HERO of its share. Laurel convoy
+      // rule: when BOTH cars are crew followers driving together, contact is convoy touch,
+      // not demolition — HERO for both. (Measured: unscaled, a rally ground itself to 3
+      // wrecks on follower-follower taps alone; the player can still total any car at full
+      // Palm City numbers, and followers still wreck on real smashes.) Remote cars take no
+      // damage here (L6: their own machine owns their state).
+      const approach = ((a.dirx || 0) * a.v - (b.dirx || 0) * b.v) * nx + ((a.diry || 0) * a.v - (b.diry || 0) * b.v) * ny;
+      if (approach > 45) {
+        const amt = impactDamage(approach);
+        if (amt > 0) {
+          const convoy = a.follower && b.follower;
+          if (!a.remote) this.hitCar(a, amt * 1.5 * 0.5 * ((a === this.player && !a.parked) || convoy ? HERO : 1), -nx, -ny);
+          if (!b.remote) this.hitCar(b, amt * 1.5 * 0.5 * ((b === this.player && !b.parked) || convoy ? HERO : 1), nx, ny);
+        }
       if (!a.remote) a.v *= 0.75; if (!b.remote) b.v *= 0.75;
+      }
     }
   }
 }
