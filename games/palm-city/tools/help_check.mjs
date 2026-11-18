@@ -54,6 +54,7 @@ for (const id of WANT) {
   else if (a.board) { armed = P.mode === 'board' && A && A.label === 'START BOARD CHASE'; where = `on the board at ${Math.round(s.board.x)},${Math.round(s.board.y)}, A = ${A && A.label}`; }
   else if (a.heli) { armed = P.mode === 'foot' && !!s.player.roof && nearHeli(s); where = `on the hospital roof at ${Math.round(P.ped.x)},${Math.round(P.ped.y)}`; }
   else if (a.water) { const cr = nearCraft(s); armed = P.mode === 'foot' && !!cr; where = `on the pier at ${Math.round(P.ped.x)},${Math.round(P.ped.y)}, beside the ${cr && cr.kind}`; }
+  else if (id === 'openroad') { armed = P.mode === 'foot' && A && A.label === 'START OPEN ROAD'; where = `on foot at ${Math.round(P.ped.x)},${Math.round(P.ped.y)}, A = ${A && A.label}`; }   // audit M2: lands on foot beside the grid car
   else { armed = P.mode === 'car' && jb && jb.kind === 'evstart' && jb.ev === id; where = `in the ${P.car && P.car.model} at ${Math.round(P.car.x)},${Math.round(P.car.y)}, A = ${A && A.label}`; }
   check(armed, `JUMP ${a.name}: you are there with it armed`, where);
   check(s.score === 1234 && s.stars === stars, `JUMP ${a.name}: free — no score or wanted change`);

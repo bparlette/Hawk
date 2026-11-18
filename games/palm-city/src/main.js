@@ -79,7 +79,8 @@ try {
     fetch('shell_layout.json').then(r => (r.ok ? r.json() : null)).catch(() => null),
   ]);
   if (sj) shell = { ...sj, buildings: (sl && sl.buildings) || [], palms: (sl && sl.palms) || [], extraRoads: (sl && sl.roads) || [] };
-} catch (_) { shell = null; }
+  if (!sj || !sl) console.warn('[palm-city] world extension shell incomplete (shell.json: ' + !!sj + ', shell_layout.json: ' + !!sl + ') — running core-only; OPEN ROAD and the sea extension will be missing');   // audit M4: never fall back silently
+} catch (e) { shell = null; console.warn('[palm-city] world extension shell failed to load — running core-only:', e); }
 const world = new World(layout, shell);
 const ground = new GroundPainter(world);
 const M = await loadAssets(p => loading(p * 0.8));

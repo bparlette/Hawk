@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { World } from '../src/world.js';
 import { Sim } from '../src/sim.js';
-import { EVENTS } from '../src/events.js';
+import { EVENTS, startEvent, quitEvent } from '../src/events.js';
 import { gridCar } from '../src/openroad.js';
 import { jump } from '../src/activities.js';
 
@@ -91,6 +91,17 @@ function rideJetski(s) {
   const roses = s.cars.filter(c => c.openroad);
   check(roses.length === 1 && roses[0] === g && Math.hypot(g.x - SITE[0], g.y - SITE[1]) < 30,
     'H2 six nudges leave ONE grid car, home in the circle', `roses=${roses.length}`);
+}
+
+// M1: ending an OPEN ROAD run released route traffic still fixed:true (parked on the causeway forever).
+{
+  const s = fresh(); run(s, 0.3);
+  const g = gridCar(s); const P = s.player; P.mode = 'car'; P.car = g; g.driver = 'player'; g.parked = false; P.ped.hidden = true;
+  startEvent(s, 'openroad'); run(s, 6);
+  const rc = s.cars.filter(c => c.driver === 'route');
+  quitEvent(s);
+  const stuck = rc.filter(c => c.fixed !== false || c.driver === 'route');
+  check(rc.length > 0 && stuck.length === 0, 'M1 OPEN ROAD end releases route traffic to the cull', `route cars=${rc.length} stuck=${stuck.length}`);
 }
 
 console.log(fails ? `AUDIT-FIXES FAIL (${fails})` : 'AUDIT-FIXES OK');
