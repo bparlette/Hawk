@@ -72,6 +72,7 @@ const [G, roster, fleet, BJ] = await Promise.all([
   j('assets/fleet.json').then(v => (tick('cars'), v)),
   j('data/bumps.json').then(v => (tick('bumps'), v)),
 ]);
+roster.beats = await fetch('data/beats.json').then(r => r.ok ? r.json() : null).catch(() => null);   // L14: door staging for the arrival beats (Lazaris boots, Grant's mom)
 const files = new Set(); for (const m of Object.values(fleet)) for (const k of ['color', 'shadow']) files.add(m[k].file);   // the 'light' sheets are never drawn: not loaded (11 fewer files at boot)
 const imgs = {};
 const BLANK = new Image(); BLANK.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';

@@ -51,6 +51,7 @@ export class InteriorRenderer {
     for (const d of I.dogs) this.dog(g, d, time);
     for (const gu of I.guests) this.guest(g, gu, time);  // CPU crew idling at home (CrewWorld B.inside): a beer by the fire
     if (I.son) this.son(g, I.son, time);                 // Brian, coming down the stairs
+    for (const c of I.callers || []) this.person(g, c, time, (c.id.length * 61) % 300 + 30);   // L14: the bark-beat speakers (Kosack up top, Rigg below)
     this.hero(g, I.hero, time);
     this.lights(g, I, time);                             // the light pass (SPEC §4): fire wash, lamp pools, TV spill
     // room labels LAST and on pills (SPEC §3): drawn over everything, so nothing clips them
@@ -59,6 +60,7 @@ export class InteriorRenderer {
     if (I.teter && I.teter.sayT > 0) this.bubble(g, SX(I.teter.x), SY(I.teter.z + 1.75), I.teter.said, Math.min(1, I.teter.sayT));
     if (I.dad && I.dad.sayT > 0) this.bubble(g, SX(I.dad.x), SY(I.dad.z + 1.75), I.dad.said, Math.min(1, I.dad.sayT), true);   // the YELL: big
     if (I.son && I.son.sayT > 0 && !I.son.link) this.bubble(g, SX(I.son.x), SY(I.son.z + 2.05), I.son.said, Math.min(1, I.son.sayT));
+    for (const c of I.callers || []) if (c.sayT > 0) this.bubble(g, SX(c.x), SY(c.z + 2.05), c.said, Math.min(1, c.sayT), true);   // L14 yells: big bubbles
     if (I.hero.said) this.bubble(g, SX(I.hero.x), SY(I.hero.z + 2.3), I.hero.said, Math.min(1, (I.hero.sayT || 0) + 0.3));   // Rigg-isms
     // HUD: room + beers
     g.textAlign = 'left'; g.font = '900 13px system-ui'; g.fillStyle = 'rgba(27,20,48,0.72)'; g.beginPath(); g.roundRect(12, 74, 168, 26, 12); g.fill();
@@ -265,6 +267,9 @@ export class InteriorRenderer {
       g.fillStyle = '#5a4030'; for (let i = 0; i < 5; i++) g.fillRect(SX(x - 0.34), SY(z + 0.05 + i * 0.2) - 0.0, 0.68 * k * (1 - i * 0.14), 0.07 * k);
       g.fillStyle = '#e8ddc4'; g.fillRect(SX(x - 0.22), SY(z + 2.25), 0.44 * k, 0.16 * k); g.strokeStyle = INK; g.lineWidth = 1; g.strokeRect(SX(x - 0.22), SY(z + 2.25), 0.44 * k, 0.16 * k); g.fillStyle = '#2a1430'; g.font = '900 8px system-ui'; g.textAlign = 'center'; g.fillText('DOWN', SX(x), SY(z + 2.25) + 0.125 * k);
     }
+    else if (p.kind === 'arcade') this.arcade(g, p, z, I, time);   // L14 Kosack's basement
+    else if (p.kind === 'bar') this.bar(g, p, z, time);
+    else if (p.kind === 'hole') this.hole(g, p, z);
     else if (p.kind === 'table') { this.box(g, x - 0.7, z + 0.72, 1.4, 0.07, '#7c5a34'); this.box(g, x - 0.62, z, 0.1, 0.72, '#6a4a2a'); this.box(g, x + 0.52, z, 0.1, 0.72, '#6a4a2a'); }
   }
   computer(g, p, z, time) {                                // BRAD'S (and Brian's) basement computer, late 90s: a desk, a beige tower, a CRT whose screen says eDonkey
@@ -314,6 +319,42 @@ export class InteriorRenderer {
       g.drawImage(SIDE.img, (i % cols) * cw, ((i / cols) | 0) * ch, cw, ch, e.ox * sc, e.oy * sc, e.w * sc, e.h * sc); g.restore();
     } else { g.fillStyle = '#58a0d9'; g.fillRect(SX(o.x) - 6, SY(o.z + 1.8), 12, 1.8 * k); }
     g.fillStyle = '#fff3dc'; g.font = '700 10px system-ui'; g.textAlign = 'center'; g.fillText(o.name.split(' ')[0], SX(o.x), SY(o.z + 2.0));
+  }
+  // L14: a row of upright cabinets — marquees, lit screens (wilder while you PLAY), control panels
+  arcade(g, p, z, I, time) {
+    const { SX, SY, k } = this, names = p.cabinets || ['ARCADE'];
+    names.forEach((nm, i) => {
+      const x = p.x - 0.5 + i * 0.95, cols = [['#c42b2b', '#ffd25c'], ['#2a6ad0', '#7fe0ff'], ['#2f9a4a', '#ffef8a']][i % 3];
+      this.box(g, x - 0.35, z, 0.7, 1.8, '#1c1a26');
+      g.fillStyle = cols[0]; g.fillRect(SX(x - 0.33), SY(z + 1.8), 0.66 * k, 0.22 * k);                          // marquee
+      g.fillStyle = '#fff8e0'; g.font = `800 ${Math.max(6, 0.1 * k)}px system-ui`; g.textAlign = 'center'; g.fillText(nm, SX(x), SY(z + 1.63));
+      const wild = I.arcadeT > 0 && i === 0, fl = 0.55 + 0.45 * Math.abs(Math.sin(time * (wild ? 23 : 3.1) + i));
+      g.fillStyle = cols[1]; g.globalAlpha = fl; g.fillRect(SX(x - 0.26), SY(z + 1.5), 0.52 * k, 0.4 * k); g.globalAlpha = 1;   // the screen
+      for (let s = 0; s < 4; s++) { g.fillStyle = '#1c1a26'; g.fillRect(SX(x - 0.2 + ((time * (wild ? 3 : 0.6) + s * 0.13 + i * 0.3) % 0.4)), SY(z + 1.4 - s * 0.07), 0.05 * k, 0.04 * k); }
+      this.box(g, x - 0.36, z + 0.9, 0.72, 0.12, '#3a3646');                                                        // control panel
+      g.fillStyle = '#e8e0d0'; g.beginPath(); g.arc(SX(x - 0.15), SY(z + 1.06), 0.04 * k, 0, TAU); g.fill();
+      g.fillStyle = cols[0]; for (const b of [0.05, 0.16]) { g.beginPath(); g.arc(SX(x + b), SY(z + 1.04), 0.03 * k, 0, TAU); g.fill(); }
+    });
+    if (I.arcadeT > 0) { g.font = '900 13px system-ui'; g.textAlign = 'center'; g.fillStyle = '#ffd25c'; g.fillText('HIGH SCORE!', SX(p.x - 0.5), SY(z + 2.3) - Math.sin(time * 8) * 3); }
+  }
+  // L14: a full bar — the counter with a brass rail, stools, taps, and a lit back shelf of bottles
+  bar(g, p, z, time) {
+    const { SX, SY, k } = this, x = p.x;
+    this.box(g, x - 0.2, z + 1.25, 2.6, 0.9, '#3a2418');                                                            // back shelf
+    for (let r = 0; r < 2; r++) for (let i = 0; i < 9; i++) { g.fillStyle = ['#7a3a20', '#2f6a3a', '#c9a24a', '#6a2a3a', '#d8d0c0'][(i + r) % 5]; g.fillRect(SX(x - 0.05 + i * 0.28), SY(z + 1.62 + r * 0.38), 0.11 * k, 0.3 * k); }
+    g.fillStyle = 'rgba(255,214,140,0.25)'; g.fillRect(SX(x - 0.2), SY(z + 2.15), 2.6 * k, 0.9 * k);                    // shelf glow
+    this.box(g, x - 0.6, z, 3.0, 1.05, '#6a3a24'); this.box(g, x - 0.7, z + 1.05, 3.2, 0.08, '#3a1e12');             // counter + top
+    g.fillStyle = '#c9a24a'; g.fillRect(SX(x - 0.6), SY(z + 0.22), 3.0 * k, 0.04 * k);                                 // brass foot rail
+    for (const t of [0.4, 0.62, 0.84]) { g.fillStyle = '#c9ccd2'; g.fillRect(SX(x + t), SY(z + 1.42), 0.04 * k, 0.3 * k); g.fillStyle = '#2a1430'; g.fillRect(SX(x + t - 0.02), SY(z + 1.46), 0.08 * k, 0.06 * k); }   // taps
+    for (const sx of [-0.9, -0.2, 0.5, 1.2]) { this.box(g, x + sx - 0.03, z, 0.06, 0.72, '#2a2a30'); g.fillStyle = '#b84a3a'; g.beginPath(); g.ellipse(SX(x + sx), SY(z + 0.76), 0.2 * k, 0.06 * k, 0, 0, TAU); g.fill(); }   // stools
+  }
+  // L14: the GIANT HOLE IN THE WALL — a ragged dark breach in the back wall, broken drywall round it, debris on the floor
+  hole(g, p, z) {
+    const { SX, SY, k } = this, x = p.x, pts = [[-0.8, 0.1], [-0.95, 0.7], [-0.6, 1.5], [-0.1, 1.9], [0.5, 1.7], [0.9, 1.2], [0.85, 0.4], [0.4, 0.05]];
+    g.fillStyle = '#efe6d2'; g.beginPath(); pts.forEach(([u, v], i) => { const px = SX(x + u * 1.12), py = SY(z + v * 1.08 + 0.02); i ? g.lineTo(px, py) : g.moveTo(px, py); }); g.closePath(); g.fill();   // torn drywall rim
+    g.fillStyle = '#120c14'; g.beginPath(); pts.forEach(([u, v], i) => { const px = SX(x + u), py = SY(z + v); i ? g.lineTo(px, py) : g.moveTo(px, py); }); g.closePath(); g.fill();
+    g.strokeStyle = '#5a4a3a'; g.lineWidth = 1.2; for (const s of [-0.5, -0.1, 0.3, 0.6]) { g.beginPath(); g.moveTo(SX(x + s), SY(z + 0.2)); g.lineTo(SX(x + s + 0.05), SY(z + 1.6)); g.stroke(); }   // studs showing through
+    g.fillStyle = '#d8ccb4'; for (const [u, w] of [[-1.1, 0.22], [-0.7, 0.14], [0.9, 0.2], [1.2, 0.12]]) g.fillRect(SX(x + u), SY(z + 0.06), w * k, 0.06 * k);   // chunks on the floor
   }
   son(g, S, time) { this.person(g, S, time, 150); }
   guest(g, gu, time) {                                     // CPU crew idling at home: by the fire with a beer; they sip now and then

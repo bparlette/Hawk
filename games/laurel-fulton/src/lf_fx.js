@@ -28,7 +28,7 @@ function pedCell(g, img, idx, x, y, w, h, ox, oy) {
 }
 // draws the fig as its Palm City ped; returns false until the sheet decodes
 function drawPed(g, f, time) {
-  const outfit = PED_OUTFIT[f.who.id] || 'ped_sun', img = PED_IMG[outfit];
+  const outfit = f.outfit || PED_OUTFIT[f.who.id] || 'ped_sun', img = PED_IMG[outfit];
   if (!img || !img.complete || !img.naturalWidth) return false;
   const dx = f.x - (f.px ?? f.x), dy = f.y - (f.py ?? f.y), moving = Math.hypot(dx, dy) > 0.02;
   if (moving) f.h = Math.atan2(dy, dx);
@@ -214,6 +214,23 @@ export function over(g, S, M, time) {
       g.save(); g.globalAlpha = a; g.fillStyle = 'rgba(255,241,216,0.95)'; g.strokeStyle = '#210f2e'; g.lineWidth = 2;
       g.beginPath(); g.roundRect(bx - w / 2, by - 11, w, 20, 8); g.fill(); g.stroke();
       g.fillStyle = '#210f2e'; g.fillText(b.text, bx, by + 3); g.restore();
+    }
+  }
+  if (M.beat && M.beat.stage && M.beat.stage.door) {             // L14 DOOR STAGING (data/beats.json): the mom at the front door, the boots, the lines
+    const B = M.beat, G = B.stage, d = G.door, T = B.T || 0;
+    const mom = G._fig || (G._fig = { who: { id: 'door', name: G.doorName || 'Mom' }, outfit: G.outfit || 'ped_rose', x: d.x, y: d.y, h: Math.atan2(B.cy - d.y, B.cx - d.x) });
+    if (B.phase !== 'zoom') { drawPed(g, mom, time); g.font = '700 9px system-ui'; g.textAlign = 'center'; g.fillStyle = '#fff3dc'; g.fillText((G.doorName || 'MOM').toUpperCase(), mom.x, mom.y - 26); }
+    if (G.boots && T > 0.5 && T < 1.6) for (const k of [0, 1]) {   // the boots, thrown out the door into the yard, landing by the huddle
+      const u = Math.min(1, (T - 0.5 - k * 0.12) / 0.85); if (u <= 0) continue;
+      const bx = d.x + (B.cx - d.x) * 0.7 * u + k * 9, by = d.y + (B.cy - d.y) * 0.7 * u - Math.sin(u * Math.PI) * 40;
+      g.save(); g.translate(bx, by); g.rotate(u * 9 + k); g.fillStyle = '#7a4a22'; g.fillRect(-6, -3, 12, 6); g.fillRect(-6, -9, 5, 7); g.restore();
+    }
+    if (G.boots && T >= 1.6) for (const k of [0, 1]) { const bx = d.x + (B.cx - d.x) * 0.7 + k * 9, by = d.y + (B.cy - d.y) * 0.7; g.fillStyle = '#7a4a22'; g.fillRect(bx - 6, by - 3, 12, 6); g.fillRect(bx - 6, by - 9, 5, 7); }
+    if (B.say) {                                                 // the line, over whoever says it — kept inside the frame (the framing lesson)
+      const sp = B.say.who === 'door' ? mom : (B.figs.find(f => f.who && f.who.id === B.say.who) || mom);
+      g.font = '800 13px system-ui'; const w = g.measureText(B.say.text).width + 20;
+      g.fillStyle = 'rgba(255,248,232,0.97)'; g.beginPath(); g.roundRect(sp.x - w / 2, sp.y - 62, w, 24, 9); g.fill(); g.strokeStyle = '#2a1430'; g.lineWidth = 1.6; g.stroke();
+      g.fillStyle = '#2a1430'; g.textAlign = 'center'; g.fillText(B.say.text, sp.x, sp.y - 45);
     }
   }
   if (M.beat && M.beat.phase === 'dap') {                              // the dap: a spark in the middle of the huddle

@@ -23,14 +23,27 @@ export const BEAT_PHASES = BEAT;
 // presentation-only mission (main.js stepOnlineBeat) — one rhythm everywhere: the camera pushes in,
 // everyone walks to the huddle, dap, back to their cars, the camera pulls back. Returns true on the
 // step the beat ends (M.beat cleared, M.camZoom back to 1); whoever owns the mission does the join.
-export function makeBeat(figs, cx, cy, stop) { return { stop: stop || null, t: 0, i: 0, phase: 'zoom', figs, cx, cy }; }
+export function makeBeat(figs, cx, cy, stop) {
+  const st = stop || null, G = st && st.stage && st.door ? { ...st.stage, door: st.door } : null;
+  return { stop: st, t: 0, T: 0, i: 0, phase: 'zoom', figs, cx, cy, stage: G };
+}
+// L14 door staging (data/beats.json): which stage a stop gets — any resident's entry (or a 'same' alias)
+export function stageFor(beats, people) {
+  if (!beats) return null;
+  for (const p of people) { let b = beats[p.id]; if (b && b.same) b = beats[b.same]; if (b && b.lines) return b; }
+  return null;
+}
 export function stepBeat(M, dt) {
   const B = M.beat; if (!B) return false;
-  B.t += dt;
-  while (B.t > BEAT[B.i][1]) { B.t -= BEAT[B.i][1]; B.i++; if (B.i >= BEAT.length) break; }
+  B.t += dt; B.T = (B.T || 0) + dt;
+  const G = B.stage, dur = (i) => BEAT[i][1] + (G && BEAT[i][0] === 'dap' ? G.hold || 0 : 0);   // L14 door staging: the dap holds while the lines land
+  while (B.t > dur(B.i)) { B.t -= dur(B.i); B.i++; if (B.i >= BEAT.length) break; }
   if (B.i >= BEAT.length) { M.beat = null; M.camZoom = 1; return true; }
   B.phase = BEAT[B.i][0];
-  const u = B.t / BEAT[B.i][1], ease = u * u * (3 - 2 * u);
+  if (G) {                                               // the line being said right now (a crew member in the huddle, or whoever is at the door)
+    B.say = null; for (const L of G.lines || []) if (B.T >= L.at && B.T < L.at + 1.9 && (L.who === 'door' || B.figs.some(f => f.who && f.who.id === L.who))) B.say = L;
+  }
+  const u = B.t / dur(B.i), ease = u * u * (3 - 2 * u);
   M.camZoom = B.phase === 'zoom' ? 1 + 1.6 * ease : B.phase === 'roll' ? 2.6 - 1.6 * ease : 2.6;   // rescaled for the 0.62 base zoom (Nov 17) — same push-in framing as before
   for (const fg of B.figs) {                             // walkers: out to the huddle, then back to their own car
     const k = B.phase === 'out' ? ease : B.phase === 'dap' ? 1 : B.phase === 'in' ? 1 - ease : 0;
@@ -58,7 +71,8 @@ export function startRally(S, roster, id) {
     if (k === key(me)) { M.time = 0; for (let i = 0; i < ppl.length; i++) join(S, M, ppl[i], cars[i]); continue; }   // housemates ride from the start
     const x = cars.reduce((a, c) => a + c.x, 0) / cars.length, y = cars.reduce((a, c) => a + c.y, 0) / cars.length;
     const r = S.W.roadInfo(x, y, 0), kerb = r.e ? S.nearPt(x, y, r) : { x, y };    // where you pull up: the kerb in front of the driveway
-    M.stops.push({ x, y, kx: kerb.x, ky: kerb.y, people: ppl, cars, done: false });
+    const stage = stageFor(roster.beats, ppl), h0 = ppl[0].house;   // L14: the house's door staging (roster.beats = data/beats.json), at its front door
+    M.stops.push({ x, y, kx: kerb.x, ky: kerb.y, people: ppl, cars, done: false, stage, door: stage && h0 ? { x: h0[0], y: h0[1] } : null });
   }
   M.meet = roster.meetup;
   pushTrail(M, S.player.x, S.player.y, true);
