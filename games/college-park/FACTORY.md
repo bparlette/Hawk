@@ -2,7 +2,7 @@
 
 Spec: college-park.spec · bbox [38.978, -76.958, 39.004, -76.922] · play: play.html
 
-Graph: 2793 edges, 147.6 km drivable. Anchors: bentleys, cornerstone, dre, frederick, juno, looneys, moe, montgomery, pike, tess, turf, washington.
+Graph: 2793 edges, 147.6 km drivable. Anchors: bentleys, cambridge, cambridge_cc, clark, cornerstone, diner, dre, frederick, johnson_whittle, juno, kim_eng, looneys, martin, moe, montgomery, pike, south_dining, tess, turf, washington, yahentamitsi.
 
 | person | where | car | placed |
 |---|---|---|---|

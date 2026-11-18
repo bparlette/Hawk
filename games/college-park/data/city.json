@@ -28,6 +28,42 @@
   {
    "id": "frederick",
    "name": "Frederick Hall"
+  },
+  {
+   "id": "johnson_whittle",
+   "name": "Johnson-Whittle Hall"
+  },
+  {
+   "id": "cambridge",
+   "name": "Cambridge Hall"
+  },
+  {
+   "id": "cambridge_cc",
+   "name": "Cambridge Community Center"
+  },
+  {
+   "id": "diner",
+   "name": "The Diner"
+  },
+  {
+   "id": "south_dining",
+   "name": "South Campus Dining Hall"
+  },
+  {
+   "id": "yahentamitsi",
+   "name": "Yahentamitsi Dining Hall"
+  },
+  {
+   "id": "clark",
+   "name": "A. James Clark Hall"
+  },
+  {
+   "id": "kim_eng",
+   "name": "Jeong H Kim Engineering Building"
+  },
+  {
+   "id": "martin",
+   "name": "Glenn L. Martin Hall"
   }
  ],
  "people": [
