@@ -192,6 +192,19 @@ let pulseT = -PULSE.rest;
 for (let cy = -2; cy <= 2; cy++) for (let cx = -1; cx <= 1; cx++) ground.get(Math.floor(cam.x / CHUNK) + cx, Math.floor(cam.y / CHUNK) + cy);
 ground.stats.sync = 0;
 const STEP = 1 / 60; let SPEED = Math.max(1, Math.min(16, Number(Q.get('speed')) || 1)); let acc = 0, last = performance.now();   // ?speed=N: N sim steps per frame (captures)
+// DAY/NIGHT PARITY (owner, Nov 18): Palm City's own clock — same curve, same HUD time.
+// ?t=0..1 pins the time of day (0 = golden hour, 1 = blue dusk) for captures, as in Palm City.
+let simTime = 0;
+const fixedT = Q.has('t') ? Math.min(1, Math.max(0, Number(Q.get('t')))) : null;
+function timeOfDay() {
+  if (fixedT !== null) return fixedT;
+  return Math.min(0.97, 0.18 + simTime / 200);  // ~3 minutes from golden hour into blue dusk, then holds (Palm City main.js, verbatim)
+}
+function clockText(t) {   // Palm City hud.js, verbatim: 6:38 pm golden hour -> 7:48 pm blue dusk
+  const mins = 18 * 60 + 38 + Math.round(t * 70);
+  const h = Math.floor(mins / 60) - 12, m = mins % 60;
+  return `${h}:${String(m).padStart(2, '0')} PM`;
+}
 let cornerT = 0, cornerS = '';
 // L10: street names written ALONG the roads once you are zoomed in enough to read them (deduped, upright, haloed)
 function drawStreetLabels() {
@@ -217,7 +230,7 @@ function frame(now) {
     if (inside) { sim.step(STEP, ZERO); if (inside.step(STEP, inp) === 'exit') goOut(); }
     else if (foot && foot.active) { sim.step(STEP, ZERO); if (!beat) { stepOnFoot(foot, STEP, inp, RF); const nc = inp.action ? nearAnyCar(foot, sim.cars) : null; if (nc) { if (nc !== sim.player) swapPlayerCar(sim, M, nc); foot.active = false; } else if (inp.action && atMyDoor()) goIn(foot.who.id, foot.who); } }
     else { sim.step(STEP, beat ? ZERO : inp); if (foot && !beat && !pilot && inp.action && Math.abs(sim.player.v) < FOOT.exitV) { exitCar(foot, sim.player); if (inHouse(foot.x, foot.y)) { const c = sim.player, a = c.h + Math.PI / 2, d = (c.wid || 20) / 2 + 7; foot.x = c.x + Math.cos(a) * d; foot.y = c.y + Math.sin(a) * d; foot.px = foot.x; foot.py = foot.y; } } }
-    if (KOTH) KOTH.step(sim, STEP); if (M) stepRally(sim, M, STEP); acc -= STEP; n++; }
+    if (KOTH) KOTH.step(sim, STEP); if (M) stepRally(sim, M, STEP); simTime += STEP; acc -= STEP; n++; }
   if (n >= 6 * SPEED) acc = 0;
   if (net) net.frame(sim, dt);
   const c = sim.player;
@@ -249,7 +262,8 @@ function frame(now) {
   // REAL pavement: the same sac the ring below draws gets its disc painted as asphalt, road grip
   // in the sim and black (not dirt-brown) skid marks. setPave no-ops until the sac changes.
   ground.setPave(KOTH && KOTH.state !== 'done' ? (KOTH.state === 'idle' ? (KOTH.candidate ? KOTH.candidate(sim) : null) : KOTH.sac) : null);
-  renderer.draw(sim, cam, now / 1000); drawStreetLabels();
+  const tod = timeOfDay();
+  renderer.draw(sim, cam, now / 1000, tod); drawStreetLabels();
   // Cul-de-Sac King of the Hill: the ring, the crown, the banner (screen space, over the world).
   // In idle the ring of the cul-de-sac you're sitting in shows DIM — it never starts itself.
   const ringSac = KOTH && KOTH.state !== 'done' ? (KOTH.state === 'idle' ? (KOTH.candidate ? KOTH.candidate(sim) : null) : KOTH.sac) : null;
@@ -272,7 +286,8 @@ function frame(now) {
   const name = cornerS;                                   // L10: "corner of X & Y" — the street you are on and the nearest cross street
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.textAlign = 'center';
   if (name) { ctx.font = '800 15px system-ui'; const w = ctx.measureText(name).width + 28; ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(VIEW_W / 2 - w / 2, 18, w, 30, 15); ctx.fill(); ctx.fillStyle = '#ffe4b0'; ctx.fillText(name, VIEW_W / 2, 38); }
-  if (!(foot && foot.active)) { ctx.font = '800 13px system-ui'; ctx.fillStyle = 'rgba(255,240,215,0.9)'; ctx.fillText(Math.round(Math.abs(c.v) / 10 * 2.237) + ' mph', VIEW_W / 2, 64); }
+  ctx.font = '800 13px system-ui'; ctx.fillStyle = 'rgba(255,240,215,0.9)';
+  ctx.fillText((foot && foot.active) ? clockText(tod) : Math.round(Math.abs(c.v) / 10 * 2.237) + ' mph · ' + clockText(tod), VIEW_W / 2, 64);   // Palm City's clock rides the HUD line: 6:38 PM -> 7:48 PM as dusk falls
   // prefetch: the view + a margin + where the car will be in ~1.2 s, nearest first
   const hw0 = VIEW_W / 2 / cam.zoom + 320, hh0 = view.h / 2 / cam.zoom + 320, want = [], hwf = Math.min(hw0, 1400), hhf = Math.min(hh0, 1800);
   const hw = hwf, hh = hhf, farOut = hw0 * hh0 > 4e6;                           // zoomed right out: prefetch only round the car (the view's ground is drawn as roads, renderer FAR_CHUNKS)
@@ -370,8 +385,8 @@ function drawControls() {
   }
 }
 const _draw = renderer.draw.bind(renderer);
-renderer.draw = (S, cam, t) => {
-  _draw(S, cam, t);
+renderer.draw = (S, cam, t, tod) => {
+  _draw(S, cam, t, tod);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.font = '800 13px system-ui'; ctx.textAlign = 'center';
   ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(VIEW_W - 72, 14, 60, 28, 12); ctx.fill(); ctx.fillStyle = '#ffe4b0'; ctx.fillText('MAP', VIEW_W - 42, 33);
   drawMissionHud();
@@ -401,4 +416,4 @@ renderer.draw = (S, cam, t) => {
   if (picking) drawPick();
 };
 requestAnimationFrame(frame);
-window.__lf = { get areas() { return areas; }, inside: () => inside, setSpeed: (k) => { SPEED = k; }, roof: () => RF, sim, W, ground, cam, input, renderer, map: () => mapOpen, mission: () => M, koth: () => KOTH, pick, picking: () => picking, pilot: () => pilot, foot: () => foot };
+window.__lf = { get areas() { return areas; }, inside: () => inside, setSpeed: (k) => { SPEED = k; }, roof: () => RF, sim, W, ground, cam, input, renderer, map: () => mapOpen, mission: () => M, koth: () => KOTH, pick, picking: () => picking, pilot: () => pilot, foot: () => foot, tod: () => timeOfDay(), simTime: () => simTime };

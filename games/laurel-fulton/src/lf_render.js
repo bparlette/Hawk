@@ -1,10 +1,42 @@
 // lf_render.js — draws the Laurel/Fulton sample: painted ground chunks (lf_ground.js), bridge decks above
 // with their cast shadow, the crew's cars (assets/fleet.json sprites: shadow pass, then colour, 32 angles),
-// a golden-hour grade in Palm City's spirit, and the real street name you are on.
+// the day-to-night grade, and the real street name you are on.
+// DAY/NIGHT PARITY (owner, Nov 18): the grade keyframes + grade() below are Palm City's own
+// (games/palm-city/src/render.js), copied verbatim — same day-to-night cycle, same lighting
+// transitions: golden hour -> warm sunset -> violet -> deep ultramarine dusk, with the same
+// windows/lamps/neon/headlight ramps. main.js drives it with Palm City's timeOfDay() curve.
 import { CHUNK } from './lf_ground.js';
 import { poly } from './lf_areas.js';
 import { bushesNear } from './lf_veg.js';
 import * as FX from './lf_fx.js';
+
+const lerp = (a, b, u) => a + (b - a) * u;
+const clamp01 = (x) => x < 0 ? 0 : x > 1 ? 1 : x;
+const smooth = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+// Grade keyframes over time of day t (0 = golden hour, 1 = blue dusk) — Palm City's KEYS, verbatim.
+const KEYS = [
+  { t: 0.00, mul: [255, 246, 224], roofMul: [255, 248, 228], warm: 0.62, glow: 0.48, shadow: 0.68, shadowCol: [108, 68, 56], vigCol: [62, 34, 24], vigAlpha: 0.18, eastGlow: [248, 162, 112] },
+  { t: 0.35, mul: [255, 236, 200], roofMul: [255, 240, 208], warm: 0.64, glow: 0.46, shadow: 0.66, shadowCol: [104, 62, 58], vigCol: [58, 32, 26], vigAlpha: 0.22, eastGlow: [244, 152, 116] },
+  { t: 0.55, mul: [242, 186, 152], roofMul: [248, 198, 166], warm: 0.50, glow: 0.34, shadow: 0.60, shadowCol: [88, 52, 74],  vigCol: [48, 26, 42], vigAlpha: 0.32, eastGlow: [220, 128, 138] },
+  { t: 0.72, mul: [162, 118, 174], roofMul: [204, 160, 208], warm: 0.24, glow: 0.14, shadow: 0.52, shadowCol: [46, 38, 108], vigCol: [24, 18, 58], vigAlpha: 0.48, eastGlow: [158, 94, 200] },
+  { t: 0.86, mul: [52, 68, 148],   roofMul: [128, 132, 206], warm: 0.05, glow: 0.04, shadow: 0.44, shadowCol: [22, 26, 78],  vigCol: [10, 14, 42], vigAlpha: 0.62, eastGlow: [150, 90, 200] },
+  { t: 1.00, mul: [24, 38, 108],   roofMul: [108, 120, 198], warm: 0.02, glow: 0.00, shadow: 0.42, shadowCol: [20, 25, 74],  vigCol: [8, 12, 38],  vigAlpha: 0.70, eastGlow: [150, 90, 200] },
+];
+export function grade(t) {
+  let i = 0;
+  while (i < KEYS.length - 2 && t > KEYS[i + 1].t) i++;
+  const a = KEYS[i], b = KEYS[i + 1], u = clamp01((t - a.t) / (b.t - a.t));
+  const mix3 = (ka, kb) => ka.map((v, k) => Math.round(lerp(v, kb[k], u)));
+  return {
+    mul: mix3(a.mul, b.mul), roofMul: mix3(a.roofMul, b.roofMul),
+    shadowCol: mix3(a.shadowCol, b.shadowCol), vigCol: mix3(a.vigCol, b.vigCol), eastGlow: mix3(a.eastGlow, b.eastGlow),
+    vigAlpha: lerp(a.vigAlpha, b.vigAlpha, u), glow: lerp(a.glow, b.glow, u), warm: lerp(a.warm, b.warm, u), shadow: lerp(a.shadow, b.shadow, u),
+    windows: smooth(0.26, 0.82, t),  // windows warm up first
+    lamps: smooth(0.48, 0.92, t),    // street lamps after
+    neon: 0.02 + 0.98 * smooth(0.32, 0.85, t),
+    heads: smooth(0.45, 0.85, t),
+  };
+}
 
 const SUN = { x: 0.8, y: -0.3 }, FAR_CHUNKS = 90;                       // the bake's sun: shadows fall east-north-east
 export class Renderer {
@@ -35,10 +67,11 @@ export class Renderer {
     g.save(); g.globalCompositeOperation = 'lighter';
     if (c.model === 'astro_jimmy') {   // blue neon underglow
       const r = L * 0.72, gr = g.createRadialGradient(c.x, c.y, 2, c.x, c.y, r);
-      gr.addColorStop(0, 'rgba(45,95,255,0.55)'); gr.addColorStop(1, 'rgba(45,95,255,0)');
+      gr.addColorStop(0, `rgba(45,95,255,${(0.55 * (0.7 + 0.3 * (this.gr ? this.gr.heads : 0))).toFixed(3)})`); gr.addColorStop(1, 'rgba(45,95,255,0)');
       g.fillStyle = gr; g.beginPath(); g.ellipse(c.x, c.y, r, Wd * 1.35, c.h, 0, Math.PI * 2); g.fill();
     }
-    const col = c.model === 'celica_rigg' ? ['rgba(55,105,255,', 0.68] : c.model === 'camaro_brad' ? ['rgba(255,200,50,', 0.58] : ['rgba(255,240,200,', 0.3];
+    const hf = 0.55 + 0.45 * (this.gr ? this.gr.heads : 0);   // Palm City's headlight ramp: always clearly on (owner: the colours must be OBVIOUS), full strength by dusk
+    const col = c.model === 'celica_rigg' ? ['rgba(55,105,255,', 0.68 * hf] : c.model === 'camaro_brad' ? ['rgba(255,200,50,', 0.58 * hf] : ['rgba(255,240,200,', 0.3 * hf];
     const beamL = L * 2.6, beamW = Wd * 0.95;
     for (const s of [-1, 1]) {
       const ox = c.x + fx * (L / 2) + px * s * Wd * 0.30, oy = c.y + fy * (L / 2) + py * s * Wd * 0.30;
@@ -64,7 +97,8 @@ export class Renderer {
       g.lineWidth = Math.max(pass ? 1.6 : 3.2, (pass ? 4 : 5) * 1) / z * (pass ? 1 : 1); g.strokeStyle = pass ? '#6b6770' : '#d9cbb3'; g.stroke();
     }
   }
-  draw(S, cam, time) {
+  draw(S, cam, time, tod = 0.18) {
+    this.gr = grade(tod); this.tod = tod;
     const g = this.ctx, { vw, vh, dpr } = this, z = cam.zoom, hw = vw / 2 / z, hh = vh / 2 / z;
     const vx0 = cam.x - hw, vy0 = cam.y - hh, vx1 = cam.x + hw, vy1 = cam.y + hh;
     g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#4c7a3c'; g.fillRect(0, 0, vw, vh);
@@ -87,7 +121,7 @@ export class Renderer {
       g.globalAlpha = 0.38; g.fillStyle = '#21183a'; g.save(); g.translate(SUN.x * 34, SUN.y * 34); poly(g, h.f, S, h.cx, h.cy); g.fill(); g.restore();
       g.globalAlpha = 1; g.fillStyle = roof; poly(g, h.f, S, h.cx, h.cy); g.fill();
       g.lineWidth = 3; g.strokeStyle = '#2a1430'; g.stroke();
-      g.globalAlpha = 0.35; g.fillStyle = '#fff2d8'; poly(g, h.f, S * 0.55, h.cx - 6, h.cy - 4); g.fill(); g.globalAlpha = 1;   // lit roof plane
+      g.globalAlpha = 0.35 * (0.25 + 0.75 * this.gr.warm); g.fillStyle = '#fff2d8'; poly(g, h.f, S * 0.55, h.cx - 6, h.cy - 4); g.fill(); g.globalAlpha = 1;   // lit roof plane (dims as the sun goes, with Palm City's warm curve)
     }
     // crashable scenery (owner, Nov 18): guardrails along the fast roads + bridges, and
     // bushes in the yards — the SAME sets the sim collides with (lf_veg.js), so what you
@@ -144,13 +178,21 @@ export class Renderer {
       g.fillStyle = 'rgba(255,241,216,0.94)'; g.beginPath(); g.roundRect(h.cx - w / 2, y - 18, w, 34, 12); g.fill();
       g.lineWidth = 2.5; g.strokeStyle = '#2a1430'; g.stroke(); g.fillStyle = '#2a1430'; g.textAlign = 'center'; g.fillText(h.who, h.cx, y + 7);
     }
-    // grade: warm golden multiply + soft-light glow from the west, vignette (Palm City's golden hour)
+    // grade (Palm City's, keyframed by tod): warm golden multiply + soft-light glow from the west,
+    // vignette — at golden hour this matches the old static grade; by dusk the multiply plunges
+    // to ultramarine, the glow dies and the vignette deepens, exactly as Palm City falls to night.
+    const gr = this.gr, gk = Math.round(tod * 50);
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    g.globalCompositeOperation = 'multiply'; g.fillStyle = 'rgb(255,232,206)'; g.fillRect(0, 0, vw, vh);
+    g.globalCompositeOperation = 'multiply'; g.fillStyle = `rgb(${gr.mul[0]},${gr.mul[1]},${gr.mul[2]})`; g.fillRect(0, 0, vw, vh);
     g.globalCompositeOperation = 'soft-light';
-    if (!this.warm || this.warm.vh !== vh) { const w = this.warm = g.createLinearGradient(0, vh * 0.3, vw, vh * 0.8); w.addColorStop(0, 'rgba(255,190,82,0.55)'); w.addColorStop(1, 'rgba(255,140,120,0.3)'); w.vh = vh;
-      const v = this.vig = g.createRadialGradient(vw / 2, vh / 2, vh * 0.32, vw / 2, vh / 2, vh * 0.72); v.addColorStop(0, 'rgba(40,20,60,0)'); v.addColorStop(1, 'rgba(40,20,60,0.42)'); }
-    g.fillStyle = this.warm; g.fillRect(0, 0, vw, vh);
+    if (!this.warmG || this.warmVh !== vh || this.warmGk !== gk) {
+      const w = g.createLinearGradient(0, vh * 0.3, vw, vh * 0.8), gs = gr.glow / 0.48;
+      w.addColorStop(0, `rgba(255,190,82,${(0.55 * gs).toFixed(3)})`); w.addColorStop(1, `rgba(255,140,120,${(0.3 * gs).toFixed(3)})`);
+      const v = g.createRadialGradient(vw / 2, vh / 2, vh * 0.32, vw / 2, vh / 2, vh * 0.72);
+      v.addColorStop(0, 'rgba(40,20,60,0)'); v.addColorStop(1, `rgba(${gr.vigCol[0]},${gr.vigCol[1]},${gr.vigCol[2]},${gr.vigAlpha.toFixed(3)})`);
+      this.warmG = w; this.vig = v; this.warmVh = vh; this.warmGk = gk;
+    }
+    g.fillStyle = this.warmG; g.fillRect(0, 0, vw, vh);
     g.globalCompositeOperation = 'source-over'; g.fillStyle = this.vig; g.fillRect(0, 0, vw, vh);
   }
 }
