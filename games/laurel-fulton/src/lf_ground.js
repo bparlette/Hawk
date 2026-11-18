@@ -24,18 +24,87 @@ function curlAngle(wx, wy, sc, seed, base) {
 }
 
 export class GroundPainter {
-  constructor(W, cap = 64, areas = null, bumps = []) { this.bumps = bumps; this.areas = areas; this.W = W; this.cache = new Map(); this.cap = cap; this.queue = []; this.job = null; this.stats = { sync: 0, sliced: 0, evicted: 0 }; }
+  constructor(W, cap = 64, areas = null, bumps = []) { this.bumps = bumps; this.areas = areas; this.W = W; this.cache = new Map(); this.cap = cap; this.queue = []; this.job = null; this.pave = null; this.painted = null; this._ptCv = null; this._ptMask = null; this.stats = { sync: 0, sliced: 0, evicted: 0 }; }
   key(cx, cy) { return cx + ',' + cy; }
   has(cx, cy) { return this.cache.has(this.key(cx, cy)); }
   trim() { while (this.cache.size > this.cap) { const k = this.cache.keys().next().value; if (this.job && this.job.k === k) break; this.cache.delete(k); this.stats.evicted++; } }
+  // PAINTED GROUND (owner, Nov 17-18): the satellite painting (assets/ground-painted.webp),
+  // pre-tiled by tools/tile_ground.py into 4096-unit tiles (16x16 chunks) with a MEASURED
+  // world->painting fit (tools/fit_painted.py; landmark residuals <= 1.5 px). Tiles stream in
+  // lazily: a chunk's tile starts loading when the chunk is requested/got (main.js caps both
+  // lists, so the far-zoom whole-map opening can never queue the world — the Nov 17 freeze
+  // rule), and when a tile lands the chunks it covers repaint through the normal sliced
+  // queue, never synchronously. In paintGen the painting lands ONLY on 'ground' cells (pass
+  // 1's type grid is the mask): roads/sidewalks/parking keep the full procedural treatment,
+  // so the game's roads sit exactly on the graph with no ghosting — and the KOTH disc, which
+  // surfaceAt reports as 'road', is never painted over (see the setPave interplay below).
+  setPainted(man) { this.painted = man ? { man, tiles: new Map() } : null; }
+  _tileOf(cx, cy) { const t = this.painted.man.tileWorld / CHUNK; return [Math.floor(cx / t), Math.floor(cy / t)]; }
+  paintedState(cx, cy) {                        // harness/diagnostics: 'ok' | 'loading' | 'err' | 'none' | 'idle' | null
+    if (!this.painted) return null;
+    const [tx, ty] = this._tileOf(cx, cy), t = this.painted.tiles.get(tx + ',' + ty);
+    return t ? t.state : 'idle';
+  }
+  _paintedAt(wx, wy) {                          // is the painting under this world point, loaded?
+    if (!this.painted) return false;
+    const tw = this.painted.man.tileWorld, t = this.painted.tiles.get(Math.floor(wx / tw) + ',' + Math.floor(wy / tw));
+    return !!t && t.state === 'ok';
+  }
+  _ensureTile(cx, cy) {
+    const P = this.painted; if (!P) return;
+    const [tx, ty] = this._tileOf(cx, cy), k = tx + ',' + ty;
+    if (P.tiles.has(k)) return;
+    const rec = P.man.tiles[k];
+    if (!rec) { P.tiles.set(k, { state: 'none' }); return; }
+    const t = { state: 'loading', img: null }; P.tiles.set(k, t);
+    const img = new Image();
+    img.onload = () => { t.state = 'ok'; t.img = img; this._tileLanded(tx, ty); };
+    img.onerror = () => { t.state = 'err' };
+    img.src = 'assets/ground-tiles/' + rec.f;
+  }
+  _tileLanded(tx, ty) {                         // repaint the tile's cached chunks, sliced as usual
+    const n = this.painted.man.tileWorld / CHUNK;
+    for (let cy = ty * n; cy < ty * n + n; cy++) for (let cx = tx * n; cx < tx * n + n; cx++) {
+      const k = this.key(cx, cy);
+      if (this.job && this.job.k === k) this.job = null;        // a half-painted chunk without the painting must not land
+      if (this.cache.delete(k) && !this.queue.some(([qx, qy]) => qx === cx && qy === cy)) this.queue.push([cx, cy]);
+    }
+  }
   get(cx, cy) {
+    this._ensureTile(cx, cy);
     const k = this.key(cx, cy), c = this.cache.get(k);
     if (c) { this.cache.delete(k); this.cache.set(k, c); return c; }
     let gen = this.job && this.job.k === k ? this.job.gen : this.paintGen(cx, cy); if (this.job && this.job.k === k) this.job = null;
     let r = gen.next(); while (!r.done) r = gen.next();
     this.cache.set(k, r.value); this.stats.sync++; this.trim(); return r.value;
   }
-  request(list) { this.queue = list.filter(([cx, cy]) => !this.has(cx, cy)); }
+  request(list) { if (this.painted) for (const [cx, cy] of list) this._ensureTile(cx, cy); this.queue = list.filter(([cx, cy]) => !this.has(cx, cy)); }
+  // KOTH circle road (owner, Nov 17): declare the candidate/active cul-de-sac's disc paved — or
+  // clear it with null when no sac is in play. Syncs W.pave (the surfaceAt override the painter,
+  // the sim's drag and the skid layer all read) and drops the cached chunks the old/new disc
+  // touches, so they repaint through the normal request/work queue — sliced, never synchronously,
+  // so the whole-map opening and the far-zoom pulse can't be stalled by it. No-op when unchanged,
+  // so main.js may call it every frame; the repaint fires only on a real state change.
+  setPave(disc) {
+    const o = this.pave;
+    if ((!o && !disc) || (o && disc && o.x === disc.x && o.y === disc.y && o.r === disc.r)) return;
+    this.pave = disc ? { x: disc.x, y: disc.y, r: disc.r } : null;
+    this.W.pave = this.pave;
+    for (const d of [o, this.pave]) {
+      if (!d) continue;
+      const m = 10;   // the kerb ring (pass 3) strokes a few units past the disc's rim
+      const cx0 = Math.floor((d.x - d.r - m) / CHUNK), cx1 = Math.floor((d.x + d.r + m) / CHUNK);
+      const cy0 = Math.floor((d.y - d.r - m) / CHUNK), cy1 = Math.floor((d.y + d.r + m) / CHUNK);
+      for (let cy = cy0; cy <= cy1; cy++) for (let cx = cx0; cx <= cx1; cx++) {
+        const nx = Math.max(cx * CHUNK, Math.min(d.x, cx * CHUNK + CHUNK)), ny = Math.max(cy * CHUNK, Math.min(d.y, cy * CHUNK + CHUNK));
+        if (Math.hypot(nx - d.x, ny - d.y) > d.r + m) continue;   // this chunk's rect never touches the disc
+        const k = this.key(cx, cy);
+        this.cache.delete(k);
+        if (this.job && this.job.k === k) this.job = null;        // a half-painted chunk of the old surface must not land
+        if (!this.queue.some(([qx, qy]) => qx === cx && qy === cy)) this.queue.push([cx, cy]);
+      }
+    }
+  }
   work(ms) {
     const t0 = performance.now(); let qi = 0;
     while (performance.now() - t0 < ms) {
@@ -61,6 +130,29 @@ export class GroundPainter {
       }
     }
     sg.putImageData(img, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(small, 0, 0, gw, gw, 0, 0, CPX + S, CPX + S);
+    // pass 1b: the painted satellite underlay, on 'ground' cells only — the type grid just
+    // built doubles as the mask (soft-edged by the same smoothing that blends the base), so
+    // the painting brings the land cover (lawns, woods, fields, ponds) while every road,
+    // sidewalk and lot keeps its procedural base and the detail passes on top. NO yield in
+    // this block: the scratch canvases are shared with the sync get() path, which can run
+    // while this generator is parked at a yield.
+    const PT = this.painted, ptile = PT ? PT.tiles.get(this._tileOf(cx, cy).join(',')) : null;
+    if (ptile && ptile.state === 'ok') {
+      const man = PT.man, rec = man.tiles[this._tileOf(cx, cy).join(',')], M = man.map;
+      const tc = this._ptCv || (this._ptCv = Object.assign(document.createElement('canvas'), { width: CPX, height: CPX }));
+      const tg2 = tc.getContext('2d');
+      tg2.globalCompositeOperation = 'source-over'; tg2.globalAlpha = 1; tg2.imageSmoothingEnabled = true;
+      tg2.clearRect(0, 0, CPX, CPX);
+      tg2.drawImage(ptile.img, M.ax * ox + M.bx - rec.px[0], M.ay * oy + M.by - rec.px[1], M.ax * CHUNK, M.ay * CHUNK, 0, 0, CPX, CPX);
+      const mk = this._ptMask || (this._ptMask = Object.assign(document.createElement('canvas'), { width: gw, height: gw }));
+      const mg = mk.getContext('2d'), mid = mg.createImageData(gw, gw), md = mid.data, GI = TYPES.indexOf('grass');
+      for (let n = 0; n < gw * gw; n++) md[n * 4 + 3] = tg[n] === GI ? 255 : 0;
+      mg.putImageData(mid, 0, 0);
+      tg2.globalCompositeOperation = 'destination-in';
+      tg2.drawImage(mk, 0, 0, gw, gw, 0, 0, CPX + S, CPX + S);
+      g.drawImage(tc, 0, 0);
+      cv._pt = 1;                                 // stamp: this chunk's canvas carries the painting (harness waits on it)
+    }
     yield;
     // pass 2: brush dabs, seeded per 32-unit world cell (seamless across chunks)
     g.lineCap = 'round';
@@ -76,6 +168,7 @@ export class GroundPainter {
             const px = (wx - ox) * PX, py = (wy - oy) * PX;
             if (px < -30 || py < -30 || px > CPX + 30 || py > CPX + 30) continue;
             const sf = W.surfaceAt(wx, wy, 0), t = kind(sf), p = PAL[t];
+            if (t === 'grass' && this._paintedAt(wx, wy)) continue;   // painted grass needs no procedural dabs (decided per world point, so chunk seams can't disagree)
             let ang, len, wid, al;
             if (t === 'road' || t === 'parking') { const r = W.roadInfo(wx, wy, 0), ra = Math.atan2(r.dy, r.dx); ang = curlAngle(wx, wy, 0.015, 11, ra) * 0.3 + ra * 0.7 + (r1 - 0.5) * 0.3; len = (pass ? 12 : 20) + r2 * 14; wid = (pass ? 5.5 : 9) + r3 * 4.5; al = (pass ? 0.4 : 0.32) + r4 * 0.24; }
             else if (t === 'grass') { ang = curlAngle(wx, wy, 0.026, 31, fbm(wx * 0.015, wy * 0.015, 4, 2) * Math.PI * 3); len = 10 + r2 * 10; wid = (pass ? 5 : 8) + r3 * 4; al = 0.45 + r4 * 0.35; }
@@ -154,6 +247,20 @@ export class GroundPainter {
         g.beginPath(); g.moveTo(-5, cy - 7); g.lineTo(3, cy); g.lineTo(-5, cy + 7); g.lineTo(-2, cy + 7); g.lineTo(6, cy); g.lineTo(-2, cy - 7); g.closePath(); g.fill();
       }
       g.restore();
+    }
+    // KOTH circle road: the paved disc's rim gets the road kerb treatment — a lit lip just
+    // outside, a dark gutter crease just inside. (Passes 1-2 already painted the disc itself as
+    // road: they sample W.surfaceAt, which honours W.pave.)
+    const PV = this.pave;
+    if (PV) {
+      const nx = Math.max(ox, Math.min(PV.x, ox + CHUNK)), ny = Math.max(oy, Math.min(PV.y, oy + CHUNK));
+      if (Math.hypot(nx - PV.x, ny - PV.y) < PV.r + 8) {
+        g.globalAlpha = 0.7; g.strokeStyle = '#f0dcbc'; g.lineWidth = 3.2;
+        g.beginPath(); g.arc(PV.x, PV.y, PV.r + 1.3, 0, Math.PI * 2); g.stroke();
+        g.globalAlpha = 0.42; g.strokeStyle = '#201a42'; g.lineWidth = 3;
+        g.beginPath(); g.arc(PV.x, PV.y, PV.r - 1.8, 0, Math.PI * 2); g.stroke();
+        g.globalAlpha = 1;
+      }
     }
     g.restore(); g.globalAlpha = 1;
     return cv;

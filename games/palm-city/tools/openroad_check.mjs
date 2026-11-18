@@ -313,8 +313,8 @@ function holdAtGrid(s, c, secs) {
   check(okRight, 'stick right drives 90 degrees clockwise from the view heading');
   const dead = { jx: 0.05, jy: 0, jm: 0.1 };
   check(chaseStick(dead, 1.1) === dead, 'a centred stick passes through unmapped');
-  check(CHASE.squash >= 0.55 && CHASE.squash <= 0.62 && CHASE.anchor === 0.68 && CHASE.horizon === 0.315 && CHASE.strips <= 24,
-    'camera constants sit in the brief (squash 0.55-0.62, car 68% down, sky ~31.5%, <=24 strips)');
+  check(CHASE.anchor === 0.68 && CHASE.horizon === 0.315,
+    'camera constants sit in the brief (car 68% down, sky ~31.5%) — the warp-era squash/strips assertions went with the warp (Nov 17 late: openroad3d.js is a true segment racer now)');
   let eMin = 1e9, eMax = -1e9;
   for (let d = 0; d <= 6000; d += 25) { const e = elevAt(d); eMin = Math.min(eMin, e); eMax = Math.max(eMax, e); }
   check(eMax - eMin > 25 && eMax <= 23.5 && eMin >= -23.5, 'the elevation profile is a gentle swell (about +/-23 units over the course)', `${eMin.toFixed(1)}..${eMax.toFixed(1)}`);

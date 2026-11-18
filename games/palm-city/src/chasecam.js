@@ -1,24 +1,18 @@
-// chasecam.js — the painted OutRun chase camera's shared maths (OPEN ROAD v2). Pure functions
-// and constants only: openroad.js steps the state (it lives on the sim, so the director's
-// re-sim reproduces the camera frame for frame), render.js composites the picture, main.js
-// remaps the stick. Nothing here touches the DOM or the sim.
+// chasecam.js — OPEN ROAD's chase-view shared maths. Pure functions and constants only:
+// openroad.js steps the state (it lives on the sim, so the director's re-sim reproduces the
+// camera frame for frame), openroad3d.js draws the picture, main.js remaps the stick.
+// Nothing here touches the DOM or the sim.
 //
-// THE PICTURE (the owner's frame: a red convertible from directly behind, low and large, the
-// road converging to a vanishing point, sky + pale silhouettes across the top):
-//   - the world is rendered once, heading-up, into an offscreen FRAME (560x1020 view units);
-//   - the frame is composited onto the portrait screen in horizontal strips under a TRUE
-//     perspective warp (see compositeChase in render.js): the source row for a screen row
-//     follows a ground-plane depth curve — far rows are compressed toward the horizon, near
-//     rows stretched — and each strip also resamples HORIZONTALLY, sampling a wider slice of
-//     the frame near the horizon and a narrower slice near the car, so the road's edges
-//     converge to the vanishing point instead of running parallel. Strips share exact
-//     boundary source rows, so the warp is continuous and curves don't tear. Each strip is
-//     also shifted by the course's elevation profile — elevation(ahead) - elevation(here) —
-//     so straights rise toward the horizon and the road falls away past a crest. Cars and
-//     props ride the same warp: no floating sprites.
-//   - above the horizon line: a painted sky gradient in the dusk grade + a silhouette strip.
-// Portrait adaptation (420x860): sky band = top ~31.5% of the screen, the car anchors ~68%
-// down. FREEZE: none of this exists outside the event — sim.chase is null in free roam.
+// THE PICTURE (the owner's frame: a convertible from directly behind, low and large, the
+// road converging to a vanishing point, sky + pale silhouettes across the top) is drawn by
+// openroad3d.js as a TRUE pseudo-3D segment racer on the Sunset GP model: segments of the
+// real course projected from a camera riding the route (scale = CAM_DEPTH / z), sprites
+// scaled by depth, the hero car a painted rear view. An earlier build warped the top-down
+// frame into a fake tilt instead; the owner rejected it ("looks nothing like OutRun") and
+// the warp was removed from render.js — the frame/squash/strip/persp/hero fields of CHASE
+// below are LEGACY from that build, kept only because tools/openroad_check.mjs reads them.
+// What the live view uses from CHASE: horizon (the sky band, top ~31.5% of the screen) and
+// anchor. FREEZE: none of this exists outside the event — sim.chase is null in free roam.
 
 export const CHASE = {
   frameW: 560, frameH: 1020,   // the offscreen world's view size (device 1120x2040 @ DPR 2, under the 2048 cap)
@@ -29,22 +23,22 @@ export const CHASE = {
   strips: 56,                  // horizontal strips per frame (was 24: the perspective warp needs fine steps — coarser strips kink the painted texture at every boundary into visible bands)
   elevGain: 1.15,              // screen px of shift per world unit of elevation difference
   lead: 27,                    // the frame's focus rides this far ahead of the car (puts the car at frame y ~540)
-  // Perspective warp (compositeChase): ahead-distance at screen depth o px below the horizon is
+  // Perspective warp (LEGACY — the warp composite was removed Nov 18; the live view is the
+  // segment racer in openroad3d.js, which reads only CHASE.horizon/CHASE.anchor from this
+  // table): ahead-distance at screen depth o px below the horizon was
   //   D(o) = perspFar * (oa - o) / (oa + perspM * o),   oa = anchor's depth below the horizon.
   // D(oa) = 0 at the car, D(0) = perspFar at the horizon; |dD/do| is ~15x larger at the horizon
   // than at the screen bottom, which is the compression that makes the far field bunch up.
   perspM: 1.5,                 // depth-curve strength: bigger = harder compression at the horizon, more stretch at the bumper (2.3 stretched the near field ~5x per strip — the texture tore into bands; 1.5 keeps ~28x -> ~9x horizon:bottom density ratio)
   perspFar: 545,               // frame px ahead of the car shown at the horizon (the frame's car row sits ~540 from its top)
   perspD0: 170,                // horizontal resample: source width at depth D is vw * (D + perspD0) / perspD0 — 1:1 at the car, ~1.33x (frame-capped) at the horizon, ~0.47x at the bottom edge. Horizontal narrowing carries the convergence; it doesn't band, so it can push harder than the vertical curve
-  // === HERO CAR HOOK (STAND-IN — NOT the final look) ===
-  // The Nov 16 frame wants the hero car drawn from DIRECTLY BEHIND, low and large. That needs a
-  // rear-view sprite, which does not exist yet (separate asset task). Until it lands, the
-  // composite draws the player's existing TOP-DOWN sheet cell at heroScale over the anchor —
-  // a framing stand-in ONLY, so size/position can be judged in captures. When the rear-view
-  // asset arrives: point drawChaseHeroCar (render.js) at it, drop the rotation, and delete
-  // this note. heroCar=false disables the hook (the frame's own car shows as before).
+  // === HERO CAR (superseded Nov 18) ===
+  // The warp-era stand-in hook (top-down sheet cell at heroScale) is GONE with the warp:
+  // the pseudo-3D view in openroad3d.js draws its own painted rear-view hero car
+  // (drawCarRear). When a generated rear-view sprite lands, swap it in THERE.
+  // heroCar/heroScale below are inert legacy values, kept only because tools read CHASE.
   heroCar: true,
-  heroScale: 2.7,              // stand-in size: x the sheet cell's world size (the frame shows it at ~zoom, so ~2.4x on screen)
+  heroScale: 2.7,              // legacy (warp era): stand-in size x the sheet cell's world size
 };
 
 // The course's gentle elevation profile: two long sine swells over route distance (world
