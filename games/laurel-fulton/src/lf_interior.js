@@ -11,7 +11,13 @@
 // BEERS: GRAB BEER at the cooler / fridge / mantle (the mantle's cans really go: 6 -> 5 ...), then DRINK anywhere — a 2.4 s
 // moment (can up, tilt, sigh). Cosmetic only: a count in the corner, nothing else (owner: keep it light).
 // RESIDENTS: two golden retrievers roam room to room and trail you; TETER never leaves her recliner and greets whoever
-// comes upstairs (placeholder line until Gemini's G7 greeting).
+// comes upstairs: "Hi guys, what are you getting into today?.... You are all alcoholics." (owner's HOUSE BEAT, Nov 18; two beats).
+// RIGG'S HOUSE (Nov 18, kit type two-story-entry): the flights overlap a floor, so they are `press` links — push UP at the foot of the
+// stairs to climb, DOWN at the top / at the cellar door to descend. THE BEAT: you walk in on the first floor, the old guy (Brian's dad)
+// yells "Brrrrrriiiiiiaaaaannnn", and Brian comes down the stairs from his bedroom (skipped when YOU are Brian).
+// GUESTS: crew CPUs idling here (CrewWorld B.inside, lf_world.js) are drawn at their kit cpuIdle spot with a beer — CPU Brad is by the fire.
+// RIGG-ISMS: when Rigg is the one walking about, he barks IGURT GOGURT / fuck shit diesel at random (lf_riggisms.js) — hero.said.
+import { Barker } from './lf_riggisms.js';
 export const MOVE = { walk: 4.4, stair: 2.7, reach: 0.9, drink: 2.4, dog: 1.7, dogRun: 3.6 };
 const rngOf = (seed) => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 
@@ -22,7 +28,14 @@ export class Interior {
     this.L = Object.fromEntries(K.links.map(l => [l.id, l]));
     this.mantle = (K.props.find(p => p.kind === 'fireplace') || {}).mantle || 0;
     this.hero = { who: opts.who || { id: K.id, name: K.id }, floor: K.door.floor, x: K.door.x + 0.5, z: this.F[K.door.floor].z, face: 1, link: null, t: 0, walk: 0, moving: false, beer: false, drinkT: 0, drank: 0 };
-    this.teter = K.teter ? { ...K.teter, z: this.F[K.teter.floor].z, sayT: 0, said: null } : null;
+    this.teter = K.teter ? { ...K.teter, z: this.F[K.teter.floor].z, sayT: 0, said: null, queue: [] } : null;
+    this.houseName = opts.house || this.hero.who.name;
+    this.dad = K.dad ? { ...K.dad, z: this.F[K.dad.floor].z, sayT: 0, said: null, queue: [] } : null;     // the old guy in his recliner (Rigg's house beat)
+    this.son = K.son && this.hero.who.id !== K.id ? { ...K.son, z: this.F[K.son.floor].z, face: -1, link: null, t: 0, walk: 0, moving: false, state: 'wait', sayT: 0, said: null, queue: [] } : null;
+    this.beat = this.dad ? { stage: 0 } : null;
+    // guests: crew CPUs home here, idling at the kit's cpuIdle spot with a beer (a sip every few seconds)
+    this.guests = (opts.guests || []).filter(g => g.id !== this.hero.who.id && this.F[(K.cpuIdle || {}).floor]).map((g, i) => ({ id: g.id, name: g.name || g.id, floor: K.cpuIdle.floor, x: K.cpuIdle.x + i * 0.9, z: this.F[K.cpuIdle.floor].z, face: -1, sip: 2 + i * 1.7, drinkT: 0, drank: 0 }));
+    this.barker = this.hero.who.id === 'rigg' ? new Barker(opts.seed || 1998) : null;
     this.dogs = [];
     for (let i = 0; i < (K.dogs || 0); i++) {
       const fl = i % 2 ? 'lower' : 'main', f = this.F[fl] || this.F[K.door.floor];
@@ -50,13 +63,27 @@ export class Interior {
     for (const l of this.K.links) {                         // stepping off a floor's end onto a flight that starts there
       const end = l.a === f.id ? l.ax : l.b === f.id ? l.bx : null; if (end === null) continue;
       const other = l.a === f.id ? l.bx : l.ax, toward = Math.sign(other - end);
-      if (toward === dir && ((dir > 0 && nx >= end - 0.3) || (dir < 0 && nx <= end + 0.3)) && (!pick || pick(l))) { p.x = end; this.enter(p, l); return; }
+      if (toward === dir && ((dir > 0 && nx >= end - 0.3) || (dir < 0 && nx <= end + 0.3)) && (!l.press || Math.abs(nx - end) < 0.6) && (!pick || pick(l))) { p.x = end; this.enter(p, l); return; }
     }
     p.x = Math.max(f.x0 + 0.25, Math.min(f.x1 - 0.25, nx));
   }
   arrived(floor) {
-    if (this.teter && floor === this.teter.floor) { this.teter.sayT = 3; this.teter.said = 'Hi hon! There’s beer in the cooler.'; this.events.push({ kind: 'teter_greet', t: this.time }); }
+    if (this.teter && floor === this.teter.floor) { this.say(this.teter, this.teter.lines || ['Hi hon! There’s beer in the cooler.'], 3.2); this.events.push({ kind: 'teter_greet', t: this.time }); }
   }
+  // a resident says a line, or a sequence of lines one after another (the bubble shows r.said while r.sayT > 0)
+  say(r, lines, dur = 2.6) { r.queue = lines.map(t => ({ t, dur })); const f = r.queue.shift(); r.said = f.t; r.sayT = f.dur; }
+  tickSay(r, dt) { if (r.sayT > 0) { r.sayT -= dt; if (r.sayT <= 0 && r.queue && r.queue.length) { const f = r.queue.shift(); r.said = f.t; r.sayT = f.dur; } } }
+  // press links: which one is under the hero's feet and which way it goes (up / down); null if none within reach
+  pressHere() {
+    const h = this.hero; if (h.link) return null;
+    for (const l of this.K.links) {
+      if (!l.press || (l.a !== h.floor && l.b !== h.floor)) continue;
+      const here = l.a === h.floor, end = here ? l.ax : l.bx, other = this.F[here ? l.b : l.a];
+      if (Math.abs(h.x - end) < 0.6) return { l, end, toward: Math.sign((here ? l.bx : l.ax) - end), up: other.z > this.F[h.floor].z };
+    }
+    return null;
+  }
+  hint() { const ph = this.pressHere(); return ph ? (ph.up ? 'push UP to climb the stairs' : 'push DOWN to take the stairs') : null; }
   near(act) {
     const h = this.hero; if (h.link) return null;
     let best = null;
@@ -86,15 +113,42 @@ export class Interior {
       else if (pr === 'PAT') { const d = this.dogNear(); d.patT = 1.2; d.mode = 'lounge'; d.wait = 2; this.events.push({ kind: 'pat', dog: d.i, t: this.time }); }
     }
     if (h.drinkT > 0) { h.drinkT -= dt; h.moving = false; if (h.drinkT <= 0) { h.beer = false; h.drank++; } }
-    else if (jm > 0.2 && Math.abs(jx) > 0.25) {
-      const dir = Math.sign(jx); h.face = dir; h.moving = true; h.walk += dt;
+    else if (jm > 0.2 && (Math.abs(jx) > 0.25 || (Math.abs(jy) > 0.5 && (h.link || this.pressHere())))) {
+      // pushing straight UP / DOWN works on stairs: at a press link's foot it takes the flight, and on a flight it runs it (up = toward the higher floor)
+      let dir = Math.sign(jx);
+      if (Math.abs(jx) <= 0.25) { if (h.link) { const l = this.L[h.link.id] || h.link, hi = this.F[l.b].z > this.F[l.a].z ? 'b' : 'a', toB = (jy < 0) === (hi === 'b'); dir = (toB ? 1 : -1) * Math.sign(l.bx - l.ax); } else dir = this.pressHere().toward; }
+      h.face = dir; h.moving = true; h.walk += dt;
       const down = jy > 0.35;                                // on the landing: down-right takes the half-flight DOWN
-      const fork = this.K.links.filter(l => l.a === h.floor || l.b === h.floor).length > 1;   // only the landing is a fork
-      this.moveOn(h, dir, h.link ? MOVE.stair : MOVE.walk, dt, (l) => !fork || (l.id === 'down') === down);
+      const fork = this.K.links.filter(l => !l.press && (l.a === h.floor || l.b === h.floor)).length > 1;   // only the landing is a fork
+      this.moveOn(h, dir, h.link ? MOVE.stair : MOVE.walk, dt, (l) => {
+        if (l.press) { const up = this.F[l.a === h.floor ? l.b : l.a].z > this.F[h.floor].z; return up ? jy < -0.3 : jy > 0.3; }   // stairs that overlap a floor: push up / down at the foot
+        return !fork || (l.id === 'down') === down;
+      });
     } else h.moving = false;
-    if (this.teter && this.teter.sayT > 0) this.teter.sayT -= dt;
+    this.tickSay(this.teter || {}, dt);
+    this.stepBeat(dt);
+    if (this.barker) { const b = this.barker.step(dt); if (b) { h.said = b; h.sayT = this.barker.hold; this.events.push({ kind: 'rigg_bark', text: b, t: this.time }); } }
+    if (h.sayT > 0) { h.sayT -= dt; if (h.sayT <= 0) h.said = null; }
+    for (const g of this.guests) { if (g.drinkT > 0) { g.drinkT -= dt; if (g.drinkT <= 0) g.drank++; } else if ((g.sip -= dt) <= 0) { g.drinkT = MOVE.drink; g.sip = 5 + this.rnd() * 5; } }
     for (const d of this.dogs) this.stepDog(d, dt);
     return out;
+  }
+  // the house beat (Rigg's): walk in -> the old guy yells for Brian -> Brian comes down the stairs and meets you at the foot of them
+  stepBeat(dt) {
+    const B = this.beat, D = this.dad, S = this.son; if (D) this.tickSay(D, dt); if (S) this.tickSay(S, dt);
+    if (!B) return;
+    if (B.stage === 0 && this.time > 0.9) { B.stage = 1; this.say(D, [D.yell || 'Brrrrrriiiiiiaaaaannnn'], 3.4); this.events.push({ kind: 'dad_yell', t: this.time }); }
+    if (!S) return;
+    if (B.stage === 1 && this.time > 2.3) { B.stage = 2; S.state = 'down'; this.events.push({ kind: 'son_coming', t: this.time }); }
+    if (S.state === 'down') {
+      const dt2 = dt, sp = S.link ? MOVE.stair : MOVE.walk; S.moving = true; S.walk += dt2;
+      if (S.link || S.floor === 'upper') { S.face = -1; this.moveOn(S, -1, sp, dt2, () => S.floor === 'upper'); }   // along the hall, down the flight (press links: only from the top)
+      else {                                                  // on the first floor: walk out to the foot of the stairs where you are
+        const tx = Math.max(2.1, this.hero.x + 1.4), d = tx - S.x; S.face = d < 0 ? -1 : 1;
+        if (Math.abs(d) < 0.12) { S.state = 'there'; S.moving = false; S.face = -1; this.say(S, ['…yeah?'], 2.2); this.events.push({ kind: 'son_down', t: this.time }); }
+        else this.moveOn(S, Math.sign(d), MOVE.walk, dt2, () => false);
+      }
+    }
   }
   roomOf(p) { const fl = p.floor; return (this.K.rooms.find(r => r.floor === fl && p.x >= r.x0 && p.x <= r.x1) || {}).name || 'stairs'; }
   stepDog(d, dt) {

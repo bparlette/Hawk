@@ -49,6 +49,7 @@ export class Renderer {
     return [img, c * fw, r * fh, fw, fh, e.ox, e.oy, e.w, e.h];
   }
   drawCar(g, c, which) {
+    if (c.van) { c.van.draw(g, c, which, this.time || 0); return; }   // L7: David Klink's Scooby-Doo van is a painted prop car (lf_van.js)
     const m = this.fleet[c.model], k = ((Math.round(c.h / (Math.PI * 2) * m.angles) % m.angles) + m.angles) % m.angles;
     const [img, sx, sy, sw, sh, ox, oy, w, h] = this.cell(m, k, which);
     let [jx, jy] = this.time != null ? FX.shake(this.S, c, this.time) : [0, 0];   // bass cars vibrate
