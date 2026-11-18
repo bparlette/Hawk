@@ -68,12 +68,20 @@ const j = async (f) => { const r = await fetch(f); if (!r.ok) throw new Error(f 
 // each file as it arrives, so a stall shows exactly where it stopped instead of looking dead.
 const TITLE = (document.title || 'LAUREL / FULTON').toUpperCase(), got = [];
 const tick = (what) => { got.push(what); msg(TITLE + ' — loading… ' + got.join(' · ')); };
-const [G, roster, fleet, BJ] = await Promise.all([
+const [G, roster, fleet, BJ, LMJ] = await Promise.all([
   j('data/graph.min.json').catch(() => j('data/graph.json')).then(v => (tick('roads'), v)),   // the packed graph (tools/graph_pack.py), 24% smaller
   j('data/roster.json').then(v => (tick('crew'), v)),
   j('assets/fleet.json').then(v => (tick('cars'), v)),
   j('data/bumps.json').then(v => (tick('bumps'), v)),
+  j('data/landmarks.json').catch(() => null).then(v => (v && tick('landmarks'), v)),   // the pick screen's landmark starts; a city without the file (College Park) just offers house starts
 ]);
+// ---- LANDMARK STARTS (owner, Nov 18): the pick screen's second selection — start at a named
+// landmark (Weis, Atholton, Gringada, ...) instead of your house. startAt = a landmark id, or
+// null = your house (the rally opening, unchanged). ?start=<id> arms one before the pick.
+const LANDMARKS = (LMJ && LMJ.landmarks) || [];
+let startAt = null;
+if (Q.get('start')) { const lm0 = LANDMARKS.find(l => l.id === Q.get('start')); if (lm0) startAt = lm0.id; }
+const startLm = () => LANDMARKS.find(l => l.id === startAt) || null;
 roster.beats = await fetch('data/beats.json').then(r => r.ok ? r.json() : null).catch(() => null);   // L14: door staging for the arrival beats (Lazaris boots, Grant's mom)
 const files = new Set(); for (const m of Object.values(fleet)) for (const k of ['color', 'shadow']) files.add(m[k].file);   // the 'light' sheets are never drawn: not loaded (11 fewer files at boot)
 const imgs = {};
@@ -217,9 +225,22 @@ function stepOnlineBeat(dt) {
   }
   if (oM.beat) stepBeat(oM, dt);
 }
+// spawn at a landmark: the jumpTo placement (roadInfo -> nearPt, heading along the road), minus
+// the camera snap — the opening intro flies to wherever the car is, landmark included. nearPt puts
+// the car ON the nearest road centreline, so it can never start wedged in a footprint.
+function spawnAtLandmark(lm) {
+  const r = W.roadInfo(lm.x, lm.y, 0);
+  const pt = r.e ? sim.nearPt(lm.x, lm.y, r) : { x: lm.x, y: lm.y };
+  const c = sim.player;
+  c.x = pt.x; c.y = pt.y; c.v = 0; c.layer = 0; c.z = 0; c.vz = 0; c.wreck = false;
+  if (r.e) c.h = Math.atan2(r.dy, r.dx);
+  if (M) pushTrail(M, c.x, c.y, true);                    // the convoy trail starts at the landmark, not back at the house
+}
 function pick(id) { if (net) { if (!net.takenBy(id)) net.pick(id); return; }
   M = startRally(sim, roster, id); renderer.mission = M; picking = false; foot = createFoot(PLAYERS.find(p => p.id === id)); setFoot(foot);
-  if (KITS[id] && !Q.has('pilot')) goIn(id, foot.who);   // PICK Brad -> you start in his house
+  const lm = startLm();
+  if (lm && !Q.has('pilot')) spawnAtLandmark(lm);         // landmark start: your car on the road at the landmark — no indoor start; the rally runs as usual from there
+  else if (KITS[id] && !Q.has('pilot')) goIn(id, foot.who);   // PICK Brad -> you start in his house
   else if (!Q.has('pilot')) pendingIn = id;               // (?player=: the kits have not landed yet)
   foot.onClimb = (c) => { learnLabel(sim, 'lf_roof'); if (c.onto === 'roof' && !foot.summited && M) { foot.summited = true; M.msg = 'THE LOOKOUT'; M.msgT = 3.5; } }; if (Q.has('pilot')) pilot = new Pilot(sim, W, M); startIntro(); }
 // the opening (owner, Nov 17): the game starts zoomed out on the WHOLE MAP, then
@@ -254,9 +275,21 @@ const pickRows = () => {
     return row;
   });
 };
+// the landmark chips: HOME + every landmark, 4 across in 2 rows, under the person cards — the
+// pick screen's second selection. Tapping a chip ARMS it (it turns gold, the header names it);
+// tapping your player then starts there. HOME — or tapping the armed chip again — is the house
+// start, exactly as before. Chips never start the game by themselves.
+const LM_COLS = 4, LM_CHIP_H = 30;
+function lmChips() {
+  const rows = pickRows(), endY = rows.length ? rows[rows.length - 1].y + rows[rows.length - 1].h : 158;
+  const items = [{ id: null, short: 'HOME', name: 'Your house' }, ...LANDMARKS];
+  const w = (VIEW_W - 48 - (LM_COLS - 1) * 6) / LM_COLS;
+  return { headY: endY + 24, chips: items.map((l, i) => ({ lm: l, x: 24 + (i % LM_COLS) * (w + 6), y: endY + 32 + Math.floor(i / LM_COLS) * (LM_CHIP_H + 6), w, h: LM_CHIP_H })) };
+}
 canvas.addEventListener('pointerdown', e => {
   if (!picking) return;
   const b = canvas.getBoundingClientRect(), x = (e.clientX - b.left) * VIEW_W / b.width, y = (e.clientY - b.top) * view.h / b.height;
+  if (LANDMARKS.length) { const ch = lmChips().chips.find(c => x > c.x && x < c.x + c.w && y > c.y && y < c.y + c.h); if (ch) { startAt = startAt === ch.lm.id ? null : ch.lm.id; e.stopPropagation(); return; } }
   const r = pickRows().find(r => x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.h);
   if (r) { pick(r.p.id); e.stopPropagation(); }
 }, { capture: true });
@@ -274,6 +307,16 @@ function drawPick() {
     ctx.font = PICK_DETAIL_FONT; ctx.fillStyle = '#5a3c58'; lines.forEach((ln, k) => ctx.fillText(ln, x + 57, y + 41 + k * 14));
     const tb = net && net.takenBy(p.id); if (tb || net) { ctx.textAlign = 'right'; ctx.font = '800 11px system-ui'; ctx.fillStyle = tb ? '#b8402a' : '#4a7a3a'; ctx.fillText(tb ? 'DRIVEN BY ' + tb.toUpperCase() : 'CPU — TAKE OVER', x + w - 10, y + 22); }
   });
+  if (LANDMARKS.length) {                                 // the landmark start: header names the armed start, the armed chip turns gold
+    const { headY, chips } = lmChips(), lm = startLm();
+    ctx.textAlign = 'left'; ctx.fillStyle = '#ffd25c'; ctx.font = '900 13px system-ui'; ctx.fillText('START AT', 24, headY);
+    ctx.textAlign = 'right'; ctx.fillStyle = '#e8dcc8'; ctx.font = '700 13px system-ui'; ctx.fillText(lm ? lm.name.toUpperCase() : 'YOUR HOUSE', VIEW_W - 24, headY);
+    for (const ch of chips) {
+      const on = (ch.lm.id || null) === startAt;
+      ctx.fillStyle = on ? '#ffd25c' : 'rgba(255,241,216,0.92)'; ctx.beginPath(); ctx.roundRect(ch.x, ch.y, ch.w, ch.h, 9); ctx.fill();
+      ctx.fillStyle = on ? '#2a1430' : '#5a3c58'; ctx.font = '800 11px system-ui'; ctx.textAlign = 'center'; ctx.fillText(ch.lm.short.toUpperCase(), ch.x + ch.w / 2, ch.y + 19);
+    }
+  }
 }
 function drawMissionHud() {
   if (!M) return;
@@ -577,5 +620,5 @@ renderer.draw = (S, cam, t, tod) => {
   if (picking) drawPick();
 };
 requestAnimationFrame(frame);
-window.__lf = { places: () => PL, goInPlace, door: () => doorOf(), van: () => van, get areas() { return areas; }, inside: () => inside, setSpeed: (k) => { SPEED = k; }, roof: () => RF, sim, W, ground, cam, input, renderer, map: () => mapOpen, mission: () => M, koth: () => KOTH, fakeCop: () => fakeCop, party: () => party, valet: () => valet, destruct: () => destruct, help: () => help, jumpTo, pick, picking: () => picking, pilot: () => pilot, foot: () => foot, tod: () => timeOfDay(), simTime: () => simTime, net: () => net, obeat: () => oM.beat };
+window.__lf = { places: () => PL, goInPlace, door: () => doorOf(), van: () => van, get areas() { return areas; }, inside: () => inside, setSpeed: (k) => { SPEED = k; }, roof: () => RF, sim, W, ground, cam, input, renderer, map: () => mapOpen, mission: () => M, koth: () => KOTH, fakeCop: () => fakeCop, party: () => party, valet: () => valet, destruct: () => destruct, help: () => help, jumpTo, pick, landmarks: () => LANDMARKS, startAt: () => startAt, lmChips: () => lmChips(), picking: () => picking, pilot: () => pilot, foot: () => foot, tod: () => timeOfDay(), simTime: () => simTime, net: () => net, obeat: () => oM.beat };
 window.__lf.traffic = traffic; window.__lf.cops = cops;   // L15
