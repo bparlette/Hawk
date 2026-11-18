@@ -6,6 +6,7 @@
 // transitions: golden hour -> warm sunset -> violet -> deep ultramarine dusk, with the same
 // windows/lamps/neon/headlight ramps. main.js drives it with Palm City's timeOfDay() curve.
 import { CHUNK } from './lf_ground.js';
+import { drawLightBar, drawSirenGlow } from './lf_cops.js';   // L15: cop light bar + siren glow
 import { poly } from './lf_areas.js';
 import { HeroArt } from './lf_heroes.js';
 import { bushesNear } from './lf_veg.js';
@@ -63,6 +64,7 @@ export class Renderer {
   }
   drawGlow(g, c) {   // headlight beams + underglow (owner, Nov 18): Rigg's beam is BLUE, Brad's is YELLOW, Jimmy's Astro has BLUE NEON under the car. The authored 'light' sheets are near-empty streaks, so the beams are drawn as gradient cones — the colours are the point, and they must be OBVIOUS.
     if (c.z > 1) return;
+    if (c.siren) drawSirenGlow(g, c, this.time || 0);   // L15: Palm City's red/blue siren pools
     const m = this.fleet[c.model]; if (!m) return;
     const fx = Math.cos(c.h), fy = Math.sin(c.h), px = -fy, py = fx;
     const L = m.length || 46, Wd = m.width || 20;
@@ -196,6 +198,7 @@ export class Renderer {
     for (const c of S.cars) if (c.layer === 0 && vis(c.x, c.y)) this.drawGlow(g, c);
     this.S = S; this.time = time; FX.under(g, S, time, [cam.x - hw - 60, cam.y - hh - 60, cam.x + hw + 60, cam.y + hh + 60]);
     g.globalAlpha = 1; for (const c of S.cars) if (c.layer === 0 && vis(c.x, c.y)) this.drawCar(g, c, 'color');
+    for (const c of S.cars) if (c.siren && c.layer === 0 && vis(c.x, c.y)) drawLightBar(g, c, time);   // L15: the cruiser's roof light bar
     // bridge decks: cast shadow on whatever is below, then the deck (asphalt + parapets), then cars on it
     const decks = []; const seen = new Set();
     for (let cy = Math.floor(vy0 / 256) - 1; cy <= Math.floor(vy1 / 256) + 1; cy++) for (let cx = Math.floor(vx0 / 256) - 1; cx <= Math.floor(vx1 / 256) + 1; cx++)

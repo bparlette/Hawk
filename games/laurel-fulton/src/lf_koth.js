@@ -18,7 +18,7 @@ export class KingOfTheHill {
     this.winner = null; this.winnerName = ''; this.crownT = 0; this.coolT = 0; this.lastOut = null;
     this.notice = null; this.noticeT = 0;   // the 'need a rival' hint, shown via banner()
   }
-  participants(sim) { return sim.cars.filter(c => !c.parked && !c.remote && c.layer === 0 && !c.wreck); }
+  participants(sim) { return sim.cars.filter(c => !c.parked && !c.remote && !c.ambient && !c.cop && c.layer === 0 && !c.wreck); }
   insideSac(c, s) { return Math.hypot(c.x - s.x, c.y - s.y) <= s.r; }
   inside(c) { return this.sac ? this.insideSac(c, this.sac) : false; }
   candidate(sim) {   // the ring the PLAYER is sitting in (the button shows for this one)

@@ -26,6 +26,8 @@ import { FakeCop } from './lf_fakecop.js';                               // M-B:
 import { NightParty } from './lf_party.js';                              // M-C: 100-guest night party (Kosack / Floyds)
 import { ValetLots } from './lf_valet.js';                               // Palm City easy win: PARK IT! (Ledo / Weis / Atholton)
 import { CurbDestruct } from './lf_destruct.js';                         // Palm City easy win: breakable curbside props + combo
+import { Traffic } from './lf_traffic.js';                              // L15: LIGHT ambient traffic on the road graph (AMBIENT_MAX cars)
+import { Cops } from './lf_cops.js';                                    // L15: cops / wanted v1 (stars, pursuit, BUSTED, siren)
 import { LFHelp } from './lf_help.js';                                   // Palm City easy win: '?' HELP / JUMP quick-teleporter
 
 const Q = new URLSearchParams(location.search);
@@ -146,6 +148,7 @@ const party = new NightParty(); if (Q.get('party')) party.setVenue(Q.get('party'
 const valet = new ValetLots(W, roster);
 const destruct = new CurbDestruct(W);
 const help = new LFHelp();
+const traffic = new Traffic(sim, W, {}), cops = new Cops(sim, W, traffic, {}), TRAFFIC_ON = Q.get('traffic') !== '0';   // L15 (?traffic=0 turns both off)
 let forcedTod = null;
 function jumpTo(it) {
   if (!it || !it.pos) return;
@@ -315,12 +318,13 @@ function frame(now) {
     const beat = (M && M.beat) || oM.beat || intro, ZERO = { jx: 0, jy: 0, jm: 0, keys: {} };
     if (inside) { sim.step(STEP, ZERO); if (inside.step(STEP, inp) === 'exit') goOut(); }
     else if (foot && foot.active) { sim.step(STEP, ZERO); if (!beat) { stepOnFoot(foot, STEP, inp, SUP); const nc = inp.action && !(PL && PL.label(foot, sim)) ? nearAnyCar(foot, sim.cars) : null; /* a public door / the 108 Astro's lights win over GET IN */ if (nc) { if (nc !== sim.player) swapPlayerCar(sim, M, nc); foot.active = false; } else if (inp.action && atMyDoor()) goIn(doorOf(), foot.who); else if (inp.action && PL) { const r = PL.act(foot, sim); if (r && r.enter && KITS[r.enter.interior]) goInPlace(r.enter, foot.who); } } }   // L12/L13: GO IN at a public door / ROB LIGHTS at the Astro
-    else { sim.step(STEP, beat ? ZERO : inp); if (foot && !beat && !pilot && inp.action && Math.abs(sim.player.v) < FOOT.exitV) { exitCar(foot, sim.player); if (inHouse(foot.x, foot.y)) { const c = sim.player, a = c.h + Math.PI / 2, d = (c.wid || 20) / 2 + 7; foot.x = c.x + Math.cos(a) * d; foot.y = c.y + Math.sin(a) * d; foot.px = foot.x; foot.py = foot.y; } } }
+    else { sim.step(STEP, beat || cops.hold ? ZERO : inp);   /* L15: BUSTED holds your input */ if (foot && !beat && !pilot && inp.action && Math.abs(sim.player.v) < FOOT.exitV) { exitCar(foot, sim.player); if (inHouse(foot.x, foot.y)) { const c = sim.player, a = c.h + Math.PI / 2, d = (c.wid || 20) / 2 + 7; foot.x = c.x + Math.cos(a) * d; foot.y = c.y + Math.sin(a) * d; foot.px = foot.x; foot.py = foot.y; } } }
     if (van) van.step(STEP, foot);
     if (!inside && !picking) RIGGB.step(STEP);   // Rigg-isms: the street-side barker (indoors, the interior has its own)
     if (PL) PL.step(STEP); if (KOTH) KOTH.step(sim, STEP); if (M) stepRally(sim, M, STEP); if (net) stepOnlineBeat(STEP);
     party.step(timeOfDay());
     fakeCop.step(STEP, !!(sim.player.model === 'cavalier_kosack' && ((inp.action && Math.abs(sim.player.v) >= FOOT.exitV) || sirenKey)));
+    if (TRAFFIC_ON && !picking) { traffic.step(STEP); cops.step(STEP, { inCar: !(foot && foot.active) && !inside }); }   // L15
     valet.step(sim, STEP);
     destruct.step(sim, STEP);
     simTime += STEP; acc -= STEP; n++; }
@@ -508,6 +512,7 @@ renderer.draw = (S, cam, t, tod) => {
   ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(VIEW_W - 72, 14, 60, 28, 12); ctx.fill(); ctx.fillStyle = '#ffe4b0'; ctx.fillText('MAP', VIEW_W - 42, 33);
   drawMissionHud();
   fakeCop.drawHud(ctx, VIEW_W);
+  cops.drawHud(ctx, VIEW_W, view.h);                        // L15: wanted stars + BUSTED / LOST THEM
   valet.drawHud(ctx, VIEW_W);
   destruct.drawHud(ctx, VIEW_W);
   if (!inside && RIGGB.sayT > 0) {                          // Rigg-isms over Rigg: on foot (you are Rigg) or over his car (you or the CPU)
@@ -542,3 +547,4 @@ renderer.draw = (S, cam, t, tod) => {
 };
 requestAnimationFrame(frame);
 window.__lf = { places: () => PL, goInPlace, door: () => doorOf(), van: () => van, get areas() { return areas; }, inside: () => inside, setSpeed: (k) => { SPEED = k; }, roof: () => RF, sim, W, ground, cam, input, renderer, map: () => mapOpen, mission: () => M, koth: () => KOTH, fakeCop: () => fakeCop, party: () => party, valet: () => valet, destruct: () => destruct, help: () => help, jumpTo, pick, picking: () => picking, pilot: () => pilot, foot: () => foot, tod: () => timeOfDay(), simTime: () => simTime, net: () => net, obeat: () => oM.beat };
+window.__lf.traffic = traffic; window.__lf.cops = cops;   // L15
