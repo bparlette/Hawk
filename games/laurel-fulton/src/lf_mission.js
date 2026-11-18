@@ -113,8 +113,20 @@ export function swapPlayerCar(S, M, car) {
 function locate(M, f) {
   const T = M.trail, n = T.x.length, c = f.car;
   const lo = f.ti < 0 ? (f.lost ? 0 : Math.max(0, n - 400)) : Math.max(0, f.ti - 6), hi = f.ti < 0 ? n : Math.min(n, f.ti + 40);
+  // Nov 18 (rally deadlock fix): score by distance AND heading. The player's path doubles
+  // back on itself (out one side of a road, home the other; cul-de-sac turnarounds), so the
+  // euclidean-nearest trail point is often the WRONG pass — a follower glued to it reads
+  // thousands of units behind its slot while sitting in the leader's face. A wrong-way
+  // point must be ~30 units closer than the right-way one to win.
+  const dx = c.dirx ?? Math.cos(c.h), dy = c.diry ?? Math.sin(c.h);
   let best = 1e18, bi = f.ti < 0 ? n - 1 : f.ti;
-  for (let i = lo; i < hi; i++) { const d = (T.x[i] - c.x) ** 2 + (T.y[i] - c.y) ** 2; if (d < best) { best = d; bi = i; } }
+  for (let i = lo; i < hi; i++) {
+    const d = (T.x[i] - c.x) ** 2 + (T.y[i] - c.y) ** 2;
+    const j = Math.min(i + 1, n - 1), k = j > 0 ? j - 1 : 0;
+    let vx = T.x[j] - T.x[k], vy = T.y[j] - T.y[k]; const L = Math.hypot(vx, vy) || 1;
+    const score = d + (1 - (vx / L * dx + vy / L * dy)) * 900;
+    if (score < best) { best = score; bi = i; }
+  }
   return bi;
 }
 
@@ -158,7 +170,7 @@ export function follow(S, M, f, dt) {
     if (f.bumpCd <= 0 && Math.abs(c.v) > 45) {
       f.bumpCd = 4.2;
       if (M.mischief) M.mischief.bumps++;
-      bark(M, c, 'Rubbin is racing!', 2.0);
+      bark(M, c, 'rubbin is racing', 2.0);
     }
   }
   if (f.throwCd <= 0 && Math.abs(c.v) > 65) {
@@ -183,7 +195,26 @@ export function follow(S, M, f, dt) {
   // (wedged reversing into a rail, bush or house) is lifted back onto the nearest road point — the player's own rule (lf_sim)
   const prog = T.s[f.ti] || 0;
   if (gap > SP && Math.abs(c.v) < 25 && prog <= (f.bestS || 0) + 5) { f.noProg = (f.noProg || 0) + dt; } else { f.noProg = 0; f.bestS = Math.max(f.bestS || 0, prog); }
-  if (f.noProg > 6 && S.unstick) { f.noProg = 0; S.unstick(c); f.ti = -1; f.lost = true; }   // lifted: re-find its place on the WHOLE trail (once)
+  if (f.noProg > 6) {   // lifted: REJOIN at its slot on the trail (Nov 18 deadlock fix)
+    f.noProg = 0;
+    // The old recovery (S.unstick) drops the car on the nearest road centreline — ~the spot
+    // it was wedged in — and locate() then re-glued it to the wrong pass of the leader's
+    // self-crossing trail: its gap read +4,000 while it sat nose-to-nose with the returning
+    // leader, both lifting forever, ~900 lifts a run. A slot on the leader's OWN trail is
+    // right by construction (the leader drove there, in convoy order, on the current pass),
+    // so a wedged follower rejoins there — right branch, right order, knot dissolved.
+    const targetS = Math.max(0, headS - (slot + 1) * SP);
+    let lo2 = 0, hi2 = n - 1, ri = 0;
+    while (lo2 <= hi2) { const mid = (lo2 + hi2) >> 1; if (T.s[mid] <= targetS) { ri = mid; lo2 = mid + 1; } else hi2 = mid - 1; }
+    if (n >= 2) {
+      const j = Math.min(ri + 1, n - 1), k = j > 0 ? j - 1 : 0;
+      let vx = T.x[j] - T.x[k], vy = T.y[j] - T.y[k]; const L = Math.hypot(vx, vy) || 1;
+      c.x = T.x[ri]; c.y = T.y[ri]; c.h = Math.atan2(vy, vx); c.dirx = vx / L; c.diry = vy / L;
+      c.v = 0; c.z = 0; c.vz = 0; c.wreck = false; f.backT = 0;
+      f.ti = ri; f.lost = false; f.bestS = T.s[ri];
+      if (S.events) S.events.push({ t: S.time, kind: 'unstuck', model: c.model });   // the rally spec's teleport exemption, same as a world unstick
+    } else if (S.unstick) { S.unstick(c); f.ti = -1; f.lost = true; }
+  }
 }
 
 // convoy order = actual progress along your path (a stalled car can never deadlock the cars behind it)
