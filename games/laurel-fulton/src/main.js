@@ -35,13 +35,27 @@ addEventListener('resize', resize); resize();
 const msg = (t) => { ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = '#1b1430'; ctx.fillRect(0, 0, VIEW_W, view.h); ctx.fillStyle = '#ffe4b0'; ctx.font = '800 22px system-ui'; ctx.textAlign = 'center'; ctx.fillText(t, VIEW_W / 2, view.h / 2); };
 msg((document.title || 'LAUREL / FULTON').toUpperCase() + ' — loading the real roads…');   // any factory city: its own name (play.html <title>)
 const j = async (f) => { const r = await fetch(f); if (!r.ok) throw new Error(f + ' failed to load (' + r.status + ')'); return r.json(); };
-const [G, roster, fleet, AJ, BJ] = await Promise.all([j('data/graph.json'), j('data/roster.json'), j('assets/fleet.json'), j('data/areas.json'), j('data/bumps.json')]);
+// LOAD SPLIT (Moth, Nov 17 — the owner's phone said "doesn't load"): boot used to await EVERYTHING —
+// 6.1 MB of JSON, every sprite, the roof, the interiors — before the first frame. Phase 1 is now only
+// what the pick screen needs (roads, crew, cars, bumps); the heavy houses file (areas.json, 2.3 MB),
+// the roof and the interiors stream in behind it and land when they land. The loading message names
+// each file as it arrives, so a stall shows exactly where it stopped instead of looking dead.
+const TITLE = (document.title || 'LAUREL / FULTON').toUpperCase(), got = [];
+const tick = (what) => { got.push(what); msg(TITLE + ' — loading… ' + got.join(' · ')); };
+const [G, roster, fleet, BJ] = await Promise.all([
+  j('data/graph.json').then(v => (tick('roads'), v)),
+  j('data/roster.json').then(v => (tick('crew'), v)),
+  j('assets/fleet.json').then(v => (tick('cars'), v)),
+  j('data/bumps.json').then(v => (tick('bumps'), v)),
+]);
 const files = new Set(); for (const m of Object.values(fleet)) for (const k of ['color', 'shadow', 'light']) files.add(m[k].file);
 const imgs = {};
-await Promise.all([...files].map(async (f) => { const im = new Image(); im.src = 'assets/' + f; try { await im.decode(); } catch (e) { throw new Error('sprite failed to decode: assets/' + f); } imgs[f] = im; }));
-const RJ = await fetch('data/roof.json').then(r => r.ok ? r.json() : null).catch(() => null);   // task L5: a city without a climbable roof just has none
-const W = new GraphWorld(G), areas = new Areas(AJ, W), ground = new GroundPainter(W, 64, areas, BJ.bumps);
-const opts = { bumps: BJ.bumps, buildings: AJ.buildings };
+const BLANK = new Image(); BLANK.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+await Promise.all([...files].map(async (f) => { const im = new Image(); im.src = 'assets/' + f; try { await im.decode(); imgs[f] = im; } catch (e) { imgs[f] = BLANK; } }));   // a bad sprite must not kill the game
+const W = new GraphWorld(G);
+let areas = new Areas({ buildings: [], parking: [], green: [], heroes: [] }, W);   // real areas land in phase 2
+const ground = new GroundPainter(W, 64, areas, BJ.bumps);
+const opts = { bumps: BJ.bumps };   // buildings arrive with areas.json in phase 2 -> sim.setBuildings
 if (Q.get('spawn')) { const [x, y, h] = Q.get('spawn').split(',').map(Number); opts.spawn = { x, y }; opts.h = h || 0; }
 if (Q.get('model')) opts.model = Q.get('model');
 const sim = new LFSim(W, roster, fleet, opts);
@@ -50,9 +64,20 @@ if (!opts.spawn) {                                       // Ledo Pizza: face out
   if (r && r.pts.length > 3) sim.player.h = Math.atan2(r.pts[3][1] - r.pts[0][1], r.pts[3][0] - r.pts[0][0]);
 }
 renderer = new Renderer(ctx, W, ground, fleet, imgs, areas);
-const RF = RJ ? new Roof(RJ) : null;
+let RF = null;   // the roof lands in phase 2
 // ---- task L7: walk-in interiors (data/interiors/<id>.json, tools/interior_build.py). A run as someone with one STARTS inside.
-const KITS = {}; for (const id of await fetch('data/interiors/index.json').then(r => r.ok ? r.json() : []).catch(() => [])) KITS[id] = await j('data/interiors/' + id + '.json');
+const KITS = {};   // interiors land in phase 2
+// ---- phase 2: the heavy/optional data streams in behind the pick screen (see LOAD SPLIT above)
+(async () => {
+  j('data/areas.json').then(AJ => {
+    areas = new Areas(AJ, W); ground.areas = areas; ground.cache.clear(); ground.job = null;
+    if (renderer) renderer.areas = areas;
+    sim.setBuildings(AJ.buildings); mapCv = null; tick('houses');
+  }).catch(e => { if (globalThis.showErr) showErr('houses failed to load: ' + e.message); });
+  fetch('data/roof.json').then(r => r.ok ? r.json() : null).then(RJ => { if (RJ) { RF = new Roof(RJ); renderer.roof = new RoofView(RF); setFootProject((x, y, z) => project(x, y, z, cam)); } }).catch(() => {});   // task L5: a city without a climbable roof just has none
+  const ids = await fetch('data/interiors/index.json').then(r => r.ok ? r.json() : []).catch(() => []);
+  for (const id of ids) { try { KITS[id] = await j('data/interiors/' + id + '.json'); } catch (e) {} }
+})();
 let inside = null; const IR = new InteriorRenderer(ctx);
 const goIn = (id, who) => { inside = new Interior(KITS[id], { who }); if (foot) foot.active = false; };
 const goOut = () => {                                     // out the front door: on foot on the front walk, your car in the driveway
@@ -61,7 +86,7 @@ const goOut = () => {                                     // out the front door:
   cam.x = foot.x; cam.y = foot.y;
 };
 const atMyDoor = () => foot && foot.active && !(foot.z > 4) && KITS[foot.who.id] && foot.who.house && Math.hypot(foot.x - foot.who.house[0], foot.y - foot.who.house[1]) < 90;
-if (RF) { renderer.roof = new RoofView(RF); setFootProject((x, y, z) => project(x, y, z, cam)); }
+// (the roof wiring lives in phase 2 below — it lands with roof.json)
 setFx(sim, roster);
 // ---- task L2: PICK YOUR PLAYER -> RALLY THE CREW (lf_mission.js). ?free = just drive; ?player=<id> skips the pick.
 const PLAYERS = players(roster);
@@ -206,8 +231,8 @@ function buildMap() {
   mapK = k; mapO = [pad - B.x0 * k, pad - B.y0 * k];
   g.fillStyle = '#e9dfc9'; g.fillRect(0, 0, cv.width, cv.height);
   g.setTransform(k, 0, 0, k, mapO[0], mapO[1]);
-  g.fillStyle = 'rgba(110,150,90,0.35)'; for (const f of AJ.green) { poly(g, f); g.fill(); }
-  g.fillStyle = 'rgba(120,104,110,0.35)'; for (const f of AJ.buildings) { poly(g, f); g.fill(); }
+  g.fillStyle = 'rgba(110,150,90,0.35)'; for (const f of areas.A.green) { poly(g, f); g.fill(); }
+  g.fillStyle = 'rgba(120,104,110,0.35)'; for (const f of areas.A.buildings) { poly(g, f); g.fill(); }
   const COL = { motorway: '#e0794a', trunk: '#e8924e', primary: '#efb35a', secondary: '#f2cf72', tertiary: '#f5f0dc' };
   for (const pass of [0, 1]) for (const e of W.edges) {
     if (e.hw === 'service') continue; const base = e.hw.replace('_link', '');
@@ -294,4 +319,4 @@ renderer.draw = (S, cam, t) => {
   if (picking) drawPick();
 };
 requestAnimationFrame(frame);
-window.__lf = { inside: () => inside, setSpeed: (k) => { SPEED = k; }, roof: () => RF, sim, W, ground, cam, input, renderer, areas, map: () => mapOpen, mission: () => M, pick, picking: () => picking, pilot: () => pilot, foot: () => foot };
+window.__lf = { get areas() { return areas; }, inside: () => inside, setSpeed: (k) => { SPEED = k; }, roof: () => RF, sim, W, ground, cam, input, renderer, map: () => mapOpen, mission: () => M, pick, picking: () => picking, pilot: () => pilot, foot: () => foot };
