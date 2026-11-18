@@ -1,0 +1,247 @@
+{
+ "id": "weis",
+ "type": "store",
+ "width": 46.0,
+ "grade": 0.0,
+ "ceiling": 4.6,
+ "floors": [
+  {
+   "id": "main",
+   "z": 0.0,
+   "x0": 0.0,
+   "x1": 46.0
+  }
+ ],
+ "links": [],
+ "door": {
+  "floor": "main",
+  "x": 0.9
+ },
+ "rooms": [
+  {
+   "floor": "main",
+   "x0": 0.0,
+   "x1": 13.4,
+   "name": "front end",
+   "wall": "#ece6d6",
+   "floorc": "#cdc6b4"
+  },
+  {
+   "floor": "main",
+   "x0": 13.4,
+   "x1": 19.4,
+   "name": "produce",
+   "wall": "#e4ecd4",
+   "floorc": "#c7c6a8"
+  },
+  {
+   "floor": "main",
+   "x0": 19.4,
+   "x1": 35.4,
+   "name": "grocery aisles",
+   "wall": "#eee8d8",
+   "floorc": "#cdc6b4"
+  },
+  {
+   "floor": "main",
+   "x0": 35.4,
+   "x1": 46.0,
+   "name": "pizza & deli",
+   "wall": "#f0dcc0",
+   "floorc": "#b98c64"
+  }
+ ],
+ "props": [
+  {
+   "kind": "cart",
+   "x": 2.3,
+   "floor": "main"
+  },
+  {
+   "kind": "sec_desk",
+   "x": 4.2,
+   "floor": "main"
+  },
+  {
+   "kind": "register",
+   "x": 7.0,
+   "lane": 1,
+   "floor": "main"
+  },
+  {
+   "kind": "register",
+   "x": 9.5,
+   "lane": 2,
+   "floor": "main"
+  },
+  {
+   "kind": "register",
+   "x": 12.0,
+   "lane": 3,
+   "floor": "main"
+  },
+  {
+   "kind": "produce",
+   "x": 15.2,
+   "floor": "main"
+  },
+  {
+   "kind": "produce",
+   "x": 17.8,
+   "floor": "main"
+  },
+  {
+   "kind": "shelf",
+   "x": 21.0,
+   "sign": "AISLE 5 \u00b7 CEREAL",
+   "cols": [
+    "#d94a3a",
+    "#e8c23a",
+    "#3a7ad9",
+    "#e87a2a"
+   ],
+   "floor": "main"
+  },
+  {
+   "kind": "shelf",
+   "x": 24.0,
+   "sign": "AISLE 6 \u00b7 SNACKS",
+   "cols": [
+    "#e8c23a",
+    "#c42b2b",
+    "#2f8f5a",
+    "#7a3a9a"
+   ],
+   "floor": "main"
+  },
+  {
+   "kind": "soda",
+   "x": 27.2,
+   "sign": "AISLE 7 \u00b7 SODA",
+   "cols": [
+    "#c42b2b",
+    "#2f6fb0",
+    "#2f8f5a",
+    "#e8a21a"
+   ],
+   "floor": "main"
+  },
+  {
+   "kind": "shelf",
+   "x": 30.4,
+   "sign": "AISLE 8 \u00b7 CANNED",
+   "cols": [
+    "#c8a23a",
+    "#c42b2b",
+    "#5a9a3a",
+    "#e8e0c0"
+   ],
+   "floor": "main"
+  },
+  {
+   "kind": "dairy",
+   "x": 34.0,
+   "floor": "main"
+  },
+  {
+   "kind": "deli",
+   "x": 37.6,
+   "floor": "main"
+  },
+  {
+   "kind": "pizza",
+   "x": 41.4,
+   "floor": "main"
+  },
+  {
+   "kind": "door_back",
+   "x": 45.0,
+   "floor": "main"
+  }
+ ],
+ "spots": [
+  {
+   "act": "EXIT",
+   "floor": "main",
+   "x": 0.9
+  },
+  {
+   "act": "GRAB SLICE",
+   "floor": "main",
+   "x": 40.2,
+   "src": "pizza"
+  },
+  {
+   "act": "OPEN SODA",
+   "floor": "main",
+   "x": 27.2,
+   "src": "soda",
+   "only": "rigg"
+  }
+ ],
+ "npcs": [
+  {
+   "id": "jason",
+   "name": "Jason",
+   "role": "SECURITY",
+   "floor": "main",
+   "x": 5.2,
+   "face": -1,
+   "look": "guard",
+   "barks": [
+    "Cart return is by the door.",
+    "Keep it moving.",
+    "Nobody walks out with a rotisserie chicken on my watch."
+   ]
+  },
+  {
+   "id": "brad",
+   "name": "Brad",
+   "role": "PIZZA",
+   "floor": "main",
+   "x": 42.3,
+   "face": -1,
+   "look": "apron",
+   "barks": [
+    "Pie is up.",
+    "Large pepperoni, ten minutes.",
+    "Extra cheese. Always extra cheese."
+   ]
+  },
+  {
+   "id": "rigg",
+   "name": "Rigg",
+   "role": "STOCK",
+   "floor": "main",
+   "x": 28.4,
+   "face": -1,
+   "look": "rigg",
+   "barks": [
+    "Stocking soda. Just stocking soda."
+   ]
+  },
+  {
+   "id": "scott",
+   "name": "Scott",
+   "role": "MANAGER",
+   "floor": "main",
+   "x": 46.6,
+   "face": -1,
+   "look": "manager",
+   "hidden": true,
+   "barks": []
+  }
+ ],
+ "beats": [
+  "fired"
+ ],
+ "sign": {
+  "text": "WEIS",
+  "sub": "WHISKEY BOTTOM"
+ },
+ "dogs": 0,
+ "cpuIdle": {
+  "floor": "main",
+  "x": 20.0
+ }
+}

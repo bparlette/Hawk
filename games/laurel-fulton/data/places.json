@@ -1,0 +1,84 @@
+{
+ "_doc": "The ENTERABLE PLACES + world set-pieces (tools/places_build.py). World units (10/m x scale 0.5). places: public buildings anyone can enter with GO IN at the door (interior = data/interiors/<id>.json). NO house numbers anywhere; Scott is a position only.",
+ "places": [
+  {
+   "id": "weis",
+   "name": "Weis",
+   "kind": "store",
+   "interior": "weis",
+   "b": 3885,
+   "style": "store",
+   "osm": "way/175330281",
+   "evidence": "OSM: brand=Weis, shop=supermarket, in Whiskey Bottom Center (retail landuse way 1356081162); footprint = areas.json building 3885, 4576 m2",
+   "door": {
+    "x": 18186.7,
+    "y": 18330.3,
+    "nx": 0.638,
+    "ny": 0.77,
+    "wall": [
+     18177.8,
+     18319.5
+    ],
+    "len": 381.0
+   },
+   "cx": 18026.416666666668,
+   "cy": 18204.583333333332
+  },
+  {
+   "id": "gringada",
+   "name": "Gringada",
+   "kind": "restaurant",
+   "interior": "gringada",
+   "b": 18742,
+   "style": "memory",
+   "memory": true,
+   "year": 1998,
+   "evidence": "MEMORY BUILD (owner memory, no imagery, not in map data). Placed on the restaurant end-pad of Hickory Ridge Village Center, Columbia MD (real center; the unit choice is invented); footprint = areas.json building 18742, 660 m2",
+   "door": {
+    "x": 4594.5,
+    "y": -23199.9,
+    "nx": 0.089,
+    "ny": -0.996,
+    "wall": [
+     4593.2,
+     -23186.0
+    ],
+    "len": 158.1
+   },
+   "cx": 4542.444444444444,
+   "cy": -23137.38888888889
+  }
+ ],
+ "npcs": [
+  {
+   "id": "scott",
+   "name": "Scott",
+   "role": "manager at the Weis; the one tied to Brian (Rigg) getting fired",
+   "house": [
+    19176.2,
+    14777.3
+   ],
+   "b": 5956,
+   "street": "Whiskey Bottom Road",
+   "car": {
+    "model": "Honda Civic (for now \u2014 owner)",
+    "sprite": "tracer_zack",
+    "note": "NO Civic sprite in the fleet; reuses tracer_zack (closest compact sedan). tools/bake_fleet.py needs Blender (bpy) to bake a real Civic."
+   },
+   "note": "a RANDOM house in Whiskey Bottom (seeded pick, 6 candidates). Position only; no house number is stored."
+  }
+ ],
+ "setpieces": [
+  {
+   "id": "astro108",
+   "kind": "parked-astro",
+   "name": "The 108 Astro",
+   "sprite": "astro_billy",
+   "x": -20330.7,
+   "y": -26721.1,
+   "h": 0.959,
+   "road": "Guilford Road (stand-in for MD 108)",
+   "note": "MD 108 lies north of this map box (N edge 39.202); parked at the north end of Guilford Rd. STAND-IN placement."
+  }
+ ]
+}
