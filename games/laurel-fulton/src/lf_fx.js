@@ -185,6 +185,30 @@ export function over(g, S, M, time) {
     }
     g.font = '700 9px system-ui'; g.textAlign = 'center'; g.fillStyle = '#fff3dc'; g.fillText(f.who.name.split(' ')[0], f.x, f.y - 26 - bob);
   }
+  if (M.throws && M.throws.length) {
+    for (const p of M.throws) {
+      const a = Math.max(0, Math.min(1, (1 - p.t / p.life) * 2));
+      g.save(); g.globalAlpha = a; g.translate(p.x, p.y); g.rotate(p.rot);
+      if (p.kind === 'bill') {
+        g.fillStyle = '#7ed484'; g.strokeStyle = '#210f2e'; g.lineWidth = 1.4; g.fillRect(-6, -3.2, 12, 6.4); g.strokeRect(-6, -3.2, 12, 6.4);
+        g.fillStyle = '#1f5a29'; g.font = '900 5px system-ui'; g.textAlign = 'center'; g.fillText('$1', 0, 2);
+      } else if (p.kind === 'pen') {
+        g.fillStyle = '#3c88ff'; g.strokeStyle = '#210f2e'; g.lineWidth = 1.2; g.fillRect(-6, -1.5, 12, 3); g.strokeRect(-6, -1.5, 12, 3);
+      } else {
+        g.fillStyle = '#d47c46'; g.strokeStyle = '#210f2e'; g.lineWidth = 1.2; g.beginPath(); g.arc(0, 0, 3.2, 0, TAU); g.fill(); g.stroke();
+      }
+      g.restore();
+    }
+  }
+  if (M.barks && M.barks.length) {
+    g.font = '800 10px system-ui'; g.textAlign = 'center';
+    for (const b of M.barks) {
+      const a = Math.min(1, b.t * 2), w = g.measureText(b.text).width + 16, bx = b.car.x, by = b.car.y - 34;
+      g.save(); g.globalAlpha = a; g.fillStyle = 'rgba(255,241,216,0.95)'; g.strokeStyle = '#210f2e'; g.lineWidth = 2;
+      g.beginPath(); g.roundRect(bx - w / 2, by - 11, w, 20, 8); g.fill(); g.stroke();
+      g.fillStyle = '#210f2e'; g.fillText(b.text, bx, by + 3); g.restore();
+    }
+  }
   if (M.beat && M.beat.phase === 'dap') {                              // the dap: a spark in the middle of the huddle
     const { cx, cy } = M.beat, s = 1 + 0.4 * Math.sin(time * 18);
     g.globalAlpha = 0.9; g.fillStyle = '#ffe9a8'; g.font = '900 16px system-ui'; g.textAlign = 'center'; g.fillText('DAP!', cx, cy - 34 * s);
