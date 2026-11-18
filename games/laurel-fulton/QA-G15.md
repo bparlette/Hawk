@@ -65,3 +65,31 @@
 - **Gringada 1998 (`L13`, `SPEC QUEUED`):** Columbia shopping-center period Mexican restaurant (stucco/tile accents/sign; **Brad works there**, **Jimmy & Clayton steal food**, Zack: `"why are you going to Clayton it"` -> Jimmy eats it super fast) not yet built.
 - **Route 108 Astro Set-Piece (`SPEC QUEUED`):** Random Chevrolet Astro parked on MD-108 with **Jason robbing its parking lights** not yet placed.
 - **Convoy Mischief Behaviour (`src/lf_mission.js`):** Currently follows breadcrumb trail smoothly at fixed `SP = 78`; **not yet implemented** per `SPECS.md`: followers racing/passing you, yelling `"Cole Trickle"`, bumping + `"rubbin is racing"`, throwing dollar bills (`ones`) / pens / pennies out windows.
+
+---
+
+## 5. Post-Merge Verification (`Hawk` merge `3d8f6fcb` — L11 / L12 / L13 / L7b)
+
+Following the initial pre-merge audit (`a25ce071`), Opus merged `opus-heroes` (`d5d08b13`, `b1023167`), `opus-stores` (`ac4ba746`), and `opus-brad-rigg` (`77f1d8a0`, `433a5bfd`) at `3d8f6fcb`. Verified post-merge on `main`:
+
+### Automated Rule Checks (All Passing)
+- `node tools/spec_l7b.mjs` -> **`SPEC L7b OK`**:
+  - Brad's downstairs **`eDonkey`** CRT PC + Teter's updated `"Hi guys, what are you getting into today?...."` -> `"You are all alcoholics."` line.
+  - Rigg's **two-story entryway** + basement `eDonkey`/CD writer + dad `"Brrrrrriiiiiiaaaaannnn"` yell + Brian stairs descent.
+  - **David Klink's Scooby-Doo van** parked by Rigg's house with steppable exhaust tip (`z 5`, puff particles) + **Rigg-isms** (`"IGURT GOGURT"`, `"fuck shit diesel"`).
+- `node tools/spec_l12.mjs` -> **`SPEC L12 OK`**:
+  - **Weis Markets (Whiskey Bottom)** cutaway (`Jason` security, `Brad` pizza counter, `Rigg` soda bottle firing beat -> `"Fuck Scott."`) + **Scott's** Whiskey Bottom house & Civic stand-in.
+  - **Gringada (1998)** memory build (`Brad` cooking, `Clayton` & `Zack` `"why are you going to Clayton it"`, `Jimmy` 0.83 s steal-eat beat) + **Route 108 Astro** stand-in on Guilford Rd (`ROB LIGHTS`).
+
+### Visual Inspection of Merged Proof Shots (`420×860 @2x`)
+- [l11-lazaris-close.png](file:///Users/braidpairlette/Games/Hawk/games/laurel-fulton/shots/l11-lazaris-close.png): Brick two-story facade, white double garage, glowing **RED front door** landmark, and Jimmy/Billy's Astros read cleanly at phone zoom.
+- [l11-floyds-close.png](file:///Users/braidpairlette/Games/Hawk/games/laurel-fulton/shots/l11-floyds-close.png): White + red side-by-side paired house composition + orange driveway basketball hoop next to Clayton & Zack's green cars.
+- [l11-ledo-night-close.png](file:///Users/braidpairlette/Games/Hawk/games/laurel-fulton/shots/l11-ledo-night-close.png): Striped awning + brick unit + glowing red **`OPEN` sign** cutting sharply through night multiply.
+- [l7b-brad-basement-computer.png](file:///Users/braidpairlette/Games/Hawk/games/laurel-fulton/shots/l7b-brad-basement-computer.png): `"eDonkey2000 / eDonkey"` CRT monitor renders crisply downstairs beside weights & fireplace.
+- [l7b-rigg-4-brian-comes.png](file:///Users/braidpairlette/Games/Hawk/games/laurel-fulton/shots/l7b-rigg-4-brian-comes.png): Two-story entryway arched window + Brian walking down the staircase.
+- [l7b-van-3-puff.png](file:///Users/braidpairlette/Games/Hawk/games/laurel-fulton/shots/l7b-van-3-puff.png): Mystery van parked beside Rigg's Celica with Jason standing on rear exhaust corner emitting exhaust puff.
+- [l12-9-fuck-scott.png](file:///Users/braidpairlette/Games/Hawk/games/laurel-fulton/shots/l12-9-fuck-scott.png): Weis soda aisle firing exchange (`"Fuck Scott."` bubble + dropped soda beside Scott).
+
+### Remaining Items Routed to Moth (`moth.md` `M-A..M-D`)
+1. **Convoy Mischief (`M-A`)**, **Kosack's Cop Lights + Fake-Cop Pull-Over Minigame (`M-B` / `G17`)**, **100-Guest Night Party (`M-C` / `G18`)**, and **L6 Online Leftovers (`M-D`)** await Moth's build wiring.
+2. Live UI fixes noted earlier remain open: Pick-screen `0 mph · HH:MM` HUD overlap across the `MD-216` sign logo (`src/main.js`) and sparse residential streetlamps at `t=0.97`.
