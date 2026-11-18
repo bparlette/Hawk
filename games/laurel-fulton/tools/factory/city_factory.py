@@ -41,6 +41,7 @@ BODY = [(r'camaro|firebird|trans ?am', 'camaro_brad'), (r'mustang', 'mustang_lam
         (r'camry|accord|corolla|civic|taurus|sedan|maxima', 'camry_jason'), (r'tracer|escort|323|hatch|golf|rabbit|civic hatch', 'tracer_zack'),
         (r'brougham|cadillac|town ?car|crown vic|grand marquis|caprice|deville|lincoln', 'brougham_grant'), (r'coupe', 'cavalier_black')]
 
+INTERIORS = []
 def parse(path):
     city, pois, people, houses, meet = None, [], [], {}, None
     for raw in open(path):
@@ -60,6 +61,7 @@ def parse(path):
         elif k == 'house':
             for pid in t[2:]: houses[pid] = t[1]
         elif k == 'mission': meet = t[t.index('meet') + 1]
+        elif k == 'interior': INTERIORS.append(t[1:])          # L7: interior <id> <type> [up a,b] [down c,d] [mantle-beers n] [dogs n] [mom "Name"]
     assert city and people and meet, 'a spec needs city, at least one person and the mission meet'
     return city, pois, people, houses, meet
 
@@ -119,6 +121,9 @@ def main():
     print(f"    {rep['edges']} edges, {rep['km_total']} km, largest component {rep['largest_component_share']}, anchors {sorted(rep['anchors'])}")
     print('[5]', run(['python3', 'tools/osm_areas.py', '--tiles', tiles], env).strip())
     print('[6]', run(['python3', 'tools/bumps_build.py'], env).strip())
+    if INTERIORS:
+        sys.path.insert(0, TOOLS); os.environ['LF_ROOT'] = out; import interior_build
+        for t in INTERIORS: print('[6c] interior', interior_build.build(t)['id'])
     try: print('[6b]', run(['python3', 'tools/roof_build.py'], env).strip())          # L5: the meet-up's roof is climbable (if OSM maps its building)
     except SystemExit as e: print('[6b] no climbable roof:', e)
     # 7 the fleet

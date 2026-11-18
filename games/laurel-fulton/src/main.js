@@ -15,6 +15,8 @@ import { learnLabel } from '../../palm-city/src/labels.js';
 import { createFoot, stepFoot, exitCar, nearCar, FOOT } from './lf_foot.js';
 import { Pilot } from './lf_pilot.js';
 import { Net } from './lf_net.js';
+import { Interior } from './lf_interior.js';
+import { InteriorRenderer } from './lf_interior_render.js';
 
 const Q = new URLSearchParams(location.search);
 const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
@@ -49,6 +51,16 @@ if (!opts.spawn) {                                       // Ledo Pizza: face out
 }
 renderer = new Renderer(ctx, W, ground, fleet, imgs, areas);
 const RF = RJ ? new Roof(RJ) : null;
+// ---- task L7: walk-in interiors (data/interiors/<id>.json, tools/interior_build.py). A run as someone with one STARTS inside.
+const KITS = {}; for (const id of await fetch('data/interiors/index.json').then(r => r.ok ? r.json() : []).catch(() => [])) KITS[id] = await j('data/interiors/' + id + '.json');
+let inside = null; const IR = new InteriorRenderer(ctx);
+const goIn = (id, who) => { inside = new Interior(KITS[id], { who }); if (foot) foot.active = false; };
+const goOut = () => {                                     // out the front door: on foot on the front walk, your car in the driveway
+  inside = null; const me = PLAYERS.find(p => foot && p.id === foot.who.id) || foot.who, [hx, hy] = me.house, c = sim.player;
+  foot.active = true; foot.x = hx + (c.x - hx) * 0.35; foot.y = hy + (c.y - hy) * 0.35; foot.h = Math.atan2(c.y - hy, c.x - hx); foot.px = foot.x; foot.py = foot.y; foot.z = 0;
+  cam.x = foot.x; cam.y = foot.y;
+};
+const atMyDoor = () => foot && foot.active && !(foot.z > 4) && KITS[foot.who.id] && foot.who.house && Math.hypot(foot.x - foot.who.house[0], foot.y - foot.who.house[1]) < 90;
 if (RF) { renderer.roof = new RoofView(RF); setFootProject((x, y, z) => project(x, y, z, cam)); }
 setFx(sim, roster);
 // ---- task L2: PICK YOUR PLAYER -> RALLY THE CREW (lf_mission.js). ?free = just drive; ?player=<id> skips the pick.
@@ -65,6 +77,7 @@ if (net) net.onYou = (id, st) => {                        // take over that crew
 };
 function pick(id) { if (net) { if (!net.takenBy(id)) net.pick(id); return; }
   M = startRally(sim, roster, id); renderer.mission = M; picking = false; foot = createFoot(PLAYERS.find(p => p.id === id)); setFoot(foot);
+  if (KITS[id] && !Q.has('pilot')) goIn(id, foot.who);   // PICK Brad -> you start in his house
   foot.onClimb = (c) => { learnLabel(sim, 'lf_roof'); if (c.onto === 'roof' && !foot.summited && M) { foot.summited = true; M.msg = 'THE LOOKOUT'; M.msgT = 3.5; } }; if (Q.has('pilot')) pilot = new Pilot(sim, W, M); }
 if (Q.get('player')) pick(Q.get('player'));
 const pickRows = () => PLAYERS.map((p, i) => ({ p, x: 24, y: 150 + i * 62, w: VIEW_W - 48, h: 54 }));
@@ -118,7 +131,8 @@ function frame(now) {
   if (pilot && M && M.complete) pilot = null;            // the autopilot's job ends at the finish: the stick is yours again
   while (acc >= STEP && n < 6 * SPEED) { const inp = pilot ? (input.read(), pilot.input(STEP)) : input.read(); if (picking) { acc = 0; break; }
     const beat = M && M.beat, ZERO = { jx: 0, jy: 0, jm: 0, keys: {} };
-    if (foot && foot.active) { sim.step(STEP, ZERO); if (!beat) { stepOnFoot(foot, STEP, inp, RF); if (inp.action && nearCar(foot, sim.player)) foot.active = false; } }
+    if (inside) { sim.step(STEP, ZERO); if (inside.step(STEP, inp) === 'exit') goOut(); }
+    else if (foot && foot.active) { sim.step(STEP, ZERO); if (!beat) { stepOnFoot(foot, STEP, inp, RF); if (inp.action && nearCar(foot, sim.player)) foot.active = false; else if (inp.action && atMyDoor()) goIn(foot.who.id, foot.who); } }
     else { sim.step(STEP, beat ? ZERO : inp); if (foot && !beat && !pilot && inp.action && Math.abs(sim.player.v) < FOOT.exitV) exitCar(foot, sim.player); }
     if (M) stepRally(sim, M, STEP); acc -= STEP; n++; }
   if (n >= 6 * SPEED) acc = 0;
@@ -133,6 +147,7 @@ function frame(now) {
   if (fixed) { tx = fixed[0]; ty = fixed[1]; tz = fixed[2] || 1; }
   const k = fixed ? 1 : 1 - Math.exp(-dt * 3.2);
   cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k; cam.zoom += (tz - cam.zoom) * (fixed ? 1 : 1 - Math.exp(-dt * 1.5));
+  if (inside) { IR.draw(inside, VIEW_W, view.h, DPR, now / 1000); drawControls(); requestAnimationFrame(frame); return; }
   renderer.draw(sim, cam, now / 1000);
   // HUD: the real street under you + speed (≤ 15% of the screen)
   const r = W.roadInfo(c.x, c.y, c.layer), name = r.e && r.d < r.hw + 30 ? (r.e.name || r.e.ref || '') : '';
@@ -195,13 +210,14 @@ function drawControls() {
   const g = ctx, TAU2 = Math.PI * 2;
   if (input.stick) { const s2 = input.stick; g.beginPath(); g.arc(s2.bx, s2.by, 56, 0, TAU2); g.fillStyle = 'rgba(255,240,220,0.16)'; g.fill(); g.lineWidth = 3; g.strokeStyle = 'rgba(255,240,220,0.55)'; g.stroke(); g.beginPath(); g.arc(s2.kx, s2.ky, 24, 0, TAU2); g.fillStyle = 'rgba(255,240,220,0.5)'; g.fill(); }
   const b = input.button(), onFoot = foot && foot.active;
-  const label = onFoot ? (nearCar(foot, sim.player) ? 'GET IN' : '') : (Math.abs(sim.player.v) < FOOT.exitV ? 'GET OUT' : '');
+  const label = inside ? (inside.prompt() || '') : onFoot ? (nearCar(foot, sim.player) ? 'GET IN' : atMyDoor() ? 'GO IN' : '') : (Math.abs(sim.player.v) < FOOT.exitV ? 'GET OUT' : '');
   g.beginPath(); g.arc(b.x, b.y, b.r, 0, TAU2); g.fillStyle = input.btnDown ? 'rgba(255,140,90,0.55)' : 'rgba(255,240,220,0.18)'; g.fill();
   g.lineWidth = 3; g.strokeStyle = label ? 'rgba(255,214,120,0.95)' : 'rgba(255,240,220,0.55)'; g.stroke();
   g.beginPath(); g.arc(b.x, b.y, b.r * 0.42, 0, TAU2); g.fillStyle = label ? 'rgba(255,214,120,0.9)' : 'rgba(255,240,220,0.5)'; g.fill();
   if (label) { g.font = '800 13px system-ui'; g.textAlign = 'center'; g.fillStyle = '#fff4dc'; g.fillText(label, b.x, b.y - b.r - 12); }
+  if (inside) return;                                     // indoors: just the stick and ACTION
   const f = input.fight();
-  if (onFoot) {
+  if (onFoot || inside) {
     const hot = input.fightDown || foot.punchT > 0;
     g.beginPath(); g.arc(f.x, f.y, f.r, 0, TAU2); g.fillStyle = hot ? 'rgba(255,110,90,0.6)' : 'rgba(255,240,220,0.16)'; g.fill();
     g.lineWidth = 3; g.strokeStyle = 'rgba(255,150,120,0.95)'; g.stroke();
@@ -245,4 +261,4 @@ renderer.draw = (S, cam, t) => {
   if (picking) drawPick();
 };
 requestAnimationFrame(frame);
-window.__lf = { setSpeed: (k) => { SPEED = k; }, roof: () => RF, sim, W, ground, cam, input, renderer, areas, map: () => mapOpen, mission: () => M, pick, picking: () => picking, pilot: () => pilot, foot: () => foot };
+window.__lf = { inside: () => inside, setSpeed: (k) => { SPEED = k; }, roof: () => RF, sim, W, ground, cam, input, renderer, areas, map: () => mapOpen, mission: () => M, pick, picking: () => picking, pilot: () => pilot, foot: () => foot };
