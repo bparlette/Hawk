@@ -138,6 +138,7 @@ export class Renderer {
         poly(g, h.f, S * 0.36, h.cx, h.cy); g.fill();
       }
       g.globalAlpha = 1;
+      if (h.style && this.heroStyle) this.heroStyle(g, h, this.gr, time, S);   // L12/L13 hook (lf_places_render.js): the Weis big-box / the Gringada memory build
     }
     // crashable scenery (owner, Nov 18): guardrails along the fast roads + bridges, and
     // bushes in the yards — the SAME sets the sim collides with (lf_veg.js), so what you
@@ -186,6 +187,7 @@ export class Renderer {
     g.globalAlpha = 0.55; for (const c of S.cars) if (c.layer === 1 && vis(c.x, c.y)) this.drawCar(g, c, 'shadow');
     for (const c of S.cars) if (c.layer === 1 && vis(c.x, c.y)) this.drawGlow(g, c);
     g.globalAlpha = 1; for (const c of S.cars) if (c.layer === 1 && vis(c.x, c.y)) this.drawCar(g, c, 'color');
+    if (this.placeFx) this.placeFx(g, S, this.gr, time, vis);   // L12/L13 hook (lf_places_render.js): the 108 Astro's parking lights, Scott's tag, the bark
     FX.over(g, S, this.mission, time);                    // bass rings, sputter, fire, pickup rings, the beat's walkers
     // hero plaques (over the cars, under the grade so they sit in the light)
     if (this.heroArt) this.heroArt.districtPlaque(g, vis);   // L11: the Maple Lawn district plaque

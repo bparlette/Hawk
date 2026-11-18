@@ -53,6 +53,9 @@ def split_foyer(pid, up, down, beers, dogs, mom):
 TYPES = {'split-foyer': split_foyer}
 def build(t):
     pid, typ = t[0], t[1]
+    if typ in ('store', 'restaurant'):                    # L12/L13 public places (tools/place_interior_build.py): not a crew house, so not in index.json — data/places.json lists them
+        import place_interior_build; k = place_interior_build.TYPES[typ](pid)
+        os.makedirs(os.path.join(ROOT, 'data', 'interiors'), exist_ok=True); json.dump(k, open(os.path.join(ROOT, 'data', 'interiors', pid + '.json'), 'w'), indent=1); return k
     opt = lambda key, d=None: t[t.index(key) + 1] if key in t else d
     k = TYPES[typ](pid, (opt('up', '') or '').split(',') if opt('up') else [], (opt('down', '') or '').split(',') if opt('down') else [],
                    int(opt('mantle-beers', 0)), int(opt('dogs', 0)), opt('mom'))
