@@ -15,9 +15,10 @@ export function exitCar(F, car) {
   const a = car.h - Math.PI / 2, d = (car.wid || 20) / 2 + 7;
   F.x = car.x + Math.cos(a) * d; F.y = car.y + Math.sin(a) * d;
   F.h = car.h; F.px = F.x; F.py = F.y; F.walk = 0; F.pose = 1; F.punchT = 0; F.punchCd = 0; F.active = true;
+  F.z = 0; F.vz = 0; F.air = false; F.climb = null; F.land = 0;   // L5 heights (lf_climb.js): you step out at street level
 }
 
-export function nearCar(F, car) { return Math.hypot(car.x - F.x, car.y - F.y) < FOOT.enterR; }
+export function nearCar(F, car) { return !(F.z > 4) && Math.hypot(car.x - F.x, car.y - F.y) < FOOT.enterR; }   // L5: not from up on a roof
 
 // one fixed step on foot. inp is Palm City's {jx, jy, jm, keys, punch}.
 // Returns 'punch' on the step a punch starts, else null.

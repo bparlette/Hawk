@@ -23,6 +23,7 @@ THE PIPELINE (each step is an existing Laurel/Fulton tool, pointed at the new ci
   4 graph  -> tools/osm_graph.py     the drivable graph + report, anchors = the POIs + every house
   5 areas  -> tools/osm_areas.py     real footprints, lots, green, the hero tier (homes + POIs)
   6 bumps  -> tools/bumps_build.py   speed bumps on residential streets
+  6b roof  -> tools/roof_build.py    the meet-up building made climbable (task L5) — skipped if OSM has no outline for it
   7 fleet  -> tools/bake_fleet.py    each car statement -> the nearest real body in the library, its paint/two-tone/lamps,
                                      baked in the house style (Blender, Palm City's pipeline)  [needs --bpy]
   8 page   -> <out>/play.html (the Laurel/Fulton engine, this city's data) + <out>/FACTORY.md (what was built)
@@ -118,6 +119,8 @@ def main():
     print(f"    {rep['edges']} edges, {rep['km_total']} km, largest component {rep['largest_component_share']}, anchors {sorted(rep['anchors'])}")
     print('[5]', run(['python3', 'tools/osm_areas.py', '--tiles', tiles], env).strip())
     print('[6]', run(['python3', 'tools/bumps_build.py'], env).strip())
+    try: print('[6b]', run(['python3', 'tools/roof_build.py'], env).strip())          # L5: the meet-up's roof is climbable (if OSM maps its building)
+    except SystemExit as e: print('[6b] no climbable roof:', e)
     # 7 the fleet
     if bpy and cars: print('[7]', ' '.join(re.findall(r'car \S+ baked', run([bpy, 'tools/bake_fleet.py', *cars.keys(), '--carfile', os.path.join(out, 'data', 'cars.json')], env))))
     elif cars: print('[7] SKIPPED: no --bpy python given — cars are specified in data/cars.json, sprites not baked')

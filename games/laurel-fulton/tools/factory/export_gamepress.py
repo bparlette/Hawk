@@ -37,7 +37,7 @@ for f in sorted(os.listdir(os.path.join(LF, 'src'))):
     open(os.path.join(OUT, 'src', f), 'w').write(sanitize(s))
 open(os.path.join(OUT, 'play.html'), 'w').write(open(os.path.join(LF, 'play.html')).read().replace('<title>Laurel / Fulton</title>', '<title>City Game</title>'))
 # the pipeline
-for f in ['world_cfg.py', 'osm_fetch.py', 'osm_graph.py', 'osm_areas.py', 'roster_build.py', 'bumps_build.py', 'bake_fleet.py', 'spec_l2.mjs', 'fleet_sheet.py']:
+for f in ['world_cfg.py', 'osm_fetch.py', 'osm_graph.py', 'osm_areas.py', 'roster_build.py', 'bumps_build.py', 'roof_build.py', 'bake_fleet.py', 'spec_l2.mjs', 'fleet_sheet.py']:
     s = open(os.path.join(LF, 'tools', f)).read()
     if f == 'roster_build.py':                              # no Laurel people, no Laurel house names: a city brings its own city.json
         s = re.sub(r"PEOPLE = \[\n.*?\n\]\n", "PEOPLE = []          # every city brings its own people in data/city.json (tools/factory/city_factory.py)\n", s, flags=re.S)
@@ -51,7 +51,7 @@ for f in ['city_factory.py', 'smoke_city.mjs']:
     open(os.path.join(OUT, 'tools', 'factory', f), 'w').write(sanitize(open(os.path.join(HERE, f)).read()))
 shutil.copy(os.path.join(HERE, 'examples', 'savage.spec'), os.path.join(OUT, 'examples', 'savage.spec'))   # the made-up example only
 # Palm City pieces, vendored (the engine's noise + touch input, the ped sprites, the Blender bake + its layout)
-for f in ['world.js', 'input.js']: shutil.copy(os.path.join(PC, 'src', f), os.path.join(OUT, 'vendor', 'palm-city', 'src', f))
+for f in ['world.js', 'input.js', 'labels.js']: shutil.copy(os.path.join(PC, 'src', f), os.path.join(OUT, 'vendor', 'palm-city', 'src', f))
 shutil.copy(os.path.join(PC, 'tools', 'bake_sprites.py'), os.path.join(OUT, 'vendor', 'palm-city', 'tools', 'bake_sprites.py'))
 shutil.copy(os.path.join(PC, 'layout.json'), os.path.join(OUT, 'vendor', 'palm-city', 'layout.json'))
 fx = open(os.path.join(LF, 'src', 'lf_fx.js')).read()

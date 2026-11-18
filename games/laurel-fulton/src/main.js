@@ -8,7 +8,10 @@ import { Renderer } from './lf_render.js';
 import { Input } from '../../palm-city/src/input.js';
 import { Areas, poly } from './lf_areas.js';
 import { players, startRally, stepRally } from './lf_mission.js';
-import { setFx, setFoot } from './lf_fx.js';
+import { setFx, setFoot, setFootProject } from './lf_fx.js';
+import { Roof, stepOnFoot, lookout, project } from './lf_climb.js';
+import { RoofView } from './lf_roof.js';
+import { learnLabel } from '../../palm-city/src/labels.js';
 import { createFoot, stepFoot, exitCar, nearCar, FOOT } from './lf_foot.js';
 import { Pilot } from './lf_pilot.js';
 
@@ -33,6 +36,7 @@ const [G, roster, fleet, AJ, BJ] = await Promise.all([j('data/graph.json'), j('d
 const files = new Set(); for (const m of Object.values(fleet)) for (const k of ['color', 'shadow', 'light']) files.add(m[k].file);
 const imgs = {};
 await Promise.all([...files].map(async (f) => { const im = new Image(); im.src = 'assets/' + f; try { await im.decode(); } catch (e) { throw new Error('sprite failed to decode: assets/' + f); } imgs[f] = im; }));
+const RJ = await fetch('data/roof.json').then(r => r.ok ? r.json() : null).catch(() => null);   // task L5: a city without a climbable roof just has none
 const W = new GraphWorld(G), areas = new Areas(AJ, W), ground = new GroundPainter(W, 64, areas, BJ.bumps);
 const opts = { bumps: BJ.bumps };
 if (Q.get('spawn')) { const [x, y, h] = Q.get('spawn').split(',').map(Number); opts.spawn = { x, y }; opts.h = h || 0; }
@@ -43,12 +47,15 @@ if (!opts.spawn) {                                       // Ledo Pizza: face out
   if (r && r.pts.length > 3) sim.player.h = Math.atan2(r.pts[3][1] - r.pts[0][1], r.pts[3][0] - r.pts[0][0]);
 }
 renderer = new Renderer(ctx, W, ground, fleet, imgs, areas);
+const RF = RJ ? new Roof(RJ) : null;
+if (RF) { renderer.roof = new RoofView(RF); setFootProject((x, y, z) => project(x, y, z, cam)); }
 setFx(sim, roster);
 // ---- task L2: PICK YOUR PLAYER -> RALLY THE CREW (lf_mission.js). ?free = just drive; ?player=<id> skips the pick.
 const PLAYERS = players(roster);
 let M = null, foot = null, picking = !Q.has('free') && !Q.has('cam') && !Q.has('map');
 let pilot = null;
-function pick(id) { M = startRally(sim, roster, id); renderer.mission = M; picking = false; foot = createFoot(PLAYERS.find(p => p.id === id)); setFoot(foot); if (Q.has('pilot')) pilot = new Pilot(sim, W, M); }
+function pick(id) { M = startRally(sim, roster, id); renderer.mission = M; picking = false; foot = createFoot(PLAYERS.find(p => p.id === id)); setFoot(foot);
+  foot.onClimb = (c) => { learnLabel(sim, 'lf_roof'); if (c.onto === 'roof' && !foot.summited && M) { foot.summited = true; M.msg = 'THE LOOKOUT'; M.msgT = 3.5; } }; if (Q.has('pilot')) pilot = new Pilot(sim, W, M); }
 if (Q.get('player')) pick(Q.get('player'));
 const pickRows = () => PLAYERS.map((p, i) => ({ p, x: 24, y: 150 + i * 62, w: VIEW_W - 48, h: 54 }));
 canvas.addEventListener('pointerdown', e => {
@@ -93,20 +100,24 @@ const fixed = Q.get('cam') ? Q.get('cam').split(',').map(Number) : null;
 const cam = { x: fixed ? fixed[0] : sim.player.x, y: fixed ? fixed[1] : sim.player.y, zoom: fixed && fixed[2] ? fixed[2] : 0.62 };   // owner Nov 17: zoom out, more world
 for (let cy = -2; cy <= 2; cy++) for (let cx = -1; cx <= 1; cx++) ground.get(Math.floor(cam.x / CHUNK) + cx, Math.floor(cam.y / CHUNK) + cy);
 ground.stats.sync = 0;
-const STEP = 1 / 60, SPEED = Math.max(1, Math.min(16, Number(Q.get('speed')) || 1)); let acc = 0, last = performance.now();   // ?speed=N: N sim steps per frame (captures)
+const STEP = 1 / 60; let SPEED = Math.max(1, Math.min(16, Number(Q.get('speed')) || 1)); let acc = 0, last = performance.now();   // ?speed=N: N sim steps per frame (captures)
 function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000); last = now; acc += dt * SPEED;
   let n = 0;
+  if (pilot && M && M.complete) pilot = null;            // the autopilot's job ends at the finish: the stick is yours again
   while (acc >= STEP && n < 6 * SPEED) { const inp = pilot ? (input.read(), pilot.input(STEP)) : input.read(); if (picking) { acc = 0; break; }
     const beat = M && M.beat, ZERO = { jx: 0, jy: 0, jm: 0, keys: {} };
-    if (foot && foot.active) { sim.step(STEP, ZERO); if (!beat) { stepFoot(foot, STEP, inp); if (inp.action && nearCar(foot, sim.player)) foot.active = false; } }
+    if (foot && foot.active) { sim.step(STEP, ZERO); if (!beat) { stepOnFoot(foot, STEP, inp, RF); if (inp.action && nearCar(foot, sim.player)) foot.active = false; } }
     else { sim.step(STEP, beat ? ZERO : inp); if (foot && !beat && !pilot && inp.action && Math.abs(sim.player.v) < FOOT.exitV) exitCar(foot, sim.player); }
     if (M) stepRally(sim, M, STEP); acc -= STEP; n++; }
   if (n >= 6 * SPEED) acc = 0;
   const c = sim.player;
   let tx = c.x + Math.cos(c.h) * c.v * 0.42, ty = c.y + Math.sin(c.h) * c.v * 0.42, tz = 0.62 - Math.min(0.10, Math.abs(c.v) / 290 * 0.10);   // Palm City's chase framing, pulled back (owner Nov 17: zoom out — ~68 m across instead of ~42)
   if (M && M.beat) { tx = M.beat.cx; ty = M.beat.cy; } if (M) tz *= M.camZoom;      // the arrival beat: push in on the huddle
-  if (foot && foot.active && !fixed) { tx = foot.x; ty = foot.y; tz = 1.5; }   // on foot: follow the walker, closer in
+  if (foot && foot.active && !fixed) {                   // on foot: follow the walker, closer in
+    tx = foot.x; ty = foot.y; tz = foot.climb ? 1.1 : 1.5;
+    if (RF && foot.z >= RF.h - 2 && !foot.air && !foot.climb) { const L = lookout(foot, RF, sim, M, view); tx = L.x; ty = L.y; tz = L.zoom; }   // L5: up top, the closing shot
+  }
   if (fixed) { tx = fixed[0]; ty = fixed[1]; tz = fixed[2] || 1; }
   const k = fixed ? 1 : 1 - Math.exp(-dt * 3.2);
   cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k; cam.zoom += (tz - cam.zoom) * (fixed ? 1 : 1 - Math.exp(-dt * 1.5));
@@ -208,4 +219,4 @@ renderer.draw = (S, cam, t) => {
   if (picking) drawPick();
 };
 requestAnimationFrame(frame);
-window.__lf = { sim, W, ground, cam, input, renderer, areas, map: () => mapOpen, mission: () => M, pick, picking: () => picking, pilot: () => pilot, foot: () => foot };
+window.__lf = { setSpeed: (k) => { SPEED = k; }, roof: () => RF, sim, W, ground, cam, input, renderer, areas, map: () => mapOpen, mission: () => M, pick, picking: () => picking, pilot: () => pilot, foot: () => foot };
