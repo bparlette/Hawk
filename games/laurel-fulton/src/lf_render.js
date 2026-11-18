@@ -5,7 +5,7 @@ import { CHUNK } from './lf_ground.js';
 import { poly } from './lf_areas.js';
 import * as FX from './lf_fx.js';
 
-const SUN = { x: 0.8, y: -0.3 };                       // the bake's sun: shadows fall east-north-east
+const SUN = { x: 0.8, y: -0.3 }, FAR_CHUNKS = 90;                       // the bake's sun: shadows fall east-north-east
 export class Renderer {
   constructor(ctx, W, ground, fleet, imgs, areas = null) { this.areas = areas; this.ctx = ctx; this.W = W; this.ground = ground; this.fleet = fleet; this.imgs = imgs; }
   resize(vw, vh, dpr) { this.vw = vw; this.vh = vh; this.dpr = dpr; }
@@ -26,13 +26,32 @@ export class Renderer {
     if (which === 'shadow' && c.z > 0) { g.save(); g.globalAlpha *= Math.max(0.3, 1 - c.z / 50); g.drawImage(img, sx, sy, sw, sh, c.x + ox + c.z * 0.8, c.y + oy + c.z * 0.25, w, h); g.restore(); return; }   // the shadow stays on the road, sliding down-sun
     g.drawImage(img, sx, sy, sw, sh, c.x + ox + jx, c.y + oy + jy, w, h);
   }
+  farRoads(g, z, x0, y0, x1, y1) {                       // every real road in view as a line (min 2 px wide on screen), kerb pass then asphalt
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    for (const pass of [0, 1]) {
+      g.beginPath();
+      for (const e of this.W.edges) {
+        if (e.hw === 'service' && z < 0.05) continue; let ok = false;
+        for (const p of e.pts) if (p[0] > x0 - 200 && p[0] < x1 + 200 && p[1] > y0 - 200 && p[1] < y1 + 200) { ok = true; break; }
+        if (!ok) continue; e.pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y));
+      }
+      g.lineWidth = Math.max(pass ? 1.6 : 3.2, (pass ? 4 : 5) * 1) / z * (pass ? 1 : 1); g.strokeStyle = pass ? '#6b6770' : '#d9cbb3'; g.stroke();
+    }
+  }
   draw(S, cam, time) {
     const g = this.ctx, { vw, vh, dpr } = this, z = cam.zoom, hw = vw / 2 / z, hh = vh / 2 / z;
     const vx0 = cam.x - hw, vy0 = cam.y - hh, vx1 = cam.x + hw, vy1 = cam.y + hh;
     g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#4c7a3c'; g.fillRect(0, 0, vw, vh);
     g.setTransform(dpr * z, 0, 0, dpr * z, dpr * (vw / 2 - cam.x * z), dpr * (vh / 2 - cam.y * z));
-    for (let cy = Math.floor(vy0 / CHUNK); cy <= Math.floor(vy1 / CHUNK); cy++)
-      for (let cx = Math.floor(vx0 / CHUNK); cx <= Math.floor(vx1 / CHUNK); cx++) g.drawImage(this.ground.get(cx, cy), cx * CHUNK, cy * CHUNK, CHUNK + 0.6, CHUNK + 0.6);
+    // LOAD FIX (Nov 18): zoomed all the way out (the opening shows the WHOLE map, the world pulse goes far) the view covers
+    // ~30,000 ground chunks, and ground.get() PAINTS a missing one synchronously — the page froze for minutes and "did not
+    // load". Over FAR_CHUNKS visible chunks: draw only the chunks already painted, and the real road network as lines over a
+    // flat ground (cheap, and exactly what you want to see from up there). The painter fills chunks in budgeted slices.
+    const cx0 = Math.floor(vx0 / CHUNK), cx1 = Math.floor(vx1 / CHUNK), cy0 = Math.floor(vy0 / CHUNK), cy1 = Math.floor(vy1 / CHUNK), far = (cx1 - cx0 + 1) * (cy1 - cy0 + 1) > FAR_CHUNKS;
+    if (far) { g.fillStyle = '#6d9a4c'; g.fillRect(vx0, vy0, vx1 - vx0, vy1 - vy0); }
+    for (let cy = cy0; cy <= cy1; cy++)
+      for (let cx = cx0; cx <= cx1; cx++) { if (far && !this.ground.has(cx, cy)) continue; g.drawImage(this.ground.get(cx, cy), cx * CHUNK, cy * CHUNK, CHUNK + 0.6, CHUNK + 0.6); }
+    if (far) this.farRoads(g, z, vx0, vy0, vx1, vy1);
     const vis = (x, y, m = 120) => x > vx0 - m && x < vx1 + m && y > vy0 - m && y < vy1 + m;
     // task L8 hero tier: the crew's homes + the POIs, BIGGER than real (x1.35 about the centroid), crisp,
     // inked, with a name plaque. (Placeholder roofs until the Street View hero art, L11/G12, lands.)
