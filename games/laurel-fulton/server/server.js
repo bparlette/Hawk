@@ -7,8 +7,10 @@
 // The world (src/lf_world.js) steps at 30 Hz whether or not anyone is connected. Everyone is CPU until picked.
 // Protocol (JSON over one WebSocket):
 //   S->C hello {crew:[{id,name,human}], t}        C->S pick {id}          S->C you {id, state} | taken {id}
-//   C->S car {x,y,h,v,z,vz,layer} (~15 Hz, the picker's machine is authoritative for its own car — friends only, so trusted)
-//   S->C snap {t, cars:[[id,x,y,h,v,z,layer,human,inside]...]} (inside = [house,floor,x] | 0) at 10 Hz          C->S leave {} | socket close -> the CPU takes back over
+//   C->S car {x,y,h,v,z,vz,layer,f?} (~15 Hz, the picker's machine is authoritative for its own car — friends only, so trusted;
+//        f = [x,y,h] while that friend is ON FOOT, absent otherwise — M-D: walkers are shared, not just cars)
+//   S->C snap {t, cars:[[id,x,y,h,v,z,layer,human,inside]...], rally, w:[[id,x,y,h]...]} (inside = [house,floor,x] | 0;
+//        rally.beat = the arrival beat in progress {x,y,who,t} | null — M-D) at 10 Hz          C->S leave {} | socket close -> the CPU takes back over
 import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath, pathToFileURL } from 'node:url';
 import { WebSocketServer } from 'ws';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -51,7 +53,7 @@ export async function start({ port = Number(process.env.PORT) || 2580, friends =
   });
   const dt = 1 / hz;
   const tick = setInterval(() => WD.step(dt), 1000 / hz);
-  let n = 0; const snap = setInterval(() => { const m = JSON.stringify({ type: 'snap', t: WD.S.time, cars: WD.snapshot(), rally: WD.rallyState() }); n++; for (const ws of wss.clients) if (ws.friend && ws.readyState === 1) ws.send(m); }, 100);
+  let n = 0; const snap = setInterval(() => { const m = JSON.stringify({ type: 'snap', t: WD.S.time, cars: WD.snapshot(), rally: WD.rallyState(), w: WD.walkers() }); n++; for (const ws of wss.clients) if (ws.friend && ws.readyState === 1) ws.send(m); }, 100);
   await new Promise(r => wss.on('listening', r));
   log(`[world] Laurel/Fulton world up on :${wss.address().port} — ${WD.crew.size} crew (all CPU), ${friends.size} friends on the list`);
   return { WD, wss, port: wss.address().port, close: () => { clearInterval(tick); clearInterval(snap); for (const c of wss.clients) c.terminate(); return new Promise(r => wss.close(r)); } };

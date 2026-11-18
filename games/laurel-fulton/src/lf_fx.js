@@ -48,6 +48,10 @@ function drawPed(g, f, time) {
 // with Palm City's punch jab (its render.js: a sin-arc shove of 5 units).
 let FOOTF = null, FOOTPROJ = null;
 export function setFoot(f) { FOOTF = f; }
+// M-D: friends on foot in the one world — main.js hands over a provider of remote-walker figures
+// ({who, x, y, px, py, h, dap} from lf_net's walkerMap); they draw with the same ped as everyone else.
+let WALKFN = null;
+export function setWalkers(fn) { WALKFN = fn; }
 // L5 heights (lf_climb.js): the renderer hands over its projection, so a walker up on the Atholton roof draws ON the
 // roof (the same top-down perspective the building is drawn in), looms a little, and keeps a shadow on whatever is below
 export function setFootProject(fn) { FOOTPROJ = fn; }
@@ -164,6 +168,9 @@ export function over(g, S, M, time) {
   }
   g.globalAlpha = 1;
   drawFootNow(g, time);
+  if (WALKFN) for (const f of WALKFN()) {                    // M-D: the shared walkers — a friend out of their car, on foot
+    if (drawPed(g, f, time) && f.who && f.who.name) { g.font = '700 9px system-ui'; g.textAlign = 'center'; g.fillStyle = '#fff3dc'; g.fillText(f.who.name.split(' ')[0], f.x, f.y - 26); }
+  }
   if (!M) return;
   for (const st of M.stops) if (!st.done) {                            // pickup rings: pull in here
     const p = 0.5 + 0.5 * Math.sin(time * 3);

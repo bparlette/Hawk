@@ -7,9 +7,9 @@ import { GroundPainter, CHUNK } from './lf_ground.js';
 import { Renderer } from './lf_render.js';
 import { Input } from '../../palm-city/src/input.js';
 import { Areas, poly } from './lf_areas.js';
-import { players, startRally, stepRally, swapPlayerCar, pushTrail } from './lf_mission.js';
+import { players, startRally, stepRally, swapPlayerCar, pushTrail, makeBeat, stepBeat } from './lf_mission.js';
 import { KingOfTheHill } from './lf_koth.js';
-import { setFx, setFoot, setFootProject } from './lf_fx.js';
+import { setFx, setFoot, setFootProject, setWalkers } from './lf_fx.js';
 import { Roof, stepOnFoot, lookout, project } from './lf_climb.js';
 import { RoofView } from './lf_roof.js';
 import { learnLabel } from '../../palm-city/src/labels.js';
@@ -139,6 +139,7 @@ const atMyDoor = () => !!doorOf();
 const inHouse = (x, y) => { if (!sim || !sim.houses) return false; for (const f of sim.houses) { let ins = false; for (let k = 0; k < f.length; k += 2) { const ax = f[k], ay = f[k + 1], ex = f[(k + 2) % f.length], ey = f[(k + 3) % f.length]; if ((ay > y) !== (ey > y) && x < (ex - ax) * (y - ay) / (ey - ay) + ax) ins = !ins; } if (ins) return true; } return false; };
 // (the roof wiring lives in phase 2 below — it lands with roof.json)
 setFx(sim, roster);
+setWalkers(() => { if (!net) return []; const out = []; for (const f of net.walkerMap.values()) { const who = roster.people.find(p => p.id === f.id); if (who) out.push({ who, x: f.x, y: f.y, px: f.px, py: f.py, h: f.h, dap: 0 }); } return out; });   // M-D: friends on foot, drawn by lf_fx
 const fakeCop = new FakeCop(sim, W);
 const party = new NightParty(); if (Q.get('party')) party.setVenue(Q.get('party'));
 const valet = new ValetLots(W, roster);
@@ -170,9 +171,40 @@ const net = Q.get('server') && Q.get('key') ? new Net(Q.get('server'), Q.get('ke
 if (net) net.onYou = (id, st) => {                        // take over that crew member IN PLACE, exactly as the CPU left them
   const mine = sim.cars.find(c => c.owner === id); sim.cars = sim.cars.filter(c => c !== sim.player);
   sim.player = mine; mine.player = true; mine.remote = false; Object.assign(mine, st); mine.parked = false;
-  picking = false; foot = createFoot(PLAYERS.find(p => p.id === id)); setFoot(foot); renderer.mission = null;
+  picking = false; foot = createFoot(PLAYERS.find(p => p.id === id)); setFoot(foot); renderer.mission = oM;
   cam.x = mine.x; cam.y = mine.y;                         // cut straight to them (they may be anywhere in the world)
 };
+// ---- M-D: THE ARRIVAL BEAT in the one world. The server rally runs the beat's timing (lf_world.js) and
+// carries it in rallyState().beat; when it rides in on a snapshot, play the SAME beat here — the same
+// stepper (lf_mission.stepBeat), the same figures, the same camera push-in — on a presentation-only
+// mission (oM: no stops, nothing to join; the world already did that). Only if it is YOUR rally or it
+// is happening where you can see it: a beat across town must not yank your camera away.
+const oM = { stops: [], convoy: [], beat: null, camZoom: 1, complete: true, throws: [], barks: [] };
+let oBeatKey = '';
+function stepOnlineBeat(dt) {
+  const rb = net.rally && net.rally.beat;
+  if (rb && !oM.beat) {
+    const key = rb.x + ',' + rb.y + ',' + rb.who.join('.');
+    if (key !== oBeatKey) {
+      oBeatKey = key;
+      const mine = net.me && net.rally.leader === net.me, near = sim.player && Math.hypot(sim.player.x - rb.x, sim.player.y - rb.y) < 800;
+      if (mine || near) {
+        const figs = [];
+        rb.who.forEach((id, k) => {
+          const c = sim.cars.find(c => c.owner === id), who = roster.people.find(p => p.id === id); if (!c || !who) return;
+          const ang = k / rb.who.length * Math.PI * 2;
+          figs.push({ who, k, cx: c.x, cy: c.y, hx: rb.x + Math.cos(ang) * 22, hy: rb.y + Math.sin(ang) * 22, x: c.x, y: c.y, vis: false, dap: 0 });
+        });
+        if (figs.length > 1) {
+          oM.beat = makeBeat(figs, rb.x, rb.y, null);
+          let left = Math.max(0, Math.min(4.6, rb.t || 0));   // join the beat where the world already is in it (snapshots are 10 Hz)
+          while (left > 0 && oM.beat) { const s = Math.min(1 / 30, left); if (stepBeat(oM, s)) break; left -= s; }
+        }
+      }
+    }
+  }
+  if (oM.beat) stepBeat(oM, dt);
+}
 function pick(id) { if (net) { if (!net.takenBy(id)) net.pick(id); return; }
   M = startRally(sim, roster, id); renderer.mission = M; picking = false; foot = createFoot(PLAYERS.find(p => p.id === id)); setFoot(foot);
   if (KITS[id] && !Q.has('pilot')) goIn(id, foot.who);   // PICK Brad -> you start in his house
@@ -279,29 +311,30 @@ function frame(now) {
   let n = 0;
   if (pilot && M && M.complete) pilot = null;            // the autopilot's job ends at the finish: the stick is yours again
   while (acc >= STEP && n < 6 * SPEED) { const inp = pilot ? (input.read(), pilot.input(STEP)) : input.read(); if (picking) { acc = 0; break; }
-    const beat = (M && M.beat) || intro, ZERO = { jx: 0, jy: 0, jm: 0, keys: {} };
+    const beat = (M && M.beat) || oM.beat || intro, ZERO = { jx: 0, jy: 0, jm: 0, keys: {} };
     if (inside) { sim.step(STEP, ZERO); if (inside.step(STEP, inp) === 'exit') goOut(); }
     else if (foot && foot.active) { sim.step(STEP, ZERO); if (!beat) { stepOnFoot(foot, STEP, inp, SUP); const nc = inp.action && !(PL && PL.label(foot, sim)) ? nearAnyCar(foot, sim.cars) : null; /* a public door / the 108 Astro's lights win over GET IN */ if (nc) { if (nc !== sim.player) swapPlayerCar(sim, M, nc); foot.active = false; } else if (inp.action && atMyDoor()) goIn(doorOf(), foot.who); else if (inp.action && PL) { const r = PL.act(foot, sim); if (r && r.enter && KITS[r.enter.interior]) goInPlace(r.enter, foot.who); } } }   // L12/L13: GO IN at a public door / ROB LIGHTS at the Astro
     else { sim.step(STEP, beat ? ZERO : inp); if (foot && !beat && !pilot && inp.action && Math.abs(sim.player.v) < FOOT.exitV) { exitCar(foot, sim.player); if (inHouse(foot.x, foot.y)) { const c = sim.player, a = c.h + Math.PI / 2, d = (c.wid || 20) / 2 + 7; foot.x = c.x + Math.cos(a) * d; foot.y = c.y + Math.sin(a) * d; foot.px = foot.x; foot.py = foot.y; } } }
     if (van) van.step(STEP, foot);
     if (!inside && !picking) RIGGB.step(STEP);   // Rigg-isms: the street-side barker (indoors, the interior has its own)
-    if (PL) PL.step(STEP); if (KOTH) KOTH.step(sim, STEP); if (M) stepRally(sim, M, STEP);
+    if (PL) PL.step(STEP); if (KOTH) KOTH.step(sim, STEP); if (M) stepRally(sim, M, STEP); if (net) stepOnlineBeat(STEP);
     party.step(timeOfDay());
     fakeCop.step(STEP, !!(sim.player.model === 'cavalier_kosack' && ((inp.action && Math.abs(sim.player.v) >= FOOT.exitV) || sirenKey)));
     valet.step(sim, STEP);
     destruct.step(sim, STEP);
     simTime += STEP; acc -= STEP; n++; }
   if (n >= 6 * SPEED) acc = 0;
-  if (net) net.frame(sim, dt);
+  if (net) net.frame(sim, dt, foot && foot.active ? foot : null);
   const c = sim.player;
   let tx = c.x + Math.cos(c.h) * c.v * 0.42, ty = c.y + Math.sin(c.h) * c.v * 0.42, tz = 0.62 - Math.min(0.10, Math.abs(c.v) / 290 * 0.10);   // Palm City's chase framing, pulled back (owner Nov 17: zoom out — ~68 m across instead of ~42)
-  if (M && M.beat) { tx = M.beat.cx; ty = M.beat.cy; } if (M) tz *= M.camZoom;      // the arrival beat: push in on the huddle
+  const ab = M && M.beat ? M : oM.beat ? oM : null;      // the arrival beat, solo or shared: push in on the huddle
+  if (ab) { tx = ab.beat.cx; ty = ab.beat.cy; } if (M) tz *= M.camZoom; else if (oM.beat) tz *= oM.camZoom;
   if (foot && foot.active && !fixed) {                   // on foot: follow the walker, closer in
     tx = foot.x; ty = foot.y; tz = foot.climb ? 1.1 : 1.8;   // on foot (owner, Nov 17): 20% closer than the old 1.5
     if (RF && foot.z >= RF.h - 2 && !foot.air && !foot.climb) { const L = lookout(foot, RF, sim, M, view); tx = L.x; ty = L.y; tz = L.zoom; }   // L5: up top, the closing shot
   }
   if (fixed) { tx = fixed[0]; ty = fixed[1]; tz = fixed[2] || 1; }
-  const pulseOK = !fixed && !(foot && foot.active) && !intro && !pilot && !Q.has('speed') && !(M && M.beat);
+  const pulseOK = !fixed && !(foot && foot.active) && !intro && !pilot && !Q.has('speed') && !((M && M.beat) || oM.beat);
   if (pulseOK) { pulseT += dt; if (pulseT > PULSE.out + PULSE.hold + PULSE.back) pulseT = -PULSE.rest; }
   if (pulseOK && pulseT >= 0) {
     const p = pulseT, u = p < PULSE.out ? p / PULSE.out : p < PULSE.out + PULSE.hold ? 1 : 1 - (p - PULSE.out - PULSE.hold) / PULSE.back;
@@ -507,4 +540,4 @@ renderer.draw = (S, cam, t, tod) => {
   if (picking) drawPick();
 };
 requestAnimationFrame(frame);
-window.__lf = { places: () => PL, goInPlace, door: () => doorOf(), van: () => van, get areas() { return areas; }, inside: () => inside, setSpeed: (k) => { SPEED = k; }, roof: () => RF, sim, W, ground, cam, input, renderer, map: () => mapOpen, mission: () => M, koth: () => KOTH, fakeCop: () => fakeCop, party: () => party, valet: () => valet, destruct: () => destruct, help: () => help, jumpTo, pick, picking: () => picking, pilot: () => pilot, foot: () => foot, tod: () => timeOfDay(), simTime: () => simTime };
+window.__lf = { places: () => PL, goInPlace, door: () => doorOf(), van: () => van, get areas() { return areas; }, inside: () => inside, setSpeed: (k) => { SPEED = k; }, roof: () => RF, sim, W, ground, cam, input, renderer, map: () => mapOpen, mission: () => M, koth: () => KOTH, fakeCop: () => fakeCop, party: () => party, valet: () => valet, destruct: () => destruct, help: () => help, jumpTo, pick, picking: () => picking, pilot: () => pilot, foot: () => foot, tod: () => timeOfDay(), simTime: () => simTime, net: () => net, obeat: () => oM.beat };

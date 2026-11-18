@@ -16,6 +16,29 @@
 const SP = 78;                    // convoy spacing along your path: a car length (~4.6 m) + a gap
 const PULL_IN_R = 190, PULL_IN_V = 45;
 const BEAT = [['zoom', 0.55], ['out', 0.95], ['dap', 1.7], ['in', 0.95], ['roll', 0.55]];
+export const BEAT_PHASES = BEAT;
+
+// THE BEAT as a stepper of its own (M-D): stepRally plays it in the solo mission; the one world
+// runs the same timing server-side (lf_world.js) and every connected client plays it locally on a
+// presentation-only mission (main.js stepOnlineBeat) — one rhythm everywhere: the camera pushes in,
+// everyone walks to the huddle, dap, back to their cars, the camera pulls back. Returns true on the
+// step the beat ends (M.beat cleared, M.camZoom back to 1); whoever owns the mission does the join.
+export function makeBeat(figs, cx, cy, stop) { return { stop: stop || null, t: 0, i: 0, phase: 'zoom', figs, cx, cy }; }
+export function stepBeat(M, dt) {
+  const B = M.beat; if (!B) return false;
+  B.t += dt;
+  while (B.t > BEAT[B.i][1]) { B.t -= BEAT[B.i][1]; B.i++; if (B.i >= BEAT.length) break; }
+  if (B.i >= BEAT.length) { M.beat = null; M.camZoom = 1; return true; }
+  B.phase = BEAT[B.i][0];
+  const u = B.t / BEAT[B.i][1], ease = u * u * (3 - 2 * u);
+  M.camZoom = B.phase === 'zoom' ? 1 + 1.6 * ease : B.phase === 'roll' ? 2.6 - 1.6 * ease : 2.6;   // rescaled for the 0.62 base zoom (Nov 17) — same push-in framing as before
+  for (const fg of B.figs) {                             // walkers: out to the huddle, then back to their own car
+    const k = B.phase === 'out' ? ease : B.phase === 'dap' ? 1 : B.phase === 'in' ? 1 - ease : 0;
+    fg.x = fg.cx + (fg.hx - fg.cx) * k; fg.y = fg.cy + (fg.hy - fg.cy) * k; fg.vis = B.phase !== 'zoom' && B.phase !== 'roll';
+    fg.dap = B.phase === 'dap' ? Math.sin(B.t * 9 + fg.k) : 0;
+  }
+  return false;
+}
 const clamp = (x, a, b) => x < a ? a : x > b ? b : x;
 const wrap = (a) => { a = (a + Math.PI) % (Math.PI * 2); if (a < 0) a += Math.PI * 2; return a - Math.PI; };
 
@@ -169,25 +192,15 @@ export function stepRally(S, M, dt) {
   }
   const P = S.player;
   if (!M.beat) { pushTrail(M, P.x, P.y); if ((M._ro = (M._ro || 0) + dt) > 0.5) { M._ro = 0; reorder(M); } }
-  // the arrival beat
+  // the arrival beat (stepBeat above): the join lands when the beat ends
   if (M.beat) {
-    const B = M.beat; B.t += dt; P.v *= Math.pow(0.02, dt);
-    while (B.t > BEAT[B.i][1]) { B.t -= BEAT[B.i][1]; B.i++; if (B.i >= BEAT.length) break; }
-    if (B.i >= BEAT.length) {
-      const st = B.stop; st.done = true; M.lastPickupT = M.time;
+    P.v *= Math.pow(0.02, dt);
+    const st = M.beat.stop;
+    if (stepBeat(M, dt)) {
+      st.done = true; M.lastPickupT = M.time;
       for (let i = 0; i < st.people.length; i++) join(S, M, st.people[i], st.cars[i]);
       M.msg = st.people.map(p => p.name.split(' ')[0]).join(' + ') + (st.people.length > 1 ? ' ARE' : ' IS') + ' IN'; M.msgT = 2.2;
-      M.beat = null; M.camZoom = 1;
       if (M.stops.every(s => s.done)) { M.msg = 'EVERYONE\'S IN — MEET AT ATHOLTON HIGH'; M.msgT = 3.5; }
-      return;
-    }
-    B.phase = BEAT[B.i][0];
-    const u = B.t / BEAT[B.i][1], ease = u * u * (3 - 2 * u);
-    M.camZoom = B.phase === 'zoom' ? 1 + 1.6 * ease : B.phase === 'roll' ? 2.6 - 1.6 * ease : 2.6;   // rescaled for the 0.62 base zoom (Nov 17) — same push-in framing as before
-    for (const fg of B.figs) {                             // walkers: out to the huddle, then back to their own car
-      const k = B.phase === 'out' ? ease : B.phase === 'dap' ? 1 : B.phase === 'in' ? 1 - ease : 0;
-      fg.x = fg.cx + (fg.hx - fg.cx) * k; fg.y = fg.cy + (fg.hy - fg.cy) * k; fg.vis = B.phase !== 'zoom' && B.phase !== 'roll';
-      fg.dap = B.phase === 'dap' ? Math.sin(B.t * 9 + fg.k) : 0;
     }
     return;
   }
@@ -196,7 +209,7 @@ export function stepRally(S, M, dt) {
     // everyone in the convoy + the people at this house walk to a huddle between the cars and the house
     const hx = (P.x + st.x) / 2, hy = (P.y + st.y) / 2, all = [{ c: P, who: M.me }, ...M.convoy.map(f => ({ c: f.car, who: f.person })), ...st.cars.map((c, i) => ({ c, who: st.people[i] }))];
     const figs = all.map((a, k) => { const ang = k / all.length * Math.PI * 2; return { who: a.who, k, cx: a.c.x, cy: a.c.y, hx: hx + Math.cos(ang) * 22, hy: hy + Math.sin(ang) * 22, x: a.c.x, y: a.c.y, vis: false, dap: 0 }; });
-    M.beat = { stop: st, t: 0, i: 0, phase: 'zoom', figs, cx: hx, cy: hy };
+    M.beat = makeBeat(figs, hx, hy, st);
     return;
   }
   // the finish: all collected, the whole convoy at the Atholton lot
