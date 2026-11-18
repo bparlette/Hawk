@@ -70,8 +70,14 @@ export function buildRails(W) {
         // OTHER road's carriageway (anything not this edge and not itself railed) is within its half-width + 14 units.
         const n = Math.max(1, Math.ceil(L / 10)); let run0 = -1;
         const ok = (u) => { const px = ax + dx * u + nx * off, py = ay + dy * u + ny * off;
+          for (let q = 0; q + 1 < e.pts.length; q++) {      // INNER-BEND CROSSING (Nov 18): on a sharp bend the inner rail's offset line swings back across the road's OWN carriageway
+            const [x0, y0] = e.pts[q], [x1, y1] = e.pts[q + 1], vx = x1 - x0, vy = y1 - y0, L2 = vx * vx + vy * vy || 1, t = Math.max(0, Math.min(1, ((px - x0) * vx + (py - y0) * vy) / L2));
+            if (Math.hypot(x0 + vx * t - px, y0 + vy * t - py) < off - 6) return false;   // — an X wall mid-road that pinned the rally autopilot: drop any stretch nearer its own road than `off`
+          }
           for (const si of W.grid[layer] ? (W.grid[layer].get(Math.floor(px / 256) * 100003 + Math.floor(py / 256)) || []) : []) {
-            const g = W.seg[si], o = g.e; if (o === e || RAIL_HW.has(o.hw) || o.bridge) continue;
+            const g = W.seg[si], o = g.e;
+            if (o === e) continue;                              // (own-road bends: checked against its polyline directly, below)
+            if (o.bridge) continue;                            // (another PRIMARY road's carriageway blocks a rail too: a dual carriageway's neighbouring rail sat inside this road's lanes)
             const vx = g.x1 - g.x0, vy = g.y1 - g.y0, L2 = vx * vx + vy * vy || 1, t = Math.max(0, Math.min(1, ((px - g.x0) * vx + (py - g.y0) * vy) / L2));
             if (Math.hypot(g.x0 + vx * t - px, g.y0 + vy * t - py) < o.w / 2 + 14) return false; }
           return true; };
