@@ -18,6 +18,14 @@ export class Areas {
       return { ...h, f, cx, cy, corner: this.corner(cx, cy) };
     });
   }
+  // L10 orientation: "<this street> & <the cross street>" for the nearest named junction on the road you are on (cheap: one edge)
+  cornerNear(x, y, layer = 0, within = 1500) {
+    const W = this.W, r = W.roadInfo(x, y, layer); if (!r.e) return ''; const st = r.e.name || r.e.ref; if (!st) return '';
+    if (!this.vn) { this.vn = new Map(); for (const e of W.edges) { const n = e.name || e.ref; if (!n || e.hw === 'service') continue; for (const v of [e.a, e.b]) { let q = this.vn.get(v); if (!q) this.vn.set(v, q = new Set()); q.add(n); } } }
+    let best = 1e18, cross = '';
+    for (const v of [r.e.a, r.e.b]) { const q = this.vn.get(v); if (!q) continue; const o = [...q].find(n => n !== st); if (!o) continue; const p = W.verts[v], d = Math.hypot(p.x - x, p.y - y); if (d < best && d < within) { best = d; cross = o; } }
+    return cross ? `${st} & ${cross}` : st;
+  }
   inChunk(kind, cx, cy) { return this.idx[kind].get(cx * 100003 + cy) || []; }
   // the hero's street + the nearest named cross street along it: "Stansfield Road & Harding Road"
   corner(x, y) {

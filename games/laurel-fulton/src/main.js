@@ -177,6 +177,22 @@ let pulseT = -PULSE.rest;
 for (let cy = -2; cy <= 2; cy++) for (let cx = -1; cx <= 1; cx++) ground.get(Math.floor(cam.x / CHUNK) + cx, Math.floor(cam.y / CHUNK) + cy);
 ground.stats.sync = 0;
 const STEP = 1 / 60; let SPEED = Math.max(1, Math.min(16, Number(Q.get('speed')) || 1)); let acc = 0, last = performance.now();   // ?speed=N: N sim steps per frame (captures)
+let cornerT = 0, cornerS = '';
+// L10: street names written ALONG the roads once you are zoomed in enough to read them (deduped, upright, haloed)
+function drawStreetLabels() {
+  if (cam.zoom < 0.3 || cam.zoom > 1.3) return;
+  const hw = VIEW_W / 2 / cam.zoom, hh = view.h / 2 / cam.zoom, seen = [], z = cam.zoom; let n = 0;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.font = '800 10px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  for (const e of W.edges) {
+    const nm = e.name; if (!nm || e.hw === 'service' || e.len < 260 || n > 9) continue;
+    const k = e.pts.length >> 1, [mx, my] = e.pts[k], sx = (mx - cam.x) * z + VIEW_W / 2, sy = (my - cam.y) * z + view.h / 2;
+    if (sx < 30 || sx > VIEW_W - 30 || sy < 70 || sy > view.h - 120) continue;
+    if (seen.some(q => q[0] === nm && Math.hypot(q[1] - sx, q[2] - sy) < 260) || seen.some(q => Math.hypot(q[1] - sx, q[2] - sy) < 40)) continue;
+    const [ax, ay] = e.pts[Math.max(0, k - 1)], [bx, by] = e.pts[Math.min(e.pts.length - 1, k + 1)]; let ang = Math.atan2(by - ay, bx - ax); if (ang > Math.PI / 2 || ang < -Math.PI / 2) ang += Math.PI;
+    seen.push([nm, sx, sy]); n++; ctx.save(); ctx.translate(sx, sy); ctx.rotate(ang); ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(27,20,48,0.8)'; ctx.strokeText(nm, 0, 0); ctx.fillStyle = 'rgba(255,240,215,0.95)'; ctx.fillText(nm, 0, 0); ctx.restore();
+  }
+  ctx.textBaseline = 'alphabetic';
+}
 function frame(now) {
   const dt = Math.max(0, Math.min(0.1, (now - last) / 1000)); last = now; acc += dt * SPEED;   // dt clamped at 0 too: a rAF timestamp can predate the module-eval performance.now() (startup clock skew sent the intro's t negative and the zoom with it)
   let n = 0;
@@ -214,7 +230,7 @@ function frame(now) {
     cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k; cam.zoom += (tz - cam.zoom) * (fixed ? 1 : 1 - Math.exp(-dt * 1.5));
   }
   if (inside) { IR.draw(inside, VIEW_W, view.h, DPR, now / 1000); drawControls(); requestAnimationFrame(frame); return; }
-  renderer.draw(sim, cam, now / 1000);
+  renderer.draw(sim, cam, now / 1000); drawStreetLabels();
   // Cul-de-Sac King of the Hill: the ring, the crown, the banner (screen space, over the world).
   // In idle the ring of the cul-de-sac you're sitting in shows DIM — it never starts itself.
   const ringSac = KOTH && KOTH.state !== 'done' ? (KOTH.state === 'idle' ? (KOTH.candidate ? KOTH.candidate(sim) : null) : KOTH.sac) : null;
@@ -233,7 +249,8 @@ function frame(now) {
   const kb = KOTH && KOTH.banner();
   if (kb) { ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.textAlign = 'center'; let fs = 20; ctx.font = `900 ${fs}px system-ui`; let w = ctx.measureText(kb).width + 30; if (w > VIEW_W - 16) { fs = Math.max(13, Math.floor(fs * (VIEW_W - 16) / w)); ctx.font = `900 ${fs}px system-ui`; w = ctx.measureText(kb).width + 30; } ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(VIEW_W / 2 - w / 2, view.h * 0.22 - 24, w, 38, 14); ctx.fill(); ctx.fillStyle = '#ffd25c'; ctx.fillText(kb, VIEW_W / 2, view.h * 0.22 + 2); }
   // HUD: the real street under you + speed (≤ 15% of the screen)
-  const r = W.roadInfo(c.x, c.y, c.layer), name = r.e && r.d < r.hw + 30 ? (r.e.name || r.e.ref || '') : '';
+  const r = W.roadInfo(c.x, c.y, c.layer); if ((cornerT -= dt) < 0) { cornerT = 0.4; cornerS = r.e && r.d < r.hw + 30 ? areas.cornerNear(c.x, c.y, c.layer) : ''; }
+  const name = cornerS;                                   // L10: "corner of X & Y" — the street you are on and the nearest cross street
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.textAlign = 'center';
   if (name) { ctx.font = '800 15px system-ui'; const w = ctx.measureText(name).width + 28; ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(VIEW_W / 2 - w / 2, 18, w, 30, 15); ctx.fill(); ctx.fillStyle = '#ffe4b0'; ctx.fillText(name, VIEW_W / 2, 38); }
   if (!(foot && foot.active)) { ctx.font = '800 13px system-ui'; ctx.fillStyle = 'rgba(255,240,215,0.9)'; ctx.fillText(Math.round(Math.abs(c.v) / 10 * 2.237) + ' mph', VIEW_W / 2, 64); }
