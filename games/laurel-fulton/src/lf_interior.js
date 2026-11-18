@@ -33,6 +33,11 @@ export class Interior {
     this.dad = K.dad ? { ...K.dad, z: this.F[K.dad.floor].z, sayT: 0, said: null, queue: [] } : null;     // the old guy in his recliner (Rigg's house beat)
     this.son = K.son && this.hero.who.id !== K.id ? { ...K.son, z: this.F[K.son.floor].z, face: -1, link: null, t: 0, walk: 0, moving: false, state: 'wait', sayT: 0, said: null, queue: [] } : null;
     this.beat = this.dad ? { stage: 0 } : null;
+    // L14: the kit's generic BARK BEAT (`barks`: who / floor / x / text / at seconds) — Kosack's "Chinese food is here." exchange.
+    // A line whose speaker is YOU is said by you; everyone else stands where the kit puts them (kept near the door: in frame).
+    this.callers = (K.barks || []).filter((b, i, a) => b.who !== this.hero.who.id && a.findIndex(c => c.who === b.who) === i)
+      .map(b => ({ id: b.who, name: b.name || b.who, floor: b.floor, x: b.x, z: this.F[b.floor].z, face: -1, link: null, t: 0, walk: 0, moving: false, sayT: 0, said: null, queue: [] }));
+    this.barkI = 0; this.arcadeT = 0;
     // guests: crew CPUs home here, idling at the kit's cpuIdle spot with a beer (a sip every few seconds)
     this.guests = (opts.guests || []).filter(g => g.id !== this.hero.who.id && this.F[(K.cpuIdle || {}).floor]).map((g, i) => ({ id: g.id, name: g.name || g.id, floor: K.cpuIdle.floor, x: K.cpuIdle.x + i * 0.9, z: this.F[K.cpuIdle.floor].z, face: -1, sip: 2 + i * 1.7, drinkT: 0, drank: 0 }));
     this.barker = this.hero.who.id === 'rigg' ? new Barker(opts.seed || 1998) : null;
@@ -95,6 +100,7 @@ export class Interior {
     const h = this.hero; if (h.drinkT > 0) return null;
     const s = this.near();
     if (s && s.act === 'EXIT') return 'EXIT';
+    if (s && s.act === 'PLAY' && !h.beer) return 'PLAY';
     if (s && s.act === 'GRAB BEER' && !h.beer && (s.src !== 'mantle' || this.mantle > 0)) return 'GRAB BEER';
     if (h.beer) return 'DRINK';
     if (this.dogNear()) return 'PAT';
@@ -110,6 +116,7 @@ export class Interior {
       if (pr === 'EXIT') out = 'exit';
       else if (pr === 'GRAB BEER') { const s = this.near('GRAB BEER'); h.beer = s.src; if (s.src === 'mantle') this.mantle--; this.events.push({ kind: 'grab', src: s.src, t: this.time }); }
       else if (pr === 'DRINK') { h.drinkT = MOVE.drink; this.events.push({ kind: 'drink', room: this.roomOf(h), t: this.time }); }
+      else if (pr === 'PLAY') { this.arcadeT = 4; this.events.push({ kind: 'arcade', t: this.time }); }   // a round on the cabinet: the screen goes wild, a high-score pill
       else if (pr === 'PAT') { const d = this.dogNear(); d.patT = 1.2; d.mode = 'lounge'; d.wait = 2; this.events.push({ kind: 'pat', dog: d.i, t: this.time }); }
     }
     if (h.drinkT > 0) { h.drinkT -= dt; h.moving = false; if (h.drinkT <= 0) { h.beer = false; h.drank++; } }
@@ -127,6 +134,13 @@ export class Interior {
     } else h.moving = false;
     this.tickSay(this.teter || {}, dt);
     this.stepBeat(dt);
+    if (this.arcadeT > 0) this.arcadeT -= dt;
+    const BK = this.K.barks || [];                          // L14: the bark beat, line by line
+    while (this.barkI < BK.length && this.time >= BK[this.barkI].at) {
+      const b = BK[this.barkI++], sp = b.who === h.who.id ? h : this.callers.find(c => c.id === b.who);
+      if (sp) { sp.said = b.text; sp.sayT = 2.1; this.events.push({ kind: 'bark', who: b.who, text: b.text, t: this.time }); }
+    }
+    for (const c of this.callers) if (c.sayT > 0) { c.sayT -= dt; if (c.sayT <= 0) c.said = null; }
     if (this.barker) { const b = this.barker.step(dt); if (b) { h.said = b; h.sayT = this.barker.hold; this.events.push({ kind: 'rigg_bark', text: b, t: this.time }); } }
     if (h.sayT > 0) { h.sayT -= dt; if (h.sayT <= 0) h.said = null; }
     for (const g of this.guests) { if (g.drinkT > 0) { g.drinkT -= dt; if (g.drinkT <= 0) g.drank++; } else if ((g.sip -= dt) <= 0) { g.drinkT = MOVE.drink; g.sip = 5 + this.rnd() * 5; } }

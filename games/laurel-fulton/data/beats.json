@@ -1,0 +1,41 @@
+{
+ "_doc": "L14 companion (owner, Nov 18): DOOR STAGING \u2014 house arrival beats played INSIDE the rally's pickup beat (lf_mission stepBeat). Keyed by any resident's id. door = who stands at the front door; lines play in order at their time (s from the beat's start), spoken by the crew member with that id if they are in the huddle (skipped if not there), or by the door figure ('door'); hold = extra seconds on the dap so the lines land; boots = the mom throws boots into the yard. Specs: tasking g12/SPECS.md (Lazaris, Grant STAGING).",
+ "jimmy": {
+  "outfit": "ped_rose",
+  "boots": true,
+  "hold": 2.8,
+  "lines": [
+   {
+    "who": "rigg",
+    "text": "why are my boots in the yard",
+    "at": 1.6
+   },
+   {
+    "who": "jimmy",
+    "text": "Mamma duke a timberland hater",
+    "at": 3.4
+   }
+  ],
+  "doorName": "Jimmy's mom"
+ },
+ "billy": {
+  "same": "jimmy"
+ },
+ "grant": {
+  "outfit": "ped_sun",
+  "hold": 1.6,
+  "lines": [
+   {
+    "who": "door",
+    "text": "move your car",
+    "at": 1.0
+   },
+   {
+    "who": "door",
+    "text": "MOVE YOUR CAR.",
+    "at": 2.6
+   }
+  ],
+  "doorName": "Grant's mom"
+ }
+}

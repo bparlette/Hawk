@@ -18,4 +18,5 @@ house "The Lazaris house" jimmy billy
 house "The Floyds" clayton zack
 interior brad split-foyer up couch,cooler,tv,fridge,rug,picture,lamp,plant down weights,fireplace,couch,rug,picture,lamp,computer mantle-beers 6 dogs 2 mom "Teter"
 interior rigg two-story-entry up couch,tv,rug,lamp,plant,chandelier down cooler,computer,cdwriter,couch,rug,lamp upper picture,plant,lamp,speaker,bed dad "Brian's dad" son Brian
+interior kosack three-level up couch,tv,rug,lamp,cooler,fridge,table upper picture,plant,bed,speaker down arcade,couch,hole,bar,speaker mantle-beers 8 host Kosack     # L14 (owner Nov 18): basement arcade + full bar + the giant hole
 mission rally meet "Atholton High School"

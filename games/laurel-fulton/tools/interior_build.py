@@ -96,7 +96,48 @@ def two_story_entry(pid, up, down, beers, dogs, mom, o):
     k['cpuIdle'] = {'floor': 'lower', 'x': (cd['x'] - 1.15) if cd else 6.0}                 # CPU-Brian idles at his computer
     return k
 
-TYPES = {'split-foyer': split_foyer, 'two-story-entry': two_story_entry}
+def three_level(pid, up, down, beers, dogs, mom, o):
+    """Kosack's house (owner design, Nov 18 — tasking L14): a THREE-LEVEL cutaway, a basement plus the big top two floors.
+    BASEMENT = an ARCADE + a FULL BAR + a GIANT HOLE IN THE WALL (it is also the night party's indoor room: kit `party`).
+    BARK BEAT on entry, from the kit's generic `barks` list (the same format any later house can use): Kosack yells from the TOP
+    STAIR HALLWAY "Chinese food is here." -> Rigg "watch wang wash wang." -> Kosack "shut up."
+    FRAMING (the viral-short audit, Nov 18: far-end speakers fell out of the 540x960 portrait frame): every speaker stands within
+    ~4 m of the front door, stacked over the stair column, so all three bubbles stay in frame while you stand in the doorway."""
+    W = 12.0; Z0, Z1, ZB = 0.2, 3.0, -2.6
+    k = {'id': pid, 'type': 'three-level', 'width': W, 'grade': 0.0, 'ceiling': 2.5,
+         'floors': [{'id': 'main', 'z': Z0, 'x0': 0.0, 'x1': W}, {'id': 'upper', 'z': Z1, 'x0': 3.4, 'x1': W}, {'id': 'lower', 'z': ZB, 'x0': 0.0, 'x1': W}],
+         'links': [{'id': 'up', 'a': 'main', 'ax': 0.9, 'b': 'upper', 'bx': 3.4, 'press': True}, {'id': 'down', 'a': 'main', 'ax': 5.4, 'b': 'lower', 'bx': 2.6, 'press': True}],
+         'door': {'floor': 'main', 'x': 0.35},
+         'rooms': [{'floor': 'main', 'x0': 0.0, 'x1': 6.6, 'name': 'living room', 'wall': '#dccaa2', 'floorc': '#9c6b44'},
+                   {'floor': 'main', 'x0': 6.6, 'x1': W, 'name': 'kitchen', 'wall': '#e6dcb8', 'floorc': '#c9b99a'},
+                   {'floor': 'upper', 'x0': 3.4, 'x1': 6.4, 'name': 'top stair hallway', 'wall': '#e6dcc4', 'floorc': '#a8845a'},
+                   {'floor': 'upper', 'x0': 6.4, 'x1': W, 'name': "Kosack's room", 'wall': '#6a7c5c', 'floorc': '#6e5a4c'},
+                   {'floor': 'lower', 'x0': 0.0, 'x1': 6.0, 'name': 'the arcade', 'wall': '#2e2848', 'floorc': '#3a3046'},
+                   {'floor': 'lower', 'x0': 6.0, 'x1': W, 'name': 'the bar', 'wall': '#5a3a2a', 'floorc': '#4a3a30'}],
+         'props': [], 'spots': [{'act': 'EXIT', 'floor': 'main', 'x': 0.35}]}
+    PLACE = {'main': {'couch': 3.0, 'tv': 4.6, 'rug': 3.0, 'lamp': 1.9, 'plant': 6.2, 'fridge': 11.2, 'table': 9.0, 'cooler': 7.4, 'picture': 2.6},
+             'upper': {'picture': 4.6, 'plant': 6.0, 'bed': 10.8, 'speaker': 8.0, 'lamp': 9.4},
+             'lower': {'arcade': 1.2, 'bar': 9.2, 'hole': 7.0, 'speaker': 11.4, 'couch': 4.4}}
+    upper = o('upper', '').split(',') if o('upper') else []
+    for fl, items in (('main', up), ('upper', upper), ('lower', down)):
+        for i, kind in enumerate(items):
+            x = PLACE[fl].get(kind, 4 + i * 1.5)
+            p = {'kind': kind, 'floor': fl, 'x': x}
+            if kind == 'arcade': p['cabinets'] = ['GALAGA', 'MORTAL KOMBAT', 'NBA JAM']      # a row of three cabinets, screens lit
+            if kind == 'bar': p['beers'] = beers or 8                                         # a full bar: counter, stools, back shelf, taps
+            k['props'].append(p)
+            if kind in ('cooler', 'fridge'): k['spots'].append({'act': 'GRAB BEER', 'floor': fl, 'x': x, 'src': kind})
+            if kind == 'bar': k['spots'].append({'act': 'GRAB BEER', 'floor': fl, 'x': x, 'src': 'bar'})
+            if kind == 'arcade': k['spots'].append({'act': 'PLAY', 'floor': fl, 'x': x + 0.9, 'src': 'arcade'})
+    k['dogs'] = dogs
+    k['barks'] = [{'who': pid, 'name': o('host', 'Kosack'), 'floor': 'upper', 'x': 3.9, 'text': 'Chinese food is here.', 'at': 1.0},
+                  {'who': 'rigg', 'name': 'Rigg', 'floor': 'lower', 'x': 3.2, 'text': 'watch wang wash wang.', 'at': 3.3},
+                  {'who': pid, 'name': o('host', 'Kosack'), 'floor': 'upper', 'x': 3.9, 'text': 'shut up.', 'at': 5.4}]
+    k['party'] = {'floor': 'lower', 'x0': 0.4, 'x1': W - 0.4}                                  # the night party's indoor guests stand here (M-C)
+    k['cpuIdle'] = {'floor': 'lower', 'x': 8.4}                                               # CPU-Kosack: at his own bar
+    return k
+
+TYPES = {'split-foyer': split_foyer, 'two-story-entry': two_story_entry, 'three-level': three_level}
 def build(t):
     pid, typ = t[0], t[1]
     if typ in ('store', 'restaurant'):                    # L12/L13 public places (tools/place_interior_build.py): not a crew house, so not in index.json — data/places.json lists them
