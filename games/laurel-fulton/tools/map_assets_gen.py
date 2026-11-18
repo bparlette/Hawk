@@ -55,6 +55,56 @@ def find_poi(*keys):
             return pos, nm
     return None, None
 
+# CANON: every line, statement and action the owner has given (Nov 18), per person/place.
+# Mirror of g12/SPECS.md — keep the two in step when new canon lands.
+BEATS = {
+ 'brad': ['Mom greets the crew: "Hi guys, what are you getting into today?.... You are all alcoholics."',
+          'Basement computer — its screen says "eDonkey". Weights + fireplace downstairs; Teter in her chair upstairs.',
+          'YELLOW headlight beams (built, live).', 'Works at the Weis (makes pizzas) and at Gringada.'],
+ 'kosack': ['His car ALWAYS has cop lights flashing in it.',
+            'MINI GAME — fake cop: try to pull other cars over even though you are not a cop. Just lights and sound.'],
+ 'jimmy': ['His mom throws the boots into the yard (see the Lazaris exchange).',
+           'BLUE NEON underglow under the Astro (built, live).',
+           'Steals food at Gringada — Zack: "why are you going to Clayton it" — then Jimmy eats it super fast.'],
+ 'billy': ['Lazaris house with Jimmy. Teal first-gen Astro.'],
+ 'jason': ['Living room: video game consoles + TV + GIANT SPEAKERS.',
+           'Basement: a Genesis with Evander Holyfield boxing, and a picture of a teacher looking like a cheeseburger on the wall.',
+           'Security at the Weis.', 'Robs the parking lights off the Astro parked on Route 108.'],
+ 'clayton': ['Outside at the Floyds stop: playing basketball and fighting with Zack when you drive up.',
+             'Steals food at Gringada with Jimmy.', '"Clayton it" = eat it super fast (Zack\'s word for it).'],
+ 'zack': ['Outside at the Floyds stop: playing basketball and fighting with Clayton when you drive up.',
+          'At Gringada, when Jimmy steals food: "why are you going to Clayton it"'],
+ 'rigg': ['Walk in: his dad yells "Brrrrrriiiiiiaaaaannnn" and Brian comes downstairs. Basement: his computer + CD writer.',
+          'Random barks: "IGURT GOGURT" and "fuck shit diesel".',
+          'Fired from the Weis for opening a bottle of soda — his line: "Fuck Scott."',
+          'At the Lazaris house, over his boots in the yard: "why are my boots in the yard"',
+          'Obvious BLUE headlight beam (built, live).', "David Klink's Scooby-Doo van is parked by his house."],
+ 'grant': ['His mom says: "move your car".', 'Cadillac Brougham — the "USS Mino".'],
+ 'lamar': ['No house — his 1987 Mustang GT sits at Atholton HS, ON FIRE (dark smoke + gold-orange ember glow).'],
+ 'weis': ['Jason is security.', 'Brad makes pizzas.', 'Brian (Rigg) got fired for opening a bottle of soda — "Fuck Scott."',
+          'Go-inside cutaway interior like the houses: aisles, checkouts, pizza counter, security desk.'],
+ 'gringada': ['Brad works there.', 'Jimmy and Clayton come and steal food.',
+              'When Jimmy steals: Zack — "why are you going to Clayton it" — then Jimmy eats it super fast.',
+              'A Mexican restaurant in a Columbia shopping center. Gone now — it existed in 1998. A memory build.'],
+ 'scott': ['A RANDOM house in Whiskey Bottom is Scott\'s.', 'He drives a Civic — for now.',
+           'He is the Scott in Rigg\'s Weis firing line: "Fuck Scott."'],
+ 'klink-van': ['Parked by Rigg\'s house.', 'Its EXHAUST TIP is steppable on foot — step-up hop + a puff at the rear corner.'],
+ 'astro-108': ['A random Astro parked on Route 108.', 'Jason robs its parking lights.'],
+ 'atholton': ['The rally finish: the whole crew meets here.', "Lamar's Mustang burns here."],
+}
+GLOBAL_CARDS = [
+ dict(id='convoy', name='Convoy behaviour — driving together', kind='GAMEPLAY', sub='the whole crew, on the roll',
+      pos=None, car='', sprite='', status='SPEC QUEUED',
+      notes='When the crew drives together or follows you, it is not a parade.',
+      beats=['They constantly try to race and pass you.', 'They yell "Cole Trickle".',
+             'They yell "rubbin is racing" as they bump you.', 'They throw ones (dollar bills) out the window at the cars.',
+             'They throw pens and pennies at each other while driving.']),
+ dict(id='logo', name='The logo + load screen', kind='BRAND', sub='owner photo, Nov 18',
+      pos=None, car='', sprite='', status='LIVE',
+      notes='The real MD-216 "Laurel / Scaggsville — EXIT 1 MILE" highway sign from the owner\'s photo, painted in the game\'s style: the game\'s logo and its load screen (assets/logo-sign.webp).',
+      beats=[]),
+]
+
 ents = []  # dicts: id,name,kind,sub,pos,car,sprite,status,notes
 for p in roster['people']:
     sp = p['car']['sprite']
@@ -103,6 +153,12 @@ def sprite_cell(sp):
         return '<div class="nosp">no sprite yet</div>'
     return (f'<div class="cell" style="background-image:url(\'assets/{f}\')" title="{sp}"></div>')
 
+def beats_list(e):
+    b = e.get('beats') or BEATS.get(e['id']) or []
+    if not b:
+        return ''
+    return '<ul class="beats">' + ''.join(f'<li>{html.escape(x)}</li>' for x in b) + '</ul>'
+
 def asset_files(sp):
     if sp not in fleet:
         return '<li class="none">no assets yet</li>'
@@ -129,6 +185,20 @@ for e in ents:
     <div class="pos">{('world ' + str([round(v) for v in e['pos']])) if e['pos'] else 'placement TBD'}</div>
     <ul class="files">{asset_files(e['sprite'])}</ul>
     <p class="notes">{html.escape(e['notes'])}</p>
+    {beats_list(e)}
+  </div>
+</section>""")
+
+for e in GLOBAL_CARDS:
+    chip = {'LIVE': 'live', 'SPEC QUEUED': 'spec'}[e['status']]
+    thumb = '<img src="assets/logo-sign.webp" style="width:64px;height:64px;object-fit:cover;border-radius:8px">' if e['id'] == 'logo' else '<div class="nosp">—</div>'
+    cards.append(f"""<section class="card" id="{e['id']}">
+  <div class="thumb">{thumb}</div>
+  <div class="body">
+    <h3>{html.escape(e['name'])} <span class="chip {chip}">{e['status']}</span></h3>
+    <div class="kind">{e['kind']} — {html.escape(e['sub'])}</div>
+    <p class="notes">{html.escape(e['notes'])}</p>
+    {beats_list(e)}
   </div>
 </section>""")
 
@@ -152,6 +222,8 @@ page = f"""<!DOCTYPE html>
  .pos{{color:#7d8ea3;font-size:12px;margin-top:2px}} ul.files{{margin:8px 0 0;padding-left:16px;font-size:12px;color:#c6d2df;word-break:break-all}}
  ul.files span,ul.files .dim{{color:#7d8ea3}} ul.files li.none{{color:#e0a23e;list-style:none;margin-left:-16px}}
  .notes{{font-size:12.5px;color:#b9c7d6;margin:8px 0 0}}
+ ul.beats{{margin:8px 0 0;padding-left:16px;font-size:12.5px;color:#ffe4b0}}
+ ul.beats li{{margin-top:3px}}
  .chip{{font-size:10px;padding:2px 7px;border-radius:20px;vertical-align:2px}}
  .chip.live{{background:#1d4d2b;color:#8ff0ae}} .chip.spec{{background:#4d3d1d;color:#ffd98f}} .chip.tbd{{background:#4d1d2a;color:#ff9fb2}}
  footer{{padding:0 16px 24px;color:#7d8ea3;font-size:12px}}
