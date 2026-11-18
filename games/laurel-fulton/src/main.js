@@ -7,13 +7,13 @@ import { GroundPainter, CHUNK } from './lf_ground.js';
 import { Renderer } from './lf_render.js';
 import { Input } from '../../palm-city/src/input.js';
 import { Areas, poly } from './lf_areas.js';
-import { players, startRally, stepRally } from './lf_mission.js';
+import { players, startRally, stepRally, swapPlayerCar } from './lf_mission.js';
 import { KingOfTheHill } from './lf_koth.js';
 import { setFx, setFoot, setFootProject } from './lf_fx.js';
 import { Roof, stepOnFoot, lookout, project } from './lf_climb.js';
 import { RoofView } from './lf_roof.js';
 import { learnLabel } from '../../palm-city/src/labels.js';
-import { createFoot, stepFoot, exitCar, nearCar, FOOT } from './lf_foot.js';
+import { createFoot, stepFoot, exitCar, nearCar, nearAnyCar, FOOT } from './lf_foot.js';
 import { Pilot } from './lf_pilot.js';
 import { Net } from './lf_net.js';
 import { Interior } from './lf_interior.js';
@@ -79,7 +79,7 @@ let KOTH = null;   // Cul-de-Sac King of the Hill lands in phase 2 with its data
   j('data/areas.json').then(AJ => {
     areas = new Areas(AJ, W); ground.areas = areas; ground.cache.clear(); ground.job = null;
     if (renderer) renderer.areas = areas;
-    sim.setBuildings(AJ.buildings); mapCv = null; tick('houses');
+    sim.setBuildings(AJ.buildings); sim.setGreens(AJ.green); mapCv = null; tick('houses');
   }).catch(e => { if (globalThis.showErr) showErr('houses failed to load: ' + e.message); });
   fetch('assets/ground-tiles/manifest.json').then(r => r.ok ? r.json() : null).then(man => { if (man) ground.setPainted(man); }).catch(() => {});   // the painted ground: tiles stream in lazily from here (lf_ground.js); a city without them just stays procedural
   fetch('data/roof.json').then(r => r.ok ? r.json() : null).then(RJ => { if (RJ) { RF = new Roof(RJ); renderer.roof = new RoofView(RF); setFootProject((x, y, z) => project(x, y, z, cam)); } }).catch(() => {});   // task L5: a city without a climbable roof just has none
@@ -95,6 +95,9 @@ const goOut = () => {                                     // out the front door:
   cam.x = foot.x; cam.y = foot.y;
 };
 const atMyDoor = () => foot && foot.active && !(foot.z > 4) && KITS[foot.who.id] && foot.who.house && Math.hypot(foot.x - foot.who.house[0], foot.y - foot.who.house[1]) < 90;
+// is (x, y) inside a house footprint? (GET OUT never leaves you standing inside a wall —
+// if the driver's side is inside a house, you step out the other side instead.)
+const inHouse = (x, y) => { if (!sim || !sim.houses) return false; for (const f of sim.houses) { let ins = false; for (let k = 0; k < f.length; k += 2) { const ax = f[k], ay = f[k + 1], ex = f[(k + 2) % f.length], ey = f[(k + 3) % f.length]; if ((ay > y) !== (ey > y) && x < (ex - ax) * (y - ay) / (ey - ay) + ax) ins = !ins; } if (ins) return true; } return false; };
 // (the roof wiring lives in phase 2 below — it lands with roof.json)
 setFx(sim, roster);
 // ---- task L2: PICK YOUR PLAYER -> RALLY THE CREW (lf_mission.js). ?free = just drive; ?player=<id> skips the pick.
@@ -201,8 +204,8 @@ function frame(now) {
   while (acc >= STEP && n < 6 * SPEED) { const inp = pilot ? (input.read(), pilot.input(STEP)) : input.read(); if (picking) { acc = 0; break; }
     const beat = (M && M.beat) || intro, ZERO = { jx: 0, jy: 0, jm: 0, keys: {} };
     if (inside) { sim.step(STEP, ZERO); if (inside.step(STEP, inp) === 'exit') goOut(); }
-    else if (foot && foot.active) { sim.step(STEP, ZERO); if (!beat) { stepOnFoot(foot, STEP, inp, RF); if (inp.action && nearCar(foot, sim.player)) foot.active = false; else if (inp.action && atMyDoor()) goIn(foot.who.id, foot.who); } }
-    else { sim.step(STEP, beat ? ZERO : inp); if (foot && !beat && !pilot && inp.action && Math.abs(sim.player.v) < FOOT.exitV) exitCar(foot, sim.player); }
+    else if (foot && foot.active) { sim.step(STEP, ZERO); if (!beat) { stepOnFoot(foot, STEP, inp, RF); const nc = inp.action ? nearAnyCar(foot, sim.cars) : null; if (nc) { if (nc !== sim.player) swapPlayerCar(sim, M, nc); foot.active = false; } else if (inp.action && atMyDoor()) goIn(foot.who.id, foot.who); } }
+    else { sim.step(STEP, beat ? ZERO : inp); if (foot && !beat && !pilot && inp.action && Math.abs(sim.player.v) < FOOT.exitV) { exitCar(foot, sim.player); if (inHouse(foot.x, foot.y)) { const c = sim.player, a = c.h + Math.PI / 2, d = (c.wid || 20) / 2 + 7; foot.x = c.x + Math.cos(a) * d; foot.y = c.y + Math.sin(a) * d; foot.px = foot.x; foot.py = foot.y; } } }
     if (KOTH) KOTH.step(sim, STEP); if (M) stepRally(sim, M, STEP); acc -= STEP; n++; }
   if (n >= 6 * SPEED) acc = 0;
   if (net) net.frame(sim, dt);
@@ -319,7 +322,7 @@ function drawControls() {
   const g = ctx, TAU2 = Math.PI * 2;
   if (input.stick) { const s2 = input.stick; g.beginPath(); g.arc(s2.bx, s2.by, 56, 0, TAU2); g.fillStyle = 'rgba(255,240,220,0.16)'; g.fill(); g.lineWidth = 3; g.strokeStyle = 'rgba(255,240,220,0.55)'; g.stroke(); g.beginPath(); g.arc(s2.kx, s2.ky, 24, 0, TAU2); g.fillStyle = 'rgba(255,240,220,0.5)'; g.fill(); }
   const b = input.button(), onFoot = foot && foot.active;
-  const label = inside ? (inside.prompt() || '') : onFoot ? (nearCar(foot, sim.player) ? 'GET IN' : atMyDoor() ? 'GO IN' : '') : (Math.abs(sim.player.v) < FOOT.exitV ? 'GET OUT' : '');
+  const label = inside ? (inside.prompt() || '') : onFoot ? (nearAnyCar(foot, sim.cars) ? 'GET IN' : atMyDoor() ? 'GO IN' : '') : (Math.abs(sim.player.v) < FOOT.exitV ? 'GET OUT' : '');
   g.beginPath(); g.arc(b.x, b.y, b.r, 0, TAU2); g.fillStyle = input.btnDown ? 'rgba(255,140,90,0.55)' : 'rgba(255,240,220,0.18)'; g.fill();
   g.lineWidth = 3; g.strokeStyle = label ? 'rgba(255,214,120,0.95)' : 'rgba(255,240,220,0.55)'; g.stroke();
   g.beginPath(); g.arc(b.x, b.y, b.r * 0.42, 0, TAU2); g.fillStyle = label ? 'rgba(255,214,120,0.9)' : 'rgba(255,240,220,0.5)'; g.fill();

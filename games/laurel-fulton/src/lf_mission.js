@@ -49,10 +49,27 @@ export function pushTrail(M, x, y, force) {
 }
 
 export function join(S, M, person, car) {
+  if (car === S.player) return;                            // Nov 18: the player may be DRIVING this house's car (they took it on foot) — it never becomes a follower
   car.parked = false; car.follower = true;
   const f = { car, person, joinedAt: M.time, ti: -1 };
   M.convoy.unshift(f);                                    // the newest member slots in right behind you
   car.driveFn = (c, dt) => follow(S, M, f, dt);
+}
+
+// GET IN any car (owner, Nov 18): the car you climb into becomes your car. Your old
+// car parks where it sits; a follower you take leaves the convoy (its driver rides
+// with you); a parked crew car is simply yours now. The trail re-heads from the new car.
+export function swapPlayerCar(S, M, car) {
+  const old = S.player;
+  if (!old || old === car) return;
+  old.player = false; old.parked = true; old.v = 0;
+  if (M) {
+    const fi = M.convoy.findIndex(f => f.car === car);
+    if (fi >= 0) { M.convoy.splice(fi, 1); car.follower = false; }
+    if (car.driveFn) delete car.driveFn;
+  }
+  car.parked = false; car.player = true; S.player = car;
+  if (M) pushTrail(M, car.x, car.y, true);
 }
 
 // where a follower is on your path: the nearest trail point near its last one (a local search)
