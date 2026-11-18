@@ -33,11 +33,21 @@ function resize() {
   if (renderer) renderer.resize(VIEW_W, view.h, DPR);
 }
 addEventListener('resize', resize); resize();
-const msg = (t) => {                                   // the loading line, WRAPPED to the screen (it used to run off both edges, hiding what was loading)
+const LOGO = new Image(); LOGO.src = 'assets/logo-sign.webp';   // the logo (owner, Nov 18): the MD-216 Laurel/Scaggsville exit sign, painted in the game's style
+let lastMsg = '';
+const msg = (t) => {                                   // the loading screen: the sign logo over the loading line, WRAPPED to the screen
+  lastMsg = t;
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = '#1b1430'; ctx.fillRect(0, 0, VIEW_W, view.h); ctx.fillStyle = '#ffe4b0'; ctx.font = '800 17px system-ui'; ctx.textAlign = 'center';
   const lines = []; let cur = ''; for (const w of String(t).split(' ')) { if (ctx.measureText(cur + ' ' + w).width > VIEW_W - 40 && cur) { lines.push(cur); cur = w; } else cur = cur ? cur + ' ' + w : w; } lines.push(cur);
-  lines.forEach((l, i) => ctx.fillText(l, VIEW_W / 2, view.h / 2 + (i - (lines.length - 1) / 2) * 24));
+  let ty = view.h / 2;
+  if (LOGO.complete && LOGO.naturalWidth) {            // logo centred, loading line under it
+    const lw = Math.min(VIEW_W - 56, 320), lh = lw * LOGO.naturalHeight / LOGO.naturalWidth;
+    const ly = Math.max(18, view.h / 2 - lh / 2 - 40);
+    ctx.drawImage(LOGO, (VIEW_W - lw) / 2, ly, lw, lh); ty = ly + lh + 36;
+  }
+  lines.forEach((l, i) => ctx.fillText(l, VIEW_W / 2, ty + i * 24));
 };
+LOGO.addEventListener('load', () => { if (lastMsg) msg(lastMsg); });   // repaint the loading screen the moment the sign arrives
 msg((document.title || 'LAUREL / FULTON').toUpperCase() + ' — loading the real roads…');   // any factory city: its own name (play.html <title>)
 const j = async (f) => { const r = await fetch(f); if (!r.ok) throw new Error(f + ' failed to load (' + r.status + ')'); return r.json(); };
 // LOAD SPLIT (Moth, Nov 17 — the owner's phone said "doesn't load"): boot used to await EVERYTHING —
@@ -127,7 +137,7 @@ function startIntro() {
 }
 canvas.addEventListener('pointerdown', () => { if (intro) intro.t = intro.dur; });
 if (Q.get('player')) pick(Q.get('player'));
-const pickRows = () => PLAYERS.map((p, i) => ({ p, x: 24, y: 150 + i * 62, w: VIEW_W - 48, h: 54 }));
+const pickRows = () => PLAYERS.map((p, i) => ({ p, x: 24, y: 158 + i * 61, w: VIEW_W - 48, h: 53 }));
 canvas.addEventListener('pointerdown', e => {
   if (!picking) return;
   const b = canvas.getBoundingClientRect(), x = (e.clientX - b.left) * VIEW_W / b.width, y = (e.clientY - b.top) * view.h / b.height;
@@ -137,8 +147,9 @@ canvas.addEventListener('pointerdown', e => {
 addEventListener('keydown', e => { if (picking && /^Digit[1-9]$/.test(e.code)) { const p = PLAYERS[+e.code.slice(5) - 1]; if (p) pick(p.id); } });
 function drawPick() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = 'rgba(20,12,32,0.86)'; ctx.fillRect(0, 0, VIEW_W, view.h);
-  ctx.textAlign = 'center'; ctx.fillStyle = '#ffd25c'; ctx.font = '900 30px system-ui'; ctx.fillText('PICK YOUR PLAYER', VIEW_W / 2, 70);
-  ctx.fillStyle = '#e8dcc8'; ctx.font = '600 13px system-ui'; ctx.fillText(net ? `the one world · ${net.status}` : 'then rally the crew — meet at ' + roster.meetup.name, VIEW_W / 2, 98);
+  if (LOGO.complete && LOGO.naturalWidth) { const lh = 82, lw = lh * LOGO.naturalWidth / LOGO.naturalHeight; ctx.drawImage(LOGO, (VIEW_W - lw) / 2, 8, lw, lh); }   // the sign logo heads the pick screen
+  ctx.textAlign = 'center'; ctx.fillStyle = '#ffd25c'; ctx.font = '900 30px system-ui'; ctx.fillText('PICK YOUR PLAYER', VIEW_W / 2, 122);
+  ctx.fillStyle = '#e8dcc8'; ctx.font = '600 13px system-ui'; ctx.fillText(net ? `the one world · ${net.status}` : 'then rally the crew — meet at ' + roster.meetup.name, VIEW_W / 2, 146);
   pickRows().forEach(({ p, x, y, w, h }, i) => {
     ctx.fillStyle = 'rgba(255,241,216,0.94)'; ctx.beginPath(); ctx.roundRect(x, y, w, h, 12); ctx.fill();
     const m = fleet[p.car.sprite], im = imgs[m.color.file], fw = im.width / m.cols, fh = im.height / Math.ceil(m.angles / m.cols);
