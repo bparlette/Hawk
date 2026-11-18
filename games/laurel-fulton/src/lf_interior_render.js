@@ -76,7 +76,7 @@ export class InteriorRenderer {
     const g2 = cv.getContext('2d'); g2.setTransform(dpr, 0, 0, dpr, 0, 0);
     const keep = { SX: this.SX, SY: this.SY };
     this.SX = (x) => (x + BAKE_PAD) * k; this.SY = (z) => gy - z * k;
-    if (I.K.type === 'two-story-entry') this.shellEntry(g2, I); else this.shellSplit(g2, I);
+    if (I.K.type === 'two-story-entry' || I.K.type === 'three-level') this.shellEntry(g2, I); else this.shellSplit(g2, I);   // L14 Kosack's three levels share the main/upper/lower shell
     this.SX = keep.SX; this.SY = keep.SY;
     return (this._bk = { key, cv, w });
   }
