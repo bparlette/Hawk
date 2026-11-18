@@ -13,6 +13,7 @@
 // cuts a lawn; if you double back, the trail doubles back and so do they. Newest member slots in right
 // behind you (they are in the driveway beside you); the rest shift one place back.
 
+import { raceTune, stepConvoy } from './lf_convoy.js';   // L17: CONVOY RACE-TO-PASS + DROP-BACK, barks, throws (lf_convoy.js / lf_barks.js)
 const SP = 78;                    // convoy spacing along your path: a car length (~4.6 m) + a gap
 const PULL_IN_R = 190, PULL_IN_V = 45;
 const BEAT = [['zoom', 0.55], ['out', 0.95], ['dap', 1.7], ['in', 0.95], ['roll', 0.55]];
@@ -62,7 +63,7 @@ export function startRally(S, roster, id) {
   const mine = S.cars.find(c => c.owner === id);
   S.cars = S.cars.filter(c => c !== S.player);           // the default spawn car goes; you get into YOUR car
   S.player = mine; mine.player = true; mine.parked = false;
-  const M = { time: 0, me, stops: [], convoy: [], beat: null, camZoom: 1, complete: false, lastPickupT: -1, trail: { x: [], y: [], s: [] }, throws: [], barks: [], mischief: { passes: 0, bumps: 0, throws: 0 }, msg: `RALLY THE CREW`, msgT: 3 };
+  const M = { time: 0, me, stops: [], convoy: [], beat: null, camZoom: 1, complete: false, lastPickupT: -1, trail: { x: [], y: [], s: [] }, msg: `RALLY THE CREW`, msgT: 3 };
   const key = (p) => p.house[0] + ',' + p.house[1];
   const groups = new Map();
   for (const p of players(roster)) { if (p.id === id) continue; const k = key(p); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(p); }
@@ -118,13 +119,6 @@ function locate(M, f) {
   return bi;
 }
 
-function bark(M, car, text, dur = 2.0) {
-  if (!M.barks) M.barks = [];
-  if (M.barks.some(b => b.car === car && b.t > 0.3)) return;
-  M.barks.push({ car, text, t: dur, max: dur });
-  if (M.barks.length > 8) M.barks.shift();
-}
-
 export function follow(S, M, f, dt) {
   const c = f.car, T = M.trail, n = T.x.length;
   if (M.beat || M.complete || n < 2) { S.driveCar(c, c.v > 5 ? -1 : 0, 0, dt, 380); return; }
@@ -134,51 +128,29 @@ export function follow(S, M, f, dt) {
   // steer at a point ON your path, further ahead the faster we go (a driver looks down the road)
   const look = 30 + Math.abs(c.v) * 0.12;
   let ai = f.ti; while (ai + 1 < n && T.s[ai] < myS + look) ai++;
-  // M-A CONVOY MISCHIEF: followers race each other, try to pass on straights, yell "Cole Trickle" / "rubbin is racing", and throw ones/pens/pennies!
+  // L17 RACE HOOK (lf_convoy.js): null = hold the slot; else a racer: steer at its aim point, boot down (race-to-pass, gloat, drop back)
   let bi = ai; while (bi + 1 < n && T.s[bi] < T.s[ai] + 70) bi++;
   const h1 = Math.atan2(T.y[ai] - T.y[f.ti], T.x[ai] - T.x[f.ti]), h2 = Math.atan2(T.y[bi] - T.y[ai], T.x[bi] - T.x[ai]);
-  const bend = Math.abs(wrap(h2 - h1)), vCorner = 380 - 250 * Math.min(1, bend / 1.1);
-  f.passCd = Math.max(0, (f.passCd || 0) - dt);
-  f.bumpCd = Math.max(0, (f.bumpCd || 0) - dt);
-  f.throwCd = Math.max(0, (f.throwCd || 1.8 + (slot % 3) * 0.9) - dt);
-  if (f.passT > 0) f.passT = Math.max(0, f.passT - dt);
-  else if (f.passCd <= 0 && bend < 0.22 && Math.abs(P.v) > 85 && gap > -18 && gap < 130) {
-    f.passT = 1.6; f.passCd = 5.5 + (slot % 3) * 1.4; f.passSide = (slot % 2 ? 1 : -1);
-    if (M.mischief) M.mischief.passes++;
-    if ((M.mischief?.passes || 0) % 2 === 1) bark(M, c, 'Cole Trickle!', 1.8);
-  }
-  const lat = f.passT > 0 ? Math.sin(Math.min(1, f.passT) * Math.PI * 0.5) * 14 * (f.passSide || 1) : 0;
-  const tx = T.x[ai] - Math.sin(h1) * lat, ty = T.y[ai] + Math.cos(h1) * lat;
-  const ta = Math.atan2(ty - c.y, tx - c.x), diff = wrap(ta - c.h);
+  const bend = T.s[bi] - T.s[ai] < 25 ? 0 : Math.abs(wrap(h2 - h1));   // (no path ahead near the head of your trail: a zero-length look must not read as a bend)
+  const rc = raceTune(S, M, f, dt, { slot, gap, P, bend, ax: T.x[ai], ay: T.y[ai] });
+  const ta = rc ? Math.atan2(rc.ay - c.y, rc.ax - c.x) : Math.atan2(T.y[ai] - c.y, T.x[ai] - c.x), diff = wrap(ta - c.h);
+  const vTop = rc ? rc.vmax : 380, vCorner = vTop - 250 * Math.min(1, bend / 1.1);
   // match the car you follow, plus a correction toward your slot; never into the car ahead
   const ahead = slot === 0 ? P : M.convoy[slot - 1].car, dAhead = Math.hypot(ahead.x - c.x, ahead.y - c.y);
-  let want = clamp(Math.abs(P.v) + gap * 1.3 + (f.passT > 0 ? 52 : 0), 0, Math.min(390, vCorner)) * (1 - Math.min(0.6, Math.abs(diff) / 2.5));
-  if (dAhead < 42) {
-    want = 0;
-    if (f.bumpCd <= 0 && Math.abs(c.v) > 45) {
-      f.bumpCd = 4.2;
-      if (M.mischief) M.mischief.bumps++;
-      bark(M, c, 'Rubbin is racing!', 2.0);
-    }
-  }
-  if (f.throwCd <= 0 && Math.abs(c.v) > 65) {
-    f.throwCd = 2.8 + ((slot * 7 + Math.floor(M.time)) % 3) * 0.9;
-    const kinds = ['bill', 'pen', 'penny'];
-    const kind = kinds[(M.mischief?.throws || 0) % 3];
-    const side = (M.mischief?.throws || 0) % 2 ? 1 : -1;
-    const ang = c.h + side * (Math.PI * 0.45);
-    if (!M.throws) M.throws = [];
-    M.throws.push({ x: c.x, y: c.y, vx: Math.cos(ang) * 95 + Math.cos(c.h) * c.v * 0.5, vy: Math.sin(ang) * 95 + Math.sin(c.h) * c.v * 0.5, rot: Math.random() * 6, vrot: side * 9, kind, t: 0, life: 1.35 });
-    if (M.throws.length > 48) M.throws.shift();
-    if (M.mischief) M.mischief.throws++;
-  }
+  let want = clamp(rc ? rc.want : Math.abs(P.v) + gap * 1.3, 0, Math.min(vTop, vCorner)) * (1 - Math.min(0.6, Math.abs(diff) / 2.5));
+  if (dAhead < 42 && !rc) want = 0;                       // (a racer is blocked only by a car dead ahead — raceTune keeps it off that)
   let throttle = c.v < want - 8 ? 1 : c.v > want + 12 ? -1 : 0, steer = clamp(diff * 2.6, -1, 1);
-  const backing = Math.abs(diff) > 2.0 && c.v < 70 && gap > -SP && (f.backT || 0) < 2.5;   // Nov 18: back-out is a SHORT manoeuvre (it used to never end: a car reversed the whole route)
+  const backing = !rc && Math.abs(diff) > 2.0 && c.v < 70 && gap > -SP && (f.backT || 0) < 2.5;   // Nov 18: back-out is a SHORT manoeuvre (it used to never end: a car reversed the whole route)
   f.backT = backing ? (f.backT || 0) + dt : Math.abs(diff) < 1.2 ? 0 : (f.backT || 0);
   if (backing) {   // the path is behind (nose-in in a driveway): back out — Palm City's own stick rule
     throttle = -0.7; steer = clamp(-wrap(ta + Math.PI - c.h) * 2.2, -1, 1);
   }
-  S.driveCar(c, throttle, steer, dt, 380);
+  // WEDGE RECOVERY (a racing nudge can leave a car nose-in on a rail): want to go, no progress for 2.5 s -> physical back-out for 1.3 s, then retry
+  if (rc && !backing && !f.wBack && want > 100 && rc.want >= 60 && !M.beat) { if (f.ti > (f.pti ?? -9) + 2) { f.pti = f.ti; f.stuckT = 0; } else f.stuckT = (f.stuckT || 0) + dt; } else f.stuckT = 0;
+  if (f.stuckT > 2.5) { f.stuckT = 0; f.wBack = 1.3; f.wSteer = diff > 0 ? -1 : 1; }
+  if (f.wBack > 0) { f.wBack -= dt; throttle = -1; steer = f.wSteer; }
+  if (c.z > 0) steer = 0;                                 // airborne off a speed bump: hands off
+  S.driveCar(c, throttle, steer, dt, vTop);
   // FOLLOWER ANTI-STUCK (Nov 18): a follower that has made no progress along your path for 6 s while it should be moving
   // (wedged reversing into a rail, bush or house) is lifted back onto the nearest road point — the player's own rule (lf_sim)
   const prog = T.s[f.ti] || 0;
@@ -195,15 +167,7 @@ export function reorder(M) {
 
 export function stepRally(S, M, dt) {
   M.time += dt; if (M.msgT > 0) M.msgT -= dt;
-  if (M.throws && M.throws.length) {
-    for (let i = M.throws.length - 1; i >= 0; i--) {
-      const p = M.throws[i]; p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= Math.pow(0.25, dt); p.vy *= Math.pow(0.25, dt); p.rot += p.vrot * dt;
-      if (p.t >= p.life) M.throws.splice(i, 1);
-    }
-  }
-  if (M.barks && M.barks.length) {
-    for (let i = M.barks.length - 1; i >= 0; i--) { M.barks[i].t -= dt; if (M.barks[i].t <= 0) M.barks.splice(i, 1); }
-  }
+  stepConvoy(S, M, dt);                                    // L17: bumps -> "RUBBIN' IS RACING", the rolling "COLE TRICKLE", ones / pens / pennies
   const P = S.player;
   if (!M.beat) { pushTrail(M, P.x, P.y); if ((M._ro = (M._ro || 0) + dt) > 0.5) { M._ro = 0; reorder(M); } }
   // the arrival beat (stepBeat above): the join lands when the beat ends
