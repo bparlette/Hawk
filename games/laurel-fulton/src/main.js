@@ -14,6 +14,7 @@ import { RoofView } from './lf_roof.js';
 import { learnLabel } from '../../palm-city/src/labels.js';
 import { createFoot, stepFoot, exitCar, nearCar, FOOT } from './lf_foot.js';
 import { Pilot } from './lf_pilot.js';
+import { Net } from './lf_net.js';
 
 const Q = new URLSearchParams(location.search);
 const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
@@ -54,7 +55,16 @@ setFx(sim, roster);
 const PLAYERS = players(roster);
 let M = null, foot = null, picking = !Q.has('free') && !Q.has('cam') && !Q.has('map');
 let pilot = null;
-function pick(id) { M = startRally(sim, roster, id); renderer.mission = M; picking = false; foot = createFoot(PLAYERS.find(p => p.id === id)); setFoot(foot);
+// ---- task L6: THE ONE WORLD. ?server=wss://<host>&key=<invite key>: open world, everyone else is CPU or a friend (lf_net.js)
+const net = Q.get('server') && Q.get('key') ? new Net(Q.get('server'), Q.get('key')) : null;
+if (net) net.onYou = (id, st) => {                        // take over that crew member IN PLACE, exactly as the CPU left them
+  const mine = sim.cars.find(c => c.owner === id); sim.cars = sim.cars.filter(c => c !== sim.player);
+  sim.player = mine; mine.player = true; mine.remote = false; Object.assign(mine, st); mine.parked = false;
+  picking = false; foot = createFoot(PLAYERS.find(p => p.id === id)); setFoot(foot); renderer.mission = null;
+  cam.x = mine.x; cam.y = mine.y;                         // cut straight to them (they may be anywhere in the world)
+};
+function pick(id) { if (net) { if (!net.takenBy(id)) net.pick(id); return; }
+  M = startRally(sim, roster, id); renderer.mission = M; picking = false; foot = createFoot(PLAYERS.find(p => p.id === id)); setFoot(foot);
   foot.onClimb = (c) => { learnLabel(sim, 'lf_roof'); if (c.onto === 'roof' && !foot.summited && M) { foot.summited = true; M.msg = 'THE LOOKOUT'; M.msgT = 3.5; } }; if (Q.has('pilot')) pilot = new Pilot(sim, W, M); }
 if (Q.get('player')) pick(Q.get('player'));
 const pickRows = () => PLAYERS.map((p, i) => ({ p, x: 24, y: 150 + i * 62, w: VIEW_W - 48, h: 54 }));
@@ -68,13 +78,14 @@ addEventListener('keydown', e => { if (picking && /^Digit[1-9]$/.test(e.code)) {
 function drawPick() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = 'rgba(20,12,32,0.86)'; ctx.fillRect(0, 0, VIEW_W, view.h);
   ctx.textAlign = 'center'; ctx.fillStyle = '#ffd25c'; ctx.font = '900 30px system-ui'; ctx.fillText('PICK YOUR PLAYER', VIEW_W / 2, 70);
-  ctx.fillStyle = '#e8dcc8'; ctx.font = '600 13px system-ui'; ctx.fillText('then rally the crew — meet at ' + roster.meetup.name, VIEW_W / 2, 98);
+  ctx.fillStyle = '#e8dcc8'; ctx.font = '600 13px system-ui'; ctx.fillText(net ? `the one world · ${net.status}` : 'then rally the crew — meet at ' + roster.meetup.name, VIEW_W / 2, 98);
   pickRows().forEach(({ p, x, y, w, h }, i) => {
     ctx.fillStyle = 'rgba(255,241,216,0.94)'; ctx.beginPath(); ctx.roundRect(x, y, w, h, 12); ctx.fill();
     const m = fleet[p.car.sprite], im = imgs[m.color.file], fw = im.width / m.cols, fh = im.height / Math.ceil(m.angles / m.cols);
     ctx.drawImage(im, 0, 0, fw, fh, x + 4, y + 4, h - 8, h - 8);                   // the car itself, side on (frame 0 = facing east)
     ctx.textAlign = 'left'; ctx.fillStyle = '#2a1430'; ctx.font = '900 17px system-ui'; ctx.fillText(`${i + 1}  ${p.name}`, x + h + 4, y + 22);
     ctx.font = '600 12px system-ui'; ctx.fillStyle = '#5a3c58'; ctx.fillText(`${p.car.model} · ${p.street}`, x + h + 4, y + 41);
+    const tb = net && net.takenBy(p.id); if (tb || net) { ctx.textAlign = 'right'; ctx.font = '800 11px system-ui'; ctx.fillStyle = tb ? '#b8402a' : '#4a7a3a'; ctx.fillText(tb ? 'DRIVEN BY ' + tb.toUpperCase() : 'CPU — TAKE OVER', x + w - 10, y + 22); }
   });
 }
 function drawMissionHud() {
@@ -111,6 +122,7 @@ function frame(now) {
     else { sim.step(STEP, beat ? ZERO : inp); if (foot && !beat && !pilot && inp.action && Math.abs(sim.player.v) < FOOT.exitV) exitCar(foot, sim.player); }
     if (M) stepRally(sim, M, STEP); acc -= STEP; n++; }
   if (n >= 6 * SPEED) acc = 0;
+  if (net) net.frame(sim, dt);
   const c = sim.player;
   let tx = c.x + Math.cos(c.h) * c.v * 0.42, ty = c.y + Math.sin(c.h) * c.v * 0.42, tz = 0.62 - Math.min(0.10, Math.abs(c.v) / 290 * 0.10);   // Palm City's chase framing, pulled back (owner Nov 17: zoom out — ~68 m across instead of ~42)
   if (M && M.beat) { tx = M.beat.cx; ty = M.beat.cy; } if (M) tz *= M.camZoom;      // the arrival beat: push in on the huddle
@@ -179,7 +191,7 @@ function drawMap(c) {
 // it is held, the big ACTION button (GET OUT / GET IN), and the A button — TURBO in
 // a car (chevrons + the car's turbo charge as the ring), PUNCH on foot (the fist).
 function drawControls() {
-  if (picking || mapOpen || !M) return;
+  if (picking || mapOpen || (!M && !net)) return;
   const g = ctx, TAU2 = Math.PI * 2;
   if (input.stick) { const s2 = input.stick; g.beginPath(); g.arc(s2.bx, s2.by, 56, 0, TAU2); g.fillStyle = 'rgba(255,240,220,0.16)'; g.fill(); g.lineWidth = 3; g.strokeStyle = 'rgba(255,240,220,0.55)'; g.stroke(); g.beginPath(); g.arc(s2.kx, s2.ky, 24, 0, TAU2); g.fillStyle = 'rgba(255,240,220,0.5)'; g.fill(); }
   const b = input.button(), onFoot = foot && foot.active;
@@ -214,6 +226,20 @@ renderer.draw = (S, cam, t) => {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.font = '800 13px system-ui'; ctx.textAlign = 'center';
   ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(VIEW_W - 72, 14, 60, 28, 12); ctx.fill(); ctx.fillStyle = '#ffe4b0'; ctx.fillText('MAP', VIEW_W - 42, 33);
   drawMissionHud();
+  if (net) {                                               // L6: who's who — a tag over every car a FRIEND is driving, and the online pill
+    ctx.font = '800 12px system-ui'; ctx.textAlign = 'center';
+    for (const c of S.cars) if (c.human || (c === S.player && net.me)) {
+      const x = (c.x - cam.x) * cam.zoom + VIEW_W / 2, y = (c.y - cam.y) * cam.zoom + view.h / 2 - 30;
+      if (x < -40 || x > VIEW_W + 40 || y < -40 || y > view.h + 40) continue;
+      const t = c === S.player ? 'YOU' : c.human, w = ctx.measureText(t).width + 16;
+      ctx.fillStyle = c === S.player ? 'rgba(255,214,90,0.92)' : 'rgba(110,200,255,0.92)'; ctx.beginPath(); ctx.roundRect(x - w / 2, y - 13, w, 20, 8); ctx.fill();
+      ctx.fillStyle = '#1b1430'; ctx.fillText(t, x, y + 2);
+    }
+    const on = new Set(net.crew.filter(p => p.human).map(p => p.human)).size;
+    ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(12, 74, 190, 26, 12); ctx.fill();
+    ctx.fillStyle = net.status === 'online' ? '#9fe08a' : '#ff9a7a'; ctx.font = '900 12px system-ui';
+    ctx.fillText(net.status === 'online' ? `ONE WORLD · ${on} FRIEND${on === 1 ? '' : 'S'} ON` : net.status, 24, 92);
+  }
   drawControls();
   if (mapOpen) drawMap(S.player);
   if (picking) drawPick();
