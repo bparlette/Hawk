@@ -56,6 +56,7 @@ const GROUND_COL = {
   pave:  ['#9c8e80', '#948577'],
 };
 const ROAD_COL = ['#786a5e', '#706357'];            // warm asphalt, alternating bands
+const INK = '#210f2e';                              // Palm City's unifying dark-plum ink contour
 const BLD_PALS = [['#eed0a2', '#c98d64'], ['#d9e2e8', '#93aab8'], ['#f0b48a', '#c97e56'], ['#e6b490', '#bd8460']];
 // model -> [top, mid, low] paint for the rear/front car painters
 const CAR_PAINT = {
@@ -187,6 +188,19 @@ export function drawOpenRoad3D(R, S, G, t, time, ease) {
     const top = Math.min(y2, y1), hh = Math.abs(y1 - y2) + 2;
     ctx.fillStyle = GROUND_COL[seg.zoneL][seg.band]; ctx.fillRect(0, top, cxSplit + 1, hh);
     ctx.fillStyle = GROUND_COL[seg.zoneR][seg.band]; ctx.fillRect(cxSplit, top, vw - cxSplit + 1, hh);
+    if (P.L1.z < FOG_FAR && (seg.zoneL === 'water' || seg.zoneR === 'water')) {
+      const shimmerCol = t > 0.5 ? `rgba(148,232,255,${0.26 * (1 - P.L1.z / FOG_FAR)})` : `rgba(255,244,196,${0.32 * (1 - P.L1.z / FOG_FAR)})`;
+      ctx.fillStyle = shimmerCol;
+      const uS = P.L1.scale * vw / 2, hW = 14 * uS, hH = Math.max(0.8, hh * 0.45);
+      const drawShimmer = (x0, x1, seedOff) => {
+        if (x1 - x0 < 12) return;
+        const f = ((Math.sin((P.i + seedOff) * 12.9898) * 43758.5453) % 1 + 1) % 1;
+        const wx = x0 + (x1 - x0 - hW) * ((f + time * 0.04 * (P.i % 2 ? 1 : -1)) % 1 + 1) % Math.max(1, x1 - x0);
+        if (P.i % 3 === 0) ctx.fillRect(wx, top + hh * 0.25, hW, hH);
+      };
+      if (seg.zoneL === 'water') drawShimmer(0, Math.min(cxSplit, P.L1.x - 4), 1.3);
+      if (seg.zoneR === 'water') drawShimmer(Math.max(cxSplit, P.R1.x + 4), vw, 4.7);
+    }
     ctx.restore();
     maxY = Math.min(maxY, y1);
   }
@@ -201,18 +215,25 @@ export function drawOpenRoad3D(R, S, G, t, time, ease) {
     ctx.save();
     ctx.beginPath(); ctx.rect(0, 0, vw, maxY); ctx.clip();
     const band = seg.band, fogA = clamp01((L1.z - FOG_NEAR) / (FOG_FAR - FOG_NEAR)) * 0.88;
-    // road trapezoid
+    // road trapezoid + subtle painted longitudinal wear tracks + dark-plum outer crease
     ctx.fillStyle = ROAD_COL[band];
     ctx.beginPath(); ctx.moveTo(L1.x, L1.y); ctx.lineTo(R1.x, R1.y); ctx.lineTo(R2.x, R2.y); ctx.lineTo(L2.x, L2.y); ctx.closePath(); ctx.fill();
+    for (const [off, col, wU] of [[-0.5, 'rgba(33,15,46,0.12)', 1.9], [0.5, 'rgba(33,15,46,0.12)', 1.9], [0, band ? 'rgba(255,244,218,0.06)' : 'rgba(33,15,46,0.08)', 0.9]]) {
+      const tw1 = L1.scale * wU * vw / 2, tw2 = L2.scale * wU * vw / 2;
+      const mx1 = (L1.x + R1.x) / 2 + off * (R1.x - L1.x) / 2, mx2 = (L2.x + R2.x) / 2 + off * (R2.x - L2.x) / 2;
+      ctx.fillStyle = col; quad(ctx, mx1 - tw1, y1, mx1 + tw1, y1, mx2 + tw2, y2, mx2 - tw2, y2);
+    }
+    ctx.strokeStyle = 'rgba(33,15,46,0.42)'; ctx.lineWidth = Math.max(0.7, L1.scale * 0.7 * vw / 2);
+    ctx.beginPath(); ctx.moveTo(L1.x, L1.y); ctx.lineTo(L2.x, L2.y); ctx.moveTo(R1.x, R1.y); ctx.lineTo(R2.x, R2.y); ctx.stroke();
     // rumble edges (warm white / coral, swapping by band) + a pale edge line inside
     const rw1 = L1.scale * 3.4 * vw / 2, rw2 = L2.scale * 3.4 * vw / 2;
     ctx.fillStyle = band ? '#e8e0d0' : '#d94f3d';
-    quad(ctx, L1.x - rw1, L1.y, L1.x, L1.y, L2.x, L2.y, L2.x - rw2, L2.y);
-    quad(ctx, R1.x, R1.y, R1.x + rw1, R1.y, R2.x + rw2, R2.y, R2.x, R2.y);
+    quad(ctx, L1.x - rw1, y1, L1.x, y1, L2.x, y2, L2.x - rw2, y2);
+    quad(ctx, R1.x, y1, R1.x + rw1, y1, R2.x + rw2, y2, R2.x, y2);
     ctx.fillStyle = 'rgba(255,244,214,0.45)';
     const ew1 = Math.max(0.7, L1.scale * 0.8 * vw / 2), ew2 = Math.max(0.7, L2.scale * 0.8 * vw / 2);
-    quad(ctx, L1.x, L1.y, L1.x + ew1, L1.y, L2.x + ew2, L2.y, L2.x, L2.y);
-    quad(ctx, R1.x - ew1, R1.y, R1.x, R1.y, R2.x, R2.y, R2.x - ew2, R2.y);
+    quad(ctx, L1.x, y1, L1.x + ew1, y1, L2.x + ew2, y2, L2.x, y2);
+    quad(ctx, R1.x - ew1, y1, R1.x, y1, R2.x, y2, R2.x - ew2, y2);
     // lane dashes on the light bands: centre gold, lane lines pale. Corner heights are the
     // strip's AVERAGED edge heights (y1/y2), not the left edge's: on a slanted edge the
     // left-only heights shear the quad, and where the slant flips (S-bends) the dashes
@@ -226,15 +247,20 @@ export function drawOpenRoad3D(R, S, G, t, time, ease) {
       dash(0, 'rgba(255,212,92,0.8)', 0.55);
       dash(-0.5, 'rgba(255,255,255,0.5)', 0.4); dash(0.5, 'rgba(255,255,255,0.5)', 0.4);
     }
-    // guardrails over the bay: posts at both edges + a rail line along the tops
+    // guardrails over the bay: posts at both edges + inked rail line along the tops
     if (seg.bay) {
       const u1 = L1.scale * vw / 2, u2 = L2.scale * vw / 2, ph1 = 4.4 * u1 * SPR_V, ph2 = 4.4 * u2 * SPR_V;
-      ctx.fillStyle = '#b9c4c9';
+      ctx.fillStyle = '#b9c4c9'; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(0.6, u1 * 0.35);
       ctx.fillRect(L1.x - u1 * 0.5, L1.y - ph1, Math.max(1.2, u1), ph1);
       ctx.fillRect(R1.x - u1 * 0.5, R1.y - ph1, Math.max(1.2, u1), ph1);
-      ctx.strokeStyle = 'rgba(214,224,228,0.85)'; ctx.lineWidth = Math.max(1, u1 * 0.85);
-      ctx.beginPath(); ctx.moveTo(L1.x, L1.y - ph1); ctx.lineTo(L2.x, L2.y - ph2); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(R1.x, R1.y - ph1); ctx.lineTo(R2.x, R2.y - ph2); ctx.stroke();
+      if (u1 > 0.35) {
+        ctx.strokeRect(L1.x - u1 * 0.5, L1.y - ph1, Math.max(1.2, u1), ph1);
+        ctx.strokeRect(R1.x - u1 * 0.5, R1.y - ph1, Math.max(1.2, u1), ph1);
+      }
+      ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.6, u1 * 1.35);
+      ctx.beginPath(); ctx.moveTo(L1.x, L1.y - ph1); ctx.lineTo(L2.x, L2.y - ph2); ctx.moveTo(R1.x, R1.y - ph1); ctx.lineTo(R2.x, R2.y - ph2); ctx.stroke();
+      ctx.strokeStyle = 'rgba(230,238,242,0.92)'; ctx.lineWidth = Math.max(1, u1 * 0.80);
+      ctx.beginPath(); ctx.moveTo(L1.x, L1.y - ph1); ctx.lineTo(L2.x, L2.y - ph2); ctx.moveTo(R1.x, R1.y - ph1); ctx.lineTo(R2.x, R2.y - ph2); ctx.stroke();
     }
     if (fogA > 0.01) { ctx.fillStyle = `rgba(${haze[0]},${haze[1]},${haze[2]},${fogA})`; ctx.fillRect(0, Math.min(y2, y1), vw, Math.abs(y1 - y2) + 1); }
     ctx.restore();
@@ -320,27 +346,32 @@ function drawRoadside(F, Rt, seg, sp) {
   const p = routeAt(Rt, seg.s + SEG_LEN / 2, sp.off);
   const pr = F.proj(p.x, p.y, elevAt(seg.s) * ELEV_SCALE);
   if (pr.z < 3 || pr.x < -190 || pr.x > F.vw + 190) return;
-  const u = pr.scale * F.vw / 2, v = u * SPR_V, g = F.g;
+  const u = pr.scale * F.vw / 2, v = u * SPR_V, g = F.g, inkW = Math.max(0.75, 0.9 * u);
   if (sp.type === 'palm') {
     const lean = (sp.seed - 0.5) * 5;
-    g.strokeStyle = '#6e4a2f'; g.lineWidth = Math.max(1, 2.0 * u); g.lineCap = 'round';
+    g.lineCap = 'round';
+    g.strokeStyle = INK; g.lineWidth = Math.max(1.8, 2.75 * u);
+    g.beginPath(); g.moveTo(pr.x, pr.y); g.quadraticCurveTo(pr.x + lean * u * 0.4, pr.y - 14 * v, pr.x + lean * u, pr.y - 24 * v); g.stroke();
+    g.strokeStyle = '#6e4a2f'; g.lineWidth = Math.max(1, 1.9 * u);
     g.beginPath(); g.moveTo(pr.x, pr.y); g.quadraticCurveTo(pr.x + lean * u * 0.4, pr.y - 14 * v, pr.x + lean * u, pr.y - 24 * v); g.stroke();
     const cx = pr.x + lean * u, cy = pr.y - 24 * v;
-    g.fillStyle = '#2e7d32';
-    for (let i = 0; i < 7; i++) { const a = -0.1 - i * 0.46 + sp.seed * 0.3; g.beginPath(); g.ellipse(cx + Math.cos(a) * 11.5 * u, cy + Math.sin(a) * 4.6 * v + 2.6 * v, 11.5 * u, 2.4 * v, a * 0.8, 0, 7); g.fill(); }
+    g.fillStyle = '#2e7d32'; g.strokeStyle = INK; g.lineWidth = inkW;
+    for (let i = 0; i < 7; i++) { const a = -0.1 - i * 0.46 + sp.seed * 0.3; g.beginPath(); g.ellipse(cx + Math.cos(a) * 11.5 * u, cy + Math.sin(a) * 4.6 * v + 2.6 * v, 11.5 * u, 2.4 * v, a * 0.8, 0, 7); g.fill(); if (u > 0.16) g.stroke(); }
     g.fillStyle = '#57a047';
     for (let i = 0; i < 4; i++) { const a = -0.5 - i * 0.62 + sp.seed * 0.3; g.beginPath(); g.ellipse(cx + Math.cos(a) * 8.2 * u, cy + Math.sin(a) * 3.2 * v + 1.0 * v, 8.2 * u, 1.7 * v, a * 0.8, 0, 7); g.fill(); }
     g.fillStyle = '#7a4a2a';
     g.beginPath(); g.arc(cx - 1.2 * u, cy + 0.8 * v, Math.max(0.8, 1.1 * u), 0, 7); g.arc(cx + 1.4 * u, cy + 0.9 * v, Math.max(0.8, 1 * u), 0, 7); g.fill();
   } else if (sp.type === 'bush') {
-    g.fillStyle = '#3d8a37';
-    g.beginPath(); g.ellipse(pr.x, pr.y - 2.6 * v, 6.4 * u, 3 * v, 0, 0, 7); g.fill();
+    g.fillStyle = '#3d8a37'; g.strokeStyle = INK; g.lineWidth = inkW;
+    g.beginPath(); g.ellipse(pr.x, pr.y - 2.6 * v, 6.4 * u, 3 * v, 0, 0, 7); g.fill(); if (u > 0.16) g.stroke();
     g.fillStyle = '#55a047';
     g.beginPath(); g.ellipse(pr.x - 2 * u, pr.y - 3.6 * v, 3.6 * u, 2 * v, 0, 0, 7); g.fill();
   } else if (sp.type === 'lamp') {
-    g.fillStyle = '#2c2c38'; g.fillRect(pr.x - Math.max(0.6, 0.55 * u), pr.y - 15 * v, Math.max(1.2, 1.1 * u), 15 * v);
+    g.fillStyle = INK; g.fillRect(pr.x - Math.max(0.9, 0.85 * u), pr.y - 15.2 * v, Math.max(1.8, 1.7 * u), 15.2 * v);
+    g.fillStyle = '#383448'; g.fillRect(pr.x - Math.max(0.6, 0.55 * u), pr.y - 15 * v, Math.max(1.2, 1.1 * u), 15 * v);
     const inTo = sp.off > 0 ? -1 : 1;
-    g.fillRect(pr.x, pr.y - 15 * v, inTo * 4.4 * u, Math.max(1, 0.8 * u));
+    g.fillStyle = INK; g.fillRect(pr.x, pr.y - 15.2 * v, inTo * 4.5 * u, Math.max(1.4, 1.25 * u));
+    g.fillStyle = '#4c465e'; g.fillRect(pr.x, pr.y - 15 * v, inTo * 4.4 * u, Math.max(1, 0.8 * u));
     const glow = F.G.lamps;
     if (glow > 0.04) {
       const gx = pr.x + inTo * 4.4 * u, gy = pr.y - 14.4 * v;
@@ -351,18 +382,25 @@ function drawRoadside(F, Rt, seg, sp) {
       g.beginPath(); g.ellipse(gx, pr.y, 6.4 * u, 1.7 * v, 0, 0, 7); g.fill();
     }
     g.fillStyle = '#fff6c8'; g.beginPath(); g.arc(pr.x + inTo * 4.4 * u, pr.y - 14.6 * v, Math.max(0.7, 0.85 * u), 0, 7); g.fill();
+    g.strokeStyle = INK; g.lineWidth = Math.max(0.6, 0.45 * u); g.stroke();
   } else if (sp.type === 'building') {
     const pal = BLD_PALS[sp.pal], w = sp.w * u, h = sp.h * v;
-    g.fillStyle = 'rgba(30,16,40,0.25)'; g.beginPath(); g.ellipse(pr.x, pr.y, w * 0.56, 1.6 * v, 0, 0, 7); g.fill();
+    g.fillStyle = 'rgba(30,16,40,0.28)'; g.beginPath(); g.ellipse(pr.x, pr.y, w * 0.58, 1.8 * v, 0, 0, 7); g.fill();
     g.fillStyle = pal[0]; g.fillRect(pr.x - w / 2, pr.y - h, w, h);
     g.fillStyle = pal[1]; g.fillRect(pr.x + w / 2, pr.y - h + h * 0.06, w * 0.20, h * 0.94);          // the sun-side sliver
-    g.fillStyle = 'rgba(255,255,255,0.35)'; g.fillRect(pr.x - w / 2, pr.y - h, w * 1.2, Math.max(1, 0.9 * v));   // parapet lip
+    g.fillStyle = 'rgba(255,255,255,0.38)'; g.fillRect(pr.x - w / 2, pr.y - h, w * 1.2, Math.max(1, 0.9 * v));   // parapet lip
+    g.strokeStyle = INK; g.lineWidth = Math.max(0.9, 1.05 * u);
+    g.strokeRect(pr.x - w / 2, pr.y - h, w, h);
+    g.strokeRect(pr.x + w / 2, pr.y - h + h * 0.06, w * 0.20, h * 0.94);
     const cols = Math.max(2, Math.round(sp.w / 10)), rows = Math.max(3, Math.round(sp.h / 12));
     const lit = F.G.windows, wr = mulberry32((sp.seed * 1e6) | 0);
     for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
       const on = wr() < 0.28 + lit * 0.5;
-      g.fillStyle = on && lit > 0.25 ? `rgba(255,196,110,${0.35 + 0.6 * lit})` : 'rgba(38,52,80,0.75)';
-      g.fillRect(pr.x - w / 2 + (c + 0.5) * (w / cols) - w * 0.26 / cols * 2, pr.y - h + (r + 0.7) * (h / rows), w * 0.42 / cols, h * 0.4 / rows);
+      const wx = pr.x - w / 2 + (c + 0.5) * (w / cols) - w * 0.26 / cols * 2;
+      const wy = pr.y - h + (r + 0.7) * (h / rows), ww = w * 0.42 / cols, wh = h * 0.4 / rows;
+      g.fillStyle = on && lit > 0.25 ? `rgba(255,196,110,${0.35 + 0.6 * lit})` : 'rgba(38,52,80,0.78)';
+      g.fillRect(wx, wy, ww, wh);
+      if (ww > 2.2) { g.strokeStyle = 'rgba(33,15,46,0.55)'; g.lineWidth = Math.max(0.6, 0.45 * u); g.strokeRect(wx, wy, ww, wh); }
     }
   }
 }
@@ -388,20 +426,25 @@ function drawGate(F, Rt, cp, isNext) {
     g.fillStyle = '#ffb02e'; quad(g, bl.x, bl.y, br.x, br.y, br2.x, br2.y, bl2.x, bl2.y);
   }
   g.globalAlpha /= cp.finish ? 0.85 : isNext ? 0.75 : 0.4;
-  // posts + banner
-  g.fillStyle = '#3a2b5a';
+  // posts + inked banner
+  g.fillStyle = '#3a2b5a'; g.strokeStyle = INK; g.lineWidth = Math.max(0.8, 0.95 * u);
   g.fillRect(pl.x - Math.max(1, 1.1 * u), pl.y - top, Math.max(2, 2.2 * u), top);
   g.fillRect(pr.x - Math.max(1, 1.1 * u), pr.y - top, Math.max(2, 2.2 * u), top);
-  const bh = 5.2 * v, pulse = isNext ? 0.82 + 0.18 * Math.sin(F.time * 5) : 0.6;
+  g.strokeRect(pl.x - Math.max(1, 1.1 * u), pl.y - top, Math.max(2, 2.2 * u), top);
+  g.strokeRect(pr.x - Math.max(1, 1.1 * u), pr.y - top, Math.max(2, 2.2 * u), top);
+  const bh = 5.2 * v, pulse = isNext ? 0.88 + 0.12 * Math.sin(F.time * 5) : 0.65;
   if (cp.finish) {
     const n = 10, yT = Math.min(pl.y, pr.y) - top;
     for (let i = 0; i < n; i++) { g.fillStyle = i % 2 ? '#f4f1e8' : '#26262f'; g.fillRect(pl.x + (pr.x - pl.x) * i / n, yT, (pr.x - pl.x) / n + 1, bh); }
-    g.fillStyle = '#ffb02e'; g.font = `900 ${Math.max(7, bh * 0.95)}px system-ui, sans-serif`; g.textAlign = 'center';
-    g.fillText('FINISH', (pl.x + pr.x) / 2, yT + bh * 1.9);
+    g.strokeStyle = INK; g.strokeRect(pl.x, yT, pr.x - pl.x, bh);
+    g.font = `900 ${Math.max(7, bh * 0.95)}px system-ui, sans-serif`; g.textAlign = 'center';
+    g.strokeStyle = INK; g.lineWidth = Math.max(1.5, 1.8 * u); g.strokeText('FINISH', (pl.x + pr.x) / 2, yT + bh * 1.9);
+    g.fillStyle = '#ffb02e'; g.fillText('FINISH', (pl.x + pr.x) / 2, yT + bh * 1.9);
   } else {
     g.fillStyle = `rgba(255,176,46,${pulse})`;
     g.fillRect(pl.x, pl.y - top, pr.x - pl.x, bh);
-    g.fillStyle = '#7a4a10';
+    g.strokeStyle = INK; g.strokeRect(pl.x, pl.y - top, pr.x - pl.x, bh);
+    g.fillStyle = '#4f2808';
     g.font = `900 ${Math.max(7, bh * 0.9)}px system-ui, sans-serif`; g.textAlign = 'center';
     g.fillText(isNext ? 'CHECKPOINT' : '· · ·', (pl.x + pr.x) / 2, pl.y - top + bh * 0.82);
   }
@@ -412,42 +455,47 @@ function drawGate(F, Rt, cp, isNext) {
 // wheels, bumper, taillights (brake = glow). (x, yB) = ground anchor at the rear bumper.
 function drawCarRear(g, x, yB, w, paint, kind, o = {}) {
   const h = w * (kind === 'van' ? 0.68 : kind === 'convertible' ? 0.44 : 0.52);
+  const inkW = o.hero ? 2.2 : Math.max(0.8, w * 0.024);
   g.save();
   g.translate(x, yB);
   if (o.tilt) g.rotate(o.tilt);
-  g.fillStyle = 'rgba(20,10,26,0.42)';
+  g.fillStyle = 'rgba(20,10,26,0.45)';
   g.beginPath(); g.ellipse(0, 1, w * 0.54, w * 0.075, 0, 0, 7); g.fill();
-  g.fillStyle = '#14100f';                                            // wheels
-  g.fillRect(-w * 0.52, -w * 0.115, w * 0.11, w * 0.115);
-  g.fillRect(w * 0.41, -w * 0.115, w * 0.11, w * 0.115);
+  g.fillStyle = '#14100f'; g.strokeStyle = INK; g.lineWidth = inkW * 0.8;  // wheels
+  g.fillRect(-w * 0.52, -w * 0.115, w * 0.11, w * 0.115); g.strokeRect(-w * 0.52, -w * 0.115, w * 0.11, w * 0.115);
+  g.fillRect(w * 0.41, -w * 0.115, w * 0.11, w * 0.115); g.strokeRect(w * 0.41, -w * 0.115, w * 0.11, w * 0.115);
   const bg = g.createLinearGradient(0, -h, 0, 0);
   bg.addColorStop(0, paint[0]); bg.addColorStop(0.55, paint[1]); bg.addColorStop(1, paint[2]);
   g.fillStyle = bg;                                                   // body: wide at the base, shoulders in
   g.beginPath();
   g.moveTo(-w * 0.5, 0); g.lineTo(-w * 0.47, -h * 0.52); g.lineTo(-w * 0.36, -h * 0.86);
   g.lineTo(w * 0.36, -h * 0.86); g.lineTo(w * 0.47, -h * 0.52); g.lineTo(w * 0.5, 0); g.closePath(); g.fill();
+  g.strokeStyle = INK; g.lineWidth = inkW; g.stroke();
   g.fillStyle = 'rgba(24,12,30,0.35)'; g.fillRect(-w * 0.5, -h * 0.16, w, h * 0.16);   // lower skirt / bumper shadow
+  g.strokeStyle = 'rgba(255,244,224,0.45)'; g.lineWidth = Math.max(0.8, inkW * 0.7);
+  g.beginPath(); g.moveTo(-w * 0.44, -h * 0.52); g.lineTo(w * 0.44, -h * 0.52); g.stroke();   // deck highlight rim
   if (kind === 'convertible') {
-    g.fillStyle = 'rgba(30,16,34,0.9)';                               // the folded top boot
-    g.beginPath(); g.ellipse(0, -h * 0.80, w * 0.30, h * 0.13, 0, 0, 7); g.fill();
+    g.fillStyle = 'rgba(30,16,34,0.92)'; g.strokeStyle = INK; g.lineWidth = inkW * 0.8;   // the folded top boot
+    g.beginPath(); g.ellipse(0, -h * 0.80, w * 0.30, h * 0.13, 0, 0, 7); g.fill(); g.stroke();
     g.fillStyle = '#2c1e33';                                          // headrests
-    g.beginPath(); g.roundRect(-w * 0.24, -h * 1.02, w * 0.15, h * 0.24, w * 0.05); g.fill();
-    g.beginPath(); g.roundRect(w * 0.09, -h * 1.02, w * 0.15, h * 0.24, w * 0.05); g.fill();
-    g.fillStyle = 'rgba(190,225,245,0.55)';                            // windscreen header, seen from behind
+    g.beginPath(); g.roundRect(-w * 0.24, -h * 1.02, w * 0.15, h * 0.24, w * 0.05); g.fill(); g.stroke();
+    g.beginPath(); g.roundRect(w * 0.09, -h * 1.02, w * 0.15, h * 0.24, w * 0.05); g.fill(); g.stroke();
+    g.fillStyle = 'rgba(190,225,245,0.65)';                            // windscreen header, seen from behind
     g.fillRect(-w * 0.30, -h * 1.06, w * 0.60, h * 0.055);
+    g.strokeRect(-w * 0.30, -h * 1.06, w * 0.60, h * 0.055);
   } else if (kind === 'van') {
-    g.fillStyle = '#22304a';                                          // rear windows
-    g.fillRect(-w * 0.40, -h * 0.92, w * 0.36, h * 0.24);
-    g.fillRect(w * 0.04, -h * 0.92, w * 0.36, h * 0.24);
-    g.fillStyle = 'rgba(24,12,30,0.4)'; g.fillRect(-w * 0.012, -h * 0.95, w * 0.024, h * 0.9);   // door split
+    g.fillStyle = '#22304a'; g.strokeStyle = INK; g.lineWidth = inkW * 0.75;   // rear windows
+    g.fillRect(-w * 0.40, -h * 0.92, w * 0.36, h * 0.24); g.strokeRect(-w * 0.40, -h * 0.92, w * 0.36, h * 0.24);
+    g.fillRect(w * 0.04, -h * 0.92, w * 0.36, h * 0.24); g.strokeRect(w * 0.04, -h * 0.92, w * 0.36, h * 0.24);
+    g.fillStyle = 'rgba(24,12,30,0.45)'; g.fillRect(-w * 0.012, -h * 0.95, w * 0.024, h * 0.9);   // door split
   } else {
     const wg = g.createLinearGradient(0, -h * 0.98, 0, -h * 0.52);    // rear glass
     wg.addColorStop(0, '#31435f'); wg.addColorStop(1, '#182338');
-    g.fillStyle = wg;
-    g.beginPath(); g.moveTo(-w * 0.30, -h * 0.56); g.lineTo(-w * 0.235, -h * 0.94); g.lineTo(w * 0.235, -h * 0.94); g.lineTo(w * 0.30, -h * 0.56); g.closePath(); g.fill();
-    g.fillStyle = 'rgba(190,225,245,0.4)';
+    g.fillStyle = wg; g.strokeStyle = INK; g.lineWidth = inkW * 0.75;
+    g.beginPath(); g.moveTo(-w * 0.30, -h * 0.56); g.lineTo(-w * 0.235, -h * 0.94); g.lineTo(w * 0.235, -h * 0.94); g.lineTo(w * 0.30, -h * 0.56); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle = 'rgba(190,225,245,0.45)';
     g.beginPath(); g.moveTo(-w * 0.24, -h * 0.60); g.lineTo(-w * 0.185, -h * 0.90); g.lineTo(-w * 0.06, -h * 0.90); g.lineTo(-w * 0.10, -h * 0.60); g.closePath(); g.fill();
-    g.fillStyle = paint[2]; g.fillRect(-w * 0.36, -h * 1.0, w * 0.72, h * 0.09);      // roof band
+    g.fillStyle = paint[2]; g.fillRect(-w * 0.36, -h * 1.0, w * 0.72, h * 0.09); g.strokeRect(-w * 0.36, -h * 1.0, w * 0.72, h * 0.09);      // roof band
   }
   if (kind === 'police') {                                            // light bar, alternating flash
     const ph = Math.floor((o.time || 0) * 3.2) % 2;
@@ -459,18 +507,22 @@ function drawCarRear(g, x, yB, w, paint, kind, o = {}) {
     g.fillStyle = fg; g.beginPath(); g.arc(0, -h * 1.05, w * 0.55, 0, 7); g.fill();
     g.fillStyle = '#23232e'; g.fillRect(-w * 0.5, -h * 0.52, w, h * 0.13);            // the black band
   }
-  // taillights (+ brake glow)
+  // taillights (+ brake glow) with crisp #210f2e ink housing
   if (o.brake) {
     const tg = g.createRadialGradient(0, -h * 0.30, 0, 0, -h * 0.30, w * 0.30);
     tg.addColorStop(0, 'rgba(255,60,50,0.40)'); tg.addColorStop(1, 'rgba(255,60,50,0)');
     g.fillStyle = tg; g.beginPath(); g.arc(0, -h * 0.30, w * 0.30, 0, 7); g.fill();
   }
-  g.fillStyle = o.brake ? '#ff7a6a' : '#e83a30';
-  g.beginPath(); g.roundRect(-w * 0.44, -h * 0.36, w * 0.17, h * 0.11, 2); g.fill();
-  g.beginPath(); g.roundRect(w * 0.27, -h * 0.36, w * 0.17, h * 0.11, 2); g.fill();
-  if (o.hero) {                                                       // hero-only dressing: plate + exhaust
+  g.fillStyle = o.brake ? '#ff7a6a' : '#e83a30'; g.strokeStyle = INK; g.lineWidth = Math.max(0.8, inkW * 0.7);
+  g.beginPath(); g.roundRect(-w * 0.44, -h * 0.36, w * 0.17, h * 0.11, 2); g.fill(); g.stroke();
+  g.beginPath(); g.roundRect(w * 0.27, -h * 0.36, w * 0.17, h * 0.11, 2); g.fill(); g.stroke();
+  if (o.hero) {                                                       // hero-only dressing: inked plate + twin chrome exhaust tips
     g.fillStyle = '#f4f1e8'; g.fillRect(-w * 0.09, -h * 0.30, w * 0.18, h * 0.13);
-    g.fillStyle = '#3a3f46'; g.fillRect(w * 0.30, -h * 0.075, w * 0.09, h * 0.075);
+    g.strokeStyle = INK; g.lineWidth = 1.4; g.strokeRect(-w * 0.09, -h * 0.30, w * 0.18, h * 0.13);
+    for (const ex of [-w * 0.37, w * 0.28]) {
+      g.fillStyle = '#cfd6de'; g.fillRect(ex, -h * 0.08, w * 0.09, h * 0.08);
+      g.strokeRect(ex, -h * 0.08, w * 0.09, h * 0.08);
+    }
   }
   g.restore();
 }
@@ -489,17 +541,18 @@ function drawCarFront(g, x, yB, w, paint, kind, o = {}) {
   g.beginPath();
   g.moveTo(-w * 0.5, 0); g.lineTo(-w * 0.47, -h * 0.52); g.lineTo(-w * 0.36, -h * 0.86);
   g.lineTo(w * 0.36, -h * 0.86); g.lineTo(w * 0.47, -h * 0.52); g.lineTo(w * 0.5, 0); g.closePath(); g.fill();
+  g.strokeStyle = INK; g.lineWidth = Math.max(0.8, w * 0.024); g.stroke();
   const wg = g.createLinearGradient(0, -h * 0.98, 0, -h * 0.52);      // windshield
   wg.addColorStop(0, '#31435f'); wg.addColorStop(1, '#182338');
   g.fillStyle = kind === 'convertible' ? 'rgba(24,35,56,0.85)' : wg;
-  g.beginPath(); g.moveTo(-w * 0.30, -h * 0.56); g.lineTo(-w * 0.235, -h * 0.94); g.lineTo(w * 0.235, -h * 0.94); g.lineTo(w * 0.30, -h * 0.56); g.closePath(); g.fill();
+  g.beginPath(); g.moveTo(-w * 0.30, -h * 0.56); g.lineTo(-w * 0.235, -h * 0.94); g.lineTo(w * 0.235, -h * 0.94); g.lineTo(w * 0.30, -h * 0.56); g.closePath(); g.fill(); g.stroke();
   g.fillStyle = 'rgba(20,14,26,0.55)'; g.fillRect(-w * 0.30, -h * 0.30, w * 0.60, h * 0.10);   // grille
   const hg = g.createRadialGradient(0, -h * 0.38, 0, 0, -h * 0.38, w * 0.4);                  // headlight glow
   hg.addColorStop(0, 'rgba(255,244,190,0.5)'); hg.addColorStop(1, 'rgba(255,244,190,0)');
   g.fillStyle = hg; g.beginPath(); g.arc(0, -h * 0.38, w * 0.4, 0, 7); g.fill();
-  g.fillStyle = '#fff3c4';
-  g.beginPath(); g.roundRect(-w * 0.44, -h * 0.44, w * 0.16, h * 0.11, 2); g.fill();
-  g.beginPath(); g.roundRect(w * 0.28, -h * 0.44, w * 0.16, h * 0.11, 2); g.fill();
+  g.fillStyle = '#fff3c4'; g.strokeStyle = INK; g.lineWidth = Math.max(0.6, w * 0.018);
+  g.beginPath(); g.roundRect(-w * 0.44, -h * 0.44, w * 0.16, h * 0.11, 2); g.fill(); g.stroke();
+  g.beginPath(); g.roundRect(w * 0.28, -h * 0.44, w * 0.16, h * 0.11, 2); g.fill(); g.stroke();
   g.restore();
 }
 
@@ -527,10 +580,10 @@ function drawCrowdPed(F, p, s) {
   const col = PED_COL[p.outfit] || '#f4f1e8';
   g.fillStyle = 'rgba(20,10,26,0.35)';
   g.beginPath(); g.ellipse(pr.x, pr.y, 2.6 * u, 0.8 * v, 0, 0, 7); g.fill();
-  g.fillStyle = col;
-  g.beginPath(); g.roundRect(pr.x - 1.5 * u, pr.y - 5.4 * v - bounce, 3 * u, 4.6 * v, 1.4 * u); g.fill();
+  g.fillStyle = col; g.strokeStyle = INK; g.lineWidth = Math.max(0.7, 0.55 * u);
+  g.beginPath(); g.roundRect(pr.x - 1.5 * u, pr.y - 5.4 * v - bounce, 3 * u, 4.6 * v, 1.4 * u); g.fill(); g.stroke();
   g.fillStyle = '#e8b98d';
-  g.beginPath(); g.arc(pr.x, pr.y - 6.6 * v - bounce, 1.5 * u, 0, 7); g.fill();
+  g.beginPath(); g.arc(pr.x, pr.y - 6.6 * v - bounce, 1.5 * u, 0, 7); g.fill(); g.stroke();
   if (p.cheerT > 0) {                                                  // arms up while the cheer lasts
     g.strokeStyle = col; g.lineWidth = Math.max(1, 0.8 * u); g.lineCap = 'round';
     g.beginPath(); g.moveTo(pr.x - 1.2 * u, pr.y - 4.6 * v - bounce); g.lineTo(pr.x - 2.8 * u, pr.y - 7.6 * v - bounce); g.stroke();

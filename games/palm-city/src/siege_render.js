@@ -201,20 +201,24 @@ export class SiegeRenderer {
   }
 
   frameOf(p) {
-    const W = ['walk0', 'walk1', 'walk2', 'walk3', 'walk4', 'walk5'];
+    // Round-2 sheets (Nov 18 overhaul): 24 poses — the 8-frame walk at the old cycle length
+    // (0.24 x 8 = 0.32 x 6), the 4-frame climb, and SWAT rappel frames on the rope.
+    const W = ['walk0', 'walk1', 'walk2', 'walk3', 'walk4', 'walk5', 'walk6', 'walk7'];
+    const CL = ['climbA', 'climbB', 'climb2', 'climb3'];
     if (p.kind === 'hero') {
       if (p.air) return 'jump';
-      if (p.link && p.link.kind === 'ladder') return Math.floor(p.walk / 0.35) % 2 ? 'climbA' : 'climbB';
+      if (p.link && p.link.kind === 'ladder') return CL[Math.floor(p.walk / 0.35) % 4];
       if (p.punchT > 0) return p.punchT > 0.17 ? 'wind' : 'punch';
-      if (p.moving || p.link) return W[Math.floor(p.walk / 0.32) % 6];
+      if (p.moving || p.link) return W[Math.floor(p.walk / 0.24) % 8];
       return 'idle';
     }
     if (p.st === 'down') return 'down';
     if (p.st === 'hurt' || p.st === 'stun') return 'hurt';
     if (p.st === 'grab') return 'punch';
-    if (p.st === 'climbin' || (p.link && p.link.kind === 'ladder')) return Math.floor(p.z / 0.35) % 2 ? 'climbA' : 'climbB';
+    if (p.st === 'climbin' && p.surf === 'R') return Math.floor(p.z / 0.35) % 2 ? 'rappel0' : 'rappel1';
+    if (p.st === 'climbin' || (p.link && p.link.kind === 'ladder')) return CL[Math.floor(p.z / 0.35) % 4];
     if (p.blockedBy) return Math.floor(p.bashT * 3) % 2 ? 'wind' : 'punch';
-    return W[Math.floor(p.walk / 0.32) % 6];
+    return W[Math.floor(p.walk / 0.24) % 8];
   }
 
   drawPerson(p, sheet, sc) {

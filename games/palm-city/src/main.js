@@ -352,7 +352,7 @@ function frame(now) {
   if (sim.event && sim.event.kind === 'openroad') newsCam.draw(ctx, sim, t, simTime, VIEW_W, view.h, safeTop(), DPR);   // OPEN ROAD: the news PiP rides over the chase view
   input.safeTop = safeTop();
   if (sim.siege) input.mapOpen = false;
-  if (input.mapOpen) cityMap.draw(ctx, VIEW_W, view.h, DPR, sim, simTime);     // live: the game runs on under the map
+  if (input.mapOpen) cityMap.draw(ctx, VIEW_W, view.h, DPR, sim, simTime, t);     // live: the game runs on under the map
   // CONTROL GRAPHICS RETIRE (owner rule, Nov 17): the stick circle + movement hint show for
   // the first 4 s of PLAY — simTime only advances while playing, never under the start
   // panel or the help page — fade over 0.5 s, then stay off for the rest of the run. A
