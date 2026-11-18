@@ -35,7 +35,7 @@ async function shot(name, query, cx, cy) {
   // wait until every chunk in the view is painted — and, when the painted layer is
   // wired, until each view chunk's canvas actually carries it (cv._pt stamp)
   await p.waitForFunction(({ cx, cy }) => {
-    const g = window.__lf.ground, CH = 256, hw = 210 / 0.62 + 20, hh = 430 / 0.62 + 20;
+    const g = window.__lf.ground, CH = 256, hw = 210 / 0.62, hh = 430 / 0.62;   // exactly the visible rect: a padded rect waits forever on edge chunks the renderer never paints (Nov 18 debug: row gy=-1 at Ledo)
     for (let gy = Math.floor((cy - hh) / CH); gy <= Math.floor((cy + hh) / CH); gy++)
       for (let gx = Math.floor((cx - hw) / CH); gx <= Math.floor((cx + hw) / CH); gx++) {
         const c = g.cache.get(gx + ',' + gy);
