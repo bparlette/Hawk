@@ -7,6 +7,8 @@
 //
 //   const S = new LFSim(world, roster, fleet); S.step(dt, input)   input: Palm City's {jx, jy, jm, keys, action, turbo}
 
+import { initSkid, layMarks } from './lf_skid.js';   // Palm City's skid module, stolen (owner, Nov 17)
+
 const TAU = Math.PI * 2;
 const wrap = (a) => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
 const clamp = (x, a, b) => x < a ? a : x > b ? b : x;
@@ -28,6 +30,8 @@ export function impactDamage(sp) { if (sp < 30) return 0; const k = Math.max(0, 
 export class LFSim {
   constructor(W, roster, fleet, opts = {}) {
     this.W = W; this.roster = roster; this.fleet = fleet; this.time = 0; this.cars = []; this.events = [];
+    this.kothBoost = false;   // Cul-de-Sac King of the Hill sets this during a round (bumper rules)
+    initSkid(this);
     // task L3: speed bumps (data/bumps.json), indexed by 256-unit cell for the crossing test
     this.bumps = opts.bumps || []; this.bumpGrid = new Map();
     this.bumps.forEach((b, i) => { const k = Math.floor(b.x / 256) * 100003 + Math.floor(b.y / 256); let l = this.bumpGrid.get(k); if (!l) this.bumpGrid.set(k, l = []); l.push(i); });
@@ -222,6 +226,7 @@ export class LFSim {
     const grip = Math.min(1, Math.abs(c.v) / 70);
     c.h = wrap(c.h + steer * 2.7 * grip * Math.sign(c.v) * dt);
     c.dirx = Math.cos(c.h); c.diry = Math.sin(c.h);
+    if (c === this.player || c.driveFn) layMarks(this, c, throttle, steer, grip, dt);   // slipping tyres leave marks (Palm City)
     const nx = c.x + c.dirx * c.v * dt, ny = c.y + c.diry * c.v * dt;
     const bump = this.bumps.length && c.layer === 0 ? this.bumpCrossed(c, nx, ny) : null;
     if (bump) {
@@ -254,7 +259,7 @@ export class LFSim {
       // Palm City numbers, and followers still wreck on real smashes.) Remote cars take no
       // damage here (L6: their own machine owns their state).
       const approach = ((a.dirx || 0) * a.v - (b.dirx || 0) * b.v) * nx + ((a.diry || 0) * a.v - (b.diry || 0) * b.v) * ny;
-      if (approach > 45) {
+      if (approach > 45 && !this.kothBoost) {
         const amt = impactDamage(approach);
         if (amt > 0) {
           const convoy = a.follower && b.follower;
@@ -262,6 +267,15 @@ export class LFSim {
           if (!b.remote) this.hitCar(b, amt * 1.5 * 0.5 * ((b === this.player && !b.parked) || convoy ? HERO : 1), nx, ny);
         }
       if (!a.remote) a.v *= 0.75; if (!b.remote) b.v *= 0.75;
+      }
+      // Cul-de-Sac King of the Hill: during a round, contacts are BUMPER cars — no damage (the
+      // block above is skipped), headings glance off the contact axis, speed mostly kept.
+      if (this.kothBoost && approach > -20) {
+        for (const [c, tx, ty] of [[a, nx, ny], [b, -nx, -ny]]) {
+          if (c.remote || c.parked) continue;
+          const dot = (c.dirx || 0) * tx + (c.diry || 0) * ty;
+          if (dot > -0.2) { const rx = c.dirx - 2 * dot * tx, ry = c.diry - 2 * dot * ty; c.h = Math.atan2(ry, rx); c.dirx = Math.cos(c.h); c.diry = Math.sin(c.h); c.v = Math.abs(c.v) * 0.92 + 18; }
+        }
       }
     }
   }
