@@ -9,8 +9,8 @@ export class LFHelp {
     const a = sim.W.G.anchors || {};
     const ledo = a.ledo ? sim.W.verts[a.ledo.v] : { x: 1450, y: 1340 };
     const person = (id) => roster.people.find(p => p.id === id);
-    const weis = PL?.places?.find(p => p.id === 'weis' || /weis/i.test(p.name || ''));
-    const gring = PL?.places?.find(p => p.id === 'gringada' || /gringada/i.test(p.name || ''));
+    const weis = PL?.place ? PL.place('weis') : null;
+    const gring = PL?.place ? PL.place('gringada') : null;
     const meet = roster.meetup?.pos || [5653, -19763];
     const list = [
       { id: 'ledo', name: 'LEDO PIZZA · PARK IT', col: '#6ee2ff', pos: [ledo.x, ledo.y] },
@@ -18,8 +18,8 @@ export class LFHelp {
       { id: 'kosack', name: "KOSACK · FAKE COP + POOL", col: '#ff5a7a', pos: person('kosack')?.house, carModel: 'cavalier_kosack' },
       { id: 'rigg', name: "RIGG'S + SCOOBY VAN", col: '#7fd4ff', pos: person('rigg')?.house },
       { id: 'floyds', name: "THE FLOYDS' SPLIT-FOYER", col: '#9fe08a', pos: person('clayton')?.house },
-      { id: 'weis', name: 'WEIS MARKET · PARK IT', col: '#6ee2ff', pos: weis?.pos || [13800, 19620] },
-      { id: 'gringada', name: 'GRINGADA (1998)', col: '#ff9a5c', pos: gring?.pos || [10500, -14500] },
+      { id: 'weis', name: 'WEIS MARKET · PARK IT', col: '#6ee2ff', pos: weis?.door || [13800, 19620] },
+      { id: 'gringada', name: 'GRINGADA (1998)', col: '#ff9a5c', pos: gring?.door || [10500, -14500] },
       { id: 'atholton', name: 'ATHOLTON HS · ROOF + LOT', col: '#ffd25c', pos: meet },
       { id: 'party', name: 'NIGHT PARTY (100 GUESTS)', col: '#d48aff', pos: party?.venue()?.world || person('kosack')?.house, night: true },
     ];
