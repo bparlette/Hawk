@@ -23,6 +23,7 @@ THE PIPELINE (each step is an existing Laurel/Fulton tool, pointed at the new ci
   4 graph  -> tools/osm_graph.py     the drivable graph + report, anchors = the POIs + every house
   5 areas  -> tools/osm_areas.py     real footprints, lots, green, the hero tier (homes + POIs)
   6 bumps  -> tools/bumps_build.py   speed bumps on residential streets
+  6a scale -> tools/compress_map.py   only if `city ... scale 0.5` (the miniature world)
   6b roof  -> tools/roof_build.py    the meet-up building made climbable (task L5) — skipped if OSM has no outline for it
   7 fleet  -> tools/bake_fleet.py    each car statement -> the nearest real body in the library, its paint/two-tone/lamps,
                                      baked in the house style (Blender, Palm City's pipeline)  [needs --bpy]
@@ -48,7 +49,7 @@ def parse(path):
         line = raw.split('#', 1)[0].strip()
         if not line: continue
         t = shlex.split(line); k = t[0]
-        if k == 'city': city = {'name': t[1], 'bbox': [float(v) for v in t[t.index('bbox') + 1:t.index('bbox') + 5]]}
+        if k == 'city': city = {'name': t[1], 'bbox': [float(v) for v in t[t.index('bbox') + 1:t.index('bbox') + 5]], 'scale': float(t[t.index('scale') + 1]) if 'scale' in t else 1.0}   # scale 0.5 = the miniature world (every road half as long)
         elif k == 'poi': pois.append({'id': t[1], 'name': t[2]})
         elif k == 'person':
             p = {'id': t[1], 'name': t[2]}
@@ -98,7 +99,7 @@ def main():
     tiles = a[a.index('--tiles') + 1] if '--tiles' in a else os.path.join('/tmp', 'cityfactory_tiles_' + re.sub(r'\W+', '_', city['name']).lower())
     # 1 parse -> the city's data
     S, W, N, E = city['bbox']; k = max(1, min(6, math.ceil(max(N - S, (E - W) * 0.78) / 0.024)))   # ~2.7 km tiles: under the API's node cap
-    json.dump({'name': city['name'], 'bbox': city['bbox']}, open(os.path.join(out, 'data', 'world.json'), 'w'), indent=1)
+    json.dump({'name': city['name'], 'bbox': city['bbox'], 'scale': 1.0}, open(os.path.join(out, 'data', 'world.json'), 'w'), indent=1)
     cars, book, city_people = {}, {}, []
     for p in people:
         q = {'id': p['id'], 'name': p['name'], 'street': p.get('street'), 'car': None}
@@ -119,12 +120,14 @@ def main():
     print('[4]', run(['python3', 'tools/osm_graph.py', '--out', os.path.join(out, 'data', 'graph.json')], env)[:0] + 'graph built')
     rep = json.load(open(os.path.join(out, 'data', 'graph_report.json')))
     print(f"    {rep['edges']} edges, {rep['km_total']} km, largest component {rep['largest_component_share']}, anchors {sorted(rep['anchors'])}")
-    print('[4b]', run(['python3', 'tools/graph_pack.py'], env).strip())
     print('[5]', run(['python3', 'tools/osm_areas.py', '--tiles', tiles], env).strip())
     print('[6]', run(['python3', 'tools/bumps_build.py'], env).strip())
+    if city.get('scale', 1.0) != 1.0:                       # the miniature world: scale graph, areas, bumps, roster, then the rest of the pipeline sees x{scale}
+        print('[6a]', run(['python3', 'tools/compress_map.py', '--scale', str(city['scale'])], env).strip().splitlines()[-1])
     if INTERIORS:
         sys.path.insert(0, TOOLS); os.environ['LF_ROOT'] = out; import interior_build
         for t in INTERIORS: print('[6c] interior', interior_build.build(t)['id'])
+    print('[6d]', run(['python3', 'tools/graph_pack.py'], env).strip())            # the packed road graph the page downloads (after any scaling)
     try: print('[6b]', run(['python3', 'tools/roof_build.py'], env).strip())          # L5: the meet-up's roof is climbable (if OSM maps its building)
     except SystemExit as e: print('[6b] no climbable roof:', e)
     # 7 the fleet

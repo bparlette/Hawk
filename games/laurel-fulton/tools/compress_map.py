@@ -8,10 +8,11 @@ half-scale miniature; trips take half the time. Originals are kept as
 data/*.full-scale.bak. Run ONCE from the game root:
     python3 tools/compress_map.py
 """
-import json, os, shutil
+import json, os, shutil, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); import world_cfg
 
-ROOT = os.path.join(os.path.dirname(__file__), "..")
-S = 0.5
+ROOT = world_cfg.root() if os.environ.get("LF_ROOT") else os.path.join(os.path.dirname(__file__), "..")   # a factory city: $LF_ROOT
+S = float(sys.argv[sys.argv.index("--scale") + 1]) if "--scale" in sys.argv else 0.5                      # factory: `city ... scale 0.5`
 
 def load(name):
     """Idempotent: always start from the full-scale backup (created on first run).
@@ -70,4 +71,6 @@ if "meetup" in r and "pos" in r["meetup"]:
     r["meetup"]["pos"] = [r1(r["meetup"]["pos"][0]), r1(r["meetup"]["pos"][1])]
 save(p, r)
 print(f"roster: {len(r['people'])} houses scaled")
-print("DONE — world is now x0.5. Backups: data/*.full-scale.bak")
+wj = os.path.join(ROOT, "data", "world.json"); w = json.load(open(wj)) if os.path.exists(wj) else {}
+w["scale"] = S; json.dump(w, open(wj, "w"), indent=1)         # tools that project from lat/lon (roof_build) read the scale from here
+print(f"DONE — world is now x{S}. Backups: data/*.full-scale.bak")

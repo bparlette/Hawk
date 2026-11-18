@@ -1,6 +1,6 @@
 # Laurel / Fulton, MD — the reference spec (PUBLIC copy: streets only, no house numbers — owner rule).
 # The exact houses come from the private address book (data/addresses.local.json, git-ignored), never from here.
-city "Laurel / Fulton" bbox 39.105 -76.942 39.202 -76.846
+city "Laurel / Fulton" bbox 39.105 -76.942 39.202 -76.846 scale 0.5     # the shipped world is the x0.5 miniature (owner, Nov 17)
 poi ledo "Ledo Pizza"
 poi atholton_hs "Atholton High School"
 poi reservoir_hs "Reservoir High School"
