@@ -76,7 +76,14 @@ export class LFSim {
 
   step(dt, inp = {}) {
     this.time += dt;
-    const c = this.player, k = inp.keys || {};
+    if (this.player && inp) this.stickDrive(this.player, inp, dt);
+    for (const o of this.cars) if (o !== this.player && !o.parked && !o.remote && o.driveFn) o.driveFn(o, dt);
+    this.collide();
+  }
+
+  // Palm City's stick -> throttle/steer, for ANY car (the player, or a CPU crew member driven by lf_pilot — task L6)
+  stickDrive(c, inp, dt) {
+    const k = inp.keys || {};
     let throttle = 0, steer = 0;
     if (k.up || k.down || k.left || k.right) {
       throttle = (k.up ? 1 : 0) - (k.down ? 1 : 0); steer = (k.right ? 1 : 0) - (k.left ? 1 : 0);
@@ -88,8 +95,6 @@ export class LFSim {
     c.turbo = clamp(c.turbo + ((inp.turbo && throttle > 0) ? dt / 0.4 : -dt / 0.6), 0, 1);
     const top = TOP * (1 + (TURBO_MULT - 1) * c.turbo);
     this.driveCar(c, throttle * (inp.turbo ? 1.6 : 1), steer, dt, top);
-    for (const o of this.cars) if (o !== c && !o.parked && o.driveFn) o.driveFn(o, dt);
-    this.collide();
   }
 
   // task L3: the bump the car's centre crossed this step (old -> new position), or null
@@ -147,10 +152,10 @@ export class LFSim {
       if (a.layer !== b.layer) continue;
       const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy), reach = (a.len + b.len) / 4 + (a.wid + b.wid) / 4;
       if (d > reach || d < 0.01) continue;
-      const push = reach - d, nx = dx / d, ny = dy / d, ma = a.parked ? 3 : 1, mb = b.parked ? 3 : 1;
+      const push = reach - d, nx = dx / d, ny = dy / d, ma = a.remote ? 1e9 : a.parked ? 3 : 1, mb = b.remote ? 1e9 : b.parked ? 3 : 1;   // L6: a car another machine drives is immovable here (its own machine resolves its contacts)
       a.x -= nx * push * mb / (ma + mb); a.y -= ny * push * mb / (ma + mb); b.x += nx * push * ma / (ma + mb); b.y += ny * push * ma / (ma + mb);
       if (Math.abs(a.v - b.v) > 60) this.events.push({ t: this.time, kind: 'bump', a: a.model, b: b.model });
-      a.v *= 0.75; b.v *= 0.75;
+      if (!a.remote) a.v *= 0.75; if (!b.remote) b.v *= 0.75;
     }
   }
 }

@@ -10,3 +10,6 @@ games/laurel-fulton/data/addresses.local.json
 
 # any factory-built city: house numbers stay local (owner rule, Nov 17)
 games/*/data/addresses.local.json
+
+# L6 world server: friends invite keys never committed
+games/*/server/friends.local.json
