@@ -103,7 +103,7 @@ let KOTH = null;   // Cul-de-Sac King of the Hill lands in phase 2 with its data
     if (PJ) { PL = new Places(PJ); AJ.heroes.push(...PL.heroes()); PL.attach(sim); valet.attachPlaces(PL); renderer.heroStyle = heroStyle; renderer.placeFx = (g, S, gr, t, vis) => worldFx(g, S, PL, gr, t, vis); for (const p of PJ.places) { try { KITS[p.interior] = await j('data/interiors/' + p.interior + '.json'); } catch (e) {} } }
     areas = new Areas(AJ, W); ground.areas = areas; ground.cache.clear(); ground.job = null;
     if (renderer) renderer.areas = areas;
-    sim.setBuildings(AJ.buildings); sim.setGreens(AJ.green); mapCv = null; tick('houses');
+    sim.setBuildings(AJ.buildings); sim.setGreens(AJ.green); mapCv = null; tick('houses'); party.build(sim, areas);   // L17: the 100-person crowd needs the footprints
     if (!van) { van = placeVan(sim, 'rigg', inHouse); setFootProject(footProj); }   // L7: the Scooby-Doo van parks by Rigg's house once the footprints are known
   }).catch(e => { if (globalThis.showErr) showErr('houses failed to load: ' + e.message); });
   fetch('assets/ground-tiles/manifest.json').then(r => r.ok ? r.json() : null).then(man => { if (man) ground.setPainted(man); }).catch(() => {});   // the painted ground: tiles stream in lazily from here (lf_ground.js); a city without them just stays procedural
@@ -183,7 +183,7 @@ if (net) net.onYou = (id, st) => {                        // take over that crew
 // stepper (lf_mission.stepBeat), the same figures, the same camera push-in — on a presentation-only
 // mission (oM: no stops, nothing to join; the world already did that). Only if it is YOUR rally or it
 // is happening where you can see it: a beat across town must not yank your camera away.
-const oM = { stops: [], convoy: [], beat: null, camZoom: 1, complete: true, throws: [], barks: [] };
+const oM = { stops: [], convoy: [], beat: null, camZoom: 1, complete: true };
 let oBeatKey = '';
 function stepOnlineBeat(dt) {
   const rb = net.rally && net.rally.beat;
@@ -342,7 +342,7 @@ function frame(now) {
     if (van) van.step(STEP, foot);
     if (!inside && !picking) RIGGB.step(STEP);   // Rigg-isms: the street-side barker (indoors, the interior has its own)
     if (PL) PL.step(STEP); if (KOTH) KOTH.step(sim, STEP); if (M) stepRally(sim, M, STEP); if (net) stepOnlineBeat(STEP);
-    party.step(timeOfDay());
+    party.step(timeOfDay(), sim.player);
     fakeCop.step(STEP, !!(sim.player.model === 'cavalier_kosack' && ((inp.action && Math.abs(sim.player.v) >= FOOT.exitV) || sirenKey)));
     if (TRAFFIC_ON && !picking) { traffic.step(STEP); cops.step(STEP, { inCar: !(foot && foot.active) && !inside }); }   // L15
     valet.step(sim, STEP);
@@ -531,6 +531,7 @@ renderer.draw = (S, cam, t, tod) => {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.font = '800 13px system-ui'; ctx.textAlign = 'center';
   ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(VIEW_W - 72, 14, 60, 28, 12); ctx.fill(); ctx.fillStyle = '#ffe4b0'; ctx.fillText('MAP', VIEW_W - 42, 33);
   drawMissionHud();
+  if (M && M.barks && M.barks.drawScreen) M.barks.drawScreen(ctx, cam, VIEW_W, view.h);   // L17: the convoy's speech bubbles (lf_barks.js)
   fakeCop.drawHud(ctx, VIEW_W);
   cops.drawHud(ctx, VIEW_W, view.h);                        // L15: wanted stars + BUSTED / LOST THEM
   valet.drawHud(ctx, VIEW_W);

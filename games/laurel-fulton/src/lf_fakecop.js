@@ -1,6 +1,7 @@
 // lf_fakecop.js — M-B Kosack's Fake-Cop Pull-Over Minigame (per DESIGN-G17-FAKE-COP.md).
 // Spawns ambient local traffic cars on layer-0 roads and lets Kosack's Cavalier (`cavalier_kosack`)
 // run lights + siren (620-980 Hz WebAudio) to bluff drivers into pulling over. Zero wanted stars.
+import { SirenBus, Civilians } from './lf_copgame.js';
 const TAU = Math.PI * 2;
 const wrap = (a) => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
 
@@ -26,28 +27,16 @@ export class FakeCop {
     this.sim = sim; this.W = W;
     this.traffic = []; this.score = 0; this.streak = 0; this.streakT = 0;
     this.sirenOn = false; this.sirenHold = 0; this.toast = null; this.barks = [];
-    this.ac = null; this.osc = null; this.gain = null; this.lfo = null;
+    this.bus = new SirenBus(); this.civ = new Civilians();
     this.lock = null; this.stops = 0; this.bluffs = 0;
     this.models = Object.keys(sim.fleet).filter(k => !k.includes('lamar') && !k.includes('kosack'));
   }
 
-  _audio(active, urgent) {
-    if (typeof window === 'undefined' || (!window.AudioContext && !window.webkitAudioContext)) return;
-    if (!active) { if (this.gain) this.gain.gain.value = 0; return; }
-    if (!this.ac) {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      this.ac = new AC();
-      this.osc = this.ac.createOscillator(); this.osc.type = 'triangle'; this.osc.frequency.value = 800;
-      this.lfo = this.ac.createOscillator(); this.lfo.frequency.value = 0.9;
-      const lg = this.ac.createGain(); lg.gain.value = 180;
-      this.gain = this.ac.createGain(); this.gain.gain.value = 0;
-      this.lfo.connect(lg); lg.connect(this.osc.frequency);
-      this.osc.connect(this.gain); this.gain.connect(this.ac.destination);
-      this.osc.start(); this.lfo.start();
-    }
-    if (this.ac.state === 'suspended') this.ac.resume().catch(() => {});
-    this.lfo.frequency.value = urgent ? 3.4 : 0.9;
-    this.gain.gain.value = 0.045;
+  _audio(active, urgent) {   // L17: Palm City's own siren bus (lf_copgame.js SirenBus -> palm-city audio.js sirG), not a parallel oscillator
+    const P = this.sim.player; if (!P) return;
+    for (const c of this.sim.cars) if (c.fcSiren) c.fcSiren = false;
+    if (active) P.fcSiren = true;
+    this.bus.update(this.sim.cars, P, urgent);
   }
 
   triggerSiren(on) {
@@ -55,26 +44,10 @@ export class FakeCop {
     if (!on) this._audio(false, false);
   }
 
-  _spawnTraffic() {
-    const P = this.sim.player;
-    if (!P) return;
-    const cx0 = Math.floor(P.x / 256), cy0 = Math.floor(P.y / 256), cands = [];
-    for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
-      for (const si of this.W.grid[0].get((cx0 + dx) * 100003 + (cy0 + dy)) || []) {
-        const s = this.W.seg[si], e = s.e;
-        if (e.hw === 'service' || e.len < 80) continue;
-        const mx = (s.ax + s.bx) * 0.5, my = (s.ay + s.by) * 0.5, d = Math.hypot(mx - P.x, my - P.y);
-        if (d > 220 && d < 850) cands.push({ mx, my, h: Math.atan2(s.by - s.ay, s.bx - s.ax) });
-      }
-    }
-    if (!cands.length) return;
-    const pick = cands[Math.floor(Math.random() * cands.length)];
-    if (this.sim.cars.some(c => Math.hypot(c.x - pick.mx, c.y - pick.my) < 90)) return;
-    const m = this.models[Math.floor(Math.random() * this.models.length)] || Object.keys(this.sim.fleet)[0];
-    const tc = this.sim.addCar(m, pick.mx, pick.my, pick.h, {
-      traffic: true, fcState: 'NONE', fcT: 0, fcCd: 0, fcSmoke: 0,
-      driveFn: (c, dt) => this._driveTraffic(c, dt),
-    });
+  _spawnTraffic() {   // L17: real civilian drivers (lf_copgame.js Civilians) on the street graph — the old spawner read fields GraphWorld does not have and made nothing
+    const tc = this.civ.spawn(this.sim, this.models, { fcState: 'NONE', fcT: 0, fcCd: 0, fcSmoke: 0 });
+    if (!tc) return;
+    tc.driveFn = (c, dt) => this._driveTraffic(c, dt);
     this.traffic.push(tc);
   }
 
@@ -97,11 +70,7 @@ export class FakeCop {
       if (c.fcT <= 0) { c.fcState = 'NONE'; c.fcCd = 25; if (this.lock === c) this.lock = null; }
       return;
     }
-    const r = this.W.roadInfo(c.x, c.y, 0), ta = r.e ? Math.atan2(r.dy, r.dx) : c.h;
-    const d1 = wrap(ta - c.h), d2 = wrap(ta + Math.PI - c.h), diff = Math.abs(d1) < Math.abs(d2) ? d1 : d2;
-    const weave = c.fcState === 'HESITATE' ? Math.sin(this.sim.time * 9) * 0.25 : 0;
-    const top = c.fcState === 'HESITATE' ? 115 : 195;
-    this.sim.driveCar(c, c.v < top ? 0.65 : 0, Math.max(-1, Math.min(1, diff * 2.4 + weave)), dt, top);
+    this.civ.drive(this.sim, c, dt, c.fcState === 'HESITATE' ? 115 : 0, c.fcState === 'HESITATE' ? Math.sin(this.sim.time * 9) * 0.25 : 0);
   }
 
   _bark(car, text, dur = 2.6, delay = 0) {
@@ -116,6 +85,7 @@ export class FakeCop {
       const c = this.traffic[i];
       if (Math.hypot(c.x - P.x, c.y - P.y) > 1250 || c.wreck) {
         const si = this.sim.cars.indexOf(c); if (si >= 0) this.sim.cars.splice(si, 1);
+        if (this.lock === c) this.lock = null;   // L17: a peeling-off target pruned far away used to leave the lock dangling for good (no more pull-overs)
         this.traffic.splice(i, 1);
       }
     }
