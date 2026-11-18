@@ -33,7 +33,7 @@ export class Net {
       if (c === P) continue; const A = a.cars.get(c.owner), B = b.cars.get(c.owner); if (!A || !B) continue;
       let dh = B[3] - A[3]; dh = Math.atan2(Math.sin(dh), Math.cos(dh));
       c.remote = true; c.parked = Math.abs(B[4]) < 2; c.x = A[1] + (B[1] - A[1]) * u; c.y = A[2] + (B[2] - A[2]) * u; c.h = A[3] + dh * u;
-      c.v = B[4]; c.z = A[5] + (B[5] - A[5]) * u; c.layer = B[6]; c.human = B[7] || null;
+      c.v = B[4]; c.z = A[5] + (B[5] - A[5]) * u; c.layer = B[6]; c.human = B[7] || null; c.inside = B[8] ? B[8][0] : null;   // L7: [8] = [house id, floor, x] while that CPU idles inside their house
     }
   }
 }

@@ -1,0 +1,233 @@
+{
+ "id": "rigg",
+ "type": "two-story-entry",
+ "width": 13.0,
+ "grade": 0.0,
+ "ceiling": 2.5,
+ "floors": [
+  {
+   "id": "main",
+   "z": 0.2,
+   "x0": 0.0,
+   "x1": 13.0
+  },
+  {
+   "id": "upper",
+   "z": 3.0,
+   "x0": 5.4,
+   "x1": 13.0
+  },
+  {
+   "id": "lower",
+   "z": -2.4,
+   "x0": 3.4,
+   "x1": 13.0
+  }
+ ],
+ "links": [
+  {
+   "id": "up",
+   "a": "main",
+   "ax": 1.2,
+   "b": "upper",
+   "bx": 5.4,
+   "press": true
+  },
+  {
+   "id": "down",
+   "a": "main",
+   "ax": 12.4,
+   "b": "lower",
+   "bx": 9.0,
+   "press": true
+  }
+ ],
+ "door": {
+  "floor": "main",
+  "x": 0.35
+ },
+ "rooms": [
+  {
+   "floor": "main",
+   "x0": 0.0,
+   "x1": 5.4,
+   "name": "two-story entryway",
+   "wall": "#e3d6b8",
+   "floorc": "#b9a27a",
+   "h": 5.3
+  },
+  {
+   "floor": "main",
+   "x0": 5.4,
+   "x1": 9.4,
+   "name": "living room",
+   "wall": "#d6c39a",
+   "floorc": "#9c6b44"
+  },
+  {
+   "floor": "main",
+   "x0": 9.4,
+   "x1": 13.0,
+   "name": "kitchen",
+   "wall": "#e6dcb8",
+   "floorc": "#c9b99a"
+  },
+  {
+   "floor": "upper",
+   "x0": 5.4,
+   "x1": 9.0,
+   "name": "upstairs hall",
+   "wall": "#e6dcc4",
+   "floorc": "#a8845a"
+  },
+  {
+   "floor": "upper",
+   "x0": 9.0,
+   "x1": 13.0,
+   "name": "Brian's bedroom",
+   "wall": "#5f6f8c",
+   "floorc": "#6e5a4c"
+  },
+  {
+   "floor": "lower",
+   "x0": 3.4,
+   "x1": 13.0,
+   "name": "Brian's basement",
+   "wall": "#7b6a58",
+   "floorc": "#5e5448"
+  }
+ ],
+ "props": [
+  {
+   "kind": "recliner",
+   "floor": "main",
+   "x": 8.95
+  },
+  {
+   "kind": "couch",
+   "floor": "main",
+   "x": 7.1
+  },
+  {
+   "kind": "tv",
+   "floor": "main",
+   "x": 6.1
+  },
+  {
+   "kind": "rug",
+   "floor": "main",
+   "x": 7.1
+  },
+  {
+   "kind": "lamp",
+   "floor": "main",
+   "x": 5.8
+  },
+  {
+   "kind": "plant",
+   "floor": "main",
+   "x": 4.9
+  },
+  {
+   "kind": "chandelier",
+   "floor": "main",
+   "x": 2.9
+  },
+  {
+   "kind": "picture",
+   "floor": "upper",
+   "x": 6.6
+  },
+  {
+   "kind": "plant",
+   "floor": "upper",
+   "x": 5.9
+  },
+  {
+   "kind": "lamp",
+   "floor": "upper",
+   "x": 8.4
+  },
+  {
+   "kind": "speaker",
+   "floor": "upper",
+   "x": 10.0
+  },
+  {
+   "kind": "bed",
+   "floor": "upper",
+   "x": 12.0
+  },
+  {
+   "kind": "cooler",
+   "floor": "lower",
+   "x": 3.9
+  },
+  {
+   "kind": "computer",
+   "floor": "lower",
+   "x": 5.3,
+   "screen": "eDonkey"
+  },
+  {
+   "kind": "cdwriter",
+   "floor": "lower",
+   "x": 6.7
+  },
+  {
+   "kind": "couch",
+   "floor": "lower",
+   "x": 7.9
+  },
+  {
+   "kind": "rug",
+   "floor": "lower",
+   "x": 7.7
+  },
+  {
+   "kind": "lamp",
+   "floor": "lower",
+   "x": 8.2
+  },
+  {
+   "kind": "door",
+   "floor": "upper",
+   "x": 9.0,
+   "label": "BRIAN"
+  },
+  {
+   "kind": "cellardoor",
+   "floor": "main",
+   "x": 12.4
+  }
+ ],
+ "spots": [
+  {
+   "act": "EXIT",
+   "floor": "main",
+   "x": 0.35
+  },
+  {
+   "act": "GRAB BEER",
+   "floor": "lower",
+   "x": 3.9,
+   "src": "cooler"
+  }
+ ],
+ "dogs": 0,
+ "dad": {
+  "name": "Brian's dad",
+  "floor": "main",
+  "x": 8.95,
+  "yell": "Brrrrrriiiiiiaaaaannnn"
+ },
+ "son": {
+  "name": "Brian",
+  "floor": "upper",
+  "x": 11.2
+ },
+ "cpuIdle": {
+  "floor": "lower",
+  "x": 4.15
+ }
+}

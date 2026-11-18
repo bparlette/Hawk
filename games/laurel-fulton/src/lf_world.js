@@ -8,6 +8,9 @@
 //   WD.drive(id, state)                                           the human's machine reports its car (it is authoritative)
 //   WD.release(id)                                                back to the CPU, from exactly where it is
 //   WD.snapshot()                                                 every crew car, compact
+//   B.inside / B.spot  (L7 remainder, Nov 18)   a CPU who is HOME is not "just a parked car": if their house has an interior kit (opts.kits,
+//                      data/interiors/<id>.json) they idle INSIDE — B.inside = 'brad', B.spot = the kit's cpuIdle {floor, x} (Brad: by the
+//                      fire with a beer). It clears the moment they leave (drive, rally, a friend's takeover). In the snapshot as [8].
 //
 // THE CPU LIFE (no Palm City equivalent: Palm City's traffic is anonymous; its DRIVER is reused — lf_pilot's stick
 // autopilot, the same input path a thumb uses): home (parked, a while) -> drive to somewhere real (a POI or another crew
@@ -20,6 +23,7 @@ const rngOf = (seed) => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 
 export class CrewWorld {
   constructor(W, roster, fleet, opts = {}) {
+    this.kits = opts.kits || {};
     this.W = W; this.roster = roster; this.rnd = rngOf(opts.seed || 20261118); this.autoRally = opts.autoRally ?? null; this.rally = null;
     const S = this.S = new LFSim(W, roster, fleet, { spawn: { x: 0, y: 0 }, bumps: opts.bumps || [] });
     S.cars = S.cars.filter(c => c !== S.player); S.player = null;     // no local player on the server: everyone is crew
@@ -110,8 +114,15 @@ export class CrewWorld {
     if (L && !L.human) { R.S2.player = L.car; L.car.parked = false; if (!R.pilot || L.pilot !== R.pilot) this.setPilot(R); const inp = R.pilot.input(dt); this.S.stickDrive(L.car, inp, dt);
       // a CPU LEADER wedged (stick held, < 8 u/s for 5 s, not braking at the end of its plan) is lifted onto the road and re-plans (Nov 18)
       if ((inp.jm || 0) > 0.15 && Math.abs(L.car.v) < 8 && !R.M.complete) { if ((R.stuckT = (R.stuckT || 0) + dt) > 5) { R.stuckT = 0; this.S.unstick(L.car); R.pilot.goal = null; } } else R.stuckT = 0; }   // a CPU leader drives the rally on the stick autopilot
-    this.S.step(dt, null); this.stepRally(dt);
+    this.S.step(dt, null); this.stepRally(dt); this.syncInside();
     if (!this.rally && this.autoRally && this.S.time > (this.nextRally ?? this.autoRally)) { const c = [...this.crew.values()].filter(B => !B.still && !B.human && B.state === 'home' && players(this.roster).some(p => p.id === B.id)); if (c.length) this.startRally(c[Math.floor(this.rnd() * c.length)].id); else this.nextRally = this.S.time + 30; }
+  }
+  // CPU crew at home with a kit are inside, idling at the kit's cpuIdle spot (and out the moment they are not home / not CPU / not free)
+  syncInside() {
+    for (const B of this.crew.values()) {
+      const K = this.kits[B.id], ok = K && K.cpuIdle && B.state === 'home' && !B.human && !B.rallying && !B.still && B.car.parked;
+      if (ok) { B.inside = B.id; B.spot = { floor: K.cpuIdle.floor, x: K.cpuIdle.x, doing: 'beer' }; } else { B.inside = null; B.spot = null; }
+    }
   }
   state(c) { return { x: c.x, y: c.y, h: c.h, v: c.v, z: c.z || 0, vz: c.vz || 0, layer: c.layer, dirx: c.dirx ?? Math.cos(c.h), diry: c.diry ?? Math.sin(c.h) }; }
   takeover(id, who) {
@@ -137,5 +148,5 @@ export class CrewWorld {
   }
   rallyState() { const R = this.rally; return R ? { leader: R.leader, crew: R.M.convoy.length + 1, total: R.M.convoy.length + 1 + R.M.stops.filter(s => !s.done).reduce((a, s) => a + s.people.length, 0), msg: R.msgT > 0 ? R.msg : '', complete: R.M.complete } : null; }
   who() { return [...this.crew.values()].map(B => ({ id: B.id, name: B.name, human: B.human })); }
-  snapshot() { return [...this.crew.values()].map(B => { const c = B.car; return [B.id, Math.round(c.x), Math.round(c.y), +c.h.toFixed(3), Math.round(c.v), Math.round(c.z || 0), c.layer, B.human || 0]; }); }   // [7] = the friend driving it, or 0 = CPU
+  snapshot() { return [...this.crew.values()].map(B => { const c = B.car; return [B.id, Math.round(c.x), Math.round(c.y), +c.h.toFixed(3), Math.round(c.v), Math.round(c.z || 0), c.layer, B.human || 0, B.inside ? [B.inside, B.spot.floor, +B.spot.x.toFixed(2)] : 0]; }); }   // [7] = the friend driving it, or 0 = CPU; [8] = [house, floor, x] while idling indoors, else 0
 }

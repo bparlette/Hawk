@@ -146,6 +146,12 @@
    "kind": "lamp",
    "floor": "lower",
    "x": 11.65
+  },
+  {
+   "kind": "computer",
+   "floor": "lower",
+   "x": 6.95,
+   "screen": "eDonkey"
   }
  ],
  "spots": [
@@ -176,7 +182,11 @@
  "teter": {
   "name": "Teter",
   "floor": "main",
-  "x": 4.3
+  "x": 4.3,
+  "lines": [
+   "Hi guys, what are you getting into today?....",
+   "You are all alcoholics."
+  ]
  },
  "dogs": 2,
  "cpuIdle": {

@@ -35,3 +35,15 @@ Brad's split-foyer (task L7) is the reference build. Change this spec first, the
    AND tools/l7_shots.mjs shots viewed full-size at phone size: whole house in frame, labels
    readable on their pills, floors visibly different per room, firelight on the lower room,
    Teter mid-rock. A spec pass without viewed shots is not acceptance.
+
+## Addendum — L7 remainder (Nov 18)
+9. **The baked layer.** The static shell (roof, wall gradients + pattern + baseboard + crown, floors, windows, slabs, stairs, the
+   front door) is painted ONCE per (kit, zoom, dpr) into an offscreen canvas and blitted each frame; furniture, residents and the
+   light pass stay live on top. **Honesty: this is a PAINTED pass, NOT a Blender bake** — `bpy`/Blender is not available in the
+   environment this was built in, and nothing here was rendered by it. `box()` props carry a painted gradient + highlight edge.
+10. **More prop vocabulary:** computer (screen text from the statement — `eDonkey`), cdwriter, bed, speaker, chandelier, plus
+    kit-placed `door` (Brian's bedroom, labelled) and `cellardoor`. Rooms may carry `h` (a two-story entryway is one tall room).
+11. **House type `two-story-entry`** (Rigg's): flights that overlap a floor are `press` links — push UP at the foot / DOWN at the
+    top (straight up/down works too); a hint pill says so. The house BEAT is data: `dad` (yells) + `son` (comes down the stairs).
+12. **Guests:** crew CPUs home with a kit (CrewWorld `B.inside`, snapshot [8]; solo: car parked at the house) are drawn at the kit's
+    `cpuIdle` spot with a beer, hue-shifted from the hero sprite. Kit `teter.lines` are said one after another (word-wrapped bubble).
