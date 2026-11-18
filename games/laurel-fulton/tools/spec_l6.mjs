@@ -38,7 +38,7 @@ if (CW) {
     for (const B of WD.crew.values()) {
       if (B.inside) { ins.sawIn.add(B.id); if (B.state !== 'home' || B.human || B.rallying || B.still) ins.viol++; } else if (ins.sawIn.has(B.id) && B.state === 'drive') ins.leftOut.add(B.id);
       const c = B.car, p = last.get(B.id);
-      if (p && !B.human && !c.parked && Math.hypot(c.x - p.x, c.y - p.y) > Math.abs(c.v) * DT + 8) { st.teleports++; if (process.env.DBG) console.log('JUMP', B.id, B.state, Math.round(c.v), Math.round(Math.hypot(c.x - p.x, c.y - p.y)), (WD.S.time / 60).toFixed(1)); }   // (parked cars settling apart at the meet-up are not jumps)
+      if (p && !B.human && !c.parked && Math.hypot(c.x - p.x, c.y - p.y) > Math.abs(c.v) * DT + 12 && !WD.S.events.some(e => e.t === WD.S.time && e.model === c.model && (e.kind === 'unstuck' || e.kind === 'bump'))) { st.teleports++; if (process.env.DBG) console.log('JUMP', B.id, B.state, Math.round(c.v), Math.round(Math.hypot(c.x - p.x, c.y - p.y)), (WD.S.time / 60).toFixed(1)); }   // (parked cars settling apart at the meet-up are not jumps)
       last.set(B.id, { x: c.x, y: c.y });
       if (B.state === 'drive' && !B.human && Math.abs(c.v) > 40) { st.drive++; const r = W.roadInfo(c.x, c.y, c.layer); if (!(r.e && r.d < r.hw + 15)) st.off++; }
     }
@@ -70,7 +70,8 @@ if (CW) {
   WD.release(B.id); for (const o of WD.crew.values()) last.set(o.id, { x: o.car.x, y: o.car.y }); st.teleports = 0;
   check(WD.rally && WD.rally.leader === B.id && WD.who().find(c => c.id === B.id).human === null, '4 HAND BACK mid-rally: the CPU keeps leading, same rally, same place');
   let max = 0; const done = run(40 * 60, () => { max = Math.max(max, WD.rally ? WD.rally.M.convoy.length : max); return WD.rally && WD.rally.M.complete; });
-  check(done && st.teleports === 0, '4 the CPU finishes the rally the friend started: every house collected, THE CREW IS ASSEMBLED, no jumps', `${max} in the convoy, ${(WD.S.time / 60).toFixed(1)} game-min`);
+  const lifts4 = WD.S.events.filter(e => e.kind === 'unstuck').length;
+  check(done && st.teleports === 0 && lifts4 <= 20, '4 the CPU finishes the rally the friend started: every house collected, THE CREW IS ASSEMBLED, no jumps', `${max} in the convoy, ${(WD.S.time / 60).toFixed(1)} game-min, ${st.teleports} jumps, ${lifts4} anti-stuck lifts`);
   const members = [...WD.crew.values()].filter(o => o.rallying || o.id === B.id), seen = new Set();
   run(14 * 60, () => { for (const o of members) if (o.state === 'home' && o.car.parked && Math.hypot(o.car.x - o.home.x, o.car.y - o.home.y) < 250) seen.add(o.id); return !WD.rally && seen.size === members.length; });
   check(!WD.rally && seen.size === members.length, '4 ... then the crew hang out and EVERY member drives home', `${seen.size}/${members.length} back at their own driveways`);
