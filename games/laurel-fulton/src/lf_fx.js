@@ -75,8 +75,14 @@ export function setFx(S, roster) {
   S.fxBy = {};
   for (const p of roster.people) if (p.car && p.car.sprite) S.fxBy[p.car.sprite] = p.car.fx || [];
 }
-// before the car's colour pass: the underglow pool sits under the body
-export function under(g, S, time) {
+import { TrackLayer } from './lf_skid.js';
+let tracks = null, tracksT = 0;
+// before the car's colour pass: Palm City's tyre-mark tiles (under everything), then the
+// underglow pool sits under the body
+export function under(g, S, time, view) {
+  if (!tracks) tracks = new TrackLayer((w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; });
+  const dt = Math.min(0.1, Math.max(0, time - tracksT)); tracksT = time;
+  if (view) tracks.draw(g, S, dt, view[0], view[1], view[2], view[3]);
   for (const c of S.cars) if (fxOf(S, c).includes('underglow_blue')) {
     const r = g.createRadialGradient(c.x, c.y, 4, c.x, c.y, c.len * 0.75);
     r.addColorStop(0, 'rgba(70,150,255,0.85)'); r.addColorStop(0.55, 'rgba(50,110,255,0.4)'); r.addColorStop(1, 'rgba(40,90,255,0)');

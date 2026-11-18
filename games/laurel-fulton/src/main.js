@@ -8,6 +8,7 @@ import { Renderer } from './lf_render.js';
 import { Input } from '../../palm-city/src/input.js';
 import { Areas, poly } from './lf_areas.js';
 import { players, startRally, stepRally } from './lf_mission.js';
+import { KingOfTheHill } from './lf_koth.js';
 import { setFx, setFoot, setFootProject } from './lf_fx.js';
 import { Roof, stepOnFoot, lookout, project } from './lf_climb.js';
 import { RoofView } from './lf_roof.js';
@@ -67,6 +68,7 @@ renderer = new Renderer(ctx, W, ground, fleet, imgs, areas);
 let RF = null;   // the roof lands in phase 2
 // ---- task L7: walk-in interiors (data/interiors/<id>.json, tools/interior_build.py). A run as someone with one STARTS inside.
 const KITS = {};   // interiors land in phase 2
+let KOTH = null;   // Cul-de-Sac King of the Hill lands in phase 2 with its data
 // ---- phase 2: the heavy/optional data streams in behind the pick screen (see LOAD SPLIT above)
 (async () => {
   j('data/areas.json').then(AJ => {
@@ -75,6 +77,7 @@ const KITS = {};   // interiors land in phase 2
     sim.setBuildings(AJ.buildings); mapCv = null; tick('houses');
   }).catch(e => { if (globalThis.showErr) showErr('houses failed to load: ' + e.message); });
   fetch('data/roof.json').then(r => r.ok ? r.json() : null).then(RJ => { if (RJ) { RF = new Roof(RJ); renderer.roof = new RoofView(RF); setFootProject((x, y, z) => project(x, y, z, cam)); } }).catch(() => {});   // task L5: a city without a climbable roof just has none
+  j('data/culdesacs.json').then(sacs => { KOTH = new KingOfTheHill(sacs); }).catch(() => {});
   const ids = await fetch('data/interiors/index.json').then(r => r.ok ? r.json() : []).catch(() => []);
   for (const id of ids) { try { KITS[id] = await j('data/interiors/' + id + '.json'); } catch (e) {} }
 })();
@@ -178,7 +181,7 @@ function frame(now) {
     if (inside) { sim.step(STEP, ZERO); if (inside.step(STEP, inp) === 'exit') goOut(); }
     else if (foot && foot.active) { sim.step(STEP, ZERO); if (!beat) { stepOnFoot(foot, STEP, inp, RF); if (inp.action && nearCar(foot, sim.player)) foot.active = false; else if (inp.action && atMyDoor()) goIn(foot.who.id, foot.who); } }
     else { sim.step(STEP, beat ? ZERO : inp); if (foot && !beat && !pilot && inp.action && Math.abs(sim.player.v) < FOOT.exitV) exitCar(foot, sim.player); }
-    if (M) stepRally(sim, M, STEP); acc -= STEP; n++; }
+    if (KOTH) KOTH.step(sim, STEP); if (M) stepRally(sim, M, STEP); acc -= STEP; n++; }
   if (n >= 6 * SPEED) acc = 0;
   if (net) net.frame(sim, dt);
   const c = sim.player;
@@ -207,6 +210,21 @@ function frame(now) {
   }
   if (inside) { IR.draw(inside, VIEW_W, view.h, DPR, now / 1000); drawControls(); requestAnimationFrame(frame); return; }
   renderer.draw(sim, cam, now / 1000);
+  // Cul-de-Sac King of the Hill: the ring, the crown, the banner (screen space, over the world)
+  if (KOTH && KOTH.sac && (KOTH.state === 'count' || KOTH.state === 'round')) {
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    const sc = KOTH.sac, cxp = (sc.x - cam.x) * cam.zoom + VIEW_W / 2, cyp = (sc.y - cam.y) * cam.zoom + view.h / 2, rp = sc.r * cam.zoom;
+    ctx.beginPath(); ctx.arc(cxp, cyp, rp, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,210,92,0.07)'; ctx.fill();
+    ctx.strokeStyle = KOTH.state === 'round' ? 'rgba(255,90,60,0.95)' : 'rgba(255,210,92,0.95)'; ctx.lineWidth = 4; ctx.setLineDash([14, 8]); ctx.stroke(); ctx.setLineDash([]);
+  }
+  if (KOTH && KOTH.state === 'done' && KOTH.winner && KOTH.crownT > 0) {
+    const wc = KOTH.winner;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.font = '26px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText('👑', (wc.x - cam.x) * cam.zoom + VIEW_W / 2, (wc.y - cam.y) * cam.zoom + view.h / 2 - 30);
+  }
+  const kb = KOTH && KOTH.banner();
+  if (kb) { ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.textAlign = 'center'; let fs = 20; ctx.font = `900 ${fs}px system-ui`; let w = ctx.measureText(kb).width + 30; if (w > VIEW_W - 16) { fs = Math.max(13, Math.floor(fs * (VIEW_W - 16) / w)); ctx.font = `900 ${fs}px system-ui`; w = ctx.measureText(kb).width + 30; } ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(VIEW_W / 2 - w / 2, view.h * 0.22 - 24, w, 38, 14); ctx.fill(); ctx.fillStyle = '#ffd25c'; ctx.fillText(kb, VIEW_W / 2, view.h * 0.22 + 2); }
   // HUD: the real street under you + speed (≤ 15% of the screen)
   const r = W.roadInfo(c.x, c.y, c.layer), name = r.e && r.d < r.hw + 30 ? (r.e.name || r.e.ref || '') : '';
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.textAlign = 'center';
@@ -319,4 +337,4 @@ renderer.draw = (S, cam, t) => {
   if (picking) drawPick();
 };
 requestAnimationFrame(frame);
-window.__lf = { get areas() { return areas; }, inside: () => inside, setSpeed: (k) => { SPEED = k; }, roof: () => RF, sim, W, ground, cam, input, renderer, map: () => mapOpen, mission: () => M, pick, picking: () => picking, pilot: () => pilot, foot: () => foot };
+window.__lf = { get areas() { return areas; }, inside: () => inside, setSpeed: (k) => { SPEED = k; }, roof: () => RF, sim, W, ground, cam, input, renderer, map: () => mapOpen, mission: () => M, koth: () => KOTH, pick, picking: () => picking, pilot: () => pilot, foot: () => foot };
