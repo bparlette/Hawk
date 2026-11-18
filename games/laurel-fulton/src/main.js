@@ -81,6 +81,7 @@ let KOTH = null;   // Cul-de-Sac King of the Hill lands in phase 2 with its data
     if (renderer) renderer.areas = areas;
     sim.setBuildings(AJ.buildings); mapCv = null; tick('houses');
   }).catch(e => { if (globalThis.showErr) showErr('houses failed to load: ' + e.message); });
+  fetch('assets/ground-tiles/manifest.json').then(r => r.ok ? r.json() : null).then(man => { if (man) ground.setPainted(man); }).catch(() => {});   // the painted ground: tiles stream in lazily from here (lf_ground.js); a city without them just stays procedural
   fetch('data/roof.json').then(r => r.ok ? r.json() : null).then(RJ => { if (RJ) { RF = new Roof(RJ); renderer.roof = new RoofView(RF); setFootProject((x, y, z) => project(x, y, z, cam)); } }).catch(() => {});   // task L5: a city without a climbable roof just has none
   j('data/culdesacs.json').then(sacs => { KOTH = new KingOfTheHill(sacs); }).catch(() => {});
   const ids = await fetch('data/interiors/index.json').then(r => r.ok ? r.json() : []).catch(() => []);
@@ -230,6 +231,10 @@ function frame(now) {
     cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k; cam.zoom += (tz - cam.zoom) * (fixed ? 1 : 1 - Math.exp(-dt * 1.5));
   }
   if (inside) { IR.draw(inside, VIEW_W, view.h, DPR, now / 1000); drawControls(); requestAnimationFrame(frame); return; }
+  // KOTH circle road (owner, Nov 17): the cul-de-sac you're sitting in — or fighting over — is
+  // REAL pavement: the same sac the ring below draws gets its disc painted as asphalt, road grip
+  // in the sim and black (not dirt-brown) skid marks. setPave no-ops until the sac changes.
+  ground.setPave(KOTH && KOTH.state !== 'done' ? (KOTH.state === 'idle' ? (KOTH.candidate ? KOTH.candidate(sim) : null) : KOTH.sac) : null);
   renderer.draw(sim, cam, now / 1000); drawStreetLabels();
   // Cul-de-Sac King of the Hill: the ring, the crown, the banner (screen space, over the world).
   // In idle the ring of the cul-de-sac you're sitting in shows DIM — it never starts itself.

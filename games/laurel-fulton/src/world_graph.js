@@ -37,6 +37,7 @@ export class GraphWorld {
       }
     }
     this.bounds = { x0, y0, x1, y1 };
+    this.pave = null;                                 // the KOTH paved disc { x, y, r } | null — set via GroundPainter.setPave
     this.adj = new Map();                             // vertex -> [[to, len, edgeIndex]]
     G.edges.forEach((e, i) => {
       const add = (a, b) => { let l = this.adj.get(a); if (!l) this.adj.set(a, l = []); l.push([b, e.len, i]); };
@@ -67,6 +68,11 @@ export class GraphWorld {
   }
 
   surfaceAt(x, y, layer = 0) {
+    // KOTH circle road (owner, Nov 17): the candidate/active cul-de-sac's disc is REAL pavement.
+    // GroundPainter.setPave (lf_ground.js) owns this field; every surface consumer — the ground
+    // painter, the sim's off-tarmac drag, the skid layer's dirt tear — reads through here, so
+    // inside the disc they all see road. Layer 0 only: a bridge deck over a sac stays a deck.
+    if (layer === 0 && this.pave) { const p = this.pave, dx = x - p.x, dy = y - p.y; if (dx * dx + dy * dy <= p.r * p.r) return 'road'; }
     const r = this.roadInfo(x, y, layer);
     if (!r.e) return 'ground';
     if (r.d < r.hw) return r.e.hw === 'service' ? 'service' : 'road';
