@@ -55,7 +55,7 @@ export function buildRails(W) {
   };
   for (const e of W.edges) {
     if (!(RAIL_HW.has(e.hw) || e.bridge) || e.pts.length < 2) continue;
-    const off = e.w / 2 + 7, layer = e.layer || 0;
+    const off = e.w / 2 + 7, layer = e.layer || 0;   // Nov 18: just past the shoulder (a car body is ~1 m wide of its centre line at the edge) — at +7 every car hugging the edge of a primary road ground along the rail: 51k scrapes, 78 wrecks in 12 CPU-minutes
     for (const side of [-1, 1]) {
       for (let i = 0; i + 1 < e.pts.length; i++) {
         const [ax, ay] = e.pts[i], [bx, by] = e.pts[i + 1];

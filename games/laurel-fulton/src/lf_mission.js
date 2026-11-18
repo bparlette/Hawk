@@ -75,7 +75,7 @@ export function swapPlayerCar(S, M, car) {
 // where a follower is on your path: the nearest trail point near its last one (a local search)
 function locate(M, f) {
   const T = M.trail, n = T.x.length, c = f.car;
-  const lo = f.ti < 0 ? Math.max(0, n - 400) : Math.max(0, f.ti - 6), hi = f.ti < 0 ? n : Math.min(n, f.ti + 40);
+  const lo = f.ti < 0 ? (f.lost ? 0 : Math.max(0, n - 400)) : Math.max(0, f.ti - 6), hi = f.ti < 0 ? n : Math.min(n, f.ti + 40);
   let best = 1e18, bi = f.ti < 0 ? n - 1 : f.ti;
   for (let i = lo; i < hi; i++) { const d = (T.x[i] - c.x) ** 2 + (T.y[i] - c.y) ** 2; if (d < best) { best = d; bi = i; } }
   return bi;
@@ -84,7 +84,7 @@ function locate(M, f) {
 export function follow(S, M, f, dt) {
   const c = f.car, T = M.trail, n = T.x.length;
   if (M.beat || M.complete || n < 2) { S.driveCar(c, c.v > 5 ? -1 : 0, 0, dt, 380); return; }
-  f.ti = locate(M, f);
+  f.ti = locate(M, f); f.lost = false;
   const slot = M.convoy.indexOf(f), headS = T.s[n - 1], P = S.player;
   const myS = T.s[f.ti], gap = headS - (slot + 1) * SP - myS;
   // steer at a point ON your path, further ahead the faster we go (a driver looks down the road)
@@ -110,7 +110,7 @@ export function follow(S, M, f, dt) {
   // (wedged reversing into a rail, bush or house) is lifted back onto the nearest road point — the player's own rule (lf_sim)
   const prog = T.s[f.ti] || 0;
   if (gap > SP && prog <= (f.bestS || 0) + 5) { f.noProg = (f.noProg || 0) + dt; } else { f.noProg = 0; f.bestS = Math.max(f.bestS || 0, prog); }
-  if (f.noProg > 6 && S.unstick) { f.noProg = 0; S.unstick(c); f.ti = -1; }
+  if (f.noProg > 6 && S.unstick) { f.noProg = 0; S.unstick(c); f.ti = -1; f.lost = true; }   // lifted: re-find its place on the WHOLE trail (once)
 }
 
 // convoy order = actual progress along your path (a stalled car can never deadlock the cars behind it)

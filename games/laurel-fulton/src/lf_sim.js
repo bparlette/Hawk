@@ -155,7 +155,7 @@ export class LFSim {
   railCollide() {
     if (!this.rails || !this.rails.segs.length) return;
     for (const c of this.cars) {
-      if (c.parked || c.remote || c.z > 0) continue;
+      if (c.parked || c.remote || c.z > 0 || c !== this.player) continue;   // Nov 18: rails are the PLAYER's scenery to crash into; CPU drivers + convoy followers hug the edge and ground along them (51k scrapes / 78 wrecks per 12 CPU-min, stalled rallies)
       const R = (c.len + c.wid) / 4;
       for (const s of railsNear(this.rails, c.x, c.y, c.layer, this._railBuf)) {
         const vx = s.x1 - s.x0, vy = s.y1 - s.y0, L2 = vx * vx + vy * vy || 1;
