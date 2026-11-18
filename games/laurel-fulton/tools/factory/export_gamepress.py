@@ -46,7 +46,7 @@ for f in ['world_cfg.py', 'osm_fetch.py', 'osm_graph.py', 'osm_areas.py', 'roste
         s = re.sub(r"'houses': \(CITY or \{\}\)\.get\('houses', \{.*?\}\)", "'houses': (CITY or {}).get('houses', {})", s, flags=re.S)
     if f == 'bake_fleet.py':
         s = s.replace("PS = os.path.abspath(os.path.join(ROOT, '..', 'palm-city', 'tools', 'bake_sprites.py'))", "PS = os.path.abspath(os.path.join(HERE, '..', 'vendor', 'palm-city', 'tools', 'bake_sprites.py'))")
-    if f == 'spec_l2.mjs': s = s.replace("const WHO = process.argv[2] || 'jason'", "const WHO = process.argv[2] || MI.players(ROSTER)[0].id")
+    if f == 'spec_l2.mjs': s = s.replace("WHO = process.argv[2] || 'jason'", "WHO = process.argv[2] || MI.players(ROSTER)[0].id")
     open(os.path.join(OUT, 'tools', f), 'w').write(sanitize(s))
 for f in ['city_factory.py', 'smoke_city.mjs']:
     open(os.path.join(OUT, 'tools', 'factory', f), 'w').write(sanitize(open(os.path.join(HERE, f)).read()))
