@@ -28,6 +28,8 @@ THE PIPELINE (each step is an existing Laurel/Fulton tool, pointed at the new ci
   7 fleet  -> tools/bake_fleet.py    each car statement -> the nearest real body in the library, its paint/two-tone/lamps,
                                      baked in the house style (Blender, Palm City's pipeline)  [needs --bpy]
   8 page   -> <out>/play.html (the Laurel/Fulton engine, this city's data) + <out>/FACTORY.md (what was built)
+  9 showcase -> tools/factory/showcase_build.py: <out>/showcase.generated.html — the public map (street names only), roster, and every
+                car + hero as REAL INSPIRATION beside IN-GAME ASSET, honesty-tagged; fails on any house number (task L9)
 """
 import os, sys, json, re, shlex, subprocess, math
 
@@ -142,6 +144,7 @@ def main():
              f"Graph: {rep['edges']} edges, {rep['km_total']} km drivable. Anchors: {', '.join(sorted(rep['anchors']))}.", '', '| person | where | car | placed |', '|---|---|---|---|']
     for p in ro['people']: lines.append(f"| {p['name']} | {p.get('street') or p.get('at')} | {(p.get('car') or {}).get('model', '-')} | {'exact address' if p.get('active') and not p.get('approx') else ('street' if p.get('approx') else 'NOT FOUND')} |")
     open(os.path.join(out, 'FACTORY.md'), 'w').write('\n'.join(lines) + '\n')
+    print('[9] showcase:', run(['python3', 'tools/factory/showcase_build.py', out], env).strip().splitlines()[-1])
     print(f"[8] {out}/play.html + FACTORY.md — {sum(1 for p in ro['people'] if p.get('active'))}/{len(ro['people'])} people placed, meet at {ro['meetup']['name']}")
 
 if __name__ == '__main__':
