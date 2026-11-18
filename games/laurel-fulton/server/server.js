@@ -25,7 +25,7 @@ export async function start({ port = Number(process.env.PORT) || 2580, friends =
   const src = (f) => pathToFileURL(path.join(HERE, '..', 'src', f)).href;
   const { GraphWorld } = await import(src('world_graph.js')); const { CrewWorld } = await import(src('lf_world.js'));
   const bumps = fs.existsSync(path.join(root, 'data/bumps.json')) ? J('data/bumps.json').bumps : [];
-  const WD = new CrewWorld(new GraphWorld(J('data/graph.json')), J('data/roster.json'), J('assets/fleet.json'), { bumps });
+  const WD = new CrewWorld(new GraphWorld(J('data/graph.json')), J('data/roster.json'), J('assets/fleet.json'), { bumps, autoRally: Number(process.env.AUTO_RALLY) || 300 });
   const wss = new WebSocketServer({ port });
   const seats = new Map();                                  // socket -> crew id it drives
   const send = (ws, m) => { if (ws.readyState === 1) ws.send(JSON.stringify(m)); };
@@ -49,7 +49,7 @@ export async function start({ port = Number(process.env.PORT) || 2580, friends =
   });
   const dt = 1 / hz;
   const tick = setInterval(() => WD.step(dt), 1000 / hz);
-  let n = 0; const snap = setInterval(() => { const m = JSON.stringify({ type: 'snap', t: WD.S.time, cars: WD.snapshot() }); n++; for (const ws of wss.clients) if (ws.friend && ws.readyState === 1) ws.send(m); }, 100);
+  let n = 0; const snap = setInterval(() => { const m = JSON.stringify({ type: 'snap', t: WD.S.time, cars: WD.snapshot(), rally: WD.rallyState() }); n++; for (const ws of wss.clients) if (ws.friend && ws.readyState === 1) ws.send(m); }, 100);
   await new Promise(r => wss.on('listening', r));
   log(`[world] Laurel/Fulton world up on :${wss.address().port} — ${WD.crew.size} crew (all CPU), ${friends.size} friends on the list`);
   return { WD, wss, port: wss.address().port, close: () => { clearInterval(tick); clearInterval(snap); for (const c of wss.clients) c.terminate(); return new Promise(r => wss.close(r)); } };

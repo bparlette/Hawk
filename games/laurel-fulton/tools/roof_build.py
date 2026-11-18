@@ -21,9 +21,15 @@ import os, sys, json, math, random, urllib.request, xml.etree.ElementTree as ET
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); import world_cfg
 ROOT = world_cfg.root()
 R = json.load(open(os.path.join(ROOT, 'data', 'roster.json')))
-NAME = sys.argv[1] if len(sys.argv) > 1 else R['meetup']['name']
+argv = sys.argv[1:]; SCALE = None
+if '--scale' in argv: i = argv.index('--scale'); SCALE = float(argv[i + 1]); del argv[i:i + 2]
+if SCALE is None:                                        # a compressed world (tools/compress_map.py x0.5) says so in data/world.json; Laurel: pass --scale 0.5
+    wj = os.path.join(ROOT, 'data', 'world.json'); SCALE = json.load(open(wj)).get('scale', 1.0) if os.path.exists(wj) else 1.0
+args = argv
+NAME = args[0] if args else R['meetup']['name']
 LAT0, LON0 = world_cfg.LAT0, world_cfg.LON0
 KX, KY = math.cos(math.radians(LAT0)) * 111320.0 * 10, 110540.0 * 10
+KX, KY = KX * SCALE, KY * SCALE            # a compressed world (tools/compress_map.py, x0.5): same projection, scaled
 proj = lambda lat, lon: (round((lon - LON0) * KX), round(-(lat - LAT0) * KY))
 P = json.load(open(os.path.join(ROOT, 'data', 'osm_places.json')))['elements']
 q = next((e for e in P if e['tags'].get('name') == NAME), None)
@@ -67,7 +73,7 @@ def inside(px, py, pts):
         (x1, y1), (x2, y2) = pts[i], pts[(i + 1) % len(pts)]
         if (y1 > py) != (y2 > py) and px < (x2 - x1) * (py - y1) / (y2 - y1) + x1: c = not c
     return c
-def area(pts): return abs(sum(pts[i][0] * pts[(i + 1) % len(pts)][1] - pts[(i + 1) % len(pts)][0] * pts[i][1] for i in range(len(pts)))) / 2
+def area(pts): return abs(sum(pts[i][0] * pts[(i + 1) % len(pts)][1] - pts[(i + 1) % len(pts)][0] * pts[i][1] for i in range(len(pts)))) / 2 / SCALE ** 2   # always full-scale units^2 (so the size thresholds mean the same)
 px, py = proj(lat, lon)
 named = [c for c in cands if c[0].get('name') == NAME]
 pick = max(named, key=lambda c: area(c[1][0])) if named else next((c for c in cands if inside(px, py, c[1][0])), None)
@@ -136,7 +142,7 @@ landings = [(c['wall']['x'] - c['wall']['nx'] * 40, c['wall']['y'] - c['wall']['
 ac, vents, pipes = [], [], []
 def free(x, y, r, objs): return all(math.hypot(x - o['x'], y - o['y']) > r for o in objs)
 tries = 0
-target = int(area(outer) / 100 / 900) + 2
+target = int(area(outer) * SCALE ** 2 / 100 / 900) + 2
 while len(ac) < target and tries < 5000:
     tries += 1; x, y = rng.uniform(min(xs), max(xs)), rng.uniform(min(ys), max(ys))
     if not in_roof(x, y) or edge_d(x, y) < 70 or not free(x, y, 110, ac) or any(math.hypot(x - lx, y - ly) < 90 for lx, ly in landings): continue
@@ -158,7 +164,7 @@ for u in ac[:max(3, len(ac) // 2)]:                        # a pipe from each of
 hx, hy = sum(xs) / len(xs), sum(ys) / len(ys)
 while not in_roof(hx, hy) or edge_d(hx, hy) < 30: hx, hy = rng.uniform(min(xs), max(xs)), rng.uniform(min(ys), max(ys))
 flat = lambda r: [v for p in r for v in p]
-out = {'name': NAME, 'osm': ref, 'levels': levels, 'h': h, 'parapet': 6, 'outer': flat(outer), 'inner': [flat(r) for r in ins], 'axis': round(ax, 4),
+out = {'name': NAME, 'scale': SCALE, 'osm': ref, 'levels': levels, 'h': h, 'parapet': 6, 'outer': flat(outer), 'inner': [flat(r) for r in ins], 'axis': round(ax, 4),
        'chains': chains, 'path': path, 'ac': ac, 'vents': vents, 'pipes': pipes, 'hatch': {'x': round(hx), 'y': round(hy), 'a': round(ax, 4)},
        'area_m2': round(area(outer) / 100 - sum(area(r) for r in ins) / 100)}
 json.dump(out, open(os.path.join(ROOT, 'data', 'roof.json'), 'w'), separators=(',', ':'))
@@ -168,6 +174,7 @@ fo = flat(outer)
 if fo in A['buildings']: bi = A['buildings'].index(fo)
 else: bi = len(A['buildings']); A['buildings'].append(fo)
 hero = next((x for x in A['heroes'] if x['who'] == NAME), None)
+if hero and hero.get('roof'): sys.exit(print(f"{NAME}: roof.json written; hero footprint already the real outline (buildings[{hero['b']}]) — areas.json untouched") or 0)
 if hero: hero['b'] = bi
 else: A['heroes'].append({'b': bi, 'who': NAME, 'kind': 'poi'})
 next(x for x in A['heroes'] if x['who'] == NAME)['roof'] = True

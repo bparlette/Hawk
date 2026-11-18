@@ -346,6 +346,13 @@ renderer.draw = (S, cam, t) => {
     ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(12, 74, 190, 26, 12); ctx.fill();
     ctx.fillStyle = net.status === 'online' ? '#9fe08a' : '#ff9a7a'; ctx.font = '900 12px system-ui';
     ctx.fillText(net.status === 'online' ? `ONE WORLD · ${on} FRIEND${on === 1 ? '' : 'S'} ON` : net.status, 24, 92);
+    const ra = net.rally;                                   // the rally in the one world: who leads, how many are in, what just happened
+    if (ra) {
+      const lead = (roster.people.find(p => p.id === ra.leader) || { name: ra.leader }).name.split(' ')[0], mine = net.me === ra.leader;
+      ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(12, 104, 190, 24, 11); ctx.fill(); ctx.fillStyle = '#ffd25c'; ctx.font = '900 11px system-ui';
+      ctx.fillText(ra.complete ? 'CREW ASSEMBLED' : `${mine ? 'YOUR' : lead.toUpperCase() + "'S"} RALLY · ${ra.crew}/${ra.total}`, 24, 120);
+      if (ra.msg) { ctx.textAlign = 'center'; ctx.font = '900 20px system-ui'; ctx.fillStyle = 'rgba(27,20,48,0.7)'; const w = ctx.measureText(ra.msg).width + 28; ctx.beginPath(); ctx.roundRect(VIEW_W / 2 - w / 2, view.h * 0.22 - 22, w, 34, 13); ctx.fill(); ctx.fillStyle = '#ffe4b0'; ctx.fillText(ra.msg, VIEW_W / 2, view.h * 0.22 + 1); }
+    }
   }
   drawControls();
   if (mapOpen) drawMap(S.player);

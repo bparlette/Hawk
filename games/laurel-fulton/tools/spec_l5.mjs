@@ -26,7 +26,8 @@ const area = (f) => { let s = 0; for (let i = 0; i < f.length; i += 2) { const j
 // 1 the real building
 check(!!RJ && RJ.osm === 'relation/1988823' && RJ.levels === 2 && RJ.inner.length === 3, 'roof.json = Atholton HS, OSM relation 1988823, 2 storeys, 3 courtyards', RJ ? `${RJ.osm} ${RJ.levels} lv, ${RJ.inner.length} courtyards, roof ${RJ.h / 10} m, ${RJ.area_m2} m2` : 'missing');
 const hero = AREAS.heroes.find(h => h.who === ROSTER.meetup.name);
-check(hero && area(AREAS.buildings[hero.b]) > 15000, 'the hero tier draws the REAL Atholton outline (not the shed)', hero ? `${Math.round(area(AREAS.buildings[hero.b]))} m2` : '');
+const k2 = RJ ? (RJ.scale || 1) ** 2 : 1, ratio = hero && RJ ? area(AREAS.buildings[hero.b]) / (RJ.area_m2 * k2) : 0;   // a compressed world (x0.5) shrinks areas by scale^2
+check(hero && ratio > 0.9 && ratio < 1.3, 'the hero tier draws the REAL Atholton outline (not the shed)', hero ? `${Math.round(area(AREAS.buildings[hero.b]))} m2 drawn vs ${Math.round(RJ.area_m2 * k2)} expected (scale ${RJ.scale || 1})` : '');
 if (CL && RJ) {
   const DT = 1 / 60, RF = new CL.Roof(RJ), H = RJ.h;
   const F = FT.createFoot(ROSTER.people.find(p => p.id === 'brad') || ROSTER.people[0]); F.active = true;
