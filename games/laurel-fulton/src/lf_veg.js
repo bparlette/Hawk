@@ -61,14 +61,26 @@ export function buildRails(W) {
         const [ax, ay] = e.pts[i], [bx, by] = e.pts[i + 1];
         const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1, nx = -dy / L * side, ny = dx / L * side;
         const mx = (ax + bx) / 2, my = (ay + by) / 2;
-        // gap at junctions: skip a segment whose end comes within 60 u of a junction vert
-        let gap = false;
-        for (const v of [e.a, e.b]) {
-          if (!junction(v)) continue;
-          const vp = e.pts[v === e.a ? 0 : e.pts.length - 1];
-          if (Math.hypot(mx - vp[0], my - vp[1]) < 60) { gap = true; break; }
+        // gap at junctions: TRIM the rail back GAP units from every junction vert (Nov 18 fix: the old test skipped a segment
+        // only when its MIDPOINT was within 60 u, so a long segment beside a junction ran straight across the side street's
+        // mouth and walled cars in — College Park's Lehigh Rd -> Baltimore Ave turn was impassable).
+        // RAILS NEVER CROSS A ROAD (Nov 18 fix): the old junction gap tested only a segment's MIDPOINT, so a rail could run
+        // straight across a side street's mouth and pin cars (College Park's Lehigh Rd -> Baltimore Ave; several Laurel rallies
+        // stalled with the player wedged on the road). Walk the rail in ~10-unit steps and keep only the stretches where no
+        // OTHER road's carriageway (anything not this edge and not itself railed) is within its half-width + 14 units.
+        const n = Math.max(1, Math.ceil(L / 10)); let run0 = -1;
+        const ok = (u) => { const px = ax + dx * u + nx * off, py = ay + dy * u + ny * off;
+          for (const si of W.grid[layer] ? (W.grid[layer].get(Math.floor(px / 256) * 100003 + Math.floor(py / 256)) || []) : []) {
+            const g = W.seg[si], o = g.e; if (o === e || RAIL_HW.has(o.hw) || o.bridge) continue;
+            const vx = g.x1 - g.x0, vy = g.y1 - g.y0, L2 = vx * vx + vy * vy || 1, t = Math.max(0, Math.min(1, ((px - g.x0) * vx + (py - g.y0) * vy) / L2));
+            if (Math.hypot(g.x0 + vx * t - px, g.y0 + vy * t - py) < o.w / 2 + 14) return false; }
+          return true; };
+        for (let k = 0; k <= n; k++) {
+          const good = ok(k / n);
+          if (good && run0 < 0) run0 = k;
+          if ((!good || k === n) && run0 >= 0) { const k1 = good ? k : k - 1; if (k1 > run0) addSeg(ax + dx * run0 / n + nx * off, ay + dy * run0 / n + ny * off, ax + dx * k1 / n + nx * off, ay + dy * k1 / n + ny * off, layer); run0 = -1; }
         }
-        if (gap) continue;
+        continue;
         addSeg(ax + nx * off, ay + ny * off, bx + nx * off, by + ny * off, layer);
       }
     }
