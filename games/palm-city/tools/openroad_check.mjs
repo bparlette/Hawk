@@ -147,7 +147,10 @@ function holdAtGrid(s, c, secs) {
   put(g1, 1500, 500, 0, 0);   // somebody left it across town
   run(s, 0.2);
   const g2 = gridCar(s);
-  check(g2 && g2 !== g1 && Math.hypot(g2.x - SITE[0], g2.y - SITE[1]) < 30 && g1.openroad === false, 'a grid car left across town is released and replaced in the circle');
+  // audit H2 (Nov 18): the grid car is a singleton — left across town it is brought HOME,
+  // never released-and-replaced (the old behaviour bred permanent duplicates).
+  const roses = s.cars.filter(c => c.openroad);
+  check(g2 && g2 === g1 && Math.hypot(g2.x - SITE[0], g2.y - SITE[1]) < 30 && roses.length === 1, 'a grid car left across town is brought home, still the only one');
 }
 
 // ---- start in your own car: the bank, the grid, the pin, the chopper

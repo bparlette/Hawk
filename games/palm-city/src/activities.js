@@ -14,6 +14,7 @@ import { quitJob } from './jobs.js';
 import { dismount, mount } from './skate.js';
 import { CHASE } from './chase.js';
 import { padPos, inRoof } from './heli.js';
+import { ensureGridCar } from './openroad.js';
 
 const JOB = {
   taxi:    { name: 'TAXI',    how: 'Get in the yellow cab and press START. Fares pay more when they stay happy.' },
@@ -100,7 +101,15 @@ export function jump(sim, id) {
   if (!a || a.group === 'hub' || P.mode === 'siege' || P.mode === 'air' || sim.siege || sim.busted) return false;
   quitJob(sim); quitEvent(sim);
   if (P.mode === 'board') dismount(sim);
-  const leave = () => { if (P.mode === 'car') { const c = P.car; c.v = 0; c.driver = null; c.parked = true; c.fixed = false; P.mode = 'foot'; P.car = null; p.hidden = false; } };
+  const leave = () => {
+    if (P.mode === 'car') { const c = P.car; c.v = 0; c.driver = null; c.parked = true; c.fixed = false; P.mode = 'foot'; P.car = null; p.hidden = false; }
+    if (P.mode === 'water') {   // audit H1: JUMP off a craft frees it and sends it home to its mooring, the way respawn() does — a craft left ridden can never be boarded again
+      P.mode = 'foot';
+      if (sim.water.ride) { const cr = sim.water.ride; cr.ridden = false; if (cr.home) { cr.x = cr.home.x; cr.y = cr.home.y; cr.h = cr.home.h; cr.vx = 0; cr.vy = 0; cr.farT = 0; } sim.water.ride = null; }
+      sim.water.cop = null;
+      p.hidden = false;
+    }
+  };
   const seat = (c) => { leave(); c.driver = 'player'; c.parked = false; c.fixed = false; c.v = 0; c.siren = false; P.mode = 'car'; P.car = c; p.hidden = true; p.x = c.x; p.y = c.y; };
   if (a.group === 'siege') {
     leave();
@@ -115,9 +124,12 @@ export function jump(sim, id) {
     const b = sim.board; b.x = CHASE.site[0]; b.y = CHASE.site[1]; b.vx = b.vy = 0; p.x = b.x; p.y = b.y; p.h = -Math.PI / 2; p.hidden = false;
     mount(sim);
   } else if (a.water) {
-    // the moorings: on the pier deck right beside the jetski — one ACTION press hops on
+    // the moorings: on the pier deck right beside the jetski — one ACTION press hops on.
+    // Audit M3: the jetski comes HOME first if it is out in the bay — placing the player
+    // at the craft's current spot can strand them in open water where the stick can't move.
     leave();
     const pier = sim.W.L.pier, cr = sim.water.craft[0];
+    if (!cr.ridden && cr.home) { cr.x = cr.home.x; cr.y = cr.home.y; cr.h = cr.home.h; cr.vx = 0; cr.vy = 0; cr.farT = 0; }
     p.x = cr.x; p.y = pier.y + pier.h - 6; p.h = Math.PI / 2; p.hidden = false;
   } else if (a.heli) {
     // the helicopter: on foot on the hospital roof, beside the pad, STEAL armed
@@ -135,6 +147,13 @@ export function jump(sim, id) {
     } else {
       const pad = sim.W.L.hospital.pad; p.x = pad[0] - 40; p.y = pad[1]; p.h = 0; p.hidden = false;
     }
+  } else if (a.id === 'openroad') {
+    // audit M2: OPEN ROAD's designed start is ON FOOT in the circle beside the waiting
+    // grid car (A reads START OPEN ROAD) — never borrow a car, never seat the player in
+    // the grid car (which then stacks a duplicate on top of them).
+    leave();
+    ensureGridCar(sim);
+    p.x = a.site.p[0] + 26; p.y = a.site.p[1]; p.h = -Math.PI / 2; p.hidden = false;
   } else {
     // an event wants a car: keep the one you are in, else borrow the nearest one that still runs
     let c = P.mode === 'car' && !P.car.wreck && !P.car.job ? P.car : null;

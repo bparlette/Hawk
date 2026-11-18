@@ -95,7 +95,7 @@ function endEvent(sim, text, ok, extra) {
   if (ev.kind === 'spot') endSpot(sim, ev);
   if (ev.kind === 'openroad') {                        // OPEN ROAD: sweep the crowds, park the route traffic, free the tyres, let the chase cam go
     for (const p of sim.peds) if (p.crowd) p.gone = true;
-    for (const c of sim.cars) if (c.driver === 'route') { c.driver = null; c.parked = true; c.v = 0; }
+    for (const c of sim.cars) if (c.driver === 'route') { c.driver = null; c.parked = true; c.v = 0; c.fixed = false; }   // audit M1: fixed=false lets the population filter cull them — a run must not leave its traffic parked on the causeway forever
     sim.gripMul = 1;
     if (sim.chase) sim.chase.out = true;
   }
