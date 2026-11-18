@@ -1,0 +1,188 @@
+{
+ "id": "gringada",
+ "type": "restaurant",
+ "width": 24.0,
+ "grade": 0.0,
+ "ceiling": 3.6,
+ "floors": [
+  {
+   "id": "main",
+   "z": 0.0,
+   "x0": 0.0,
+   "x1": 24.0
+  }
+ ],
+ "links": [],
+ "door": {
+  "floor": "main",
+  "x": 0.9
+ },
+ "rooms": [
+  {
+   "floor": "main",
+   "x0": 0.0,
+   "x1": 10.6,
+   "name": "dining room",
+   "wall": "#e7c690",
+   "floorc": "#b0502f"
+  },
+  {
+   "floor": "main",
+   "x0": 10.6,
+   "x1": 16.4,
+   "name": "counter",
+   "wall": "#4f8f6a",
+   "floorc": "#c9b08a"
+  },
+  {
+   "floor": "main",
+   "x0": 16.4,
+   "x1": 24.0,
+   "name": "kitchen",
+   "wall": "#dcdad0",
+   "floorc": "#a8a89c"
+  }
+ ],
+ "props": [
+  {
+   "kind": "sombrero",
+   "x": 2.4,
+   "floor": "main"
+  },
+  {
+   "kind": "booth",
+   "x": 3.2,
+   "floor": "main"
+  },
+  {
+   "kind": "table",
+   "x": 6.4,
+   "floor": "main"
+  },
+  {
+   "kind": "table",
+   "x": 9.0,
+   "floor": "main"
+  },
+  {
+   "kind": "plant",
+   "x": 10.9,
+   "floor": "main"
+  },
+  {
+   "kind": "menu",
+   "x": 13.2,
+   "floor": "main"
+  },
+  {
+   "kind": "counter",
+   "x": 13.2,
+   "floor": "main"
+  },
+  {
+   "kind": "hot_case",
+   "x": 15.0,
+   "floor": "main"
+  },
+  {
+   "kind": "salsa",
+   "x": 11.8,
+   "floor": "main"
+  },
+  {
+   "kind": "grill",
+   "x": 19.0,
+   "floor": "main"
+  },
+  {
+   "kind": "prep",
+   "x": 21.8,
+   "floor": "main"
+  }
+ ],
+ "spots": [
+  {
+   "act": "EXIT",
+   "floor": "main",
+   "x": 0.9
+  },
+  {
+   "act": "ORDER",
+   "floor": "main",
+   "x": 12.4,
+   "src": "counter"
+  },
+  {
+   "act": "STEAL FOOD",
+   "floor": "main",
+   "x": 15.0,
+   "src": "hot_case",
+   "only": "jimmy"
+  }
+ ],
+ "npcs": [
+  {
+   "id": "brad",
+   "name": "Brad",
+   "role": "COOK",
+   "floor": "main",
+   "x": 17.6,
+   "face": 1,
+   "look": "apron",
+   "barks": [
+    "Welcome to Gringada.",
+    "Order up!",
+    "Two tacos, extra salsa."
+   ]
+  },
+  {
+   "id": "jimmy",
+   "name": "Jimmy",
+   "role": "",
+   "floor": "main",
+   "x": -4,
+   "face": 1,
+   "look": "jimmy",
+   "hidden": true,
+   "barks": []
+  },
+  {
+   "id": "clayton",
+   "name": "Clayton",
+   "role": "",
+   "floor": "main",
+   "x": -5,
+   "face": 1,
+   "look": "clayton",
+   "hidden": true,
+   "barks": []
+  },
+  {
+   "id": "zack",
+   "name": "Zack",
+   "role": "",
+   "floor": "main",
+   "x": -6,
+   "face": 1,
+   "look": "zack",
+   "hidden": true,
+   "barks": []
+  }
+ ],
+ "beats": [
+  "steal"
+ ],
+ "sign": {
+  "text": "GRINGADA",
+  "sub": "MEXICAN RESTAURANT"
+ },
+ "memory": {
+  "year": 1998,
+  "label": "MEMORY BUILD \u00b7 1998 \u00b7 from the owner's memory"
+ },
+ "dogs": 0,
+ "cpuIdle": {
+  "floor": "main",
+  "x": 8.0
+ }
+}
