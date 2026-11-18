@@ -52,6 +52,7 @@ export class InteriorRenderer {
     for (const gu of I.guests) this.guest(g, gu, time, I.partyImgs && I.partyImgs.cut);  // CPU crew idling at home (CrewWorld B.inside): a beer by the fire; party guests: the G18 cutaway sheet
     if (I.son) this.son(g, I.son, time);                 // Brian, coming down the stairs
     for (const c of I.callers || []) this.person(g, c, time, (c.id.length * 61) % 300 + 30);   // L14: the bark-beat speakers (Kosack up top, Rigg below)
+    for (const c of I.callers || []) if (c.brush) this.brush(g, c, time);                     // Jason's paintbrush, mid-dab on the brow dog
     this.hero(g, I.hero, time);
     this.lights(g, I, time);                             // the light pass (SPEC §4): fire wash, lamp pools, TV spill
     // room labels LAST and on pills (SPEC §3): drawn over everything, so nothing clips them
@@ -236,6 +237,15 @@ export class InteriorRenderer {
       for (let i = 0; i < I.mantle; i++) this.can(g, x - 0.85 + i * 0.34, z + 1.25, 1.7);    // the beers on the mantle (they really go when you take one)
     }
     else if (p.kind === 'rug') { g.fillStyle = '#a03c30'; g.fillRect(SX(x - 1.15), SY(z + 0.05), 2.3 * k, 0.05 * k); g.fillStyle = '#e0aa4e'; g.fillRect(SX(x - 0.95), SY(z + 0.035), 1.9 * k, 0.018 * k); }
+    else if (p.kind === 'puddle') {                        // THE GIANT PEE PUDDLE (Brad's house): a wide glossy amber pool with a wobbly wet edge, satellite drips and a light streak — flat on the floor, drawn over the rug it soaks
+      const w = (p.w || 2.2) / 2, cy = SY(z + 0.045);
+      g.fillStyle = 'rgba(146,104,26,0.5)'; g.beginPath(); g.ellipse(SX(x), cy + 2, (w + 0.14) * k, 0.075 * k, 0, 0, TAU); g.fill();          // the soaked halo
+      g.fillStyle = 'rgba(219,178,62,0.82)'; g.beginPath(); g.ellipse(SX(x), cy, w * k, 0.072 * k, 0, 0, TAU); g.fill();                        // the pool
+      g.strokeStyle = 'rgba(146,104,26,0.65)'; g.lineWidth = 1.6; g.beginPath(); g.ellipse(SX(x), cy, w * k, 0.072 * k, 0, Math.PI * 1.08, Math.PI * 1.92); g.stroke();   // the wet near edge
+      g.fillStyle = 'rgba(240,203,92,0.9)'; g.beginPath(); g.ellipse(SX(x - w * 0.25), cy - 1, w * 0.55 * k, 0.038 * k, 0, 0, TAU); g.fill();    // the bright middle
+      g.fillStyle = 'rgba(255,244,190,0.75)'; g.fillRect(SX(x - w * 0.7), cy - 0.028 * k, w * 0.8 * k, 0.016 * k);                               // the gloss streak
+      g.fillStyle = 'rgba(219,178,62,0.8)'; for (const [dx, dw] of [[-w - 0.28, 0.16], [w + 0.34, 0.12], [w * 0.45, 0.09]]) { g.beginPath(); g.ellipse(SX(x + dx), cy + 1, dw * k, 0.03 * k, 0, 0, TAU); g.fill(); }   // drips that escaped
+    }
     else if (p.kind === 'picture') { this.box(g, x - 0.42, z + 1.3, 0.84, 0.62, '#7c5a28'); g.fillStyle = '#b8c8a8'; g.fillRect(SX(x - 0.34), SY(z + 1.84), 0.68 * k, 0.46 * k); g.fillStyle = '#5c7a48'; g.beginPath(); g.moveTo(SX(x - 0.34), SY(z + 1.42)); g.lineTo(SX(x - 0.05), SY(z + 1.68)); g.lineTo(SX(x + 0.12), SY(z + 1.42)); g.closePath(); g.fill(); }
     else if (p.kind === 'lamp') { this.box(g, x - 0.16, z, 0.32, 0.05, '#4a3036'); g.fillStyle = '#4a3036'; g.fillRect(SX(x) - 1, SY(z + 1.42), 2, 1.42 * k); g.fillStyle = '#f4d98c'; g.beginPath(); g.moveTo(SX(x - 0.2), SY(z + 1.28)); g.lineTo(SX(x + 0.2), SY(z + 1.28)); g.lineTo(SX(x + 0.13), SY(z + 1.58)); g.lineTo(SX(x - 0.13), SY(z + 1.58)); g.closePath(); g.fill(); g.strokeStyle = INK; g.lineWidth = 1; g.stroke(); }
     else if (p.kind === 'plant') { g.fillStyle = '#b85c38'; g.beginPath(); g.moveTo(SX(x - 0.17), SY(z + 0.34)); g.lineTo(SX(x + 0.17), SY(z + 0.34)); g.lineTo(SX(x + 0.12), SY(z)); g.lineTo(SX(x - 0.12), SY(z)); g.closePath(); g.fill(); g.fillStyle = '#4a7a34'; for (const [dx, dz, r] of [[-0.14, 0.62, 0.17], [0.13, 0.7, 0.15], [0, 0.85, 0.19], [-0.05, 0.5, 0.12]]) { g.beginPath(); g.ellipse(SX(x + dx), SY(z + dz), r * k, r * 0.8 * k, 0, 0, TAU); g.fill(); } }
@@ -356,6 +366,16 @@ export class InteriorRenderer {
     g.strokeStyle = '#5a4a3a'; g.lineWidth = 1.2; for (const s of [-0.5, -0.1, 0.3, 0.6]) { g.beginPath(); g.moveTo(SX(x + s), SY(z + 0.2)); g.lineTo(SX(x + s + 0.05), SY(z + 1.6)); g.stroke(); }   // studs showing through
     g.fillStyle = '#d8ccb4'; for (const [u, w] of [[-1.1, 0.22], [-0.7, 0.14], [0.9, 0.2], [1.2, 0.12]]) g.fillRect(SX(x + u), SY(z + 0.06), w * k, 0.06 * k);   // chunks on the floor
   }
+  brush(g, c, time) {                                       // a paintbrush in the caller's hand, dabbing down at the dog: wooden handle up in the fist, silver ferrule, the tip loaded with the same brown as the brows; an open paint can at his feet
+    const { SX, SY, k } = this, dab = Math.sin(time * 2.3);
+    g.fillStyle = '#8f8a84'; g.beginPath(); g.ellipse(SX(c.x + 0.38), SY(c.z + 0.02), 0.11 * k, 0.035 * k, 0, 0, TAU); g.fill();   // the can's rim
+    g.fillStyle = '#5a6068'; g.fillRect(SX(c.x + 0.28), SY(c.z + 0.14), 0.2 * k, 0.12 * k); g.fillStyle = '#4a2a10'; g.beginPath(); g.ellipse(SX(c.x + 0.38), SY(c.z + 0.135), 0.085 * k, 0.026 * k, 0, 0, TAU); g.fill();   // the can, full of brown
+    g.save(); g.translate(SX(c.x + c.face * 0.26), SY(c.z + 0.88 + dab * 0.05)); g.rotate(-c.face * (0.62 + dab * 0.1));
+    g.fillStyle = '#c9a24a'; g.fillRect(-0.024 * k, -0.19 * k, 0.048 * k, 0.19 * k);           // the handle
+    g.fillStyle = '#c9ccd2'; g.fillRect(-0.026 * k, 0, 0.052 * k, 0.05 * k);                    // the ferrule
+    g.fillStyle = '#4a2a10'; g.beginPath(); g.moveTo(-0.026 * k, 0.05 * k); g.lineTo(0.026 * k, 0.05 * k); g.lineTo(0.004 * k, 0.145 * k); g.closePath(); g.fill();   // the loaded tip
+    g.restore();
+  }
   son(g, S, time) { this.person(g, S, time, 150); }
   guest(g, gu, time, cut) {                              // CPU crew idling at home: by the fire with a beer; they sip now and then
     if (gu.party && cut && cut.complete && cut.naturalWidth) { this.partyGuest(g, gu, time, cut); return; }   // a party guest wears the cutaway sheet, not a hue-shifted clone of you
@@ -400,6 +420,11 @@ export class InteriorRenderer {
     g.beginPath(); g.ellipse(0.42 * k, (lie ? -0.3 : -0.58) * k, 0.13 * k, 0.11 * k, 0, 0, TAU); g.fill();       // head
     g.beginPath(); g.ellipse(0.55 * k, (lie ? -0.27 : -0.55) * k, 0.08 * k, 0.05 * k, 0, 0, TAU); g.fill();      // muzzle
     g.fillStyle = dark; g.beginPath(); g.ellipse(0.38 * k, (lie ? -0.26 : -0.53) * k, 0.05 * k, 0.09 * k, 0.3, 0, TAU); g.fill();   // ear
+    if (d.brows) {                                          // GIANT BROWN EYEBROWS, painted on by Jason: two fat dark-brown slabs slapped over the eyes, the far one peeking past the ear — hand-painted, so they sit a little crooked
+      g.fillStyle = '#4a2a10';
+      g.save(); g.translate(0.52 * k, (lie ? -0.40 : -0.665) * k); g.rotate(-0.16); g.beginPath(); g.ellipse(0, 0, 0.15 * k, 0.055 * k, 0, 0, TAU); g.fill(); g.restore();
+      g.save(); g.translate(0.315 * k, (lie ? -0.375 : -0.64) * k); g.rotate(-0.05); g.beginPath(); g.ellipse(0, 0, 0.125 * k, 0.048 * k, 0, 0, TAU); g.fill(); g.restore();
+    }
     g.fillStyle = '#2a1a14'; g.beginPath(); g.arc(0.62 * k, (lie ? -0.28 : -0.56) * k, 0.022 * k, 0, TAU); g.fill();
     const wag = Math.sin(time * (d.patT > 0 ? 22 : 9)) * 0.35;
     g.strokeStyle = gold; g.lineWidth = 0.07 * k; g.beginPath(); g.moveTo(-0.4 * k, (lie ? -0.22 : -0.45) * k); g.quadraticCurveTo(-0.62 * k, (-0.6 + wag * 0.3) * k, (-0.7 + wag * 0.1) * k, (-0.5 + wag) * k); g.stroke();
