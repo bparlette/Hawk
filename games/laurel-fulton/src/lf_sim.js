@@ -8,6 +8,7 @@
 //   const S = new LFSim(world, roster, fleet); S.step(dt, input)   input: Palm City's {jx, jy, jm, keys, action, turbo}
 
 import { initSkid, layMarks } from './lf_skid.js';   // Palm City's skid module, stolen (owner, Nov 17)
+import { buildRails, railsNear, bushesNear } from './lf_veg.js';   // crashable guardrails + bushes (owner, Nov 18)
 
 const TAU = Math.PI * 2;
 const wrap = (a) => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
@@ -40,6 +41,11 @@ export class LFSim {
     // areas.json lands (the load split) and calls it again on arrival.
     this.houses = []; this.houseGrid = new Map(); this.houseBox = [];
     if (opts.buildings) this.setBuildings(opts.buildings);
+    // crashable scenery (owner, Nov 18): guardrails from the road graph (built now, the
+    // graph is here at boot), bushes as a hash scatter (lf_veg) — squashed bushes are
+    // remembered here so the renderer flattens the same ones; they regrow after 20 s.
+    this.rails = buildRails(W); this.squashed = new Map(); this.greens = opts.greens || null;
+    this._bushBuf = []; this._railBuf = [];
     // every crew car parked at its owner's house, nose toward the street
     for (const p of roster.people) {
       if (!p.active || !p.car || !p.car.sprite || !fleet[p.car.sprite]) continue;
@@ -106,6 +112,79 @@ export class LFSim {
     });
   }
 
+  setGreens(greens) { this.greens = greens || null; }   // areas.json green polygons — bush country (main.js phase 2)
+
+  // is there a house footprint within d of (x, y)? (the bush rule + the anti-stuck test)
+  nearBuilding(x, y, d = 110) {
+    for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++)
+      for (const hi of this.houseGrid.get((Math.floor(x / 256) + i) * 100003 + Math.floor(y / 256) + j) || []) {
+        const bb = this.houseBox[hi];
+        if (x > bb[0] - d && x < bb[2] + d && y > bb[1] - d && y < bb[3] + d) return true;
+      }
+    return false;
+  }
+
+  // the player's car is hard against (or inside) a house footprint — houseCollide's
+  // neighbourhood test, read-only.
+  touchingHouse(c) {
+    const R = (c.len + c.wid) / 4 + 2, seen = new Set();
+    for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++)
+      for (const hi of this.houseGrid.get((Math.floor(c.x / 256) + i) * 100003 + Math.floor(c.y / 256) + j) || []) {
+        if (seen.has(hi)) continue; seen.add(hi);
+        const bb = this.houseBox[hi];
+        if (c.x > bb[0] - R && c.x < bb[2] + R && c.y > bb[1] - R && c.y < bb[3] + R) return true;
+      }
+    return false;
+  }
+
+  // anti-stuck recovery: back to the nearest road centreline point, stopped, wreck cleared
+  unstick(c) {
+    const r = this.W.roadInfo(c.x, c.y, 0);
+    let tx = null, ty = null;
+    if (r && r.e) { const p = this.nearPt(c.x, c.y, r); tx = p.x; ty = p.y; }
+    if (tx === null) for (let ring = 60; ring <= 900 && tx === null; ring += 60)
+      for (let k = 0; k < 24; k++) { const x = c.x + Math.cos(k / 24 * Math.PI * 2) * ring, y = c.y + Math.sin(k / 24 * Math.PI * 2) * ring; if (this.W.surfaceAt(x, y, 0) === 'road') { tx = x; ty = y; break; } }
+    if (tx === null) return;
+    c.x = tx; c.y = ty; c.v = 0; c.z = 0; c.vz = 0; c.wreck = false;
+    this.events.push({ t: this.time, kind: 'unstuck', model: c.model });
+  }
+
+  // guardrails (owner, Nov 18): a scrape, not a wall — the car is pushed out of the
+  // rail line and SLIDES along it (no heading bounce: a bounce is what wedges cars
+  // against houses). A fast hit bites a little damage; the slide itself is free.
+  railCollide() {
+    if (!this.rails || !this.rails.segs.length) return;
+    for (const c of this.cars) {
+      if (c.parked || c.remote || c.z > 0) continue;
+      const R = (c.len + c.wid) / 4;
+      for (const s of railsNear(this.rails, c.x, c.y, c.layer, this._railBuf)) {
+        const vx = s.x1 - s.x0, vy = s.y1 - s.y0, L2 = vx * vx + vy * vy || 1;
+        const t = clamp(((c.x - s.x0) * vx + (c.y - s.y0) * vy) / L2, 0, 1), px = s.x0 + vx * t, py = s.y0 + vy * t;
+        const dx = c.x - px, dy = c.y - py, d = Math.hypot(dx, dy);
+        if (d >= R || d < 0.001) continue;
+        const nx = dx / d, ny = dy / d;
+        c.x += nx * (R - d); c.y += ny * (R - d);
+        const vn = c.dirx * nx + c.diry * ny;              // kill only the into-rail motion: the car keeps its slide
+        if (vn < 0) { const sp = Math.abs(c.v); if (sp > 60) { this.hitCar(c, impactDamage(sp) * 0.5 * (c === this.player ? HERO : 1), -nx, -ny); this.events.push({ t: this.time, kind: 'rail', model: c.model, v: sp }); } c.v *= 0.94; }
+      }
+    }
+  }
+
+  // bushes (owner, Nov 18): soft — driving in squashes the bush flat and drags the
+  // car hard, but a bush can never stop or wedge anyone. Regrow after 20 s.
+  bushCollide(dt) {
+    for (const [id, t] of this.squashed) if (this.time - t > 20) this.squashed.delete(id);
+    for (const c of this.cars) {
+      if (c.parked || c.remote || c.layer !== 0 || c.z > 0 || Math.abs(c.v) < 4) continue;
+      const R = (c.len + c.wid) / 4;
+      for (const b of bushesNear(c.x, c.y, R + 18, this.W, (x, y) => this.nearBuilding(x, y), this.greens, this._bushBuf)) {
+        if (Math.hypot(b.x - c.x, b.y - c.y) >= R + b.r) continue;
+        if (!this.squashed.has(b.id)) { this.squashed.set(b.id, this.time); if (c === this.player) this.events.push({ t: this.time, kind: 'bush', model: c.model }); }
+        c.v *= Math.pow(0.18, dt);                          // ploughing through foliage: heavy drag, never a wall
+      }
+    }
+  }
+
   hitCar(c, amt, dx, dy) {
     if (amt <= 0.004 || this.time - c.hitT < 0.3) return;
     const before = stageOfCar(c.dmg);
@@ -166,6 +245,19 @@ export class LFSim {
     for (const o of this.cars) if (o !== this.player && !o.parked && !o.remote && o.driveFn) o.driveFn(o, dt);
     this.collide();
     this.houseCollide();
+    this.railCollide();
+    this.bushCollide(dt);
+    // ANTI-STUCK (owner, Nov 18 — the friend review: "got stuck in a tree... couldn't get
+    // back in my car"): the PLAYER's car can never stay wedged. Stick held, car barely
+    // moving on the ground, and the spot is off-road, wrecked, or hard against a house
+    // for 1.5 s straight -> it is lifted back to the nearest road point, stopped.
+    const P = this.player;
+    if (P && inp && !P.remote) {
+      const want = (inp.jm || 0) > 0.15 || !!((inp.keys || {}).up || (inp.keys || {}).down);
+      if (want && Math.abs(P.v) < 8 && !P.z && (P.surface !== 'road' || P.wreck || this.touchingHouse(P))) P.stuckT = (P.stuckT || 0) + dt;
+      else P.stuckT = 0;
+      if (P.stuckT > 1.5) { P.stuckT = 0; this.unstick(P); }
+    }
     // SELF-HEALING (owner, Nov 17): 10 s after a car's last hit it is back to normal — dents,
     // glass, damage and even the wreck itself, whatever stage it had reached.
     for (const o of this.cars) if ((o.dmg > 0 || o.wreck) && this.time - o.hitT >= HEAL_AFTER) {

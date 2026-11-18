@@ -18,7 +18,23 @@ export function exitCar(F, car) {
   F.z = 0; F.vz = 0; F.air = false; F.climb = null; F.land = 0;   // L5 heights (lf_climb.js): you step out at street level
 }
 
-export function nearCar(F, car) { return !(F.z > 4) && Math.hypot(car.x - F.x, car.y - F.y) < FOOT.enterR; }   // L5: not from up on a roof
+// distance from the ped to a car's BODY (its centreline segment), not just its centre:
+// at the nose or tail of a long car you are standing right beside it, not a car-length
+// away from help. (Nov 18, the friend review: "couldn't get back in my car.")
+export function carDist(F, car) {
+  const dx = Math.cos(car.h), dy = Math.sin(car.h), L = (car.len || 40) / 2;
+  const px = F.x - car.x, py = F.y - car.y, t = Math.max(-L, Math.min(L, px * dx + py * dy));
+  return Math.hypot(px - dx * t, py - dy * t);
+}
+export function nearCar(F, car) { return !(F.z > 4) && carDist(F, car) < FOOT.enterR; }   // L5: not from up on a roof
+// ANY car you can get into (owner, Nov 18): yours, a parked crew car, any car at all —
+// the nearest one whose body is within reach. Remote (another player's) cars excluded.
+export function nearAnyCar(F, cars) {
+  if (F.z > 4) return null;
+  let best = null, bd = FOOT.enterR;
+  for (const c of cars) { if (c.remote) continue; const d = carDist(F, c); if (d < bd) { bd = d; best = c; } }
+  return best;
+}
 
 // one fixed step on foot. inp is Palm City's {jx, jy, jm, keys, punch}.
 // Returns 'punch' on the step a punch starts, else null.

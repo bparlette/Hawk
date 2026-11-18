@@ -3,6 +3,7 @@
 // a golden-hour grade in Palm City's spirit, and the real street name you are on.
 import { CHUNK } from './lf_ground.js';
 import { poly } from './lf_areas.js';
+import { bushesNear } from './lf_veg.js';
 import * as FX from './lf_fx.js';
 
 const SUN = { x: 0.8, y: -0.3 }, FAR_CHUNKS = 90;                       // the bake's sun: shadows fall east-north-east
@@ -62,6 +63,35 @@ export class Renderer {
       g.globalAlpha = 1; g.fillStyle = roof; poly(g, h.f, S, h.cx, h.cy); g.fill();
       g.lineWidth = 3; g.strokeStyle = '#2a1430'; g.stroke();
       g.globalAlpha = 0.35; g.fillStyle = '#fff2d8'; poly(g, h.f, S * 0.55, h.cx - 6, h.cy - 4); g.fill(); g.globalAlpha = 1;   // lit roof plane
+    }
+    // crashable scenery (owner, Nov 18): guardrails along the fast roads + bridges, and
+    // bushes in the yards — the SAME sets the sim collides with (lf_veg.js), so what you
+    // see is exactly what you can hit. Rails: a bright band on a dark shadow line.
+    if (S.rails && !far) {
+      const seenS = new Set(); g.lineCap = 'round';
+      for (let cy = Math.floor(vy0 / 256); cy <= Math.floor(vy1 / 256); cy++) for (let cx = Math.floor(vx0 / 256); cx <= Math.floor(vx1 / 256); cx++)
+        for (const s of S.rails.grid.get(cx * 100003 + cy) || []) { if (seenS.has(s)) continue; seenS.add(s);
+          g.beginPath(); g.moveTo(s.x0 + SUN.x * 4, s.y0 + SUN.y * 4); g.lineTo(s.x1 + SUN.x * 4, s.y1 + SUN.y * 4); g.lineWidth = 4.6; g.strokeStyle = 'rgba(24,20,36,0.4)'; g.stroke();
+          g.beginPath(); g.moveTo(s.x0, s.y0); g.lineTo(s.x1, s.y1); g.lineWidth = 3.4; g.strokeStyle = '#c9d2da'; g.stroke();
+          g.beginPath(); g.moveTo(s.x0, s.y0); g.lineTo(s.x1, s.y1); g.lineWidth = 1.1; g.strokeStyle = '#eef3f6'; g.stroke();
+        }
+    }
+    if (this.areas && !far) {
+      if (!this._nb) {   // the renderer's own house-box grid, for the shared bush rule
+        const boxes = this.areas.A.buildings.map(f => { let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (let k = 0; k < f.length; k += 2) { x0 = Math.min(x0, f[k]); x1 = Math.max(x1, f[k]); y0 = Math.min(y0, f[k + 1]); y1 = Math.max(y1, f[k + 1]); } return [x0, y0, x1, y1]; });
+        const grid = new Map(); boxes.forEach((bb, i) => { for (let cx = Math.floor(bb[0] / 256); cx <= Math.floor(bb[2] / 256); cx++) for (let cy = Math.floor(bb[1] / 256); cy <= Math.floor(bb[3] / 256); cy++) { const key = cx * 100003 + cy; let l = grid.get(key); if (!l) grid.set(key, l = []); l.push(i); } });
+        this._nb = (x, y) => { for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (const hi of grid.get((Math.floor(x / 256) + i) * 100003 + Math.floor(y / 256) + j) || []) { const bb = boxes[hi]; if (x > bb[0] - 110 && x < bb[2] + 110 && y > bb[1] - 110 && y < bb[3] + 110) return true; } return false; };
+      }
+      const buf = this._bb || (this._bb = []);
+      for (const b of bushesNear(cam.x, cam.y, Math.max(hw, hh) + 80, this.W, this._nb, this.areas.A.green, buf)) {
+        if (S.squashed && S.squashed.has(b.id)) {   // driven through: flat + pale until it regrows
+          g.globalAlpha = 0.75; g.fillStyle = '#7a8f4a'; g.beginPath(); g.ellipse(b.x, b.y, b.r * 1.25, b.r * 0.6, 0, 0, Math.PI * 2); g.fill(); g.globalAlpha = 1; continue;
+        }
+        g.globalAlpha = 0.35; g.fillStyle = '#1e3016'; g.beginPath(); g.ellipse(b.x + SUN.x * 6, b.y + SUN.y * 6, b.r, b.r * 0.8, 0, 0, Math.PI * 2); g.fill();
+        g.globalAlpha = 1; g.fillStyle = '#3f7031'; g.beginPath(); g.arc(b.x, b.y, b.r, 0, Math.PI * 2); g.fill();
+        g.fillStyle = '#55883f'; g.beginPath(); g.arc(b.x - b.r * 0.25, b.y - b.r * 0.3, b.r * 0.68, 0, Math.PI * 2); g.fill();
+        g.fillStyle = '#6fa653'; g.beginPath(); g.arc(b.x - b.r * 0.38, b.y - b.r * 0.45, b.r * 0.36, 0, Math.PI * 2); g.fill();
+      }
     }
     // shadows of ground-level cars, then those cars
     g.globalAlpha = 0.55; for (const c of S.cars) if (c.layer === 0 && vis(c.x, c.y)) this.drawCar(g, c, 'shadow');
