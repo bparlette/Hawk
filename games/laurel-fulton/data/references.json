@@ -1,0 +1,16 @@
+{
+ "_doc": "Reference-photo manifest for the showcase generator (tools/factory/showcase_build.py). Files live in showcase-assets/. match: exact (default) | near. Captions sourced from the hand-made showcase.html.",
+ "cars": {
+  "brad": {"caption": "real 1987 Camaro, front 3/4"},
+  "kosack": {"caption": "a Cavalier - the '96 third-gen refs are still to come", "match": "near"},
+  "jimmy": {"caption": "real 1996 Astro, front"},
+  "billy": {"caption": "an actual teal 1994 Astro"},
+  "jason": {"caption": "real white 1989 Camry"},
+  "clayton": {"caption": "green IROC-Z, front 3/4"},
+  "zack": {"caption": "first-gen Tracer 5-door; the photo car is blue, the green is the spec", "match": "near"},
+  "rigg": {"caption": "a Celica - the '87 GT refs are still to come", "match": "near"},
+  "grant": {"caption": "real maroon Brougham, front 3/4"},
+  "lamar": {"caption": "real 1987 Mustang GT hatchback"}
+ },
+ "heroes": {}
+}
