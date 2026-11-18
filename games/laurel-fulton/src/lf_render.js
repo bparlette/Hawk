@@ -115,13 +115,24 @@ export class Renderer {
     const vis = (x, y, m = 120) => x > vx0 - m && x < vx1 + m && y > vy0 - m && y < vy1 + m;
     // task L8 hero tier: the crew's homes + the POIs, BIGGER than real (x1.35 about the centroid), crisp,
     // inked, with a name plaque. (Placeholder roofs until the Street View hero art, L11/G12, lands.)
+    const HERO_ROOF = {
+      Brad: '#e8e4dc', Kosack: '#b85d48', 'The Lazaris house': '#c49a6c', Jason: '#dcd6c8',
+      'The Floyds': '#7c8c74', Rigg: '#687888', Grant: '#9e4b46', 'Ledo Pizza': '#d44a3a',
+      'Atholton High School': '#d8b480', 'Reservoir High School': '#d8b480',
+    };
     if (this.areas) for (const h of this.areas.heroes) {
       if (!vis(h.cx, h.cy, 600)) continue;
-      const S = h.kind === 'poi' ? 1.12 : 1.35, roof = h.kind === 'poi' ? '#e8b77a' : '#d9785a';
-      g.globalAlpha = 0.38; g.fillStyle = '#21183a'; g.save(); g.translate(SUN.x * 34, SUN.y * 34); poly(g, h.f, S, h.cx, h.cy); g.fill(); g.restore();
+      const S = h.kind === 'poi' ? 1.16 : 1.40, roof = HERO_ROOF[h.who] || (h.kind === 'poi' ? '#d8b480' : '#d9785a');
+      g.globalAlpha = 0.44; g.fillStyle = '#1d1432'; g.save(); g.translate(SUN.x * 38, SUN.y * 38); poly(g, h.f, S, h.cx, h.cy); g.fill(); g.restore();
       g.globalAlpha = 1; g.fillStyle = roof; poly(g, h.f, S, h.cx, h.cy); g.fill();
-      g.lineWidth = 3; g.strokeStyle = '#2a1430'; g.stroke();
-      g.globalAlpha = 0.35 * (0.25 + 0.75 * this.gr.warm); g.fillStyle = '#fff2d8'; poly(g, h.f, S * 0.55, h.cx - 6, h.cy - 4); g.fill(); g.globalAlpha = 1;   // lit roof plane (dims as the sun goes, with Palm City's warm curve)
+      g.lineWidth = 3.5; g.strokeStyle = '#210f2e'; g.stroke();
+      g.lineWidth = 1.4; g.strokeStyle = 'rgba(33,15,46,0.55)'; poly(g, h.f, S * 0.86, h.cx, h.cy); g.stroke();
+      g.globalAlpha = 0.38 * (0.25 + 0.75 * this.gr.warm); g.fillStyle = '#fff5e0'; poly(g, h.f, S * 0.58, h.cx - 7, h.cy - 5); g.fill();
+      if (this.gr.windows > 0.15) {
+        g.globalAlpha = 0.34 * this.gr.windows; g.fillStyle = '#ffd68a';
+        poly(g, h.f, S * 0.36, h.cx, h.cy); g.fill();
+      }
+      g.globalAlpha = 1;
     }
     // crashable scenery (owner, Nov 18): guardrails along the fast roads + bridges, and
     // bushes in the yards — the SAME sets the sim collides with (lf_veg.js), so what you
