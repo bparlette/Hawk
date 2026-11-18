@@ -38,8 +38,15 @@ export class Interior {
     this.callers = (K.barks || []).filter((b, i, a) => b.who !== this.hero.who.id && a.findIndex(c => c.who === b.who) === i)
       .map(b => ({ id: b.who, name: b.name || b.who, floor: b.floor, x: b.x, z: this.F[b.floor].z, face: -1, link: null, t: 0, walk: 0, moving: false, sayT: 0, said: null, queue: [] }));
     this.barkI = 0; this.arcadeT = 0;
-    // guests: crew CPUs home here, idling at the kit's cpuIdle spot with a beer (a sip every few seconds)
-    this.guests = (opts.guests || []).filter(g => g.id !== this.hero.who.id && this.F[(K.cpuIdle || {}).floor]).map((g, i) => ({ id: g.id, name: g.name || g.id, floor: K.cpuIdle.floor, x: K.cpuIdle.x + i * 0.9, z: this.F[K.cpuIdle.floor].z, face: -1, sip: 2 + i * 1.7, drinkT: 0, drank: 0 }));
+    // guests: crew CPUs home here idle at the kit's cpuIdle spot with a beer (a sip every few
+    // seconds); night-party guests (g.party) carry their own placement — floor / x / facing /
+    // cutaway cell — from lf_party.interiorGuests() and are drawn from the party sheet.
+    this.partyImgs = opts.partyImgs || null;   // the party's sprite sheets (lf_party.js owns the object; it fills in as they load)
+    const idle = K.cpuIdle && this.F[K.cpuIdle.floor] ? K.cpuIdle : null;
+    this.guests = (opts.guests || []).filter(g => g.id !== this.hero.who.id && (this.F[g.floor] || idle)).map((g, i) => {
+      const fl = this.F[g.floor] ? g.floor : idle.floor, F2 = this.F[fl];
+      return { id: g.id, name: g.name || (g.party ? '' : g.id), party: !!g.party, cell: g.cell || 0, pose: g.pose || '', scale: g.scale || 1, bobPhase: g.bobPhase || 0, floor: fl, x: g.x != null ? g.x : (idle && fl === idle.floor ? idle.x + i * 0.9 : F2.x0 + 0.6 + i * 0.9), z: F2.z, face: g.face || -1, sip: 2 + i * 1.7, drinkT: 0, drank: 0 };
+    });
     this.barker = this.hero.who.id === 'rigg' ? new Barker(opts.seed || 1998) : null;
     this.dogs = [];
     for (let i = 0; i < (K.dogs || 0); i++) {

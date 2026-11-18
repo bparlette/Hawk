@@ -112,7 +112,15 @@ let KOTH = null;   // Cul-de-Sac King of the Hill lands in phase 2 with its data
   const ids = await fetch('data/interiors/index.json').then(r => r.ok ? r.json() : []).catch(() => []);
   for (const id of ids) { try { KITS[id] = await j('data/interiors/' + id + '.json'); } catch (e) {} }
   // ?player=<id> picks at module time, BEFORE the kits stream in (the load split): a run as someone with a house kit still STARTS inside — go in the moment the kit lands
-  if (pendingIn && KITS[pendingIn] && !inside && foot && !foot.active && Math.abs(sim.player.v) < 1) goIn(pendingIn, foot.who);
+  if (pendingIn && KITS[pendingIn] && !inside && foot && !foot.active && Math.abs(sim.player.v) < 1) {
+    // Nov 18 leftover fix: the pending entry only fires while the player is still AT the
+    // pending house — a slow Brad driving on past used to get yanked inside the moment the
+    // kit landed, however far down the road he had got. Past ~200 wu the flag is dropped.
+    const ph = (roster.people.find(p => p.id === pendingIn) || {}).house;
+    if (ph && Math.hypot(sim.player.x - ph[0], sim.player.y - ph[1]) <= 200) goIn(pendingIn, foot.who);
+    else if (ph) pendingIn = null;
+    else goIn(pendingIn, foot.who);
+  }
 })();
 let pendingIn = null, inside = null, insideId = null; const IR = new InteriorRenderer(ctx), PIR = new PlaceRenderer(ctx); let PL = null;   // PL: L12/L13 places (lands with places.json)
 // ---- L7 remainder hooks: the van's step-up support (merged with the roof's), its screen lift, Rigg's ambient barks
@@ -123,9 +131,9 @@ const RIGGB = new Barker();
 const goIn = (id, who) => {
   const P = roster.people.find(p => p.id === id) || { name: id }, car = sim.cars.find(c => c.owner === id), home = P.house && car && Math.hypot(car.x - P.house[0], car.y - P.house[1]) < 260 && Math.abs(car.v) < 25 && !car.follower;
   const guests = id !== who.id && home && (!net || car.inside === id) ? [{ id, name: P.name }] : [];
-  const pGuests = party.indoorGuests(id);
-  for (let i = 0; i < Math.min(18, pGuests.length); i++) guests.push({ id: pGuests[i].id, name: '' });
-  insideId = id; inside = new Interior(KITS[id], { who, house: P.name, guests }); if (foot) foot.active = false;
+  const pGuests = party.interiorGuests(id, KITS[id]);   // ALL of the venue's indoor slots, placed on the kit's floors (no 18-cap row at the cpuIdle spot)
+  for (const pg of pGuests) guests.push(pg);
+  insideId = id; inside = new Interior(KITS[id], { who, house: P.name, guests, partyImgs: party.imgs }); if (foot) foot.active = false;
 };
 const goInPlace = (pl, who) => { inside = new PlaceInterior(KITS[pl.interior], { who, exitAt: pl }); if (foot) foot.active = false; };   // L12/L13: a public building, anyone
 const goOut = () => {                                     // out the front door: on foot on the front walk, your car in the driveway

@@ -39,6 +39,32 @@ export class FakeCop {
     this.bus.update(this.sim.cars, P, urgent);
   }
 
+  // DESIGN-G17 §3: the WOOP-WOOP blip — two 110 ms upward chirps (620 -> 980 Hz sawtooth
+  // through an 1100 Hz bandpass). §4 gives the peel-off driver a laugh-off cue as he goes;
+  // the shipped game had no peel-off sound at all (Nov 18 audit), so he gets the blip.
+  // Rides the siren bus's own context (started by the siren during the pull-over); if the
+  // bus has no context yet (or in node specs) it stays silent rather than spinning another.
+  _woop() {
+    const A = this.bus && this.bus.a, ctx = A && A.ctx;
+    if (!ctx) return;
+    try {
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+      const t0 = ctx.currentTime;
+      for (const off of [0, 0.17]) {
+        const o = ctx.createOscillator(); o.type = 'sawtooth';
+        o.frequency.setValueAtTime(620, t0 + off);
+        o.frequency.exponentialRampToValueAtTime(980, t0 + off + 0.11);
+        const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1100; bp.Q.value = 1.1;
+        const gn = ctx.createGain();
+        gn.gain.setValueAtTime(0.0001, t0 + off);
+        gn.gain.exponentialRampToValueAtTime(0.05, t0 + off + 0.02);
+        gn.gain.exponentialRampToValueAtTime(0.0001, t0 + off + 0.13);
+        o.connect(bp); bp.connect(gn); gn.connect(ctx.destination);
+        o.start(t0 + off); o.stop(t0 + off + 0.14);
+      }
+    } catch (e) {}
+  }
+
   triggerSiren(on) {
     this.sirenOn = !!on;
     if (!on) this._audio(false, false);
@@ -66,7 +92,7 @@ export class FakeCop {
       const r = this.W.roadInfo(c.x, c.y, 0), ta = r.e ? Math.atan2(r.dy, r.dx) : c.h;
       const d1 = wrap(ta - c.h), d2 = wrap(ta + Math.PI - c.h);
       const steer = Math.max(-1, Math.min(1, (Math.abs(d1) < Math.abs(d2) ? d1 : d2) * 2.2));
-      this.sim.driveCar(c, 1, steer, dt, 310);
+      this.sim.driveCar(c, 1, steer, dt, 263);   // DESIGN-G17 §4: peel-off caps at 1.35x the 195 traffic cruise = 263 (shipped 310 = 1.59x — Nov 18 audit)
       if (c.fcT <= 0) { c.fcState = 'NONE'; c.fcCd = 25; if (this.lock === c) this.lock = null; }
       return;
     }
@@ -130,7 +156,7 @@ export class FakeCop {
             this._bark(P, KOSACK_LINES[this.stops % KOSACK_LINES.length], 2.4, 0);
             this._bark(t, DRIVER_PULL_LINES[this.stops % DRIVER_PULL_LINES.length], 2.6, 1.5);
           } else {
-            t.fcState = 'PEEL_OFF'; t.fcT = 3.5; this.bluffs++; this.streak = 0;
+            t.fcState = 'PEEL_OFF'; t.fcT = 3.5; this.bluffs++; this.streak = 0; this._woop();   // DESIGN-G17 §3/§4: WOOP-WOOP as he peels off
             this.score += 100;
             this.toast = { text: `+100 BUSTED BLUFF`, t: 2.4 };
             this._bark(t, DRIVER_PEEL_LINES[this.bluffs % DRIVER_PEEL_LINES.length], 2.5, 0);
