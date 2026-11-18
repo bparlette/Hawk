@@ -210,13 +210,15 @@ function frame(now) {
   }
   if (inside) { IR.draw(inside, VIEW_W, view.h, DPR, now / 1000); drawControls(); requestAnimationFrame(frame); return; }
   renderer.draw(sim, cam, now / 1000);
-  // Cul-de-Sac King of the Hill: the ring, the crown, the banner (screen space, over the world)
-  if (KOTH && KOTH.sac && (KOTH.state === 'count' || KOTH.state === 'round')) {
+  // Cul-de-Sac King of the Hill: the ring, the crown, the banner (screen space, over the world).
+  // In idle the ring of the cul-de-sac you're sitting in shows DIM — it never starts itself.
+  const ringSac = KOTH && KOTH.state !== 'done' ? (KOTH.state === 'idle' ? (KOTH.candidate ? KOTH.candidate(sim) : null) : KOTH.sac) : null;
+  if (KOTH && ringSac) {
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    const sc = KOTH.sac, cxp = (sc.x - cam.x) * cam.zoom + VIEW_W / 2, cyp = (sc.y - cam.y) * cam.zoom + view.h / 2, rp = sc.r * cam.zoom;
+    const sc = ringSac, cxp = (sc.x - cam.x) * cam.zoom + VIEW_W / 2, cyp = (sc.y - cam.y) * cam.zoom + view.h / 2, rp = sc.r * cam.zoom;
     ctx.beginPath(); ctx.arc(cxp, cyp, rp, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(255,210,92,0.07)'; ctx.fill();
-    ctx.strokeStyle = KOTH.state === 'round' ? 'rgba(255,90,60,0.95)' : 'rgba(255,210,92,0.95)'; ctx.lineWidth = 4; ctx.setLineDash([14, 8]); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle = KOTH.state === 'round' ? 'rgba(255,90,60,0.95)' : KOTH.state === 'count' ? 'rgba(255,210,92,0.95)' : 'rgba(255,210,92,0.45)'; ctx.lineWidth = 4; ctx.setLineDash([14, 8]); ctx.stroke(); ctx.setLineDash([]);
   }
   if (KOTH && KOTH.state === 'done' && KOTH.winner && KOTH.crownT > 0) {
     const wc = KOTH.winner;
@@ -242,6 +244,8 @@ function frame(now) {
 let mapOpen = Q.has('map');
 addEventListener('keydown', e => { if (e.code === 'KeyM') mapOpen = !mapOpen; });
 canvas.addEventListener('pointerdown', e => { const b = canvas.getBoundingClientRect(), x = (e.clientX - b.left) * VIEW_W / b.width, y = (e.clientY - b.top) * view.h / b.height; if (x > VIEW_W - 76 && y > 12 && y < 46) { mapOpen = !mapOpen; e.stopPropagation(); } }, { capture: true });
+canvas.addEventListener('pointerdown', e => { if (!KOTH || KOTH.state !== 'idle' || picking || mapOpen || inside || (foot && foot.active) || !KOTH.candidate || !KOTH.candidate(sim)) return; const b = canvas.getBoundingClientRect(), x = (e.clientX - b.left) * VIEW_W / b.width, y = (e.clientY - b.top) * view.h / b.height, kb2 = kothBtnPos(); if (Math.hypot(x - kb2.x, y - kb2.y) <= kb2.r + 8) { KOTH.tryStart(sim); e.stopPropagation(); } }, { capture: true });
+addEventListener('keydown', e => { if (e.code === 'KeyK' && KOTH && !inside) KOTH.tryStart(sim); });
 let mapCv = null, mapK = 0, mapO = [0, 0];
 function buildMap() {
   const B = W.bounds, pad = 40, cw = 840, k = Math.min((cw - pad * 2) / (B.x1 - B.x0), (cw * 1.33 - pad * 2) / (B.y1 - B.y0));
@@ -278,6 +282,7 @@ function drawMap(c) {
   ctx.font = '800 16px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffe4b0'; ctx.fillText(document.title.toUpperCase() + ' — tap MAP to close', VIEW_W / 2, 40);
 }
 
+function kothBtnPos() { return { x: VIEW_W - 72, y: view.h - 232, r: 34 }; }   // the crown button: above ACTION
 // Palm City's control graphics (its hud.js), drawn over the world: the stick while
 // it is held, the big ACTION button (GET OUT / GET IN), and the A button — TURBO in
 // a car (chevrons + the car's turbo charge as the ring), PUNCH on foot (the fist).
@@ -310,6 +315,16 @@ function drawControls() {
     g.strokeStyle = 'rgba(255,120,60,0.95)'; g.lineWidth = 3.5;
     g.beginPath(); g.arc(f.x, f.y, f.r + 5, -Math.PI / 2, -Math.PI / 2 + TAU2 * Math.max(0, Math.min(1, c.turbo || 0))); g.stroke();
     g.font = '800 12px system-ui'; g.textAlign = 'center'; g.fillStyle = '#ffe9c4'; g.fillText('TURBO', f.x, f.y - f.r - 11);
+  }
+  // Cul-de-Sac King of the Hill: the crown button — shown only while you're sitting in a
+  // cul-de-sac; the mode starts when YOU press it, never by itself (owner, Nov 17).
+  if (!onFoot && KOTH && KOTH.state === 'idle' && KOTH.candidate && KOTH.candidate(sim)) {
+    const kb2 = kothBtnPos();
+    g.beginPath(); g.arc(kb2.x, kb2.y, kb2.r, 0, TAU2); g.fillStyle = 'rgba(255,240,220,0.18)'; g.fill();
+    g.lineWidth = 3; g.strokeStyle = 'rgba(255,214,120,0.95)'; g.stroke();
+    g.beginPath(); g.arc(kb2.x, kb2.y, kb2.r * 0.62, 0, TAU2); g.fillStyle = 'rgba(255,214,120,0.85)'; g.fill();
+    g.font = '22px system-ui'; g.textAlign = 'center'; g.fillText('👑', kb2.x, kb2.y + 8);
+    g.font = '800 12px system-ui'; g.fillStyle = '#ffe9c4'; g.fillText('KING', kb2.x, kb2.y - kb2.r - 11);
   }
 }
 const _draw = renderer.draw.bind(renderer);

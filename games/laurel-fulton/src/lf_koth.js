@@ -1,9 +1,12 @@
 // lf_koth.js — Cul-de-Sac King of the Hill (owner, Nov 17): any real cul-de-sac on the map
-// (data/culdesacs.json, tools/find_culdesacs.py — 302 of them) is an instant bumper-car ring.
-// When EVERY car that's out is inside one cul-de-sac's circle, a round fires: a 3-count, then
-// 30 seconds of bumper cars (the sim's kothBoost: no damage, headings glance off each other).
-// Out of the circle for more than 0.75 s and you're eliminated. Last car in wins; if the clock
-// runs out, the car closest to the centre takes it. The winner wears the crown for 30 s.
+// (data/culdesacs.json, tools/find_culdesacs.py — 302 of them) is a bumper-car ring.
+// STARTING IS A DECISION (owner, Nov 17 evening): the rally makes the crew follow the player
+// and pile up at every house stop — half of them in cul-de-sacs — so the mode must NEVER
+// auto-fire. When the player is sitting in a cul-de-sac, the ring shows dim and the crown
+// button appears (main.js); pressing it (or K) with at least 2 cars in the ring starts a
+// 3-count, then 30 seconds of bumper cars (the sim's kothBoost: no damage, headings glance
+// off each other). Out of the circle for more than 0.75 s and you're eliminated. Last car
+// in wins; if the clock runs out, the car closest to the centre takes it. Crown for 30 s.
 export class KingOfTheHill {
   constructor(sacs) {
     this.sacs = sacs || [];
@@ -13,25 +16,36 @@ export class KingOfTheHill {
     this.alive = new Set();     // cars still in the round
     this.outT = new Map();      // car -> seconds spent outside the ring
     this.winner = null; this.winnerName = ''; this.crownT = 0; this.coolT = 0; this.lastOut = null;
+    this.notice = null; this.noticeT = 0;   // the 'need a rival' hint, shown via banner()
   }
   participants(sim) { return sim.cars.filter(c => !c.parked && !c.remote && c.layer === 0 && !c.wreck); }
-  inside(c) { return Math.hypot(c.x - this.sac.x, c.y - this.sac.y) <= this.sac.r; }
+  insideSac(c, s) { return Math.hypot(c.x - s.x, c.y - s.y) <= s.r; }
+  inside(c) { return this.sac ? this.insideSac(c, this.sac) : false; }
+  candidate(sim) {   // the ring the PLAYER is sitting in (the button shows for this one)
+    const P = sim.player;
+    if (!P || P.parked || P.remote || P.layer !== 0 || P.wreck) return null;
+    return this.sacs.find(s => this.insideSac(P, s)) || null;
+  }
+  insiders(sim, s) { return this.participants(sim).filter(c => this.insideSac(c, s)); }
+  tryStart(sim) {   // THE BUTTON: start a round in the player's cul-de-sac, if a rival is in
+    if (this.state !== 'idle' || this.coolT > 0) return false;
+    const s = this.candidate(sim); if (!s) return false;
+    if (this.insiders(sim, s).length < 2) { this.notice = 'NEED A RIVAL IN THE RING — BRING THE CREW IN'; this.noticeT = 3; return false; }
+    this.sac = s; this.state = 'count'; this.t = 3; return true;
+  }
   step(sim, dt) {
     sim.kothBoost = this.state === 'round';
     if (this.crownT > 0) this.crownT -= dt;
     if (this.coolT > 0) this.coolT -= dt;
-    const P = this.participants(sim);
-    if (this.state === 'idle') {
-      if (this.coolT > 0 || P.length < 2) return;
-      for (const s of this.sacs) {
-        this.sac = s;
-        if (P.every(c => this.inside(c))) { this.state = 'count'; this.t = 3; return; }
-      }
-      this.sac = null;
-    } else if (this.state === 'count') {
-      if (P.length < 2 || !P.every(c => this.inside(c))) { this.state = 'idle'; this.sac = null; return; }   // someone bailed: no round
+    if (this.noticeT > 0) this.noticeT -= dt;
+    if (this.state === 'count') {
+      if (!this.inside(sim.player)) { this.state = 'idle'; this.sac = null; return; }   // the starter drove off: no round
       this.t -= dt;
-      if (this.t <= 0) { this.state = 'round'; this.t = 30; this.alive = new Set(P); this.outT = new Map(); this.lastOut = null; }
+      if (this.t <= 0) {
+        const P = this.insiders(sim, this.sac);
+        if (P.length < 2) { this.state = 'idle'; this.sac = null; return; }              // the rival bailed during the count
+        this.state = 'round'; this.t = 30; this.alive = new Set(P); this.outT = new Map(); this.lastOut = null;
+      }
     } else if (this.state === 'round') {
       this.t -= dt;
       for (const c of [...this.alive]) {
@@ -52,6 +66,7 @@ export class KingOfTheHill {
     }
   }
   banner() {
+    if (this.state === 'idle' && this.noticeT > 0 && this.notice) return this.notice;
     if (this.state === 'count') return `CUL-DE-SAC KING OF THE HILL — ${this.sac.name} — ${Math.ceil(this.t)}`;
     if (this.state === 'round') return `KING OF THE HILL — ${Math.max(0, Math.ceil(this.t))}s — ${this.alive.size} IN THE RING`;
     if (this.state === 'done' && this.winner) return `${this.winnerName.toUpperCase()} TAKES THE CUL-DE-SAC!`;
