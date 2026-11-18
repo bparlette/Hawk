@@ -94,14 +94,23 @@ export function gridCar(sim) {
   return c && !c.wreck && sim.cars.includes(c) ? c : null;
 }
 
-// Keep the race car waiting in the start circle whenever no run is live. If it was taken,
-// wrecked or left across town, it is released to the world and a fresh one is parked in the
-// circle (fixed: true, so the population filter never culls it — the job vehicles' trick).
+// Keep the race car waiting in the start circle whenever no run is live. The grid car is a
+// SINGLETON (fixed: true, so the population filter never culls it — the job vehicles'
+// trick): it is never released-and-respawned. If traffic shoved it out of the circle or it
+// was left across town, it is brought home and repaired, the guardRingCars pattern — the
+// old release-and-respawn bred permanent duplicates (audit H2). A fresh one spawns only
+// when the singleton is wrecked or gone.
 export function ensureGridCar(sim) {
   if (sim.event) return gridCar(sim);
   const old = sim.openroadCar;
-  if (old && !old.wreck && sim.cars.includes(old) && old.driver !== 'player' && Math.hypot(old.x - SITE[0], old.y - SITE[1]) < 30) {
+  if (old && !old.wreck && sim.cars.includes(old)) {
+    if (old.driver === 'player' || sim.player.car === old) return old;   // in the player's hands — it comes home when they leave it
+    if (Math.hypot(old.x - SITE[0], old.y - SITE[1]) >= 30) {
+      old.x = SITE[0]; old.y = SITE[1]; old.h = Math.PI;
+      old.dmg = 0; old.dent = [0, 0, 0, 0]; old.glass = [0, 0];
+    }
     if (!old.parked) { old.parked = true; old.driver = null; old.v = 0; }
+    old.fixed = true; old.openroad = true;
     return old;
   }
   if (old) old.openroad = false;
