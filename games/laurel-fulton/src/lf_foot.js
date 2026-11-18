@@ -32,7 +32,8 @@ export function nearCar(F, car) { return !(F.z > 4) && carDist(F, car) < FOOT.en
 export function nearAnyCar(F, cars) {
   if (F.z > 4) return null;
   let best = null, bd = FOOT.enterR;
-  for (const c of cars) { if (c.remote) continue; const d = carDist(F, c); if (d < bd) { bd = d; best = c; } }
+  for (const c of cars) { if (c.remote || c.ambient || c.cop) continue;   // L15: traffic and cop cars are not yours to get into
+      const d = carDist(F, c); if (d < bd) { bd = d; best = c; } }
   return best;
 }
 

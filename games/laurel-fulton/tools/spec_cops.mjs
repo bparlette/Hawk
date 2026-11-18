@@ -26,13 +26,13 @@ if (CP && TR) {
   for (const k of ['SPEED_OVER_MPH', 'COOL_TIME', 'BUST_TIME', 'BUST_SPEED', 'COP_SPAWN_MIN', 'COP_SPEED', 'OFFENSE_GAP']) check(typeof CP[k] === 'number', `tuning number ${k} is a named constant`, String(CP[k]));
 
   // 1 — a legal quiet drive raises nothing
-  { const { S, C, pilot, run } = world(); C.opts.noPatrol = false; let top = 0;
-    run(45, () => { const i = pilot.steer(DT); i.jm = Math.min(i.jm, 0.25); return i; }, () => { top = Math.max(top, C.level); });
-    check(C.level === 0 && top === 0, 'a calm drive never raises the wanted level', `level ${C.level}, speed ${Math.round(Math.abs(S.player.v) / 4.47)} mph`); }
+  { const { S, C, pilot, run, ahead } = world({ noPatrol: true }); const p = ahead(380); C.spawnPatrol(p[0], p[1], S.player.h); let top = 0;
+    run(45, () => { const i = pilot.steer(DT); i.jm = Math.min(i.jm, 0.2); return i; }, () => { top = Math.max(top, C.level); });
+    check(C.level === 0 && top === 0, 'a calm drive past a cop never raises the wanted level', `level ${C.level}, speed ${Math.round(Math.abs(S.player.v) / 4.47)} mph`); }
 
   // 2 — SPEEDING in view of a patrol cop
   { const { S, T, C, pilot, run, ahead } = world({ noPatrol: true });
-    const p = ahead(420); C.spawnPatrol(p[0], p[1], S.player.h); let at = null; const maxMph = [];
+    run(5, () => pilot.steer(DT)); const p = ahead(650); C.spawnPatrol(p[0], p[1], S.player.h); let at = null; const maxMph = [];
     run(25, () => pilot.steer(DT), () => { maxMph.push(Math.abs(S.player.v) / 4.47); if (C.level > 0 && at === null) { at = S.time; return 'stop'; } });
     check(C.level === 1, 'speeding near a cop raises the level to 1', `level ${C.level} after ${at ? at.toFixed(1) : '-'} s at up to ${Math.round(Math.max(...maxMph))} mph`);
     check(C.log.some(l => l.kind === 'speeding'), 'the offense is logged as speeding', C.log.map(l => l.kind).join(','));
