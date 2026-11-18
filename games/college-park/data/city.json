@@ -1,0 +1,101 @@
+{
+ "name": "College Park",
+ "pois": [
+  {
+   "id": "bentleys",
+   "name": "R.J. Bentley's"
+  },
+  {
+   "id": "looneys",
+   "name": "Looney's Pub"
+  },
+  {
+   "id": "cornerstone",
+   "name": "Cornerstone Grill & Loft"
+  },
+  {
+   "id": "turf",
+   "name": "Terrapin's Turf"
+  },
+  {
+   "id": "montgomery",
+   "name": "Montgomery Hall"
+  },
+  {
+   "id": "washington",
+   "name": "Washington Hall"
+  },
+  {
+   "id": "frederick",
+   "name": "Frederick Hall"
+  }
+ ],
+ "people": [
+  {
+   "id": "dre",
+   "name": "Dre",
+   "street": "Lehigh Road",
+   "car": {
+    "model": "1989 Honda Accord maroon",
+    "paint": "1989 Honda Accord maroon",
+    "fx": [
+     "bass"
+    ],
+    "sprite": "dre_camry"
+   }
+  },
+  {
+   "id": "tess",
+   "name": "Tess",
+   "street": "Regents Drive",
+   "car": {
+    "model": "1988 Ford Escort red",
+    "paint": "1988 Ford Escort red",
+    "fx": [],
+    "sprite": "tess_tracer"
+   }
+  },
+  {
+   "id": "moe",
+   "name": "Moe",
+   "street": "Knox Road",
+   "car": {
+    "model": "1987 Chevrolet Camaro blue two-tone blue/silver",
+    "paint": "1987 Chevrolet Camaro blue two-tone blue/silver",
+    "fx": [
+     "underglow_blue"
+    ],
+    "sprite": "moe_camaro"
+   }
+  },
+  {
+   "id": "juno",
+   "name": "Juno",
+   "street": "Baltimore Avenue",
+   "car": {
+    "model": "1990 Chevrolet Astro white",
+    "paint": "1990 Chevrolet Astro white",
+    "fx": [],
+    "sprite": "juno_astro"
+   }
+  },
+  {
+   "id": "pike",
+   "name": "Pike",
+   "street": "Knox Road",
+   "car": {
+    "model": "1989 Cadillac Brougham black",
+    "paint": "1989 Cadillac Brougham black",
+    "fx": [
+     "tailpipe_sputter"
+    ],
+    "sprite": "pike_brougham"
+   }
+  }
+ ],
+ "houses": {
+  "moe": "The Knox Road house",
+  "pike": "The Knox Road house"
+ },
+ "meet": "R.J. Bentley's"
+}

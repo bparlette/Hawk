@@ -1,0 +1,30 @@
+{
+ "dre_camry": {
+  "base": "camry_jason",
+  "paint": "#5a1424"
+ },
+ "tess_tracer": {
+  "base": "tracer_zack",
+  "paint": "#b81d24",
+  "head": "#ffd23a",
+  "headcol": [
+   1.0,
+   0.82,
+   0.25
+  ]
+ },
+ "moe_camaro": {
+  "base": "camaro_brad",
+  "paint": "#1f4fb0",
+  "paint2": "#b9bdc2",
+  "split": 0.5
+ },
+ "juno_astro": {
+  "base": "astro_jimmy",
+  "paint": "#f2f1ec"
+ },
+ "pike_brougham": {
+  "base": "brougham_grant",
+  "paint": "#16161a"
+ }
+}
