@@ -18,6 +18,8 @@ import { Pilot } from './lf_pilot.js';
 import { Net } from './lf_net.js';
 import { Interior } from './lf_interior.js';
 import { InteriorRenderer } from './lf_interior_render.js';
+import { Places, PlaceInterior, doorPoint } from './lf_places.js';           // L12/L13: public enterable places (the Weis, Gringada) + the 108 Astro + Scott's Civic
+import { PlaceRenderer, heroStyle, worldFx } from './lf_places_render.js';
 
 const Q = new URLSearchParams(location.search);
 const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
@@ -86,7 +88,9 @@ const KITS = {};   // interiors land in phase 2
 let KOTH = null;   // Cul-de-Sac King of the Hill lands in phase 2 with its data
 // ---- phase 2: the heavy/optional data streams in behind the pick screen (see LOAD SPLIT above)
 (async () => {
-  j('data/areas.json').then(AJ => {
+  const PJP = j('data/places.json').catch(() => null);   // L12/L13: the enterable places (data/places.json)
+  Promise.all([j('data/areas.json'), PJP]).then(async ([AJ, PJ]) => {
+    if (PJ) { PL = new Places(PJ); AJ.heroes.push(...PL.heroes()); PL.attach(sim); renderer.heroStyle = heroStyle; renderer.placeFx = (g, S, gr, t, vis) => worldFx(g, S, PL, gr, t, vis); for (const p of PJ.places) { try { KITS[p.interior] = await j('data/interiors/' + p.interior + '.json'); } catch (e) {} } }
     areas = new Areas(AJ, W); ground.areas = areas; ground.cache.clear(); ground.job = null;
     if (renderer) renderer.areas = areas;
     sim.setBuildings(AJ.buildings); sim.setGreens(AJ.green); mapCv = null; tick('houses');
@@ -97,9 +101,11 @@ let KOTH = null;   // Cul-de-Sac King of the Hill lands in phase 2 with its data
   const ids = await fetch('data/interiors/index.json').then(r => r.ok ? r.json() : []).catch(() => []);
   for (const id of ids) { try { KITS[id] = await j('data/interiors/' + id + '.json'); } catch (e) {} }
 })();
-let inside = null; const IR = new InteriorRenderer(ctx);
+let inside = null; const IR = new InteriorRenderer(ctx), PIR = new PlaceRenderer(ctx); let PL = null;   // PL: L12/L13 places (lands with places.json)
 const goIn = (id, who) => { inside = new Interior(KITS[id], { who }); if (foot) foot.active = false; };
+const goInPlace = (pl, who) => { inside = new PlaceInterior(KITS[pl.interior], { who, exitAt: pl }); if (foot) foot.active = false; };   // L12/L13: a public building, anyone
 const goOut = () => {                                     // out the front door: on foot on the front walk, your car in the driveway
+  if (inside && inside.exitAt) { const pl = inside.exitAt, d = doorPoint(pl); inside = null; foot.active = true; foot.x = d.x + d.nx * 14; foot.y = d.y + d.ny * 14; foot.h = Math.atan2(d.ny, d.nx); foot.px = foot.x; foot.py = foot.y; foot.z = 0; cam.x = foot.x; cam.y = foot.y; return; }   // out of a public place: on foot at its door
   inside = null; const me = PLAYERS.find(p => foot && p.id === foot.who.id) || foot.who, [hx, hy] = me.house, c = sim.player;
   foot.active = true; foot.x = hx + (c.x - hx) * 0.35; foot.y = hy + (c.y - hy) * 0.35; foot.h = Math.atan2(c.y - hy, c.x - hx); foot.px = foot.x; foot.py = foot.y; foot.z = 0;
   cam.x = foot.x; cam.y = foot.y;
@@ -228,9 +234,9 @@ function frame(now) {
   while (acc >= STEP && n < 6 * SPEED) { const inp = pilot ? (input.read(), pilot.input(STEP)) : input.read(); if (picking) { acc = 0; break; }
     const beat = (M && M.beat) || intro, ZERO = { jx: 0, jy: 0, jm: 0, keys: {} };
     if (inside) { sim.step(STEP, ZERO); if (inside.step(STEP, inp) === 'exit') goOut(); }
-    else if (foot && foot.active) { sim.step(STEP, ZERO); if (!beat) { stepOnFoot(foot, STEP, inp, RF); const nc = inp.action ? nearAnyCar(foot, sim.cars) : null; if (nc) { if (nc !== sim.player) swapPlayerCar(sim, M, nc); foot.active = false; } else if (inp.action && atMyDoor()) goIn(foot.who.id, foot.who); } }
+    else if (foot && foot.active) { sim.step(STEP, ZERO); if (!beat) { stepOnFoot(foot, STEP, inp, RF); const nc = inp.action && !(PL && PL.label(foot, sim)) ? nearAnyCar(foot, sim.cars) : null; /* a public door / the 108 Astro's lights win over GET IN */ if (nc) { if (nc !== sim.player) swapPlayerCar(sim, M, nc); foot.active = false; } else if (inp.action && atMyDoor()) goIn(foot.who.id, foot.who); else if (inp.action && PL) { const r = PL.act(foot, sim); if (r && r.enter && KITS[r.enter.interior]) goInPlace(r.enter, foot.who); } } }   // L12/L13: GO IN at a public door / ROB LIGHTS at the Astro
     else { sim.step(STEP, beat ? ZERO : inp); if (foot && !beat && !pilot && inp.action && Math.abs(sim.player.v) < FOOT.exitV) { exitCar(foot, sim.player); if (inHouse(foot.x, foot.y)) { const c = sim.player, a = c.h + Math.PI / 2, d = (c.wid || 20) / 2 + 7; foot.x = c.x + Math.cos(a) * d; foot.y = c.y + Math.sin(a) * d; foot.px = foot.x; foot.py = foot.y; } } }
-    if (KOTH) KOTH.step(sim, STEP); if (M) stepRally(sim, M, STEP); simTime += STEP; acc -= STEP; n++; }
+    if (PL) PL.step(STEP); if (KOTH) KOTH.step(sim, STEP); if (M) stepRally(sim, M, STEP); simTime += STEP; acc -= STEP; n++; }
   if (n >= 6 * SPEED) acc = 0;
   if (net) net.frame(sim, dt);
   const c = sim.player;
@@ -257,7 +263,7 @@ function frame(now) {
     const k = fixed ? 1 : 1 - Math.exp(-dt * 3.2);
     cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k; cam.zoom += (tz - cam.zoom) * (fixed ? 1 : 1 - Math.exp(-dt * 1.5));
   }
-  if (inside) { IR.draw(inside, VIEW_W, view.h, DPR, now / 1000); drawControls(); requestAnimationFrame(frame); return; }
+  if (inside) { (inside.place ? PIR : IR).draw(inside, VIEW_W, view.h, DPR, now / 1000); drawControls(); requestAnimationFrame(frame); return; }
   // KOTH circle road (owner, Nov 17): the cul-de-sac you're sitting in — or fighting over — is
   // REAL pavement: the same sac the ring below draws gets its disc painted as asphalt, road grip
   // in the sim and black (not dirt-brown) skid marks. setPave no-ops until the sac changes.
@@ -348,7 +354,7 @@ function drawControls() {
   const g = ctx, TAU2 = Math.PI * 2;
   if (input.stick) { const s2 = input.stick; g.beginPath(); g.arc(s2.bx, s2.by, 56, 0, TAU2); g.fillStyle = 'rgba(255,240,220,0.16)'; g.fill(); g.lineWidth = 3; g.strokeStyle = 'rgba(255,240,220,0.55)'; g.stroke(); g.beginPath(); g.arc(s2.kx, s2.ky, 24, 0, TAU2); g.fillStyle = 'rgba(255,240,220,0.5)'; g.fill(); }
   const b = input.button(), onFoot = foot && foot.active;
-  const label = inside ? (inside.prompt() || '') : onFoot ? (nearAnyCar(foot, sim.cars) ? 'GET IN' : atMyDoor() ? 'GO IN' : '') : (Math.abs(sim.player.v) < FOOT.exitV ? 'GET OUT' : '');
+  const label = inside ? (inside.prompt() || '') : onFoot ? ((PL && PL.label(foot, sim)) || (nearAnyCar(foot, sim.cars) ? 'GET IN' : atMyDoor() ? 'GO IN' : '')) : (Math.abs(sim.player.v) < FOOT.exitV ? 'GET OUT' : '');
   g.beginPath(); g.arc(b.x, b.y, b.r, 0, TAU2); g.fillStyle = input.btnDown ? 'rgba(255,140,90,0.55)' : 'rgba(255,240,220,0.18)'; g.fill();
   g.lineWidth = 3; g.strokeStyle = label ? 'rgba(255,214,120,0.95)' : 'rgba(255,240,220,0.55)'; g.stroke();
   g.beginPath(); g.arc(b.x, b.y, b.r * 0.42, 0, TAU2); g.fillStyle = label ? 'rgba(255,214,120,0.9)' : 'rgba(255,240,220,0.5)'; g.fill();
@@ -416,4 +422,4 @@ renderer.draw = (S, cam, t, tod) => {
   if (picking) drawPick();
 };
 requestAnimationFrame(frame);
-window.__lf = { get areas() { return areas; }, inside: () => inside, setSpeed: (k) => { SPEED = k; }, roof: () => RF, sim, W, ground, cam, input, renderer, map: () => mapOpen, mission: () => M, koth: () => KOTH, pick, picking: () => picking, pilot: () => pilot, foot: () => foot, tod: () => timeOfDay(), simTime: () => simTime };
+window.__lf = { places: () => PL, goInPlace, get areas() { return areas; }, inside: () => inside, setSpeed: (k) => { SPEED = k; }, roof: () => RF, sim, W, ground, cam, input, renderer, map: () => mapOpen, mission: () => M, koth: () => KOTH, pick, picking: () => picking, pilot: () => pilot, foot: () => foot, tod: () => timeOfDay(), simTime: () => simTime };
