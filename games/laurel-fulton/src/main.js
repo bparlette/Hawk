@@ -295,15 +295,17 @@ function drawMissionHud() {
 } renderer.resize(VIEW_W, view.h, DPR);
 const input = new Input(canvas, view); input.fightOn = true;
 const fixed = Q.get('cam') ? Q.get('cam').split(',').map(Number) : null;
-const B0 = W.bounds, fitZ = Math.min(VIEW_W / (B0.x1 - B0.x0), view.h / (B0.y1 - B0.y0)) * 0.98;
+const B0 = W.bounds, fitZ = Math.min(VIEW_W / (B0.x1 - B0.x0), view.h / (B0.y1 - B0.y0)) * 0.98 * 2;   // Nov 18 (owner): the opening opens HALF as far out as the whole-map fit — half the width, a quarter of the area; the whole-map view cost too much performance
 const cam = fixed ? { x: fixed[0], y: fixed[1], zoom: fixed[2] || 1 }
   : (picking || Q.get('player')) && !Q.has('speed') && !Q.has('pilot') && !Q.has('nointro')
-    ? { x: (B0.x0 + B0.x1) / 2, y: (B0.y0 + B0.y1) / 2, zoom: fitZ }   // open on the whole map
+    ? { x: (B0.x0 + B0.x1) / 2, y: (B0.y0 + B0.y1) / 2, zoom: fitZ }   // open wide on the map (half-fit since Nov 18)
     : { x: sim.player.x, y: sim.player.y, zoom: 0.62 };   // owner Nov 17: zoom out, more world
 // WORLD PULSE (owner, Nov 17): while driving, every so often the camera eases
-// FAR out (~0.14 — about 300 m across) to show the world, holds, then eases
-// back to the normal chase zoom. Skipped for captures, beats, foot and intro.
-const PULSE = { far: 0.14, out: 3.0, hold: 3.0, back: 3.0, rest: 27.0 };
+// FAR out to show the world, holds, then eases back to the normal chase zoom.
+// Nov 18 (owner): the far reach is HALF what it was — 0.28, about 150 m across
+// (was 0.14, ~300 m) — the full zoom-out cost too much performance.
+// Skipped for captures, beats, foot and intro.
+const PULSE = { far: 0.28, out: 3.0, hold: 3.0, back: 3.0, rest: 27.0 };
 let pulseT = -PULSE.rest;
 for (let cy = -2; cy <= 2; cy++) for (let cx = -1; cx <= 1; cx++) ground.get(Math.floor(cam.x / CHUNK) + cx, Math.floor(cam.y / CHUNK) + cy);
 ground.stats.sync = 0;
