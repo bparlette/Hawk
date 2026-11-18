@@ -30,10 +30,10 @@ if (CW) {
   const fire0 = fire && { x: fire.car.x, y: fire.car.y };
   const ins = { viol: 0, sawIn: new Set(), leftOut: new Set() };
   WD.step(DT);
-  { const b = WD.crew.get('brad'), r = WD.crew.get('rigg'), snap = WD.snapshot(), sb = snap.find(c => c[0] === 'brad'), sk = snap.find(c => c[0] === 'kosack');
-    check(b.inside === 'brad' && b.spot.floor === KITS.brad.cpuIdle.floor && b.spot.x === KITS.brad.cpuIdle.x && KITS.brad.cpuIdle.floor === 'lower' && r.inside === 'rigg' && r.spot.floor === 'lower' && !WD.crew.get('kosack').inside,
+  { const b = WD.crew.get('brad'), r = WD.crew.get('rigg'), snap = WD.snapshot(), sb = snap.find(c => c[0] === 'brad'), sk = snap.find(c => c[0] === 'jason');
+    check(b.inside === 'brad' && b.spot.floor === KITS.brad.cpuIdle.floor && b.spot.x === KITS.brad.cpuIdle.x && KITS.brad.cpuIdle.floor === 'lower' && r.inside === 'rigg' && r.spot.floor === 'lower' && !WD.crew.get('jason').inside,
       '9 CPU Brad home = INSIDE his house, by the fire (kit cpuIdle); Rigg idles at his basement computer; crew without a kit are not inside', `brad ${b.inside}@${b.spot && b.spot.floor}:${b.spot && b.spot.x}, rigg ${r.inside}@${r.spot && r.spot.floor}:${r.spot && r.spot.x}`);
-    check(Array.isArray(sb[8]) && sb[8][0] === 'brad' && sb[8][1] === 'lower' && sk[8] === 0 && sb.length === 9, '10 the snapshot carries it: [8] = [house, floor, x] for Brad, 0 for Kosack', JSON.stringify(sb[8])); }
+    check(Array.isArray(sb[8]) && sb[8][0] === 'brad' && sb[8][1] === 'lower' && sk[8] === 0 && sb.length === 9, '10 the snapshot carries it: [8] = [house, floor, x] for Brad, 0 for Jason (no kit)', JSON.stringify(sb[8])); }
   const watch = () => {
     for (const B of WD.crew.values()) {
       if (B.inside) { ins.sawIn.add(B.id); if (B.state !== 'home' || B.human || B.rallying || B.still) ins.viol++; } else if (ins.sawIn.has(B.id) && B.state === 'drive') ins.leftOut.add(B.id);
