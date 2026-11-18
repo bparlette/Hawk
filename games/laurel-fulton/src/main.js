@@ -33,6 +33,7 @@ import { LFHelp } from './lf_help.js';                                   // Palm
 const Q = new URLSearchParams(location.search);
 const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
 const VIEW_W = 420, view = { w: VIEW_W, h: 860 };
+const MIN_ZOOM = VIEW_W / 28300;   // HARD CAP (owner, Nov 18): no zoomed-out view is EVER wider than 2,830 m across (10 wu = 1 m) — opening fit, world pulse, every start, every house
 let DPR = 1, renderer = null;
 function resize() {
   const iw = innerWidth, ih = innerHeight;
@@ -120,7 +121,7 @@ let KOTH = null;   // Cul-de-Sac King of the Hill lands in phase 2 with its data
   const ids = await fetch('data/interiors/index.json').then(r => r.ok ? r.json() : []).catch(() => []);
   for (const id of ids) { try { KITS[id] = await j('data/interiors/' + id + '.json'); } catch (e) {} }
   // ?player=<id> picks at module time, BEFORE the kits stream in (the load split): a run as someone with a house kit still STARTS inside — go in the moment the kit lands
-  if (pendingIn && KITS[pendingIn] && !inside && foot && !foot.active && Math.abs(sim.player.v) < 1) {
+  if (pendingIn && KITS[pendingIn] && !inside && !intro && foot && !foot.active && Math.abs(sim.player.v) < 1) {   // !intro: never cut the opening flight short — if it is still flying, frame()'s intro landing takes the player in instead
     // Nov 18 leftover fix: the pending entry only fires while the player is still AT the
     // pending house — a slow Brad driving on past used to get yanked inside the moment the
     // kit landed, however far down the road he had got. Past ~200 wu the flag is dropped.
@@ -240,17 +241,26 @@ function pick(id) { if (net) { if (!net.takenBy(id)) net.pick(id); return; }
   M = startRally(sim, roster, id); renderer.mission = M; picking = false; foot = createFoot(PLAYERS.find(p => p.id === id)); setFoot(foot);
   const lm = startLm();
   if (lm && !Q.has('pilot')) spawnAtLandmark(lm);         // landmark start: your car on the road at the landmark — no indoor start; the rally runs as usual from there
-  else if (KITS[id] && !Q.has('pilot')) goIn(id, foot.who);   // PICK Brad -> you start in his house
+  else if (KITS[id] && !Q.has('pilot')) introIn = id;   // PICK Brad -> you start in his house, but AFTER the opening flight: every start gets the same zoom-out first (Nov 18 consistency fix — a kit pick used to skip the intro entirely, so one house "didn't zoom out" and the next went the full width)
   else if (!Q.has('pilot')) pendingIn = id;               // (?player=: the kits have not landed yet)
-  foot.onClimb = (c) => { learnLabel(sim, 'lf_roof'); if (c.onto === 'roof' && !foot.summited && M) { foot.summited = true; M.msg = 'THE LOOKOUT'; M.msgT = 3.5; } }; if (Q.has('pilot')) pilot = new Pilot(sim, W, M); startIntro(); }
+  foot.onClimb = (c) => { learnLabel(sim, 'lf_roof'); if (c.onto === 'roof' && !foot.summited && M) { foot.summited = true; M.msg = 'THE LOOKOUT'; M.msgT = 3.5; } }; if (Q.has('pilot')) pilot = new Pilot(sim, W, M); startIntro(); if (introIn && !intro) { const g = introIn; introIn = null; goIn(g, foot.who); } }
 // the opening (owner, Nov 17): the game starts zoomed out on the WHOLE MAP, then
 // flies in to the picked person's house. Any tap skips it. Captures (?speed/?cam/
-// ?pilot) and ?nointro skip it so their framing stays deterministic, and so does
-// a pick that starts indoors (L7: Brad's house — you begin in the cutaway).
-let intro = null;
+// ?pilot) and ?nointro skip it so their framing stays deterministic. A pick that
+// starts indoors (L7: Brad's house) now flies FIRST and goes in when the flight
+// lands — the opening is part of every start, identical for every house.
+let intro = null, introIn = null;
+// THE OPENING FIT, computed from the world itself (never from the live camera):
+// the Nov 18 bug was capturing the intro's start from cam on the first frame —
+// while the pick screen sat, the chase camera kept easing to the default car's
+// street zoom (0.62), so a slow pick opened at ~68 m across and a fast pick at
+// ~2,820 m. Same fit for every start, every house, every dwell time; clamped to
+// the 2,830 m cap.
+function openFit() { const B = W.bounds; return { x: (B.x0 + B.x1) / 2, y: (B.y0 + B.y1) / 2, z: Math.max(MIN_ZOOM, Math.min(VIEW_W / (B.x1 - B.x0), view.h / (B.y1 - B.y0)) * 0.98 * 1.5) }; }
 function startIntro() {
   if (inside || Q.has('cam') || Q.has('pilot') || Q.has('speed') || Q.has('nointro')) return;   // NOT `fixed`: pick() can run before that const exists
-  intro = { t: 0, dur: 3.0, x1: sim.player.x, y1: sim.player.y, z1: 0.62 };   // from = the camera's spot on the first frame (pick() can run before cam exists)
+  const F = openFit();
+  intro = { t: 0, dur: 3.0, x0: F.x, y0: F.y, z0: F.z, x1: sim.player.x, y1: sim.player.y, z1: 0.62 };
 }
 canvas.addEventListener('pointerdown', () => { if (intro) intro.t = intro.dur; });
 if (Q.get('player')) pick(Q.get('player'));
@@ -338,15 +348,16 @@ function drawMissionHud() {
 } renderer.resize(VIEW_W, view.h, DPR);
 const input = new Input(canvas, view); input.fightOn = true;
 const fixed = Q.get('cam') ? Q.get('cam').split(',').map(Number) : null;
-const B0 = W.bounds, fitZ = Math.min(VIEW_W / (B0.x1 - B0.x0), view.h / (B0.y1 - B0.y0)) * 0.98 * 1.5;   // Nov 18 (owner): the opening opens HALF as far out as the whole-map fit — half the width, a quarter of the area; the whole-map view cost too much performance
+const B0 = W.bounds, fitZ = Math.max(MIN_ZOOM, Math.min(VIEW_W / (B0.x1 - B0.x0), view.h / (B0.y1 - B0.y0)) * 0.98 * 1.5);   // Nov 18 (owner): the opening sits halfway back from the whole-map fit (~2,830 m across, never wider — the MIN_ZOOM cap); startIntro() recomputes this same fit via openFit() so the flight's start never depends on the live camera
 const cam = fixed ? { x: fixed[0], y: fixed[1], zoom: fixed[2] || 1 }
   : (picking || Q.get('player')) && !Q.has('speed') && !Q.has('pilot') && !Q.has('nointro')
     ? { x: (B0.x0 + B0.x1) / 2, y: (B0.y0 + B0.y1) / 2, zoom: fitZ }   // open wide on the map (half-fit since Nov 18)
     : { x: sim.player.x, y: sim.player.y, zoom: 0.62 };   // owner Nov 17: zoom out, more world
 // WORLD PULSE (owner, Nov 17): while driving, every so often the camera eases
 // FAR out to show the world, holds, then eases back to the normal chase zoom.
-// Nov 18 (owner): the far reach is HALF what it was — 0.28, about 150 m across
-// (was 0.14, ~300 m) — the full zoom-out cost too much performance.
+// Nov 18 (owner): the far reach was halved, then set halfway back — 0.21, about
+// 200 m across (was 0.14, ~300 m). Identical at every house, and the MIN_ZOOM
+// cap in frame() floors every zoomed-out view regardless of path.
 // Skipped for captures, beats, foot and intro.
 const PULSE = { far: 0.21, out: 3.0, hold: 3.0, back: 3.0, rest: 27.0 };
 let pulseT = -PULSE.rest;
@@ -412,7 +423,7 @@ function frame(now) {
     if (RF && foot.z >= RF.h - 2 && !foot.air && !foot.climb) { const L = lookout(foot, RF, sim, M, view); tx = L.x; ty = L.y; tz = L.zoom; }   // L5: up top, the closing shot
   }
   if (fixed) { tx = fixed[0]; ty = fixed[1]; tz = fixed[2] || 1; }
-  const pulseOK = !fixed && !(foot && foot.active) && !intro && !pilot && !Q.has('speed') && !((M && M.beat) || oM.beat);
+  const pulseOK = !fixed && !(foot && foot.active) && !intro && !picking && !pilot && !Q.has('speed') && !((M && M.beat) || oM.beat);   // !picking: the pulse clock starts when you start driving — the same post-meeting rhythm at every house
   if (pulseOK) { pulseT += dt; if (pulseT > PULSE.out + PULSE.hold + PULSE.back) pulseT = -PULSE.rest; }
   if (pulseOK && pulseT >= 0) {
     const p = pulseT, u = p < PULSE.out ? p / PULSE.out : p < PULSE.out + PULSE.hold ? 1 : 1 - (p - PULSE.out - PULSE.hold) / PULSE.back;
@@ -423,11 +434,12 @@ function frame(now) {
     if (intro.x0 === undefined) { intro.x0 = cam.x; intro.y0 = cam.y; intro.z0 = cam.zoom; }
     intro.t += dt; const u = Math.min(1, intro.t / intro.dur), e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
     cam.x = intro.x0 + (intro.x1 - intro.x0) * e; cam.y = intro.y0 + (intro.y1 - intro.y0) * e; cam.zoom = intro.z0 + (intro.z1 - intro.z0) * e;
-    if (u >= 1) intro = null;
-  } else {
+    if (u >= 1) { intro = null; const g = introIn || (pendingIn && KITS[pendingIn] ? pendingIn : null); if (g) { introIn = null; if (pendingIn === g) pendingIn = null; goIn(g, foot && foot.who); } }   // the flight has landed: a house-kit start goes inside NOW — every start saw the same opening first
+  } else if (!picking || fixed) {   // while the pick screen is up the camera HOLDS the wide opening view: it used to ease to the default car's street zoom behind the overlay, eating the intro's start (the Nov 18 inconsistency)
     const k = fixed ? 1 : 1 - Math.exp(-dt * 3.2);
     cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k; cam.zoom += (tz - cam.zoom) * (fixed ? 1 : 1 - Math.exp(-dt * 1.5));
   }
+  if (!fixed && cam.zoom < MIN_ZOOM) cam.zoom = MIN_ZOOM;   // HARD CAP (owner, Nov 18): never wider than 2,830 m across, whatever path set the zoom
   if (inside) { (inside.place ? PIR : IR).draw(inside, VIEW_W, view.h, DPR, now / 1000); drawControls(); requestAnimationFrame(frame); return; }
   // KOTH circle road (owner, Nov 17): the cul-de-sac you're sitting in — or fighting over — is
   // REAL pavement: the same sac the ring below draws gets its disc painted as asphalt, road grip
