@@ -225,7 +225,27 @@ function startIntro() {
 }
 canvas.addEventListener('pointerdown', () => { if (intro) intro.t = intro.dur; });
 if (Q.get('player')) pick(Q.get('player'));
-const pickRows = () => PLAYERS.map((p, i) => ({ p, x: 24, y: 158 + i * 61, w: VIEW_W - 48, h: 53 }));
+// G15/M-E: the detail line (model · street) word-wraps to the card's text budget and a row that
+// needs two lines grows taller — full canon strings at the full 12px, never clipped off the card.
+const PICK_DETAIL_FONT = '600 12px system-ui';
+function wrapPickDetail(text, maxW) {
+  ctx.font = PICK_DETAIL_FONT;
+  if (ctx.measureText(text).width <= maxW) return [text];
+  const words = text.split(' '), lines = []; let cur = '';
+  for (const wd of words) { const t = cur ? cur + ' ' + wd : wd; if (cur && ctx.measureText(t).width > maxW) { lines.push(cur); cur = wd; } else cur = t; }
+  if (cur) lines.push(cur);
+  return lines.slice(0, 2);
+}
+const pickRows = () => {
+  const w = VIEW_W - 48, maxW = w - 67;   // text starts 57px into the card; 10px clear of its right edge
+  let y = 158;
+  return PLAYERS.map(p => {
+    const lines = wrapPickDetail(`${p.car.model} · ${p.street}`, maxW);
+    const h = lines.length > 1 ? 67 : 53, row = { p, x: 24, y, w, h, lines };
+    y += h + 8;
+    return row;
+  });
+};
 canvas.addEventListener('pointerdown', e => {
   if (!picking) return;
   const b = canvas.getBoundingClientRect(), x = (e.clientX - b.left) * VIEW_W / b.width, y = (e.clientY - b.top) * view.h / b.height;
@@ -238,12 +258,12 @@ function drawPick() {
   if (LOGO.complete && LOGO.naturalWidth) { const lh = 82, lw = lh * LOGO.naturalWidth / LOGO.naturalHeight; ctx.drawImage(LOGO, (VIEW_W - lw) / 2, 8, lw, lh); }   // the sign logo heads the pick screen
   ctx.textAlign = 'center'; ctx.fillStyle = '#ffd25c'; ctx.font = '900 30px system-ui'; ctx.fillText('PICK YOUR PLAYER', VIEW_W / 2, 122);
   ctx.fillStyle = '#e8dcc8'; ctx.font = '600 13px system-ui'; ctx.fillText(net ? `the one world · ${net.status}` : 'then rally the crew — meet at ' + roster.meetup.name, VIEW_W / 2, 146);
-  pickRows().forEach(({ p, x, y, w, h }, i) => {
+  pickRows().forEach(({ p, x, y, w, h, lines }, i) => {
     ctx.fillStyle = 'rgba(255,241,216,0.94)'; ctx.beginPath(); ctx.roundRect(x, y, w, h, 12); ctx.fill();
     const m = fleet[p.car.sprite], im = imgs[m.color.file], fw = im.width / m.cols, fh = im.height / Math.ceil(m.angles / m.cols);
-    ctx.drawImage(im, 0, 0, fw, fh, x + 4, y + 4, h - 8, h - 8);                   // the car itself, side on (frame 0 = facing east)
-    ctx.textAlign = 'left'; ctx.fillStyle = '#2a1430'; ctx.font = '900 17px system-ui'; ctx.fillText(`${i + 1}  ${p.name}`, x + h + 4, y + 22);
-    ctx.font = '600 12px system-ui'; ctx.fillStyle = '#5a3c58'; ctx.fillText(`${p.car.model} · ${p.street}`, x + h + 4, y + 41);
+    ctx.drawImage(im, 0, 0, fw, fh, x + 4, y + (h - 45) / 2, 45, 45);             // the car itself, side on (frame 0 = facing east)
+    ctx.textAlign = 'left'; ctx.fillStyle = '#2a1430'; ctx.font = '900 17px system-ui'; ctx.fillText(`${i + 1}  ${p.name}`, x + 57, y + 22);
+    ctx.font = PICK_DETAIL_FONT; ctx.fillStyle = '#5a3c58'; lines.forEach((ln, k) => ctx.fillText(ln, x + 57, y + 41 + k * 14));
     const tb = net && net.takenBy(p.id); if (tb || net) { ctx.textAlign = 'right'; ctx.font = '800 11px system-ui'; ctx.fillStyle = tb ? '#b8402a' : '#4a7a3a'; ctx.fillText(tb ? 'DRIVEN BY ' + tb.toUpperCase() : 'CPU — TAKE OVER', x + w - 10, y + 22); }
   });
 }

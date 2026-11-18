@@ -10,6 +10,13 @@ export class NightParty {
     this.imgs = {};
     this.venueKey = 'kosack';
     this.active = false;
+    // DESIGN-G18 rotating hosts (Nov 18 fix): the venue used to sit on Kosack forever —
+    // setVenue() was only ever called from the ?party= URL param, so the Floyds party was
+    // unreachable in normal play. The host now rotates by night: `night` is seeded from
+    // the calendar day count and advances whenever the clock wraps into a new night.
+    this.night = Math.floor(Date.now() / 86400000);
+    this._override = false;   // ?party= is the player's choice and always wins
+    this._lastTod = null;
     this._load();
   }
 
@@ -32,7 +39,7 @@ export class NightParty {
   }
 
   setVenue(key) {
-    if (key === 'kosack' || key === 'floyds') this.venueKey = key;
+    if (key === 'kosack' || key === 'floyds') { this.venueKey = key; this._override = true; }
   }
 
   venue() {
@@ -42,7 +49,14 @@ export class NightParty {
 
   step(tod) {
     const min = this.data?.trigger?.todMin ?? 0.72;
-    this.active = tod >= min;
+    // A new night begins when the clock wraps; as the party switches on for a night, the
+    // host for that night is picked from the night seed — even nights Kosack, odd nights
+    // Floyds (50/50 across nights) — unless the player forced a venue with ?party=.
+    if (this._lastTod !== null && tod < this._lastTod - 0.5) this.night++;
+    this._lastTod = tod;
+    const on = tod >= min;
+    if (on && !this.active && !this._override) this.venueKey = this.night % 2 === 0 ? 'kosack' : 'floyds';
+    this.active = on;
   }
 
   count() {
