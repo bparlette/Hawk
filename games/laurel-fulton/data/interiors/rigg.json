@@ -101,12 +101,12 @@
   {
    "kind": "recliner",
    "floor": "main",
-   "x": 8.9
+   "x": 8.95
   },
   {
    "kind": "couch",
    "floor": "main",
-   "x": 7.6
+   "x": 7.1
   },
   {
    "kind": "tv",
@@ -116,7 +116,7 @@
   {
    "kind": "rug",
    "floor": "main",
-   "x": 7.6
+   "x": 7.1
   },
   {
    "kind": "lamp",
@@ -218,7 +218,7 @@
  "dad": {
   "name": "Brian's dad",
   "floor": "main",
-  "x": 8.9,
+  "x": 8.95,
   "yell": "Brrrrrriiiiiiaaaaannnn"
  },
  "son": {
@@ -228,6 +228,6 @@
  },
  "cpuIdle": {
   "floor": "lower",
-  "x": 6.25
+  "x": 4.15
  }
 }
