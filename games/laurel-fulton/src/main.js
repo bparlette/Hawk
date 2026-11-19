@@ -29,6 +29,7 @@ import { CurbDestruct } from './lf_destruct.js';                         // Palm
 import { Traffic } from './lf_traffic.js';                              // L15: LIGHT ambient traffic on the road graph (AMBIENT_MAX cars)
 import { Cops } from './lf_cops.js';                                    // L15: cops / wanted v1 (stars, pursuit, BUSTED, siren)
 import { LFHelp } from './lf_help.js';                                   // Palm City easy win: '?' HELP / JUMP quick-teleporter
+import { compassTarget, COMPASS } from './lf_compass.js';               // easy-five: the orbiting target arrow (Nov 18)
 
 const Q = new URLSearchParams(location.search);
 const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
@@ -351,8 +352,8 @@ function drawMissionHud() {
 } renderer.resize(VIEW_W, view.h, DPR);
 // DRIFT BANKING (Nov 18, lf_drift.js): while a drift banks, the growing bank rides just over the
 // player's car (transient — it exists only while the bank does, no new persistent HUD); on
-// cash-in / loss a popup floats up from the car and fades. The compass arrow (when it lands)
-// orbits OUTSIDE this readout's slot, so the two never stack.
+// cash-in / loss a popup floats up from the car and fades. The compass arrow (lf_compass.js)
+// orbits OUTSIDE this readout's slot (radius 104), so the two never stack.
 function drawDrift() {
   const D = sim.drift, c = sim.player;
   if (!D || !c || picking || inside || (foot && foot.active)) return;
@@ -373,6 +374,27 @@ function drawDrift() {
     ctx.fillText(p.txt, px, py);
     ctx.globalAlpha = 1;
   }
+}
+// COMPASS ARROW (Nov 18, lf_compass.js): a small gold arrow orbiting the player's car at
+// COMPASS.radius, pointing at the current rally target (next house / Atholton on the finale /
+// the party house at night). The camera is north-up, so the world angle is the screen angle.
+// Hidden whenever there is no target, during the arrival beat, on foot, inside, or picking —
+// and inside 6 m of the target, where an arrow would just spin.
+function drawCompass() {
+  if (picking || inside || (foot && foot.active)) return;
+  const c = sim.player; if (!c) return;
+  const t = compassTarget(M, party, c, W.bounds);
+  if (!t) return;
+  const dx = t.x - c.x, dy = t.y - c.y, d = Math.hypot(dx, dy);
+  if (d < COMPASS.arriveDist) return;
+  const a = Math.atan2(dy, dx);
+  const sx = (c.x - cam.x) * cam.zoom + VIEW_W / 2, sy = (c.y - cam.y) * cam.zoom + view.h / 2;
+  const rx = sx + Math.cos(a) * COMPASS.radius, ry = sy + Math.sin(a) * COMPASS.radius;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.save(); ctx.translate(rx, ry); ctx.rotate(a);
+  ctx.fillStyle = '#ffd25c'; ctx.strokeStyle = '#2a1430'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(13, 0); ctx.lineTo(-8, 9); ctx.lineTo(-3, 0); ctx.lineTo(-8, -9); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.restore();
 }
 const input = new Input(canvas, view); input.fightOn = true;
 const fixed = Q.get('cam') ? Q.get('cam').split(',').map(Number) : null;
@@ -625,6 +647,7 @@ renderer.draw = (S, cam, t, tod) => {
   ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(VIEW_W - 72, 14, 60, 28, 12); ctx.fill(); ctx.fillStyle = '#ffe4b0'; ctx.fillText('MAP', VIEW_W - 42, 33);
   drawMissionHud();
   drawDrift();
+  drawCompass();
   if (M && M.barks && M.barks.drawScreen) M.barks.drawScreen(ctx, cam, VIEW_W, view.h);   // L17: the convoy's speech bubbles (lf_barks.js)
   fakeCop.drawHud(ctx, VIEW_W);
   cops.drawHud(ctx, VIEW_W, view.h);                        // L15: wanted stars + BUSTED / LOST THEM
