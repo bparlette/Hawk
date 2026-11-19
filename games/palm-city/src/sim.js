@@ -564,15 +564,18 @@ export class Sim {
   }
 
   carBlocked(c, x, y, h) {
-    const W = this.W, ca = Math.cos(h), sa = Math.sin(h);
-    for (const [u, v] of [[c.len / 2, c.wid / 2], [c.len / 2, -c.wid / 2], [-c.len / 2, c.wid / 2], [-c.len / 2, -c.wid / 2], [c.len / 2, 0]]) {
+    const W = this.W, ca = Math.cos(h), sa = Math.sin(h), hl = c.len * 0.5, hw = c.wid * 0.5;
+    const H = this.heli, PL = this.plane, obst = this.obst;
+    const hSolid = H && H.state === 'parked' && !H.onRoof;
+    const pSolid = PL && PL.state === 'wreck' && PL.onLand;
+    for (let i = 0; i < 5; i++) {
+      const u = i === 2 || i === 3 ? -hl : hl;
+      const v = i === 4 ? 0 : (i === 0 || i === 2 ? hw : -hw);
       const px = x + ca * u - sa * v, py = y + sa * u + ca * v;
       if (!W.isDrivable(px, py)) return true;
-      const H = this.heli;   // a helicopter parked on the ground is a solid (heli.js)
-      if (H && H.state === 'parked' && !H.onRoof && (px - H.x) ** 2 + (py - H.y) ** 2 < 27 * 27) return true;
-      const PL = this.plane;   // a seaplane wrecked on land is a solid (seaplane.js)
-      if (PL && PL.state === 'wreck' && PL.onLand && (px - PL.x) ** 2 + (py - PL.y) ** 2 < 30 * 30) return true;
-      for (const o of this.obst) if ((px - o.x) ** 2 + (py - o.y) ** 2 < o.r * o.r) { this.hitObst = o; return true; }
+      if (hSolid && (px - H.x) ** 2 + (py - H.y) ** 2 < 729) return true;
+      if (pSolid && (px - PL.x) ** 2 + (py - PL.y) ** 2 < 900) return true;
+      for (let j = 0; j < obst.length; j++) { const o = obst[j]; if ((px - o.x) ** 2 + (py - o.y) ** 2 < o.r * o.r) { this.hitObst = o; return true; } }
       const tr = W.hitTrunk(px, py, 1);
       if (tr) { this.hitTree = tr; return true; }
     }

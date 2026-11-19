@@ -1097,8 +1097,12 @@ export class Renderer {
   drawMotelDoor(g, S, time) {
     if (S.player.mode === 'siege') return;
     const d = this.L.motelDoor, pulse = 0.5 + 0.5 * Math.sin(time * 2.4);
-    const rg = g.createRadialGradient(d[0], d[1], 2, d[0], d[1], 46);
-    rg.addColorStop(0, `rgba(255,214,150,${0.55 + pulse * 0.2})`); rg.addColorStop(0.5, 'rgba(255,120,130,0.28)'); rg.addColorStop(1, 'rgba(255,120,130,0)');
+    let rg = this._motelGrad;
+    if (!rg) {
+      rg = this._motelGrad = g.createRadialGradient(d[0], d[1], 2, d[0], d[1], 46);
+      rg.addColorStop(0, 'rgba(255,214,150,0.75)'); rg.addColorStop(0.5, 'rgba(255,120,130,0.30)'); rg.addColorStop(1, 'rgba(255,120,130,0)');
+    }
+    g.globalAlpha = 0.76 + pulse * 0.24;
     g.fillStyle = rg; g.beginPath(); g.ellipse(d[0] + 10, d[1], 46, 30, 0, 0, 7); g.fill();
     g.lineCap = 'round'; g.lineJoin = 'round'; g.lineWidth = 3;
     for (let i = 0; i < 3; i++) {                       // chevrons marching west, into the door
@@ -1638,11 +1642,14 @@ export class Renderer {
   drawNeonPuddles(lg, G, time, vx0, vy0, vx1, vy1) {
     for (const p of this.L.neonPuddles) {
       if (p.x + p.r < vx0 || p.x - p.r > vx1 || p.y + p.r < vy0 || p.y - p.r > vy1) continue;
-      // Soft ambient neon bounce on wet pavement (drawWetReflections supplies the mirror ribbons)
-      const rg = lg.createRadialGradient(p.x, p.y, 4, p.x, p.y, p.r * 1.15);
-      rg.addColorStop(0, p.color);
-      rg.addColorStop(0.45, p.color);
-      rg.addColorStop(1, 'rgba(0,0,0,0)');
+      // Soft ambient neon bounce on wet pavement (cached gradient per puddle, zero per-frame alloc)
+      let rg = p._grad;
+      if (!rg) {
+        rg = p._grad = lg.createRadialGradient(p.x, p.y, 4, p.x, p.y, p.r * 1.15);
+        rg.addColorStop(0, p.color);
+        rg.addColorStop(0.45, p.color);
+        rg.addColorStop(1, 'rgba(0,0,0,0)');
+      }
       lg.globalAlpha = G.neon * 0.24;
       lg.fillStyle = rg;
       lg.beginPath();
@@ -1805,16 +1812,20 @@ export class Renderer {
   }
 
   drawSiren(lg, c, time) {
+    if (!this._sirenR && typeof document !== 'undefined') {
+      const make = (c0, c1) => {
+        const cv = document.createElement('canvas'); cv.width = cv.height = 140;
+        const g2 = cv.getContext('2d'), rg = g2.createRadialGradient(70, 70, 1, 70, 70, 70);
+        rg.addColorStop(0, c0); rg.addColorStop(0.25, c1); rg.addColorStop(1, 'rgba(0,0,0,0)');
+        g2.fillStyle = rg; g2.fillRect(0, 0, 140, 140); return cv;
+      };
+      this._sirenR = make('rgba(255,40,60,1)', 'rgba(255,40,60,0.35)');
+      this._sirenB = make('rgba(60,110,255,1)', 'rgba(60,110,255,0.35)');
+    }
     const ph = Math.floor(time * 6) % 2;
-    const col = ph ? 'rgba(255,40,60,1)' : 'rgba(60,110,255,1)';
     const ox = Math.cos(c.h + Math.PI / 2) * (ph ? -4 : 4), oy = Math.sin(c.h + Math.PI / 2) * (ph ? -4 : 4);
-    const rg = lg.createRadialGradient(c.x + ox, c.y + oy, 1, c.x + ox, c.y + oy, 70);
-    rg.addColorStop(0, col);
-    rg.addColorStop(0.25, ph ? 'rgba(255,40,60,0.35)' : 'rgba(60,110,255,0.35)');
-    rg.addColorStop(1, 'rgba(0,0,0,0)');
     lg.globalAlpha = 0.9;
-    lg.fillStyle = rg;
-    lg.fillRect(c.x - 70, c.y - 70, 140, 140);
+    if (this._sirenR) lg.drawImage(ph ? this._sirenR : this._sirenB, c.x + ox - 70, c.y + oy - 70, 140, 140);
   }
 }
 
