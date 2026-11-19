@@ -27,7 +27,7 @@ for (let i = 0; i < 24; i++) DR.stepDrift(S, fake, 0, 0, 1, DT);             // 
 check(D.bank > 0 && D.total === 0, 'no cash-in before ~0.5 s of grip');
 for (let i = 0; i < 12; i++) DR.stepDrift(S, fake, 0, 0, 1, DT);             // 0.6 s of grip: cashed
 check(D.bank === 0 && D.total > 300, 'grip for ~0.5 s cashes the bank into the total', `total ${D.total}`);
-check(S.events.some(e => e.kind === 'drift_cash' && e.pts === D.total), 'a drift_cash event carries the cashed points');
+check(D.log.some(e => e.kind === 'drift_cash' && e.pts === D.total), 'a drift_cash event carries the cashed points');
 check(D.popups.some(p => p.kind === 'cash' && /DRIFT \+\d+/.test(p.txt)), 'a DRIFT +N popup is queued at the car', D.popups.map(p => p.txt).join(' '));
 const totalAfterCash = D.total;
 for (let i = 0; i < 120; i++) DR.stepDrift(S, fake, 0.9, 0, 1, DT);          // hard LAUNCH: slip .9 but steer 0 -> no lateral load
@@ -36,7 +36,7 @@ for (let i = 0; i < 120; i++) DR.stepDrift(S, fake, 0.8, 1, 1, DT);          // 
 check(D.bank > 100, 'bank rebuilds for the loss test', `bank ${D.bank.toFixed(0)}`);
 DR.loseDrift(S, fake);
 check(D.bank === 0 && D.total === totalAfterCash, 'loseDrift wipes the bank and leaves the total untouched');
-check(S.events.some(e => e.kind === 'drift_lost'), 'a drift_lost event fires');
+check(D.log.some(e => e.kind === 'drift_lost'), 'a drift_lost event fires');
 check(D.popups.some(p => p.kind === 'lost'), 'a DRIFT LOST popup is queued');
 
 // ---------- (2) integration: the real car, the real map ----------
@@ -61,7 +61,7 @@ if (spot) {
   P.v = 220; P.z = 0;                                                                          // pin the speed stepDrift reads (it never changes v itself)
   for (let i = 0; i < 120; i++) DR.stepDrift(S, P, 0.8, 1, 1, DT);
   check(D.bank > 100, 'bank rebuilt for the building test', `bank ${D.bank.toFixed(0)}`);
-  const evMark = S.events.length;
+  const evMark = D.log.length;
   // Aim at the footprint's westmost VERTEX: the polygon boundary passes through it exactly, so
   // contact is a few steps away whatever the surface — well inside the 0.5 s grip window, the
   // bank still live at impact, as it is for a player who slides into a wall mid-drift. (Aiming
@@ -75,7 +75,7 @@ if (spot) {
   for (let i = 0; i < 120 && !lost; i++) {
     if (Math.abs(P.v) < 230) P.v = 240;
     S.step(DT, { keys: { up: true } });
-    lost = S.events.slice(evMark).some(e => e.kind === 'drift_lost');
+    lost = D.log.slice(evMark).some(e => e.kind === 'drift_lost');
   }
   check(lost && D.bank === 0, 'a hard building hit loses the bank (drift_lost fired, bank zeroed)');
   check(D.total === totalPre, 'the loss costs only the un-banked points — the total is untouched', `total ${D.total}`);
