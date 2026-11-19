@@ -58,6 +58,21 @@ const GROUND_COL = {
 const ROAD_COL = ['#786a5e', '#706357'];            // warm asphalt, alternating bands
 const INK = '#210f2e';                              // Palm City's unifying dark-plum ink contour
 const BLD_PALS = [['#eed0a2', '#c98d64'], ['#d9e2e8', '#93aab8'], ['#f0b48a', '#c97e56'], ['#e6b490', '#bd8460']];
+const BILLBOARDS = [
+  { text: 'PALM CITY', sub: 'SUNSET COAST', bg: '#ff7b8a', acc: '#ffd45c' },
+  { text: 'SOLANA', sub: 'BEACH CLUB', bg: '#4ad6d0', acc: '#fff3d6' },
+  { text: 'NOVA', sub: 'MIDNIGHT DISCO', bg: '#8a4fff', acc: '#ff69b4' },
+  { text: 'PORT BLVD', sub: 'NEXT EXIT →', bg: '#f29f4b', acc: '#fff1cf' },
+];
+let LAMP_TEX = null;
+function lampTex() {
+  if (LAMP_TEX || typeof document === 'undefined') return LAMP_TEX;
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+  const g = cv.getContext('2d'), rg = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  rg.addColorStop(0, 'rgba(255,240,180,0.9)'); rg.addColorStop(1, 'rgba(255,240,180,0)');
+  g.fillStyle = rg; g.fillRect(0, 0, 64, 64);
+  return LAMP_TEX = cv;
+}
 // model -> [top, mid, low] paint for the rear/front car painters
 const CAR_PAINT = {
   conv_rose: ['#ffc2cf', '#f28ba4', '#c25b78'], conv_mint: ['#d2f4e2', '#93dcb1', '#5cab7d'],
@@ -88,7 +103,18 @@ function buildSegs(R, world) {
     const rng = mulberry32(i * 7919 + 1013);
     const sprites = [];
     const bay = zoneL === 'water' && zoneR === 'water';
+    // OutRun corner chevron signs on sharp curves + Palm City painted billboards
+    const pA = routeAt(R, s, 0), pB = routeAt(R, Math.min(R.len, s + 30), 0);
+    const curv = wrapA(Math.atan2(pB.ty, pB.tx) - Math.atan2(pA.ty, pA.tx));
+    if (Math.abs(curv) > 0.055 && i % 5 === 0) {
+      const outSide = curv > 0 ? -1 : 1;
+      sprites.push({ type: 'chevron', off: outSide * (ROAD_HALF + 6), dir: curv > 0 ? 1 : -1 });
+    }
     if (!bay) {
+      if (i > 20 && i % 48 === 0) {
+        const bSide = (i % 96 === 0) ? 1 : -1;
+        sprites.push({ type: 'billboard', off: bSide * (ROAD_HALF + 20), idx: ((i / 48) | 0) % BILLBOARDS.length });
+      }
       for (const side of [-1, 1]) {
         const zone = side < 0 ? zoneL : zoneR;
         if (zone === 'water') continue;
@@ -311,8 +337,26 @@ export function drawOpenRoad3D(R, S, G, t, time, ease) {
   const prevV = view.prevV.get(car.id);
   const braking = prevV != null && car.v < prevV - 90 * dtF;
   view.prevV.set(car.id, car.v);
+  const offRoad = !!(ev && ev.offRoad);
+  const rumble = offRoad && speedR > 0.15 ? Math.sin(time * 58) * 3.0 * speedR : (speedR > 0.8 ? Math.sin(time * 38) * 1.6 * speedR : 0);
   const hx = vw / 2 + clamp(yaw * 95, -30, 30);
-  const hy = vh - 22 + (speedR > 0.8 ? Math.sin(time * 38) * 1.6 * speedR : 0);
+  const hy = vh - 22 + rumble;
+  // OutRun tire smoke / off-road shoulder dust plumes behind the rear wheels
+  if (speedR > 0.35 && (offRoad || car.skidOn || Math.abs(yaw) > 0.16)) {
+    const hw = vw * 0.18;
+    ctx.save();
+    for (let k = 0; k < 6; k++) {
+      const ph = ((time * 5.2 + k * 0.17) % 1);
+      const side = k % 2 ? 1 : -1;
+      const sx = hx + side * (hw + ph * 14) - yaw * ph * 26;
+      const sy = hy - 2 + ph * 10 - Math.sin(ph * Math.PI) * 8;
+      const rr = (6 + ph * 14) * (offRoad ? 1.25 : 1);
+      ctx.globalAlpha = (1 - ph) * (offRoad ? 0.52 : 0.42);
+      ctx.fillStyle = offRoad ? '#e6c28a' : '#fbf4e8';
+      ctx.beginPath(); ctx.arc(sx, sy, rr, 0, 7); ctx.fill();
+    }
+    ctx.restore();
+  }
   if ((car.turbo || 0) > 0.25) {                                       // turbo flame under the bumper
     const fl = (14 + Math.sin(time * 61) * 4) * car.turbo;
     const fg = ctx.createLinearGradient(0, hy, 0, hy + fl * 2.2);
@@ -320,7 +364,24 @@ export function drawOpenRoad3D(R, S, G, t, time, ease) {
     ctx.fillStyle = fg;
     ctx.beginPath(); ctx.moveTo(hx - 9, hy - 2); ctx.lineTo(hx, hy + fl * 2.2); ctx.lineTo(hx + 9, hy - 2); ctx.closePath(); ctx.fill();
   }
-  drawCarRear(ctx, hx, hy, vw * 0.40, CAR_PAINT[car.model] || CAR_PAINT.sedan_coral, car.kind, { brake: braking, hero: true, tilt: clamp(yaw * 0.45, -0.085, 0.085), time });
+  drawCarRear(ctx, hx, hy, vw * 0.40, CAR_PAINT[car.model] || CAR_PAINT.sedan_coral, car.kind, { brake: braking, hero: true, tilt: clamp(yaw * 0.45, -0.085, 0.085), time, speedR });
+
+  // OutRun high-speed edge wind lines
+  if (speedR > 0.72) {
+    ctx.save();
+    ctx.strokeStyle = `rgba(255,244,218,${((speedR - 0.72) * 0.45).toFixed(3)})`;
+    ctx.lineWidth = 1.6;
+    for (let k = 0; k < 8; k++) {
+      const a = (k / 8) * Math.PI * 2 + Math.floor(time * 18) * 0.31;
+      const r0 = Math.min(vw, vh) * (0.42 + ((k * 37) % 10) * 0.012);
+      const r1 = r0 + 28 + 24 * speedR;
+      ctx.beginPath();
+      ctx.moveTo(vw / 2 + Math.cos(a) * r0, vh * 0.56 + Math.sin(a) * r0);
+      ctx.lineTo(vw / 2 + Math.cos(a) * r1, vh * 0.56 + Math.sin(a) * r1);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
 
   // --- grade: vignette + a dusk wash over the road (the world pass's multiply, faked) ---
   ctx.fillStyle = G.vigGrad; ctx.fillRect(0, 0, vw, vh);
@@ -332,6 +393,7 @@ export function drawOpenRoad3D(R, S, G, t, time, ease) {
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = ease;
   }
+  if (ease > 0.55 && ev) drawOutRunHud(ctx, vw, vh, ev, car, Rt, time);
   ctx.restore();
 }
 
@@ -374,15 +436,43 @@ function drawRoadside(F, Rt, seg, sp) {
     g.fillStyle = '#4c465e'; g.fillRect(pr.x, pr.y - 15 * v, inTo * 4.4 * u, Math.max(1, 0.8 * u));
     const glow = F.G.lamps;
     if (glow > 0.04) {
-      const gx = pr.x + inTo * 4.4 * u, gy = pr.y - 14.4 * v;
-      const rg = g.createRadialGradient(gx, gy, 0, gx, gy, 9 * u);
-      rg.addColorStop(0, `rgba(255,240,180,${0.85 * glow})`); rg.addColorStop(1, 'rgba(255,240,180,0)');
-      g.fillStyle = rg; g.beginPath(); g.arc(gx, gy, 9 * u, 0, 7); g.fill();
+      const gx = pr.x + inTo * 4.4 * u, gy = pr.y - 14.4 * v, r = 9 * u, lt = lampTex();
+      if (lt) { g.save(); g.globalAlpha *= glow; g.drawImage(lt, gx - r, gy - r, r * 2, r * 2); g.restore(); }
       g.fillStyle = `rgba(255,246,200,${0.20 * glow})`;
       g.beginPath(); g.ellipse(gx, pr.y, 6.4 * u, 1.7 * v, 0, 0, 7); g.fill();
     }
     g.fillStyle = '#fff6c8'; g.beginPath(); g.arc(pr.x + inTo * 4.4 * u, pr.y - 14.6 * v, Math.max(0.7, 0.85 * u), 0, 7); g.fill();
     g.strokeStyle = INK; g.lineWidth = Math.max(0.6, 0.45 * u); g.stroke();
+  } else if (sp.type === 'chevron') {
+    const bw = 6.8 * u, bh = 5.4 * v, postH = 6.8 * v;
+    g.fillStyle = '#383448'; g.fillRect(pr.x - Math.max(0.8, 0.7 * u), pr.y - postH, Math.max(1.6, 1.4 * u), postH);
+    g.fillStyle = '#ffd45c'; g.strokeStyle = INK; g.lineWidth = Math.max(0.8, 0.85 * u);
+    g.fillRect(pr.x - bw / 2, pr.y - postH - bh, bw, bh);
+    if (u > 0.14) g.strokeRect(pr.x - bw / 2, pr.y - postH - bh, bw, bh);
+    // bold OutRun arrow chevron pointing into the turn
+    g.strokeStyle = INK; g.lineWidth = Math.max(1.2, 1.35 * u); g.lineCap = 'round'; g.lineJoin = 'round';
+    const d = sp.dir, cy = pr.y - postH - bh * 0.5;
+    g.beginPath();
+    g.moveTo(pr.x - d * bw * 0.18, cy - bh * 0.28);
+    g.lineTo(pr.x + d * bw * 0.22, cy);
+    g.lineTo(pr.x - d * bw * 0.18, cy + bh * 0.28);
+    g.stroke();
+  } else if (sp.type === 'billboard') {
+    const B = BILLBOARDS[sp.idx % BILLBOARDS.length];
+    const bw = 28 * u, bh = 13 * v, postH = 9 * v;
+    g.fillStyle = 'rgba(30,16,40,0.28)'; g.beginPath(); g.ellipse(pr.x, pr.y, bw * 0.48, 1.5 * v, 0, 0, 7); g.fill();
+    g.fillStyle = '#383448';
+    g.fillRect(pr.x - bw * 0.34, pr.y - postH, Math.max(1.4, 1.4 * u), postH);
+    g.fillRect(pr.x + bw * 0.34 - Math.max(1.4, 1.4 * u), pr.y - postH, Math.max(1.4, 1.4 * u), postH);
+    const bx = pr.x - bw / 2, by = pr.y - postH - bh;
+    g.fillStyle = B.bg; g.strokeStyle = INK; g.lineWidth = Math.max(0.9, 1.1 * u);
+    g.fillRect(bx, by, bw, bh); g.strokeRect(bx, by, bw, bh);
+    g.fillStyle = B.acc; g.fillRect(bx + 1.2 * u, by + 1.2 * v, bw - 2.4 * u, bh * 0.22);
+    if (bw > 22) {
+      g.fillStyle = INK; g.textAlign = 'center';
+      g.font = `900 ${Math.max(6, bh * 0.42)}px system-ui, sans-serif`;
+      g.fillText(B.text, pr.x, by + bh * 0.72);
+    }
   } else if (sp.type === 'building') {
     const pal = BLD_PALS[sp.pal], w = sp.w * u, h = sp.h * v;
     g.fillStyle = 'rgba(30,16,40,0.28)'; g.beginPath(); g.ellipse(pr.x, pr.y, w * 0.58, 1.8 * v, 0, 0, 7); g.fill();
@@ -480,6 +570,20 @@ function drawCarRear(g, x, yB, w, paint, kind, o = {}) {
     g.fillStyle = '#2c1e33';                                          // headrests
     g.beginPath(); g.roundRect(-w * 0.24, -h * 1.02, w * 0.15, h * 0.24, w * 0.05); g.fill(); g.stroke();
     g.beginPath(); g.roundRect(w * 0.09, -h * 1.02, w * 0.15, h * 0.24, w * 0.05); g.fill(); g.stroke();
+    if (o.hero) {                                                     // 1986 OutRun homage: driver + blonde passenger with wind-blown hair
+      const wind = Math.sin((o.time || 0) * 20) * (2.5 + 4.5 * (o.speedR || 0));
+      // Driver (left seat)
+      g.fillStyle = '#3b241d'; g.strokeStyle = INK; g.lineWidth = inkW * 0.75;
+      g.beginPath(); g.arc(-w * 0.165, -h * 1.09, w * 0.068, 0, 7); g.fill(); g.stroke();
+      // Passenger (right seat) with fluttering golden hair
+      g.fillStyle = '#f5d06c';
+      g.beginPath(); g.arc(w * 0.165, -h * 1.08, w * 0.065, 0, 7); g.fill(); g.stroke();
+      g.beginPath();
+      g.moveTo(w * 0.11, -h * 1.12);
+      g.quadraticCurveTo(w * 0.24 + wind * 0.6, -h * 1.14 + wind * 0.2, w * 0.28 + wind, -h * 0.98 + wind * 0.35);
+      g.quadraticCurveTo(w * 0.20 + wind * 0.4, -h * 0.94, w * 0.13, -h * 1.02);
+      g.closePath(); g.fill(); g.stroke();
+    }
     g.fillStyle = 'rgba(190,225,245,0.65)';                            // windscreen header, seen from behind
     g.fillRect(-w * 0.30, -h * 1.06, w * 0.60, h * 0.055);
     g.strokeRect(-w * 0.30, -h * 1.06, w * 0.60, h * 0.055);
@@ -516,7 +620,12 @@ function drawCarRear(g, x, yB, w, paint, kind, o = {}) {
   g.fillStyle = o.brake ? '#ff7a6a' : '#e83a30'; g.strokeStyle = INK; g.lineWidth = Math.max(0.8, inkW * 0.7);
   g.beginPath(); g.roundRect(-w * 0.44, -h * 0.36, w * 0.17, h * 0.11, 2); g.fill(); g.stroke();
   g.beginPath(); g.roundRect(w * 0.27, -h * 0.36, w * 0.17, h * 0.11, 2); g.fill(); g.stroke();
-  if (o.hero) {                                                       // hero-only dressing: inked plate + twin chrome exhaust tips
+  if (o.hero) {                                                       // hero-only dressing: OutRun Testarossa louvered slats, inked plate & twin exhausts
+    g.strokeStyle = 'rgba(33,15,46,0.52)'; g.lineWidth = 1.4;
+    for (let s = 0; s < 3; s++) {
+      const sy = -h * (0.43 - s * 0.065);
+      g.beginPath(); g.moveTo(-w * 0.42, sy); g.lineTo(-w * 0.13, sy); g.moveTo(w * 0.13, sy); g.lineTo(w * 0.42, sy); g.stroke();
+    }
     g.fillStyle = '#f4f1e8'; g.fillRect(-w * 0.09, -h * 0.30, w * 0.18, h * 0.13);
     g.strokeStyle = INK; g.lineWidth = 1.4; g.strokeRect(-w * 0.09, -h * 0.30, w * 0.18, h * 0.13);
     for (const ex of [-w * 0.37, w * 0.28]) {
@@ -589,4 +698,61 @@ function drawCrowdPed(F, p, s) {
     g.beginPath(); g.moveTo(pr.x - 1.2 * u, pr.y - 4.6 * v - bounce); g.lineTo(pr.x - 2.8 * u, pr.y - 7.6 * v - bounce); g.stroke();
     g.beginPath(); g.moveTo(pr.x + 1.2 * u, pr.y - 4.6 * v - bounce); g.lineTo(pr.x + 2.8 * u, pr.y - 7.6 * v - bounce); g.stroke();
   }
+}
+
+// ------------------------------------------------------------------ classic OutRun arcade HUD in Palm City's plum-ink palette
+function drawOutRunHud(g, vw, vh, ev, car, Rt, time) {
+  g.save();
+  // 1. Course progress strip near top-center (shows all 5 checkpoints + finish flag)
+  const barW = Math.min(200, vw - 140), barX = (vw - barW) / 2, barY = 74;
+  g.fillStyle = 'rgba(27,20,48,0.78)'; g.strokeStyle = INK; g.lineWidth = 2;
+  g.beginPath(); g.roundRect(barX - 10, barY - 8, barW + 20, 16, 8); g.fill(); g.stroke();
+  g.fillStyle = 'rgba(255,244,218,0.22)'; g.fillRect(barX, barY - 2, barW, 4);
+  const prog = clamp01((ev.routeS || 0) / Math.max(1, Rt.len));
+  g.fillStyle = '#ffd45c'; g.fillRect(barX, barY - 2, barW * prog, 4);
+  for (let i = 0; i < ev.cps.length; i++) {
+    const cx = barX + barW * clamp01(ev.cps[i].s / Math.max(1, Rt.len));
+    g.fillStyle = i < ev.idx ? '#7dff9c' : (ev.cps[i].finish ? '#fff' : '#ffb02e');
+    g.beginPath(); g.arc(cx, barY, ev.cps[i].finish ? 4 : 2.8, 0, 7); g.fill();
+  }
+  // Player pip
+  g.fillStyle = '#ff6b8a'; g.strokeStyle = '#fff'; g.lineWidth = 1.4;
+  g.beginPath(); g.arc(barX + barW * prog, barY, 4.2, 0, 7); g.fill(); g.stroke();
+
+  // Checkpoint +TIME EXTEND burst
+  if (ev.gainT > 0 && ev.gain > 0) {
+    const u = clamp01(ev.gainT / 1.1);
+    g.globalAlpha = Math.min(1, u * 1.6);
+    g.font = '900 20px system-ui, sans-serif'; g.textAlign = 'center';
+    g.strokeStyle = INK; g.lineWidth = 4;
+    const msg = `+${ev.gain}s EXTEND!`;
+    const my = barY + 34 - (1 - u) * 14;
+    g.strokeText(msg, vw / 2, my); g.fillStyle = '#7dff9c'; g.fillText(msg, vw / 2, my);
+    g.globalAlpha = 1;
+  }
+
+  // 2. Classic OutRun bottom-left KM/H + LO/HI Gear + segmented RPM bar
+  const sp = Math.abs(car.v || 0), kmh = Math.round(sp * 0.92);
+  const gear = ev.gear || (sp >= 175 ? 'HI' : 'LO');
+  const rpm = gear === 'LO' ? clamp01(sp / 185) : clamp01(0.32 + (sp - 165) / 180);
+  const bx = 12, by = vh - 108, bw = 116, bh = 54;
+  g.fillStyle = 'rgba(27,20,48,0.84)'; g.strokeStyle = INK; g.lineWidth = 2.2;
+  g.beginPath(); g.roundRect(bx, by, bw, bh, 11); g.fill(); g.stroke();
+  g.textAlign = 'left'; g.font = '900 21px system-ui, sans-serif'; g.fillStyle = '#ffd45c';
+  g.fillText(String(kmh), bx + 10, by + 25);
+  g.font = '800 10px system-ui, sans-serif'; g.fillStyle = 'rgba(255,244,218,0.82)';
+  g.fillText('KM/H', bx + 54, by + 24);
+  // Gear badge
+  g.fillStyle = gear === 'HI' ? '#ff5a7a' : '#4ad6d0';
+  g.beginPath(); g.roundRect(bx + bw - 30, by + 9, 22, 17, 5); g.fill();
+  g.textAlign = 'center'; g.font = '900 10px system-ui, sans-serif'; g.fillStyle = INK;
+  g.fillText(gear, bx + bw - 19, by + 21);
+  // 10-segment arcade RPM bar
+  const segs = 10, sw = (bw - 20 - (segs - 1) * 2) / segs;
+  for (let i = 0; i < segs; i++) {
+    const on = (i + 0.5) / segs <= rpm;
+    g.fillStyle = on ? (i >= 8 ? '#ff4a5c' : i >= 6 ? '#ffb02e' : '#7dff9c') : 'rgba(255,244,218,0.14)';
+    g.fillRect(bx + 10 + i * (sw + 2), by + 35, sw, 10);
+  }
+  g.restore();
 }

@@ -282,6 +282,19 @@ export function stepOpenRoad(sim, ev, dt, end, pay) {
   // held drifts pay (with the grippier tyres this takes real speed — see skid.js)
   if (c.skidOn && Math.abs(c.v) > 100) { ev.driftT += dt; if (ev.driftT >= 0.5) { ev.driftT = 0; pay(OPENROAD.driftPts, 'DRIFT'); } }
   else ev.driftT = Math.max(0, ev.driftT - dt);
+  // OutRun feel: gentle centrifugal outward pull on fast bends + LO/HI gear + off-road shoulder state
+  const sp = Math.abs(c.v);
+  ev.gear = sp >= 175 ? 'HI' : 'LO';
+  const pHere = routeAt(R, ev.routeS, 0);
+  const latOff = (c.x - pHere.x) * -pHere.ty + (c.y - pHere.y) * pHere.tx;
+  ev.offRoad = Math.abs(latOff) > 27;
+  if (sp > 140) {
+    const pFwd = routeAt(R, Math.min(R.len, ev.routeS + 28), 0);
+    const curv = wrapA(Math.atan2(pFwd.ty, pFwd.tx) - Math.atan2(pHere.ty, pHere.tx));
+    const push = clamp(-curv * (sp / 290) * (sp / 290) * 16, -12, 12) * dt;
+    const nx = c.x - pHere.ty * push, ny = c.y + pHere.tx * push;
+    if (sim.W.isDrivable(nx, ny)) { c.x = nx; c.y = ny; }
+  }
   stepRouteTraffic(sim, ev, dt);
   stepScreech(sim, ev, dt, c);
   ev.prevH = c.h;
