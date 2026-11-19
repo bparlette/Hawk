@@ -276,6 +276,7 @@ export class LFSim {
       o.dmg = 0; o.dent = [0, 0, 0, 0]; o.glass = [0, 0];
       if (o.wreck) { o.wreck = false; this.events.push({ t: this.time, kind: 'healed', model: o.model }); }
     }
+    if (this.events.length > 2500) this.events.splice(0, 500);   // bound memory on long sessions
   }
 
   // Palm City's stick -> throttle/steer, for ANY car (the player, or a CPU crew member driven by lf_pilot — task L6)
@@ -352,7 +353,9 @@ export class LFSim {
     for (let i = 0; i < cs.length; i++) for (let j = i + 1; j < cs.length; j++) {
       const a = cs[i], b = cs[j];
       if (a.layer !== b.layer) continue;
-      const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy), reach = (a.len + b.len) / 4 + (a.wid + b.wid) / 4;
+      const dx = b.x - a.x, dy = b.y - a.y;
+      if (Math.abs(dx) > 90 || Math.abs(dy) > 90) continue;
+      const d = Math.hypot(dx, dy), reach = (a.len + b.len) / 4 + (a.wid + b.wid) / 4;
       if (d > reach || d < 0.01) continue;
       // L15 LANE PASS-BY: the circle test above is wider than a two-lane street, so oncoming cars would 'collide' while passing in their own
       // lanes. For ambient traffic heading the opposite way, only a real lateral overlap (head-on / wrong lane) counts as contact.

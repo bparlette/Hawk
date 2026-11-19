@@ -158,7 +158,18 @@ const doorOf = () => { if (!(foot && foot.active) || foot.z > 4) return null; fo
 const atMyDoor = () => !!doorOf();
 // is (x, y) inside a house footprint? (GET OUT never leaves you standing inside a wall —
 // if the driver's side is inside a house, you step out the other side instead.)
-const inHouse = (x, y) => { if (!sim || !sim.houses) return false; for (const f of sim.houses) { let ins = false; for (let k = 0; k < f.length; k += 2) { const ax = f[k], ay = f[k + 1], ex = f[(k + 2) % f.length], ey = f[(k + 3) % f.length]; if ((ay > y) !== (ey > y) && x < (ex - ax) * (y - ay) / (ey - ay) + ax) ins = !ins; } if (ins) return true; } return false; };
+const inHouse = (x, y) => {
+  if (!sim || !sim.houses || !sim.houseGrid) return false;
+  const list = sim.houseGrid.get(Math.floor(x / 256) * 100003 + Math.floor(y / 256));
+  if (!list) return false;
+  for (const hi of list) {
+    const bb = sim.houseBox[hi]; if (x < bb[0] || x > bb[2] || y < bb[1] || y > bb[3]) continue;
+    const f = sim.houses[hi]; let ins = false;
+    for (let k = 0; k < f.length; k += 2) { const ax = f[k], ay = f[k + 1], ex = f[(k + 2) % f.length], ey = f[(k + 3) % f.length]; if ((ay > y) !== (ey > y) && x < (ex - ax) * (y - ay) / (ey - ay) + ax) ins = !ins; }
+    if (ins) return true;
+  }
+  return false;
+};
 // (the roof wiring lives in phase 2 below — it lands with roof.json)
 setFx(sim, roster);
 setWalkers(() => { if (!net) return []; const out = []; for (const f of net.walkerMap.values()) { const who = roster.people.find(p => p.id === f.id); if (who) out.push({ who, x: f.x, y: f.y, px: f.px, py: f.py, h: f.h, dap: 0 }); } return out; });   // M-D: friends on foot, drawn by lf_fx
@@ -453,18 +464,25 @@ function clockText(t) {   // Palm City hud.js, verbatim: 6:38 pm golden hour -> 
   return `${h}:${String(m).padStart(2, '0')} PM`;
 }
 let cornerT = 0, cornerS = '';
-// L10: street names written ALONG the roads once you are zoomed in enough to read them (deduped, upright, haloed)
+// L10: street names written ALONG the roads once you are zoomed in enough to read them (spatial-grid queried, deduped, upright, plum-ink haloed)
+const _lblSeenE = new Set();
 function drawStreetLabels() {
   if (cam.zoom < 0.3 || cam.zoom > 1.3) return;
-  const hw = VIEW_W / 2 / cam.zoom, hh = view.h / 2 / cam.zoom, seen = [], z = cam.zoom; let n = 0;
+  const z = cam.zoom, hw = VIEW_W / 2 / z, hh = view.h / 2 / z, seen = []; let n = 0;
+  const cx0 = Math.floor((cam.x - hw) / 256), cx1 = Math.floor((cam.x + hw) / 256);
+  const cy0 = Math.floor((cam.y - hh) / 256), cy1 = Math.floor((cam.y + hh) / 256);
+  _lblSeenE.clear();
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.font = '800 10px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
-  for (const e of W.edges) {
-    const nm = e.name; if (!nm || e.hw === 'service' || e.len < 260 || n > 9) continue;
-    const k = e.pts.length >> 1, [mx, my] = e.pts[k], sx = (mx - cam.x) * z + VIEW_W / 2, sy = (my - cam.y) * z + view.h / 2;
-    if (sx < 30 || sx > VIEW_W - 30 || sy < 70 || sy > view.h - 120) continue;
-    if (seen.some(q => q[0] === nm && Math.hypot(q[1] - sx, q[2] - sy) < 260) || seen.some(q => Math.hypot(q[1] - sx, q[2] - sy) < 40)) continue;
-    const [ax, ay] = e.pts[Math.max(0, k - 1)], [bx, by] = e.pts[Math.min(e.pts.length - 1, k + 1)]; let ang = Math.atan2(by - ay, bx - ax); if (ang > Math.PI / 2 || ang < -Math.PI / 2) ang += Math.PI;
-    seen.push([nm, sx, sy]); n++; ctx.save(); ctx.translate(sx, sy); ctx.rotate(ang); ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(27,20,48,0.8)'; ctx.strokeText(nm, 0, 0); ctx.fillStyle = 'rgba(255,240,215,0.95)'; ctx.fillText(nm, 0, 0); ctx.restore();
+  for (let cy = cy0; cy <= cy1 && n <= 9; cy++) for (let cx = cx0; cx <= cx1 && n <= 9; cx++) {
+    for (const si of W.grid[0].get(cx * 100003 + cy) || []) {
+      const e = W.seg[si].e; if (_lblSeenE.has(e)) continue; _lblSeenE.add(e);
+      const nm = e.name; if (!nm || e.hw === 'service' || e.len < 260 || n > 9) continue;
+      const k = e.pts.length >> 1, [mx, my] = e.pts[k], sx = (mx - cam.x) * z + VIEW_W / 2, sy = (my - cam.y) * z + view.h / 2;
+      if (sx < 30 || sx > VIEW_W - 30 || sy < 70 || sy > view.h - 120) continue;
+      if (seen.some(q => q[0] === nm && Math.hypot(q[1] - sx, q[2] - sy) < 260) || seen.some(q => Math.hypot(q[1] - sx, q[2] - sy) < 40)) continue;
+      const [ax, ay] = e.pts[Math.max(0, k - 1)], [bx, by] = e.pts[Math.min(e.pts.length - 1, k + 1)]; let ang = Math.atan2(by - ay, bx - ax); if (ang > Math.PI / 2 || ang < -Math.PI / 2) ang += Math.PI;
+      seen.push([nm, sx, sy]); n++; ctx.save(); ctx.translate(sx, sy); ctx.rotate(ang); ctx.lineWidth = 3.2; ctx.strokeStyle = 'rgba(33,15,46,0.88)'; ctx.strokeText(nm, 0, 0); ctx.fillStyle = 'rgba(255,241,216,0.96)'; ctx.fillText(nm, 0, 0); ctx.restore();
+    }
   }
   ctx.textBaseline = 'alphabetic';
 }
@@ -547,7 +565,7 @@ function frame(now) {
     ctx.font = '800 13px system-ui'; ctx.fillStyle = 'rgba(255,240,215,0.9)';
     ctx.fillText((foot && foot.active) ? clockText(tod) : Math.round(Math.abs(c.v) / 10 * 2.237) + ' mph · ' + clockText(tod), VIEW_W / 2, 64);   // Palm City's clock rides the HUD line: 6:38 PM -> 7:48 PM as dusk falls
     const pb = party.banner();
-    if (pb) { ctx.font = '900 11px system-ui'; const pw = ctx.measureText(pb).width + 20; ctx.fillStyle = 'rgba(27,20,48,0.82)'; ctx.beginPath(); ctx.roundRect(VIEW_W - pw - 12, 74, pw, 24, 10); ctx.fill(); ctx.fillStyle = '#d48aff'; ctx.textAlign = 'center'; ctx.fillText(pb, VIEW_W - pw / 2 - 12, 90); }
+    if (pb) { ctx.font = '900 11px system-ui'; const pw = ctx.measureText(pb).width + 20; ctx.fillStyle = 'rgba(27,20,48,0.86)'; ctx.strokeStyle = '#210f2e'; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.roundRect(VIEW_W - pw - 12, 104, pw, 24, 10); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#d48aff'; ctx.textAlign = 'center'; ctx.fillText(pb, VIEW_W - pw / 2 - 12, 120); }
   }
   // prefetch: the view + a margin + where the car will be in ~1.2 s, nearest first
   const hw0 = VIEW_W / 2 / cam.zoom + 320, hh0 = view.h / 2 / cam.zoom + 320, want = [], hwf = Math.min(hw0, 1400), hhf = Math.min(hh0, 1800);

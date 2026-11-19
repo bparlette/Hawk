@@ -172,7 +172,7 @@ export class Renderer {
     // bushes in the yards — the SAME sets the sim collides with (lf_veg.js), so what you
     // see is exactly what you can hit. Rails: a bright band on a dark shadow line.
     if (S.rails && !far) {
-      const seenS = new Set(); g.lineCap = 'round';
+      const seenS = this._seenS || (this._seenS = new Set()); seenS.clear(); g.lineCap = 'round';
       for (let cy = Math.floor(vy0 / 256); cy <= Math.floor(vy1 / 256); cy++) for (let cx = Math.floor(vx0 / 256); cx <= Math.floor(vx1 / 256); cx++)
         for (const s of S.rails.grid.get(cx * 100003 + cy) || []) { if (seenS.has(s)) continue; seenS.add(s);
           g.beginPath(); g.moveTo(s.x0 + SUN.x * 4, s.y0 + SUN.y * 4); g.lineTo(s.x1 + SUN.x * 4, s.y1 + SUN.y * 4); g.lineWidth = 4.6; g.strokeStyle = 'rgba(24,20,36,0.4)'; g.stroke();
@@ -181,7 +181,8 @@ export class Renderer {
         }
     }
     if (this.areas && !far) {
-      if (!this._nb) {   // the renderer's own house-box grid, for the shared bush rule
+      if (!this._nb || this._nbAreas !== this.areas) {   // rebuild whenever areas.json lands in phase 2 so bushes never draw inside houses
+        this._nbAreas = this.areas;
         const boxes = this.areas.A.buildings.map(f => { let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (let k = 0; k < f.length; k += 2) { x0 = Math.min(x0, f[k]); x1 = Math.max(x1, f[k]); y0 = Math.min(y0, f[k + 1]); y1 = Math.max(y1, f[k + 1]); } return [x0, y0, x1, y1]; });
         const grid = new Map(); boxes.forEach((bb, i) => { for (let cx = Math.floor(bb[0] / 256); cx <= Math.floor(bb[2] / 256); cx++) for (let cy = Math.floor(bb[1] / 256); cy <= Math.floor(bb[3] / 256); cy++) { const key = cx * 100003 + cy; let l = grid.get(key); if (!l) grid.set(key, l = []); l.push(i); } });
         this._nb = (x, y) => { for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (const hi of grid.get((Math.floor(x / 256) + i) * 100003 + Math.floor(y / 256) + j) || []) { const bb = boxes[hi]; if (x > bb[0] - 110 && x < bb[2] + 110 && y > bb[1] - 110 && y < bb[3] + 110) return true; } return false; };
@@ -216,6 +217,7 @@ export class Renderer {
     g.globalAlpha = 0.55; for (const c of S.cars) if (c.layer === 1 && vis(c.x, c.y)) this.drawCar(g, c, 'shadow');
     for (const c of S.cars) if (c.layer === 1 && vis(c.x, c.y)) this.drawGlow(g, c);
     g.globalAlpha = 1; for (const c of S.cars) if (c.layer === 1 && vis(c.x, c.y)) this.drawCar(g, c, 'color');
+    for (const c of S.cars) if (c.siren && c.layer === 1 && vis(c.x, c.y)) drawLightBar(g, c, time);   // L15: light bar on bridge decks too
     if (this.placeFx) this.placeFx(g, S, this.gr, time, vis);   // L12/L13 hook (lf_places_render.js): the 108 Astro's parking lights, Scott's tag, the bark
     if (this.worldFx) this.worldFx(g, S, time, vis, vx0, vy0, vx1, vy1);   // M-B/M-C + valet + curb destruct world overlays
     FX.over(g, S, this.mission, time);                    // bass rings, sputter, fire, pickup rings, the beat's walkers
@@ -247,24 +249,27 @@ export class Renderer {
     if (!far) {
       g.setTransform(dpr * z, 0, 0, dpr * z, dpr * (vw / 2 - cam.x * z), dpr * (vh / 2 - cam.y * z));
       if (gr.lamps > 0.10) {
-        g.save(); g.globalCompositeOperation = 'lighter';
-        const seenL = new Set();
+        if (!this._lampTex && typeof document !== 'undefined') {
+          const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+          const lg2 = cv.getContext('2d'), rg = lg2.createRadialGradient(32, 32, 1, 32, 32, 32);
+          rg.addColorStop(0, 'rgba(255,214,132,1)'); rg.addColorStop(0.55, 'rgba(255,202,118,0.42)'); rg.addColorStop(1, 'rgba(255,202,118,0)');
+          lg2.fillStyle = rg; lg2.fillRect(0, 0, 64, 64); this._lampTex = cv;
+        }
+        g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.34 * gr.lamps;
+        const seenL = this._seenL || (this._seenL = new Set()); seenL.clear();
         for (let cy = Math.floor(vy0 / 256); cy <= Math.floor(vy1 / 256); cy++) for (let cx = Math.floor(vx0 / 256); cx <= Math.floor(vx1 / 256); cx++) {
           for (const si of this.W.grid[0].get(cx * 100003 + cy) || []) {
             const e = this.W.seg[si].e; if (seenL.has(e) || e.hw === 'service' || e.len < 90) continue; seenL.add(e);
             const r = e.hw === 'residential' || e.hw === 'unclassified' ? 54 : 68;
-            // Nov 18 (lamp density): a pool every ~140 wu along the edge's polyline, not one
-            // at its midpoint — one-per-edge averaged a pool per ~518 wu and left ~3/4 of
-            // residential street unlit at dusk, where Palm City runs near-continuous pools.
+            // Nov 18 (lamp density): a pool every ~140 wu along the edge's polyline, stamped from one pre-baked sprite
             let acc = 0, next = 70;
             for (let pi = 0; pi + 1 < e.pts.length; pi++) {
               const ax = e.pts[pi][0], ay = e.pts[pi][1], bx = e.pts[pi + 1][0], by = e.pts[pi + 1][1], seg = Math.hypot(bx - ax, by - ay);
               while (acc + seg >= next && next < e.len - 20) {
                 const u = seg > 0 ? (next - acc) / seg : 0, lx = ax + (bx - ax) * u, ly = ay + (by - ay) * u;
                 if (vis(lx, ly, r)) {
-                  const lg = g.createRadialGradient(lx, ly, 2, lx, ly, r);
-                  lg.addColorStop(0, `rgba(255,210,128,${(0.32 * gr.lamps).toFixed(3)})`); lg.addColorStop(1, 'rgba(255,210,128,0)');
-                  g.fillStyle = lg; g.beginPath(); g.arc(lx, ly, r, 0, Math.PI * 2); g.fill();
+                  if (this._lampTex) g.drawImage(this._lampTex, lx - r, ly - r, r * 2, r * 2);
+                  else { g.fillStyle = 'rgba(255,210,128,0.5)'; g.beginPath(); g.arc(lx, ly, r, 0, Math.PI * 2); g.fill(); }
                 }
                 next += 140;
               }

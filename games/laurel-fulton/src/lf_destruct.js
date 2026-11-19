@@ -18,10 +18,14 @@ export class CurbDestruct {
     this.debris = [];
     this.combo = 0; this.comboT = 0; this.score = 0;
     this.toast = null;
+    this._seen = new Set();
+    this._buf = [];
   }
 
   _propsIn(vx0, vy0, vx1, vy1) {
-    const out = [], seen = new Set();
+    const out = this._buf, seen = this._seen;
+    out.length = 0; seen.clear();
+    if ((vx1 - vx0) > 2200) return out;   // skip far-zoom overview
     const cx0 = Math.floor(vx0 / 256), cx1 = Math.floor(vx1 / 256), cy0 = Math.floor(vy0 / 256), cy1 = Math.floor(vy1 / 256);
     for (let cy = cy0; cy <= cy1; cy++) for (let cx = cx0; cx <= cx1; cx++) {
       for (const si of this.W.grid[0].get(cx * 100003 + cy) || []) {
