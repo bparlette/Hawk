@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Figure Factory — Your Photo, As an Action Figure</title>
+<style>
+  :root{
+    --bg:#10131c; --panel:#1a1f2e; --panel2:#232a3f; --ink:#f2f4fa; --muted:#9aa5bd;
+    --accent:#f5c518; --accent2:#3b82f6; --line:#313a55;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    touch-action:manipulation; overscroll-behavior-y:none;}
+  .wrap{max-width:560px; margin:0 auto; padding:10px 12px 28px;}
+  header{text-align:center; padding:6px 0 2px;}
+  header h1{margin:0; font-size:26px; letter-spacing:2px; font-weight:900; font-style:italic;}
+  header h1 .y{color:var(--accent);}
+  header p{margin:3px 0 8px; color:var(--muted); font-size:13px;}
+  #stage{position:relative; border-radius:16px; overflow:hidden; border:1px solid var(--line);
+    background:radial-gradient(120% 90% at 50% 20%, #2c3a5e 0%, #1a2238 55%, #11182b 100%);}
+  #gl{display:block; width:100%; height:46vh; min-height:330px; touch-action:none; cursor:grab;}
+  #gl:active{cursor:grabbing;}
+  #stageHint{position:absolute; left:0; right:0; bottom:6px; text-align:center; font-size:11px;
+    color:rgba(230,236,250,.55); pointer-events:none; letter-spacing:.4px;}
+  .row{display:flex; gap:8px; margin-top:10px;}
+  button{flex:1; border:1px solid var(--line); background:var(--panel2); color:var(--ink);
+    border-radius:12px; padding:12px 6px; font-size:14px; font-weight:700; letter-spacing:.6px; cursor:pointer;}
+  button:active{transform:translateY(1px);}
+  button.on{background:var(--accent); color:#191204; border-color:var(--accent);}
+  button.primary{background:var(--accent); color:#191204; border-color:var(--accent); font-size:15px;}
+  button.blue{background:var(--accent2); border-color:var(--accent2); color:#fff;}
+  #uploadBtn{width:100%; margin-top:10px; padding:15px 6px; font-size:16px;}
+  .privacy{margin:7px 2px 0; font-size:12px; color:var(--muted); text-align:center;}
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px 14px 6px; margin-top:12px;}
+  .panel h2{margin:0 0 4px; font-size:12px; letter-spacing:2px; color:var(--muted); font-weight:800;}
+  .ctl{margin:9px 0;}
+  .ctl label{display:flex; justify-content:space-between; font-size:13px; font-weight:700; letter-spacing:.5px; margin-bottom:2px;}
+  .ctl label output{color:var(--accent); font-variant-numeric:tabular-nums;}
+  input[type=range]{-webkit-appearance:none; appearance:none; width:100%; height:34px; background:transparent; margin:0;}
+  input[type=range]::-webkit-slider-runnable-track{height:8px; border-radius:4px; background:#39466b;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:30px; height:30px; border-radius:50%;
+    background:var(--accent); border:3px solid #0d0f16; margin-top:-11px; box-shadow:0 1px 5px rgba(0,0,0,.5);}
+  input[type=range]::-moz-range-track{height:8px; border-radius:4px; background:#39466b;}
+  input[type=range]::-moz-range-thumb{width:26px; height:26px; border-radius:50%; background:var(--accent); border:3px solid #0d0f16;}
+  #err{display:none; margin-top:10px; background:#3a1620; border:1px solid #7a2438; color:#ffb9c6;
+    border-radius:10px; padding:10px 12px; font-size:13px;}
+  footer{margin-top:14px; text-align:center; color:var(--muted); font-size:11.5px; line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>FIGURE <span class="y">FACTORY</span></h1>
+    <p>Upload a photo &rarr; get a 3D action figure of yourself. Reshape it. Pose it. Keep it.</p>
+  </header>
+
+  <div id="stage">
+    <canvas id="gl"></canvas>
+    <div id="stageHint">Drag to spin the figure</div>
+  </div>
+
+  <button id="uploadBtn" class="primary">UPLOAD YOUR PHOTO</button>
+  <input type="file" id="file" accept="image/*" hidden>
+  <p class="privacy">Private by design: your photo never leaves this device. Everything is drawn right here on the page &mdash; nothing is uploaded anywhere.</p>
+
+  <div class="row" role="group" aria-label="Poses">
+    <button id="poseIdle" class="on">IDLE</button>
+    <button id="poseGuard">GUARD</button>
+    <button id="poseDunk">DUNK</button>
+    <button id="dlBtn" class="blue">SAVE PNG</button>
+  </div>
+
+  <div class="panel" id="bodyPanel">
+    <h2>BODY &mdash; SLIDE TO RESHAPE</h2>
+    <div class="ctl"><label>HEIGHT <output id="o_height">1.00&times;</output></label>
+      <input type="range" id="s_height" min="0.82" max="1.25" step="0.01" value="1"></div>
+    <div class="ctl"><label>WEIGHT <output id="o_weight">1.00&times;</output></label>
+      <input type="range" id="s_weight" min="0.68" max="1.50" step="0.01" value="1"></div>
+    <div class="ctl"><label>HEAD SIZE <output id="o_head">1.30&times;</output></label>
+      <input type="range" id="s_head" min="0.80" max="1.75" step="0.01" value="1.3"></div>
+    <div class="ctl"><label>HAND SIZE <output id="o_hands">1.30&times;</output></label>
+      <input type="range" id="s_hands" min="0.80" max="1.80" step="0.01" value="1.3"></div>
+    <div class="ctl"><label>ARM LENGTH <output id="o_arms">1.00&times;</output></label>
+      <input type="range" id="s_arms" min="0.72" max="1.38" step="0.01" value="1"></div>
+    <div class="ctl"><label>LEG LENGTH <output id="o_legs">1.00&times;</output></label>
+      <input type="range" id="s_legs" min="0.72" max="1.38" step="0.01" value="1"></div>
+    <div class="ctl"><label>SHOULDER WIDTH <output id="o_shoulders">1.00&times;</output></label>
+      <input type="range" id="s_shoulders" min="0.78" max="1.35" step="0.01" value="1"></div>
+  </div>
+
+  <div class="panel" id="facePanel">
+    <h2>PHOTO FIT &mdash; LINE THE FACE UP</h2>
+    <div class="ctl"><label>FACE ZOOM <output id="o_fzoom">1.05&times;</output></label>
+      <input type="range" id="s_fzoom" min="0.60" max="1.80" step="0.01" value="1.05"></div>
+    <div class="ctl"><label>FACE &harr; <output id="o_fx">0%</output></label>
+      <input type="range" id="s_fx" min="-60" max="60" step="1" value="0"></div>
+    <div class="ctl"><label>FACE &varr; <output id="o_fy">0%</output></label>
+      <input type="range" id="s_fy" min="-60" max="60" step="1" value="0"></div>
+  </div>
+
+  <div id="err"></div>
+  <footer>Figure Factory is a sample: one parametric action-figure rig, your photo as its face.<br>
+  Feet stay planted at every slider combination &mdash; the legs re-derive the hip height, no IK.</footer>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+/* ============================================================
+   FIGURE FACTORY — parametric action figure (rigkit technique):
+   primitive meshes on named Group pivots, pose programs writing
+   channel targets, one exponential damper (1 - exp(-16*dt)).
+   Legs are dimensioned so the chain sums exactly to hip height:
+   feet plant at y=0 by arithmetic, not IK.
+   ============================================================ */
+
+const P = { height:1, weight:1, head:1.30, hands:1.30, arms:1, legs:1, shoulders:1 };
+const FIT = { zoom:1.05, x:0, y:0 };
+const PAL = { skin:new THREE.Color(0xc68863), hair:new THREE.Color(0x2a2320),
+              shirt:new THREE.Color(0x2563eb), shorts:new THREE.Color(0x161a26),
+              shoe:new THREE.Color(0xf2f2f2), shoeAccent:new THREE.Color(0x2563eb) };
+
+const canvas = document.getElementById('gl');
+const errBox = document.getElementById('err');
+function showErr(m){ errBox.style.display='block'; errBox.textContent = m; }
+
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true, preserveDrawingBuffer:true });
+} catch(e){ showErr('WebGL is not available on this device, so the figure cannot be drawn.'); throw e; }
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.06;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 60);
+
+/* Lights — hemisphere fill + shadow-casting key (the Jam Fight lesson:
+   the same rig under flat light looks cheap). */
+scene.add(new THREE.HemisphereLight(0xcfe2ff, 0x8a6f4d, 0.95));
+const sun = new THREE.DirectionalLight(0xffffff, 2.1);
+sun.position.set(2.6, 4.6, 3.0);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+sun.shadow.camera.left=-2.2; sun.shadow.camera.right=2.2;
+sun.shadow.camera.top=3.4; sun.shadow.camera.bottom=-0.6;
+sun.shadow.camera.far=14; sun.shadow.bias=-0.0004;
+scene.add(sun);
+const rim = new THREE.DirectionalLight(0x88aaff, 0.7);
+rim.position.set(-3, 2.2, -2.6); scene.add(rim);
+
+/* Ground shadow catcher + painted contact blob (the blob does most of
+   the grounding work, and shrinks/fades as the figure leaves the floor). */
+const shadowPlane = new THREE.Mesh(
+  new THREE.CircleGeometry(3.2, 40),
+  new THREE.ShadowMaterial({ opacity: 0.20 }));
+shadowPlane.rotation.x = -Math.PI/2; shadowPlane.receiveShadow = true; scene.add(shadowPlane);
+
+const blobC = document.createElement('canvas'); blobC.width = blobC.height = 256;
+{
+  const g = blobC.getContext('2d');
+  const rg = g.createRadialGradient(128,128,8,128,128,126);
+  rg.addColorStop(0,'rgba(0,0,0,0.50)'); rg.addColorStop(0.7,'rgba(0,0,0,0.28)');
+  rg.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle = rg; g.fillRect(0,0,256,256);
+}
+const blobTex = new THREE.CanvasTexture(blobC);
+const blob = new THREE.Mesh(new THREE.CircleGeometry(0.62, 36),
+  new THREE.MeshBasicMaterial({ map: blobTex, transparent:true, depthWrite:false }));
+blob.rotation.x = -Math.PI/2; blob.position.y = 0.004; scene.add(blob);
+
+/* ---------- face texture (photo patch / drawn default) ---------- */
+const faceC = document.createElement('canvas'); faceC.width = faceC.height = 512;
+const faceTex = new THREE.CanvasTexture(faceC);
+faceTex.colorSpace = THREE.SRGBColorSpace;
+
+function drawDefaultFace(){
+  const g = faceC.getContext('2d');
+  g.clearRect(0,0,512,512);
+  g.fillStyle = '#fff';
+  const eye = (x)=>{ g.beginPath(); g.ellipse(x,215,34,42,0,0,Math.PI*2); g.fill();
+    g.fillStyle='#26221f'; g.beginPath(); g.ellipse(x,222,17,24,0,0,Math.PI*2); g.fill();
+    g.fillStyle='#fff'; g.beginPath(); g.ellipse(x-6,212,6,8,0,0,Math.PI*2); g.fill(); g.fillStyle='#fff'; };
+  eye(168); eye(344);
+  g.strokeStyle = 'rgba(60,35,20,0.85)'; g.lineWidth = 13; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(128,148); g.quadraticCurveTo(168,132,208,146); g.stroke();
+  g.beginPath(); g.moveTo(304,146); g.quadraticCurveTo(344,132,384,148); g.stroke();
+  g.strokeStyle = 'rgba(120,70,40,0.55)'; g.lineWidth = 9;
+  g.beginPath(); g.moveTo(256,240); g.quadraticCurveTo(246,292,262,306); g.stroke();
+  g.strokeStyle = '#7c3f2a'; g.lineWidth = 15;
+  g.beginPath(); g.moveTo(196,368); g.quadraticCurveTo(256,412,316,368); g.stroke();
+  g.fillStyle = 'rgba(214,110,90,0.30)';
+  g.beginPath(); g.ellipse(112,318,34,20,0,0,Math.PI*2); g.fill();
+  g.beginPath(); g.ellipse(400,318,34,20,0,0,Math.PI*2); g.fill();
+  faceTex.needsUpdate = true;
+}
+drawDefaultFace();
+
+/* ---------- shirt texture (lathe wrap: front design at u=0.25) ---------- */
+const shirtC = document.createElement('canvas'); shirtC.width = shirtC.height = 512;
+const shirtTex = new THREE.CanvasTexture(shirtC);
+shirtTex.colorSpace = THREE.SRGBColorSpace;
+function drawShirt(){
+  const g = shirtC.getContext('2d');
+  const base = '#' + PAL.shirt.getHexString();
+  g.fillStyle = base; g.fillRect(0,0,512,512);
+  g.fillStyle = 'rgba(0,0,0,0.20)'; g.fillRect(0,428,512,84);            // hem shade
+  g.fillStyle = 'rgba(255,255,255,0.85)'; g.fillRect(0,150,512,20);      // chest stripe
+  g.fillStyle = 'rgba(0,0,0,0.16)'; g.fillRect(0,182,512,10);
+  g.fillStyle = 'rgba(0,0,0,0.22)'; g.fillRect(0,0,26,512); g.fillRect(256,0,26,512); g.fillRect(486,0,26,512); // side panels at wrap points
+  g.fillStyle = 'rgba(255,255,255,0.10)';
+  for(let y=16;y<512;y+=14) for(let x=8;x<512;x+=14){ g.fillRect(x,y,2,2); }  // perforation dots
+  shirtTex.needsUpdate = true;
+}
+drawShirt();
+
+/* ============================================================
+   THE FIGURE — one parametric builder. Every measurement is
+   base x slider params, so a new body is a data row, not a model.
+   ============================================================ */
+let fig = null;      // { root, bodyPivot, hips, torso, headGroup, armL, foreL, armR, foreR,
+                     //   legL, shinL, legR, shinR, footL, footR, ball, mats }
+let MATS = null;
+
+function tapered(rTop, rBot, len, mat, seg=14){
+  const geo = new THREE.CylinderGeometry(rTop, rBot, len, seg, 1);
+  geo.translate(0, -len/2, 0);                       // hangs DOWN from the pivot
+  const m = new THREE.Mesh(geo, mat); m.castShadow = true; return m;
+}
+function ball3(r, mat, w=20, h=16){
+  const m = new THREE.Mesh(new THREE.SphereGeometry(r, w, h), mat);
+  m.castShadow = true; return m;
+}
+function box(w, h, d, mat){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.castShadow = true; return m;
+}
+
+function buildFigure(){
+  if (fig){
+    scene.remove(fig.root);
+    fig.root.traverse(o => { if (o.geometry) o.geometry.dispose(); });
+    for (const k in MATS) MATS[k].dispose();
+  }
+  const wS = P.weight;                                   // bulk
+  const thigh = 0.42 * P.legs, calf = 0.39 * P.legs, ankle = 0.08, legDrop = 0.05;
+  const hipY = legDrop + thigh + calf + ankle;           // <- the feet-plant identity
+  const upLen = 0.31 * P.arms, foLen = 0.29 * P.arms;
+  const headR = 0.185 * P.head;
+  const shoulderX = 0.30 * P.shoulders * (0.72 + 0.28 * wS);
+
+  MATS = {
+    skin:  new THREE.MeshPhysicalMaterial({ color: PAL.skin, roughness: 0.5, clearcoat: 0.42, clearcoatRoughness: 0.25 }),
+    hair:  new THREE.MeshStandardMaterial({ color: PAL.hair, roughness: 0.85 }),
+    shirt: new THREE.MeshStandardMaterial({ map: shirtTex, roughness: 0.7 }),
+    shorts:new THREE.MeshStandardMaterial({ color: PAL.shorts, roughness: 0.8 }),
+    shoe:  new THREE.MeshStandardMaterial({ color: PAL.shoe, roughness: 0.45 }),
+    shoeA: new THREE.MeshStandardMaterial({ color: PAL.shoeAccent, roughness: 0.5 }),
+    face:  new THREE.MeshStandardMaterial({ map: faceTex, transparent: true, roughness: 0.55,
+             polygonOffset: true, polygonOffsetFactor: -2 }),
+    ball:  new THREE.MeshStandardMaterial({ color: 0xe8722a, roughness: 0.6 }),
+  };
+
+  const root = new THREE.Group();
+  const bodyPivot = new THREE.Group(); root.add(bodyPivot);
+  const hips = new THREE.Group(); hips.position.y = hipY; bodyPivot.add(hips);
+
+  /* pelvis */
+  const pelvis = new THREE.Mesh(new THREE.CylinderGeometry(0.20*wS, 0.185*wS, 0.17, 18), MATS.shorts);
+  pelvis.castShadow = true; pelvis.scale.z = 0.8; hips.add(pelvis);
+  const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.205*wS, 0.205*wS, 0.05, 18), MATS.shoeA);
+  belt.position.y = 0.07; belt.scale.z = 0.8; hips.add(belt);
+
+  /* torso — a lathe, squashed front-to-back, texture front at u=0.25 */
+  const torso = new THREE.Group(); torso.position.y = 0.10; hips.add(torso);
+  const prof = [[0.03,0.00],[0.215,0.02],[0.26,0.20],[0.275,0.42],[0.225,0.55],[0.14,0.64],[0.05,0.67]]
+    .map(([r,y]) => new THREE.Vector2(r*wS, y));
+  const chest = new THREE.Mesh(new THREE.LatheGeometry(prof, 28), MATS.shirt);
+  chest.castShadow = true; chest.scale.set(1, 1, 0.78); chest.rotation.y = Math.PI/2;
+  torso.add(chest);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.068*wS, 0.075*wS, 0.10, 12), MATS.skin);
+  neck.position.y = 0.66; neck.castShadow = true; torso.add(neck);
+
+  /* head */
+  const headGroup = new THREE.Group(); headGroup.position.y = 0.74; torso.add(headGroup);
+  const skull = new THREE.Group(); skull.position.y = 0.15; skull.scale.set(0.95, 1.06, 1.02);
+  headGroup.add(skull);
+  const cranium = ball3(headR, MATS.skin, 28, 22); skull.add(cranium);
+  const jaw = new THREE.Mesh(new THREE.CylinderGeometry(headR*0.62, headR*0.46, headR*0.55, 16), MATS.skin);
+  jaw.position.y = -headR*0.52; jaw.castShadow = true; skull.add(jaw);
+  /* face patch: a sphere segment hugging the cranium's front */
+  const patch = new THREE.Mesh(
+    new THREE.SphereGeometry(headR*1.03, 40, 28, Math.PI/2 - 0.725, 1.45, 0.82, 1.28), MATS.face);
+  skull.add(patch);
+  /* hair: a tilted cap shell */
+  const hair = new THREE.Mesh(new THREE.SphereGeometry(headR*1.07, 28, 18, 0, Math.PI*2, 0, 1.30), MATS.hair);
+  hair.rotation.x = -0.38; hair.castShadow = true; skull.add(hair);
+  for (const s of [-1, 1]){
+    const ear = ball3(headR*0.26, MATS.skin, 12, 10);
+    ear.scale.set(0.45, 1, 0.8); ear.position.set(s*headR*0.97, -0.01, 0); headGroup.add(ear);
+    ear.position.y += 0.15;
+  }
+
+  /* arms */
+  function buildArm(side){ // side: -1 left, +1 right
+    const arm = new THREE.Group();
+    arm.position.set(side * shoulderX, 0.54, 0); torso.add(arm);
+    const delt = ball3(0.095*wS, MATS.shirt); arm.add(delt);
+    arm.add(tapered(0.080*wS, 0.066*wS, upLen, MATS.shirt));
+    const fore = new THREE.Group(); fore.position.y = -upLen; arm.add(fore);
+    const elb = ball3(0.065*wS, MATS.skin); fore.add(elb);
+    fore.add(tapered(0.066*wS, 0.052*wS, foLen, MATS.skin));
+    const hand = new THREE.Group(); hand.position.y = -foLen; hand.scale.setScalar(P.hands); fore.add(hand);
+    const palm = box(0.088, 0.105, 0.046, MATS.skin); palm.position.y = -0.055; hand.add(palm);
+    const fing = box(0.084, 0.07, 0.042, MATS.skin); fing.position.set(0, -0.125, 0.008);
+    fing.rotation.x = 0.28; hand.add(fing);
+    const thumb = box(0.03, 0.07, 0.034, MATS.skin);
+    thumb.position.set(-side*0.052, -0.07, 0.02); thumb.rotation.z = side*0.5; hand.add(thumb);
+    return { arm, fore, hand };
+  }
+  const aL = buildArm(-1), aR = buildArm(1);
+
+  /* the dunk ball — parked in the right hand, only shown for DUNK */
+  const ball = ball3(0.115, MATS.ball, 22, 18);
+  ball.position.set(0, -0.10, 0.03); ball.visible = false; aR.hand.add(ball);
+
+  /* legs */
+  function buildLeg(side){
+    const leg = new THREE.Group();
+    leg.position.set(side * 0.135 * wS, -legDrop, 0); hips.add(leg);
+    const shortLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.115*wS, 0.135*wS, 0.20, 14), MATS.shorts);
+    shortLeg.geometry.translate(0, -0.10, 0); shortLeg.castShadow = true; leg.add(shortLeg);
+    leg.add(tapered(0.092*wS, 0.074*wS, thigh, MATS.skin));
+    const shin = new THREE.Group(); shin.position.y = -thigh; leg.add(shin);
+    const knee = ball3(0.074*wS, MATS.skin); shin.add(knee);
+    shin.add(tapered(0.075*wS, 0.056*wS, calf, MATS.skin));
+    const sock = new THREE.Mesh(new THREE.CylinderGeometry(0.058*wS, 0.055*wS, 0.09, 12), MATS.shoe);
+    sock.position.y = -calf + 0.045; shin.add(sock);
+    const foot = new THREE.Group(); foot.position.y = -calf; shin.add(foot); // ankle joint; sole bottom is `ankle` below it
+    const sole = box(0.105*Math.max(wS,0.85), 0.03, 0.27, MATS.shoeA); sole.position.set(0, -0.065, 0.045); foot.add(sole);
+    const upper = box(0.10*Math.max(wS,0.85), 0.075, 0.18, MATS.shoe); upper.position.set(0, -0.032, 0.02); foot.add(upper);
+    const toe = ball3(0.052, MATS.shoe, 14, 10); toe.scale.set(1, 0.62, 1.15); toe.position.set(0, -0.052, 0.135); foot.add(toe);
+    const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.062*wS, 0.066*wS, 0.07, 12), MATS.shoe);
+    collar.position.y = -0.01; foot.add(collar);
+    return { leg, shin, foot };
+  }
+  const lL = buildLeg(-1), lR = buildLeg(1);
+
+  root.scale.setScalar(P.height);
+  scene.add(root);
+  fig = { root, bodyPivot, hips, torso, headGroup,
+          armL: aL.arm, foreL: aL.fore, armR: aR.arm, foreR: aR.fore,
+          legL: lL.leg, shinL: lL.shin, legR: lR.leg, shinR: lR.shin,
+          footL: lL.foot, footR: lR.foot, ball,
+          totalH: (hipY + 0.10 + 0.74 + 0.15 + headR * 1.06) * P.height };
+  return fig;
+}
+buildFigure();
+
+/* ============================================================
+   POSES — programs write channel targets; the damper eases.
+   ============================================================ */
+const NEUTRAL = { torsoX:0.04, torsoY:0, headX:0,
+  armLX:-0.06, armLZ:-0.14, foreLX:-0.35, armRX:-0.06, armRZ:0.14, foreRX:-0.35,
+  legLX:0.02, shinLX:0.06, legRX:-0.02, shinRX:0.06, bodyY:0, bodySY:1 };
+const cur = { ...NEUTRAL };
+let pose = 'idle', dunkT = -1;
+const clock = new THREE.Clock();
+
+function poseTargets(t){
+  const T = { ...NEUTRAL };
+  if (pose === 'idle'){
+    const b = Math.sin(t * 2.3);
+    T.bodyY = b * 0.012; T.armLZ = -0.14 + b * 0.02; T.armRZ = 0.14 - b * 0.02;
+    T.torsoX = 0.04 + Math.sin(t * 2.3 + 0.6) * 0.012;
+  } else if (pose === 'guard'){
+    T.armLX = -1.85; T.armRX = -1.80; T.foreLX = -1.30; T.foreRX = -1.38;
+    T.armLZ = -0.30; T.armRZ = 0.30;
+    T.legLX = -0.38; T.shinLX = 0.52; T.legRX = 0.22; T.shinRX = 0.30;
+    T.bodyY = -0.055; T.torsoX = 0.20; T.headX = 0.08;
+  } else if (pose === 'dunk' && dunkT >= 0){
+    const u = dunkT;
+    if (u < 0.20){ const k = u / 0.20;                       // wind-up crouch
+      T.bodyY = -0.11 * k; T.legLX = T.legRX = -0.38 * k; T.shinLX = T.shinRX = 0.68 * k;
+      T.armRX = 0.55 * k; T.armLX = -0.30 * k; T.torsoX = 0.16 * k;
+    } else if (u < 0.55){ const k = (u - 0.20) / 0.35;       // rise, arm cocks back
+      T.bodyY = -0.11 + 0.72 * (1 - (1 - k) * (1 - k));
+      T.armRX = 0.55 - 3.60 * (k * k * (3 - 2 * k)); T.foreRX = -0.25;
+      T.armLX = -0.30 - 0.55 * k; T.armLZ = -0.55 * k;
+      T.legLX = -0.55; T.shinLX = 1.15; T.legRX = -0.25; T.shinRX = 0.55;
+      T.torsoX = -0.10 * k; T.bodySY = 1.05;
+    } else if (u < 0.68){ const k = (u - 0.55) / 0.13;       // the slam
+      T.bodyY = 0.61 - 0.10 * k; T.armRX = -3.05 + 1.30 * k; T.foreRX = -0.10;
+      T.armLX = -0.85; T.legLX = -0.55; T.shinLX = 1.15; T.legRX = -0.25; T.shinRX = 0.55;
+    } else { const k = (u - 0.68) / 0.32;                    // fall + landing squash
+      T.bodyY = 0.51 * (1 - k * k);
+      T.armRX = -1.75 + 1.55 * k; T.armLX = -0.85 + 0.79 * k;
+      T.legLX = -0.55 + 0.53 * k; T.shinLX = 1.15 - 1.09 * k;
+      T.legRX = -0.25 + 0.23 * k; T.shinRX = 0.55 - 0.49 * k;
+      if (k > 0.78) T.bodySY = 1 - 0.15 * Math.sin((k - 0.78) / 0.22 * Math.PI);
+    }
+  }
+  return T;
+}
+
+function applyPose(dt, t){
+  if (pose === 'dunk' && dunkT >= 0){
+    dunkT += dt / 1.05;
+    if (dunkT >= 1){ dunkT = -1; setPose('idle'); }
+  }
+  const T = poseTargets(t);
+  const damp = 1 - Math.exp(-16 * dt);
+  for (const k in NEUTRAL){
+    if (k === 'bodyY' && pose === 'dunk'){ cur.bodyY = T.bodyY; continue; }  // flight path is exact
+    cur[k] += (T[k] - cur[k]) * damp;
+  }
+  const f = fig; if (!f) return;
+  f.torso.rotation.x = cur.torsoX; f.torso.rotation.y = cur.torsoY;
+  f.headGroup.rotation.x = cur.headX;
+  f.armL.rotation.x = cur.armLX; f.armL.rotation.z = cur.armLZ; f.foreL.rotation.x = cur.foreLX;
+  f.armR.rotation.x = cur.armRX; f.armR.rotation.z = cur.armRZ; f.foreR.rotation.x = cur.foreRX;
+  f.legL.rotation.x = cur.legLX; f.shinL.rotation.x = cur.shinLX;
+  f.legR.rotation.x = cur.legRX; f.shinR.rotation.x = cur.shinRX;
+  f.bodyPivot.position.y = cur.bodyY;
+  f.bodyPivot.scale.set(1 + (1 - cur.bodySY) * 0.55, cur.bodySY, 1 + (1 - cur.bodySY) * 0.55);
+  const lift = Math.max(0, cur.bodyY);
+  blob.scale.setScalar(Math.max(0.45, 1 - lift * 0.38));
+  blob.material.opacity = Math.max(0.35, 1 - lift * 0.5);
+}
+
+/* ---------- camera orbit (drag / wheel / pinch) ---------- */
+let yaw = 0.38, pitch = 0.14, dist = 4.4;
+function placeCamera(){
+  /* during a dunk the camera eases back and rises with the figure,
+     so the whole jump stays in frame */
+  const lift = (pose === 'dunk') ? Math.max(0, cur.bodyY) : 0;
+  const fit = fig ? THREE.MathUtils.clamp(fig.totalH / 2.19, 0.8, 1.5) : 1;  // auto-frame giant/tiny builds
+  const d = dist * fit * (1 + lift * 0.38);
+  const targetY = 1.04 * P.height + lift * 0.48;
+  const cp = Math.cos(pitch), sp = Math.sin(pitch);
+  camera.position.set(
+    Math.sin(yaw) * cp * d,
+    targetY + sp * d,
+    Math.cos(yaw) * cp * d);
+  camera.lookAt(0, targetY, 0);
+}
+{
+  const ptrs = new Map(); let lastPinch = 0;
+  canvas.addEventListener('pointerdown', e => { ptrs.set(e.pointerId, [e.clientX, e.clientY]); canvas.setPointerCapture(e.pointerId); });
+  canvas.addEventListener('pointermove', e => {
+    if (!ptrs.has(e.pointerId)) return;
+    const [px, py] = ptrs.get(e.pointerId);
+    ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+    if (ptrs.size === 1){
+      yaw += (e.clientX - px) * 0.008;
+      pitch = THREE.MathUtils.clamp(pitch + (e.clientY - py) * 0.006, -0.06, 0.95);
+    } else if (ptrs.size === 2){
+      const [a, b] = [...ptrs.values()];
+      const d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      if (lastPinch) dist = THREE.MathUtils.clamp(dist * (lastPinch / d), 2.4, 7.5);
+      lastPinch = d;
+    }
+  });
+  const release = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) lastPinch = 0; };
+  canvas.addEventListener('pointerup', release);
+  canvas.addEventListener('pointercancel', release);
+  canvas.addEventListener('wheel', e => { e.preventDefault();
+    dist = THREE.MathUtils.clamp(dist * (1 + e.deltaY * 0.001), 2.4, 7.5); }, { passive:false });
+}
+
+/* ---------- sizing ---------- */
+function resize(){
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (!w || !h) return;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+
+/* ---------- photo: sample colours + draw the face ---------- */
+let photoImg = null;
+function avgColor(g, W, H, x0, y0, x1, y1, darkest = 0){
+  const d = g.getImageData(Math.max(0, x0|0), Math.max(0, y0|0),
+    Math.max(1, (x1 - x0)|0), Math.max(1, (y1 - y0)|0)).data;
+  const px = [];
+  for (let i = 0; i < d.length; i += 4) px.push([d[i], d[i+1], d[i+2]]);
+  if (darkest > 0){           // hair: backgrounds are bright — average the darkest slice
+    px.sort((a, b) => (a[0] + a[1] + a[2]) - (b[0] + b[1] + b[2]));
+    px.length = Math.max(1, Math.floor(px.length * darkest));
+  }
+  let r = 0, gg = 0, b = 0;
+  for (const [pr, pg, pb] of px){ r += pr; gg += pg; b += pb; }
+  const c = new THREE.Color();
+  c.setRGB(r/px.length/255, gg/px.length/255, b/px.length/255, THREE.SRGBColorSpace);
+  return c;
+}
+function processPhoto(){
+  const img = photoImg; if (!img) return;
+  const W = img.naturalWidth, H = img.naturalHeight;
+  /* face crop window FIRST — colour sampling is relative to it, so the
+     samples land on the actual face wherever the user frames it */
+  const side = Math.min(W, H) * 0.66 / FIT.zoom;
+  let cx = W * 0.5 - (FIT.x / 100) * side;
+  let cy = H * 0.38 - (FIT.y / 100) * side;
+  cx = THREE.MathUtils.clamp(cx, side/2, W - side/2);
+  cy = THREE.MathUtils.clamp(cy, side/2, H - side/2);
+  const sc = document.createElement('canvas');
+  const s = Math.min(512, Math.max(W, H)); sc.width = s; sc.height = Math.round(s * H / W);
+  const sg = sc.getContext('2d'); sg.drawImage(img, 0, 0, sc.width, sc.height);
+  const kx = sc.width / W, ky = sc.height / H;
+  const sample = (fx, fy, fw, fh, darkest = 0) => avgColor(sg, sc.width, sc.height,
+    (fx - fw/2) * kx, (fy - fh/2) * ky, (fx + fw/2) * kx, (fy + fh/2) * ky, darkest);
+  PAL.skin.copy(sample(cx, cy + side * 0.10, side * 0.22, side * 0.22));            // cheek, inside the face
+  const hairC = sample(cx, cy - side * 0.52, side * 0.50, side * 0.16, 0.3);        // above the face, darkest slice
+  if (cy - side * 0.44 > 0) PAL.hair.copy(hairC);
+  const shirtC = sample(cx, cy + side * 0.80, side * 0.55, side * 0.22);           // chest, below the face
+  if (cy + side * 0.69 < H) PAL.shirt.copy(shirtC);
+  drawShirt();
+  const g = faceC.getContext('2d');
+  g.clearRect(0, 0, 512, 512);
+  g.drawImage(img, cx - side/2, cy - side/2, side, side, 0, 0, 512, 512);
+  g.globalCompositeOperation = 'destination-in';               // feather the patch edges
+  const rg = g.createRadialGradient(256, 250, 150, 256, 250, 252);
+  rg.addColorStop(0, 'rgba(0,0,0,1)'); rg.addColorStop(0.82, 'rgba(0,0,0,1)');
+  rg.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = rg; g.fillRect(0, 0, 512, 512);
+  g.globalCompositeOperation = 'source-over';
+  faceTex.needsUpdate = true;
+  buildFigure();
+}
+
+/* ---------- UI wiring ---------- */
+let needsRebuild = false;
+for (const key of Object.keys(P)){
+  const el = document.getElementById('s_' + key), out = document.getElementById('o_' + key);
+  el.addEventListener('input', () => {
+    P[key] = parseFloat(el.value);
+    out.textContent = P[key].toFixed(2) + '×';
+    needsRebuild = true;
+  });
+}
+for (const key of Object.keys(FIT)){
+  const el = document.getElementById('s_f' + key), out = document.getElementById('o_f' + key);
+  el.addEventListener('input', () => {
+    FIT[key] = parseFloat(el.value);
+    out.textContent = key === 'zoom' ? FIT[key].toFixed(2) + '×' : FIT[key].toFixed(0) + '%';
+    if (photoImg) processPhoto();
+  });
+}
+const poseBtns = { idle: poseIdle, guard: poseGuard, dunk: poseDunk };
+function setPose(name){
+  pose = name;
+  if (name === 'dunk'){ dunkT = 0; if (fig) fig.ball.visible = true; }
+  else if (fig) fig.ball.visible = false;
+  for (const k in poseBtns) poseBtns[k].classList.toggle('on', k === name);
+}
+poseIdle.addEventListener('click', () => setPose('idle'));
+poseGuard.addEventListener('click', () => setPose('guard'));
+poseDunk.addEventListener('click', () => setPose('dunk'));
+
+const fileInput = document.getElementById('file');
+document.getElementById('uploadBtn').addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', () => {
+  const f = fileInput.files && fileInput.files[0]; if (!f) return;
+  const url = URL.createObjectURL(f);
+  const img = new Image();
+  img.onload = () => { photoImg = img; processPhoto(); URL.revokeObjectURL(url); };
+  img.onerror = () => showErr('That file could not be read as an image — try a JPG or PNG photo.');
+  img.src = url;
+});
+
+document.getElementById('dlBtn').addEventListener('click', () => {
+  renderer.render(scene, camera);
+  canvas.toBlob(b => {
+    if (!b){ showErr('Snapshot failed on this device.'); return; }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b); a.download = 'my-action-figure.png'; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }, 'image/png');
+});
+
+/* ---------- main loop ---------- */
+let booted = false;
+function loop(){
+  requestAnimationFrame(loop);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+  if (needsRebuild){ needsRebuild = false; buildFigure(); if (pose === 'dunk') fig.ball.visible = true; }
+  applyPose(dt, t);
+  placeCamera();
+  renderer.render(scene, camera);
+  if (!booted){ booted = true; window.__ffReady = true; }
+}
+resize();
+loop();
+
+/* test/debug hooks (also handy in a console) */
+window.__ff = {
+  P, FIT, setPose,
+  setParam(k, v){ P[k] = v; buildFigure(); },
+  setFit(k, v){ FIT[k] = v; if (photoImg) processPhoto(); },
+  hasPhoto(){ return !!photoImg; },
+  soles(){
+    const out = [];
+    for (const foot of [fig.footL, fig.footR]){
+      const b = new THREE.Box3().setFromObject(foot);
+      out.push(+b.min.y.toFixed(4));
+    }
+    return out;
+  },
+};
+</script>
+</body>
+</html>
