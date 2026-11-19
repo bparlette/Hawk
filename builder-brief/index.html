@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Builder Brief — 3D Fighters &amp; Jam Fight</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 2rem 1rem 4rem; font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+         color: #1a1a1a; background: #fdfdfb; line-height: 1.5; }
+  main { max-width: 920px; margin: 0 auto; }
+  h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 .4rem; }
+  h2 { font-size: 1.35rem; margin: 2.6rem 0 .6rem; padding-top: 1.2rem; border-top: 3px solid #1a1a1a; }
+  h3 { font-size: 1.08rem; margin: 1.5rem 0 .4rem; }
+  p, li { font-size: .98rem; }
+  ul, ol { padding-left: 1.4rem; }
+  li { margin: .22rem 0; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .86em;
+         background: #f0efe9; padding: .08em .32em; border-radius: 4px; }
+  pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .8rem; line-height: 1.42;
+        background: #14161a; color: #e8e6df; padding: .9rem 1rem; border-radius: 8px; overflow-x: auto; }
+  pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; margin: .6rem 0 1rem; font-size: .86rem; }
+  th, td { border: 1px solid #c9c6bb; padding: .32rem .5rem; text-align: left; vertical-align: top; }
+  th { background: #f0efe9; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  .rule { background: #fff7e0; border-left: 5px solid #d9a400; padding: .6rem .9rem; margin: .8rem 0; }
+  .law { background: #fdecec; border-left: 5px solid #c0272d; padding: .6rem .9rem; margin: .8rem 0; }
+  .note { color: #55534b; font-size: .9rem; }
+  .sub { color: #55534b; margin-top: 0; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Builder Brief — 3D Fighters &amp; Jam Fight</h1>
+<p class="sub">Everything another AI needs to rebuild our 3D fighter work with no other context. Every number, data row, and code block below is copied from the production sources (the gamepress rigkit, the Fight Engine library, and the live Jam Fight build), not paraphrased from memory. Where a value was measured by running the game, the measurement is stated next to the claim.</p>
+
+<h2>1. What this is</h2>
+<p><strong>Jam Fight</strong> is a 1v1 streetball fighting game — NBA Jam × Street Fighter on a half court, portrait phone-first. Two action-figure fighters dribble, shoot, dunk, steal, and beat each other up under streetball possession rules (make-it-take-it, take-back) with a real fighting layer on top (one attack button driving an automatic 5-move combo chain, signature special moves, knockdowns, KOs). First to 21 or the highest score when the 3:00 clock dies. It was built by an AI (Gemini 4 Neon) in AI Studio runs, then audited, torn down, and generalised into the reusable kit this brief documents. The stack, bottom to top:</p>
+<ul>
+  <li><strong>rigkit figures</strong> — characters are data rows fed to one parametric builder: ~60 rigid primitive meshes bolted onto named pivot groups. No skinning, no bones, no weights, anywhere. Animation is small mathematical <em>pose programs</em> eased through one exponential damper (§2).</li>
+  <li><strong>toon look</strong> — stepped cel shading + inverted-hull ink outlines + a halftone dot screen that lives only in the shade. Three ingredients, exact recipe in §3.</li>
+  <li><strong>frame-data combat</strong> — a deterministic 60&nbsp;Hz, DOM-free simulation core where every move is a data row (startup / active / recovery / damage / hitstun / blockstun / pushback / hitstop / cancel window / type / height). Seeded RNG; same seed + same inputs = same match, hash-proven (§5).</li>
+  <li><strong>the 3D court</strong> — a three.js scene: low close portrait camera, instanced crowd, comic SFX callouts, painted court with halftone shading. Framing law: fighters occupy 31–33% of frame height; the scene fills the frame; zero dead foreground (§6).</li>
+  <li><strong>touch controls</strong> — the gptouch standard: floating joystick on the left half, round buttons bottom-right, merged with keyboard (§7).</li>
+</ul>
+<p>Design stance that produced all of it: <strong>ask for tools and systems, not content</strong> (a parametric figure factory, a move-table engine), <strong>pin every choice you care about</strong> (an AI builder fills unspecified choices silently), and <strong>prove by running</strong> — tests, probes, and screenshots at phone size, never by reading your own summary (§8).</p>
+
+<h2>2. The figure system — characters are data rows</h2>
+
+<h3>2.1 The model</h3>
+<p>A character is one <code>CharacterParams</code> row. One builder function (<code>buildHumanoid(params)</code>) turns any row into a rig: ~60 primitive meshes (57–65 per figure; a slider-creator variant measured 74–82) rigidly parented to a tree of <code>THREE.Group</code> pivots. Limbs are pivot-at-top tapered cylinders — geometry translated so it hangs from the joint origin, so rotating the group swings the limb from the joint. Joint spheres at deltoid, elbow, and knee plug the gaps so bends never show a crack. The torso is a lathe; chest art is a canvas texture wrapped on it. The hand is three boxes (palm, curled-finger block, thumb) — never posed, reads by silhouette. The sneaker is four parts (sole, upper, ankle collar, toe cap).</p>
+<pre><code>interface BodyParams {
+  width: number;      // lateral bulk multiplier — drives EVERY radius (torso, deltoids, thighs, calves)
+  height: number;     // overall height multiplier. Total height ≈ 2.12 × height world units
+  headScale: number;  // ~1.3 gives the exaggerated arcade look
+  handScale: number;  // ~1.3 for big arcade hands
+}
+
+interface Palette {           // hex colours, one per material zone
+  skin: number;
+  jersey: number;             // torso cloth (also the torso-texture base colour)
+  shorts: number;
+  trim: number;               // belt / trim
+  hair: number;
+  band: number;               // headband / wristband
+  shoePrimary: number;
+  shoeAccent: number;
+  glove?: number;             // OPTIONAL 9th slot: glove leather for the hands.
+                              // Undefined = bare skin hands. (Sprite-sampled Ryu needed it:
+                              // his fists are dark red-brown leather 0x7a2d1c, not headband red.)
+}
+
+type HairStyle = 'mohawk' | 'dreads' | 'fade' | 'buzz' | 'none';   // kit enum
+// The game extends the union per roster: 'spiky' | 'spiky_ryu' | 'flattop_guile' |
+// 'cap' | 'quills_sonic' | 'link_cap' | 'kong_tuft'
+// Outfits and footwear are likewise enum-gated branches + canvas textures, never new geometry pipelines:
+//   outfitStyle: 'jersey' | 'karate_gi' | 'airman' | 'plumber' | 'hedgehog' | 'tunic' | 'kong'
+//   footwear:    'sneakers' | 'barefoot' | 'combat_boots' | 'work_shoes' | 'speed_shoes' | 'hero_boots'
+
+interface CharacterParams {
+  body: BodyParams;
+  palette: Palette;
+  hairStyle: HairStyle;
+  torsoTexture?: THREE.Texture | null;  // canvas art for the lathe torso (jersey number, gi, emblem)
+  proportions?: Partial&lt;Proportions&gt;; // per-row segment overrides, §2.3
+  limbs?: { armScale?: number; neckLift?: number; shoeScale?: number; headband?: boolean }; // kit v2, §2.4
+  toon?: { outlineWidth?: number; outlineColor?: number; halftone?: number; halftoneScale?: number; steps?: 3 | 4 }; // §3
+}</code></pre>
+<p><strong>Likeness = silhouette + signature props.</strong> Spend the geometry budget on the outline and the two props everyone recognises (a long cap + a shield; a muzzle, a tuft, a tie, 1.6× hands). All roster likenesses read at phone size in real gameplay framing by this rule alone.</p>
+
+<h3>2.2 Creator sliders and the 39-point stat budget</h3>
+<p>The creator schema runs every slider <em>past</em> the built-in roster's extremes — that is the point of a creator. Both slider-corner fighters (all-max and all-min) are test-verified to spawn with both feet planted at y = 0 (|min.y| &lt; 0.015) and to score in a real match. Extremes are a test case, not a hope.</p>
+<div class="scroll"><table>
+<tr><th>Slider</th><th class="n">Range</th><th>Notes</th></tr>
+<tr><td>HEIGHT</td><td class="n">0.62–1.55</td><td>roster max is below 1.55</td></tr>
+<tr><td>WEIGHT</td><td class="n">0.55–1.65</td><td>drives the lathe torso radii</td></tr>
+<tr><td>HEAD</td><td class="n">0.65–1.75</td><td>arcade big-head to pin-head</td></tr>
+<tr><td>HANDS</td><td class="n">0.65–1.85</td><td>a big-hands read is mostly this slider</td></tr>
+<tr><td>ARM LENGTH</td><td class="n">0.60–1.65</td><td>maps to kit v2 <code>armScale</code></td></tr>
+<tr><td>LEG LENGTH</td><td class="n">0.60–1.55</td><td>must re-balance the leg sum (§2.3)</td></tr>
+<tr><td>SHOULDER WIDTH</td><td class="n">0.65–1.65</td><td></td></tr>
+</table></div>
+<p><strong>Stats:</strong> five stats — SPD (speed), SHT (shot), DNK (dunk), PWR (power), DEF (the <code>health</code> value, displayed as DEF) — on a <strong>39-point total budget</strong>, the roster's best total. Four presets (THE GIANT, THE TANK, THE SPEEDSTER, THE ALL-ROUNDER) sit exactly at the cap; a seeded RANDOMISE builds to 33–39 and passes through the same enforcement.</p>
+<div class="rule"><strong>Budget semantics — clamp, never reject.</strong> The cap is enforced by <em>trimming</em>: an imported 50-point fighter comes back 7/8/8/8/8 = 39. Out-of-range body values are clamped the same way (height 99 → 1.55). Malformed data (garbage text, missing keys, unknown enum values) IS rejected with a visible error — but an over-budget or out-of-range <em>value</em> never produces an error, and an over-budget fighter can never exist in-game. If your design needs rejection instead, that is a different contract — say so explicitly.</div>
+<p>Each stat is an integer <strong>1–10</strong> (the roster's observed range is 4–10). The budget constrains the sum, not any single stat.</p>
+
+<h3>2.3 Proportions — the skeleton, and the feet-planted invariant</h3>
+<p>Every segment length is a fraction of <code>body.height</code>. These are the shipped defaults, verbatim:</p>
+<pre><code>export const PROPORTIONS = {
+  hipHeight: 0.94,   // hip pivot height
+  hipDrop: 0.05,     // hip pivot → leg pivot
+  thigh: 0.42,
+  calf: 0.39,
+  ankleToSole: 0.08,
+  torsoRise: 0.10,   // hip pivot → torso pivot
+  shoulderY: 0.54,   // torso pivot → shoulder pivot (height)
+  shoulderX: 0.31,   // torso pivot → shoulder pivot (lateral, × width)
+  upperArm: 0.31,
+  forearm: 0.29,
+  headY: 0.72,       // torso pivot → head pivot
+  hipX: 0.135,       // hip pivot → leg pivot (lateral, × width)
+} as const;</code></pre>
+<div class="rule"><strong>The invariant:</strong> <code>hipDrop + thigh + calf + ankleToSole</code> must equal <code>hipHeight</code> (defaults: 0.05 + 0.42 + 0.39 + 0.08 = 0.94), so straight legs plant the sole exactly on y = 0. Ground contact is arithmetic, not IK — no raycasts. A gait-phase body bounce, a minimum shin bend of 0.08, and a painted contact shadow mask the rest. If you change one term of the sum, rebalance another — and grep <em>every</em> term of the sum for the scale factor: kit v1 shipped a bug where <code>ankleToSole</code> went unscaled, so at height ≠ 1 the feet floated by <code>ankleToSole·(height−1)</code> (0.032 units at height 1.4). Per-row <code>proportions</code> overrides merge over these defaults at build time, and per-frame code must read the rig's own stored proportions — never the global const (see the hipHeight bug, §4).</div>
+<p>Head size is a parameter, not a modelling choice: head = 24% of total height at <code>headScale</code> 1.0. Kit reach/height caps at ≈1.24 (shoulder height is a fixed fraction of height, <code>shoulderY</code> 0.54) — <code>armScale</code> alone cannot buy more reach without going simian.</p>
+
+<h3>2.4 Kit v2 limb overrides</h3>
+<div class="scroll"><table>
+<tr><th>Override</th><th>Effect</th></tr>
+<tr><td><code>armScale</code></td><td>multiplies upperArm + forearm lengths. Free — arms have no ground-contact invariant.</td></tr>
+<tr><td><code>neckLift</code></td><td>added to <code>headY</code> for this character; the neck mesh is re-spanned to fill the gap, so it reads as visible neck.</td></tr>
+<tr><td><code>shoeScale</code></td><td>scales the sneaker group. (Stock v1 built one fixed shoe size for every body, however tall.)</td></tr>
+<tr><td><code>headband: false</code></td><td>hides the headband + tails (stock always adds them).</td></tr>
+</table></div>
+<p>Worked extreme — the Wembanyama row: height 1.40, width 0.70, headScale 0.92, handScale 1.45, <code>armScale</code> 1.28, <code>neckLift</code> +0.07, <code>shoeScale</code> 1.30 → ≈2.89 world units tall vs ≈2.27 for the kit standard, standing reach ≈3.55, palms the ball at knee height in idle. Pose-authoring note: when an arm goes near vertical, the stance's outward Z signs cross the arms over the face — flip spread signs for overhead poses.</p>
+
+<h3>2.5 The pivots — 17 at runtime, 16 in the interchange standard</h3>
+<p>The runtime rig tree (root → bodyPivot → hips → torso → head, with two arm chains and two leg chains):</p>
+<pre><code>root
+└─ bodyPivot          (yaw / lean channel — runtime only, NOT part of the interchange set)
+   └─ hips
+      ├─ torso
+      │  ├─ head
+      │  ├─ armL → forearmL → handL      (each a THREE.Group pivot)
+      │  └─ armR → forearmR → handR
+      ├─ legL → shinL → footL            (foot pivot sits AT the ankle — added by the channel extension)
+      └─ legR → shinR → footR</code></pre>
+<p><strong>GLB interchange standard:</strong> so a fighter built anywhere can be posed anywhere, exports carry every body part as a <em>separate, unmerged, descriptively named</em> mesh parented under one of <strong>16 named pivot groups</strong> — <code>root, hips, chest, armL_upper → armL_forearm → armL_hand, armR_upper → armR_forearm → armR_hand, legL_thigh → legL_shin → legL_foot, legR_thigh → legR_shin → legR_foot, head</code> (chest = the runtime torso). Accessories export too, parented to their pivot. A posed export bakes the pose into node transforms; the neutral export is the same file at the neutral pose. This standard was verified by hand-decoding a real export: valid glTF 2.0, 61 distinct meshes, 78 nodes, 20 materials, all 16 pivots present in the correct hierarchy. The text-share format (Fighter Code JSON) is an 8-key schema that round-trips byte-identical; a share code <em>is</em> the fighter's data row.</p>
+<p><strong>Canvas-UV gotcha (bitten twice):</strong> where the lathe torso's front falls in u is NOT consistent across builds — the kit lathe's front is u = 0.25; the Figure Factory page's lathe (rotY = π/2) puts the front at u = 0.75. Do not trust any doc, including this one: run a debug-quadrant texture pass in your harness and draw chest art where your build actually puts the front.</p>
+
+<h3>2.6 Pose — 51 channels, one damper</h3>
+<p>A pose is a flat record of <strong>51 channels</strong>. All angles are radians. Every channel defaults to the neutral value below and is eased by the one damper; a program writes only the channels it cares about.</p>
+<pre><code>bodyY        bodyPitch    bodyRoll     spin (number | null — see below)
+hipsPitch    hipsYaw      hipsRoll
+torsoPitch   torsoYaw     torsoRoll
+headPitch    headYaw      headRoll
+armLX  armLY  armLZ      foreLX  foreLY  foreLZ
+armRX  armRY  armRZ      foreRX  foreRY  foreRZ
+handLX handLY handLZ     handRX  handRY  handRZ
+legLX  legLY  legLZ      shinLX  shinLY  shinLZ
+legRX  legRY  legRZ      shinRX  shinRY  shinRZ
+footLX footLY footLZ     footRX  footRY  footRZ
+mouth  brow
+
+NEUTRAL_POSE (non-zero defaults; everything else 0):
+  armLZ 0.15, armRZ -0.15        (arms hang slightly out)
+  foreLX -0.35, foreRX -0.35     (elbows carry a slight bend)
+  shinLX 0.08, shinRX 0.08       (minimum knee bend)
+  mouth 1.0  (mouth scale.y; ~2.5 = shouting)
+  brow 0.14  (positive = aggressive, negative = pained)</code></pre>
+<p><strong>The one damper makes the feel:</strong> poses are never snapped to. Every channel eases toward its target with <code>damp = 1 − exp(−16·dt)</code> (rate 16/s, time constant ≈ 63 ms, frame-rate independent). Transitions, anticipation bleed, and follow-through lag are all emergent from that single constant — it is THE feel knob (lower = floatier, higher = snappier; 16 is proven for move durations of ~0.3–1.0 s). The one exception: <code>spin</code> — when a program sets it non-null, body yaw = facingYaw + spin is applied <em>without</em> damping, because spin moves must track exactly.</p>
+<p>History worth knowing: the channel set started at 19 fields (only the axes one game's moves needed). A step-data authoring tool (full Euler targets per pivot) forced the extension to 51 — projecting onto 19 had silently dropped real acting: a −0.977 rad head yaw in a punch, a 90° hand roll, all foot motion. The extension is purely additive: every added channel defaults to 0, no pre-existing program writes them, and the default path is bit-identical (regression-proven: harness screenshots md5-identical, joint dumps equal to ≤1.1e-16).</p>
+
+<h3>2.7 Pose programs — moves are functions, not keyframe clips</h3>
+<p>A pose program is a function of normalised time <code>t ∈ [0,1]</code> that writes target channel values into an output pose. The engine owns time (durations, hit windows, damage live in the engine's move table — pose program and hit window are authored in the same row, which is why hits land when the fist arrives); the rig only turns a state sample into a pose. Continuous signals come in through a context object the engine maintains:</p>
+<pre><code>interface PoseContext {
+  momentum: number;      // 0..1 built-up speed
+  lean: number;          // damped lean (e.g. ease toward momentum × 0.36 at 10/s)
+  runPhase: number;      // advance: += actualSpeed × dt × 2.6 while moving
+  dribblePhase: number;  // advance: += dt × (7.5 + momentum × 4.5) with ball, 5.6 idle
+  squash: number;        // set 0.7–1.0 on landing by the engine; decay ≈ 5/s
+  airY: number;          // jump height (engine physics / scripted arc)
+  vy: number;            // vertical velocity (secondary motion)
+  hasBall: boolean;  guarding: boolean;  moving: boolean;
+  spinDir: number;       // ±1, for directional spin moves
+  time: number;          // elapsed seconds (idle breathing, flutter)
+}
+type PoseProgram = (t: number, ctx: PoseContext, out: Pose) =&gt; void;</code></pre>
+<p>Four idioms cover a game. Sign conventions: rotation.x negative swings a hanging limb FORWARD; shin positive bends the knee backward; torsoPitch positive leans forward; armL/legL are the near side in side view, armR/legR the far side.</p>
+<pre><code>// IDIOM 1 — snap envelope for strikes: peaks at t≈0.69, fully returns by t=1.
+export const snapEnv = (u: number): number =&gt; Math.sin(Math.min(1, u * 1.45) * Math.PI);
+export const jabProgram: PoseProgram = (_t, _ctx, out) =&gt; {
+  const snap = snapEnv(_t);
+  out.torsoYaw = 0.55 * snap;
+  out.torsoPitch = 0.18 * snap;
+  out.armLX = -1.65 * snap;      // punching arm extends
+  out.foreLX = -0.1;
+  out.armRX = -0.9;              // guard arm stays home
+  out.foreRX = -1.4;
+  out.legLX = -0.28 * snap;      // brace
+  out.legRX = 0.28 * snap;
+  out.brow = 0.36;
+  out.mouth = 1.9;
+};
+
+// IDIOM 2 — linear sweep for spins: an angle that accumulates across the whole move.
+//   windmill arm:  out.armRX = -Math.PI * 0.5 - t * Math.PI * 2.2;   // full revolution + a bit
+
+// IDIOM 3 — phase split for two-beat moves (tomahawk: 65% wind-up, 35% slam):
+//   const cock = t &lt; 0.65 ? -3.15 * (t / 0.65) : -3.15 + ((t - 0.65) / 0.35) * 1.95;
+//   out.armRX = cock;
+
+// IDIOM 4 — held constants for stances, plus ctx.time for breathing (see Ryu idle, §2.8).</code></pre>
+<p>Base layers run under every program: a phase-driven gait (stride 0.55 + momentum × 0.55, bounce |cos(runPhase)| × (0.06 + momentum × 0.06), torso counter-yaw swing × 0.18), a dribble arm that leaves the gait and follows the dribble clock, idle breathing. Held props are NOT attached to hands — the ball sits at fixed offsets, synced to the dribble arm by one shared phase clock. Authoring a new move = a name, an engine-side duration, one program, one trigger.</p>
+
+<h3>2.8 Worked example — Ryu, complete</h3>
+<p>The full character row, tuned against the actual SF2 sprite by the sprite-goal method (§4). Palette values are sampled from the sprite's own pixels; proportions keep the invariant (0.05 implicit hipDrop… his row: thigh 0.46 + calf 0.475 + ankleToSole 0.08 + hipDrop — the row's hipHeight is 1.065, and hipDrop + 0.46 + 0.475 + 0.08 sums to it with hipDrop 0.05).</p>
+<pre><code>export const RYU: CharacterParams = {
+  body: { width: 1.56, height: 1.0, headScale: 1.42, handScale: 1.60 },
+  palette: {
+    skin: 0xf2ba8e,        // sprite skin light
+    jersey: 0xe9e6cf,      // gi cream
+    shorts: 0xe9e6cf,      // gi cream (pants / waist)
+    trim: 0x141414,        // belt — the sprite's exact near-black
+    hair: 0x17120e,
+    band: 0xc01900,        // headband red, sampled (#bb0000–#c01900)
+    glove: 0x7a2d1c,       // dark red-brown glove leather (sprite fist zones)
+    shoePrimary: 0xcf945f, // unused (bare feet)
+    shoeAccent: 0xcf945f,  // unused
+  },
+  proportions: {
+    thigh: 0.46, calf: 0.475, hipHeight: 1.065,
+    torsoRise: 0.055, headY: 0.575,
+    upperArm: 0.30, forearm: 0.36,
+    shoulderX: 0.36, hipX: 0.16,
+    footScale: 1.35,
+  },
+  toon: { halftone: 0.25 },  // sprite shade is flat pixel clusters, not dots
+  hairStyle: 'spiky',
+};</code></pre>
+<p>One complete pose program — the hadouken, as a keyframe mix (keys are partial poses at normalised times; the player smoothstep-lerps between keys and the global damper eases on top). Gather at the hips (t&lt;0.34) → both palms thrust (0.52) → hold → recover to idle:</p>
+<pre><code>export const hadoukenProgram: PoseProgram = keyframed([
+  [0.0, {
+    armLX: 0.3, armLZ: 0.52, foreLX: -0.55, armRX: 0.3, armRZ: -0.52, foreRX: -0.55,
+    legLX: -0.4, shinLX: 0.5, legRX: 0.44, shinRX: 0.14,
+    bodyY: -0.1, torsoPitch: 0.16, torsoYaw: -0.3, mouth: 1.2, brow: 0.3,
+  }],
+  [0.34, {
+    armLX: 0.44, armLZ: 0.58, foreLX: -0.78, armRX: 0.44, armRZ: -0.58, foreRX: -0.78,
+    legLX: -0.42, shinLX: 0.52, legRX: 0.46, shinRX: 0.15,
+    bodyY: -0.13, torsoPitch: 0.18, torsoYaw: -0.38, mouth: 1.5, brow: 0.36,
+  }],
+  [0.52, {
+    armLX: -1.4, armLZ: 0.5, foreLX: -0.1, armRX: -1.33, armRZ: -0.5, foreRX: -0.12,
+    legLX: -0.42, shinLX: 0.52, legRX: 0.46, shinRX: 0.15,
+    bodyY: -0.1, torsoPitch: 0.26, torsoYaw: 0.02, headPitch: 0.04, mouth: 2.3, brow: 0.4,
+  }],
+  [0.78, {
+    armLX: -1.36, armLZ: 0.48, foreLX: -0.12, armRX: -1.29, armRZ: -0.48, foreRX: -0.14,
+    legLX: -0.42, shinLX: 0.52, legRX: 0.46, shinRX: 0.15,
+    bodyY: -0.1, torsoPitch: 0.22, torsoYaw: 0.0, mouth: 1.8, brow: 0.36,
+  }],
+  [1.0, {
+    armLX: 0.4, armLZ: 0.3, foreLX: -1.95, armRX: -0.42, armRZ: -0.25, foreRX: 0.8,
+    legLX: -0.62, shinLX: 0.42, legRX: 0.66, shinRX: -0.42,
+    bodyY: -0.14, torsoPitch: 0.27, torsoYaw: -0.26, mouth: 1.0, brow: 0.34,
+  }],
+]);
+// The keyframed() helper the hadouken above is built with (from the same source).
+// It mixes the 18 classic fields; direct-function programs (§2.7) can write any of the 51.
+const POSE_FIELDS: Array&lt;keyof Pose&gt; = [
+  'bodyY', 'bodyPitch', 'bodyRoll', 'torsoPitch', 'torsoYaw', 'headPitch',
+  'armLX', 'armLZ', 'foreLX', 'armRX', 'armRZ', 'foreRX',
+  'legLX', 'shinLX', 'legRX', 'shinRX', 'mouth', 'brow',
+];
+type Key = [number, Partial&lt;Pose&gt;];
+function keyframed(keys: Key[], spinFn?: (t: number) =&gt; number): PoseProgram {
+  const sorted = [...keys].sort((a, b) =&gt; a[0] - b[0]);
+  return (t, _ctx, out) =&gt; {
+    let a = sorted[0]; let b = sorted[sorted.length - 1];
+    if (t &lt;= a[0]) { b = a; }
+    else if (t &gt;= b[0]) { a = b; }
+    else { for (let i = 0; i &lt; sorted.length - 1; i++) {
+      if (t &gt;= sorted[i][0] &amp;&amp; t &lt;= sorted[i + 1][0]) { a = sorted[i]; b = sorted[i + 1]; break; } } }
+    const span = b[0] - a[0];
+    const k = span &gt; 0 ? (t - a[0]) / span : 0;
+    const smooth = k * k * (3 - 2 * k);   // smoothstep between keys
+    for (const f of POSE_FIELDS) {
+      const av = a[1][f] ?? (NEUTRAL_POSE[f] as number);
+      const bv = b[1][f] ?? (NEUTRAL_POSE[f] as number);
+      (out[f] as number) = av + (bv - av) * smooth;
+    }
+    if (spinFn) out.spin = spinFn(t);   // spin is authored separately — it must track exactly
+  };
+}
+
+// Engine-side durations (the engine owns time): hadouken 0.95 s, shoryuken 1.25 s.
+// Fireball release at normalised t = 0.5 inside the hadouken.
+// Ryu idle (held stance, breathing on ctx.time): bodyY -0.14 + sin(time×2.1)×0.012,
+// torsoPitch 0.27, torsoYaw -0.26, foreLX -1.95 (fist thrust at chest height),
+// legLX -0.62 / shinLX 0.42 (lead leg bent), legRX 0.66 / shinRX -0.42 (rear leg on toes).</code></pre>
+<p>The same fighter as a Jam Fight game row (the game's own proportions/palette dialect — note the game row is a <em>different tuning</em> of the same character: Jam big-head proportions, its own hex set):</p>
+<pre><code>ryu: {
+  id: 'ryu',
+  name: 'RYU', nickname: 'WANDERING WARRIOR', archetype: 'Disciplined All-Rounder',
+  tagline: 'Tatsumaki trick, Shoryuken Dunk, Hadouken combo finisher. Rock-solid defense.',
+  stats: { speed: 7, shot: 8, dunk: 8, power: 8, health: 8 },        // = 39, exactly at budget
+  visuals: {
+    skinColor: 0xe6b48c, jerseyPrimary: 0xf4f2eb /* white gi */, jerseySecondary: 0x171717 /* black belt */,
+    jerseyTrim: 0xd9261c, shortsColor: 0xf4f2eb, shoePrimary: 0xe6b48c /* barefoot */, shoeAccent: 0xe6b48c,
+    hairColor: 0x3b2416, headbandColor: 0xe11d1d, eyeColor: 0x1b1410,
+    hairStyle: 'spiky_ryu', outfitStyle: 'karate_gi', footwear: 'barefoot', hasHeadband: true,
+    disciplinedDefense: true,
+    bodyScale: { width: 1.1, height: 1.01, headScale: 1.24, handScale: 1.28 },
+    jerseyNumber: 'SF', accentHex: '#ef4444',
+  },
+}</code></pre>
+<p>The game-side schema, complete — every field below is required unless marked optional. <code>CharacterDef</code>: <code>id</code>, <code>name</code>, <code>nickname</code>, <code>archetype</code>, <code>tagline</code>, <code>stats</code> { speed, shot, dunk, power, health — integers 1–10, sum ≤ 39 }, <code>visuals</code>. <code>CharacterVisuals</code>: <code>skinColor, jerseyPrimary, jerseySecondary, jerseyTrim, shortsColor, shoePrimary, shoeAccent, hairColor, headbandColor, eyeColor</code> (all hex numbers), <code>hairStyle</code>, <code>outfitStyle</code>, <code>footwear</code> (the game-extended enums of §2.1), <code>hasHeadband</code> (boolean), <code>bodyScale</code> { width, height, headScale, handScale }, <code>jerseyNumber</code> (string), <code>accentHex</code> (CSS colour string); optional: <code>hasDogTags</code>, <code>hasFlagTattoo</code>, <code>disciplinedDefense</code>. Adding a fighter also means adding its id to the <code>CharacterId</code> union type (<code>'ryu' | 'guile' | 'tank' | 'zip' | 'ray' | 'rex'</code>) — the roster record is typed <code>Record&lt;CharacterId, CharacterDef&gt;</code>, so the compiler enforces the new entry.</p>
+
+<h2>3. The look — toon is three ingredients, not a vibe</h2>
+<p>The Jam Fight look is exactly three ingredients. Missing any one of them reads as a different, cheaper game.</p>
+<h3>3.1 Stepped cel shading</h3>
+<ul>
+  <li><code>MeshToonMaterial</code> with a cached gradient-map ramp: <strong>4 steps [105, 160, 212, 255]</strong> or <strong>3 steps [120, 190, 255]</strong>, <code>NearestFilter</code> — hard shadow terminator, no specular falloff.</li>
+  <li>Face features (eyes, pupils, brows, mouth) switch to flat <code>MeshBasicMaterial</code>: crisp ink shapes instead of lit blobs.</li>
+  <li>API: <code>renderMode: 'toon'</code> + <code>params.toon</code> (<code>outlineWidth</code>, <code>outlineColor</code>, <code>halftone</code> 0..1, <code>halftoneScale</code>, <code>steps</code> 3|4), overrides merged field-by-field. In the gamepress character builder the port is <code>toon(color, { halftone, halftoneDensity = 30 })</code> and <code>buildHumanoid({ outline, halftone })</code>, defaults off.</li>
+</ul>
+<h3>3.2 Inverted-hull ink outlines — and the lesson that cost two attempts</h3>
+<ul>
+  <li>One BackSide dark shell child per mesh, displaced in the vertex shader along the vertex normal by a world-space width (<strong>default 0.026</strong> in the kit; the gamepress port's <code>addOutlines(root, width = 0.018, color = 0x17120d, minRadius = 0.05)</code>), so thickness is uniform at any figure scale.</li>
+  <li>Skip small parts: any part whose bounding sphere × world scale &lt; <strong>0.06 m</strong> gets no hull — eyes, pupils, brows, mouth and toes measure below the threshold, so they are never swallowed. Hulls cast/receive no shadow and ignore raycasts.</li>
+</ul>
+<div class="law"><strong>The raw-normal rule.</strong> The first outline implementation displaced along <code>objectNormal</code> — which MeshBasicMaterial's shader program never declares (it skips the normal chunks). The outline program failed to compile (<code>'objectNormal': undeclared identifier</code>) and <strong>the hulls silently never rendered</strong>. What looked like "thin outlines" for two attempts was the cel terminator plus dark geometry. Two rules: (1) displace along the raw <code>normal</code> attribute, never <code>objectNormal</code>, in a MeshBasicMaterial hull; (2) <strong>prove outlines by pixel probe, not by eye</strong> — the fix was verified by an outline on/off pixel diff (6,238 pixels differ at width 0.026, 0 shader errors). A silent shader compile failure looks exactly like a subtle effect.</div>
+<h3>3.3 Halftone — dots that live only in the shade</h3>
+<ul>
+  <li>A fragment-shader injection recomputes the first directional light's cel gradient per pixel and grows dots as the gradient darkens: <strong>no dots in the light, fat dots in the shadow step</strong>. Object-space via each part's own UVs (attach a plain white map to map-less parts so UVs exist).</li>
+  <li>Do NOT bake halftone into canvas textures: baked dots print everywhere — lit skin, white cloth — and read as leopard print / measles. Baked is kept only for unlit/sprite contexts, and is the only halftone form that survives GLB export, at that cost.</li>
+  <li>At scene level the same print language extends past the fighters: halftone dots baked into the court texture, a halftone-band sunset shader in the sky, and comic SFX starburst callouts (WHAM! / SWISH! / BAM! / SHORYUKEN! / HADOUKEN!) rendered as SVG bursts over the HUD.</li>
+</ul>
+<p class="note">Two more field lessons from the same pass. Option-bag merges eat defaults: an explicit <code>undefined</code> from a caller's options silently wiped the halftone default for a whole attempt — merge field-by-field and treat <code>undefined</code> as "not passed". And toon is a <strong>renderer-side mode</strong>: GLB export carries geometry, pivot hierarchy, part colours and canvas maps, but NOT the cel stepping (glTF has no toon ramp), NOT the shader halftone, and NOT the outlines (hulls export as undisplaced duplicate geometry that z-fights). An exported GLB is a smooth-shaded figure; the look appears when a three.js scene renders it with this kit.</p>
+<h3>3.4 The owner's law — a style variant must change construction</h3>
+<div class="law"><strong>Rule:</strong> a render mode that only changes the <em>surface</em> — shading model, texture treatment, palette, output resolution — on one identical construction <strong>reads as a recolor at phone size</strong>, whatever the pipeline does underneath. The figure's geometry, proportions and silhouette carry the look-and-feel; a mode that is supposed to change look-and-feel <strong>must change geometry and proportions too</strong> (a chibi proportion row for Anime, a chunkier low-poly rebuild for PS1, and so on). Surface treatments are finishes, not modes. The check is <strong>silhouette IoU against the base figure</strong> (§4): if the silhouette barely moved, the "mode" didn't.</div>
+<p>Evidence: nine surface modes (Anime, 16-bit, 8-bit, Paint, Watercolour, Clay, PS1, Sticker, Real) were built with genuinely working mechanisms — 2-step cel ramps, Bayer-dithered 144×180 render targets snapped to a 52-colour NES palette, ~1,250 directional brush strokes per part, vertex snap to a 168×132 clip grid, fingerprint bump maps — and the builder graded all nine PASS at 420 px panels. The owner graded the sheet: <em>"Not good. Nothing changed other than slight colors. Exact same look and feel of the 3D character."</em> The owner's verdict supersedes the builder's grades. Grade style work against the owner's eye at phone size, not against a mechanism checklist.</p>
+
+<h2>4. Matching a reference — the sprite-goal method</h2>
+<p>When a character has a ground-truth reference (a sprite, a render, a photo), the reference IS the target — set the goal as the reference image and measure against its pixels. Two numbers, both computed against the real reference:</p>
+<ul>
+  <li><strong>Silhouette IoU</strong> — render alpha vs reference alpha, height-normalised, alignment searched. This is also the construction check for style variants (§3.4).</li>
+  <li><strong>Palette ΔE</strong> — CIE Lab distance over reference-defined colour regions. The palette itself is <strong>sampled from the reference's pixels</strong>, never eyeballed.</li>
+</ul>
+<p>The measured pass (rigkit Ryu vs the SF2 sprite), three attempts — proportions first, then palette, then proportions round 2 — each photographed sprite | render | overlay:</p>
+<div class="scroll"><table>
+<tr><th>Attempt</th><th class="n">Idle IoU</th><th class="n">Jab IoU</th><th class="n">Roundhouse IoU</th><th class="n">Idle palette ΔE</th></tr>
+<tr><td>A1 baseline (toon-pass row)</td><td class="n">0.509</td><td class="n">0.449</td><td class="n">0.549</td><td class="n">18.1</td></tr>
+<tr><td>A2 proportions + sampled palette</td><td class="n">0.603</td><td class="n">0.481</td><td class="n">0.592</td><td class="n">16.2</td></tr>
+<tr><td><strong>Final (A3 row + kit fix)</strong></td><td class="n"><strong>0.634</strong></td><td class="n"><strong>0.485</strong></td><td class="n"><strong>0.588</strong></td><td class="n">17.3</td></tr>
+</table></div>
+<ul>
+  <li><strong>The sprite is chunkier than defaults:</strong> silhouette 45% wider for its height (bbox aspect 0.674 vs 0.463). The winning row is §2.8: width 1.56, headScale 1.42, handScale 1.60, thigh 0.46 / calf 0.475 (calf longer than thigh), forearm 0.36, footScale 1.35, hipHeight 1.065.</li>
+  <li><strong>Sampling corrected a house assumption:</strong> the sprite's fists are dark red-brown leather (<code>0x7a2d1c</code>); the bright red lives only in the headband (<code>0xc01900</code>). That correction is why the palette has a glove slot.</li>
+  <li><strong>Sprite-true proportions improved the poses, free:</strong> with segment lengths matching the sprite, the same unedited pose programs land closer to the sprite's joints — idle pose error 12.7% → 9.3%, hadouken 14.3% → 11.7%, shoryuken 9.0% → 8.1%. Proportions are not cosmetics; they are half the pose accuracy.</li>
+  <li><strong>Benchmark honesty:</strong> a 0.804 IoU exists in our history — for a one-pose static sculpt, posed once, offline. 0.634 is a working rig holding locked pose programs. The residual gap: stance width/depth (lives in pose-program joint angles, not proportions), cloth vocabulary (painted baggy cloth vs tapered cylinders), the head (uniform sphere scaling cannot reproduce a jaw-forward drawing), and reach (forearm 0.36 is the cap before fist joints become the pose scores' worst outliers). "Exact" is achievable at the reference pose/view; painted detail and other camera angles have no 3D counterpart to be exact against.</li>
+</ul>
+<div class="rule"><strong>The 3-attempt rule:</strong> push up to THREE attempts per item — each photographed at the same framing and judged against the original — pushing further each time (not colour only: density, dressing, models). A stop after attempt 2 needs a written, evidence-cited reason.</div>
+<p><strong>The bug this method caught</strong> (fix is in the kit): per-frame code reasserted hip height every frame from the <em>global</em> PROPORTIONS const, silently stomping any per-row <code>hipHeight</code> — attempts were scored with the pelvis stuck at default height, feet sunk ~0.11, invisible under bbox normalisation. The standard joint dump exposed it: pelvis byte-identical while knees/ankles moved. Rules that generalise: per-frame code must read the rig's own build parameters, never a global const the builder also read; and <strong>a joint dump is a better lie detector than a screenshot</strong>. Harness pattern: match mode is opt-in URL params — orthographic side camera at fixed figure height, chroma backdrop, flat ~1.0 irradiance light rig (so rendered colours are the authored palette, not the stage's tone mapping), per-attempt row overrides so attempts need no code edits. When tone mapping is off, rebalance flat-light intensities to ~1.0 total, or exposure error will masquerade as a palette regression.</p>
+
+<h2>5. The combat core — Fight Engine contract</h2>
+<p>A deterministic <strong>60 Hz</strong> 2D fighting-game core as a <strong>DOM-free</strong> TypeScript library, plus a training-mode app on top. Verified by grep and by audit: no <code>document</code>, <code>window</code>, <code>Math.random</code> or <code>Date.now</code> anywhere in the engine source — its only randomness is a seeded PRNG (Mulberry32) whose state lives inside the engine state. Fighters are added with <code>registerFighter()</code> as pure data; there is zero fighter-specific logic in the engine.</p>
+<h3>5.1 Moves are data rows, full stop</h3>
+<p>Every move carries all of these fields (frame counts are in 60 Hz frames):</p>
+<pre><code>interface MoveData {
+  id: string;
+  command: string;        // numpad notation: '5L' standing light, '2L' crouching, '6L' forward,
+                          // '5H' / '2H' heavy, 'jH' jumping, 'THROW', '236P' quarter-circle special
+  name: string;
+  startup: number;        // frames before the hitbox is live
+  active: number;         // frames the hitbox is live
+  recovery: number;       // frames after active before the fighter can act
+  damage: number;
+  hitstun: number;        // frames the victim is stunned on hit
+  blockstun: number;      // frames the blocker is stunned on block
+  pushback: number;
+  hitstop: number;        // freeze frames on connect — by weight: light 6, medium 8, heavy 11
+  cancelWindow: [number, number] | null;  // inclusive [startFrame, endFrame], 1-indexed move frames
+  type: 'strike' | 'throw' | 'projectile';
+  height: 'low' | 'mid' | 'high';
+  weight: 'light' | 'medium' | 'heavy';
+  isSpecial: boolean;     // specials chip on block (10%) and take the highest cancel priority
+  cancelPriority: number; // 1 = light, 2 = medium, 3 = heavy, 4 = special, 0 = throw
+  airOnly?: boolean;
+  hitbox: { offsetX: number; offsetY: number; width: number; height: number }; // relative to fighter origin
+  launch?: { vx: number; vy: number };   // juggle launch impulse on hit
+  lungeVx?: number;                      // forward momentum during startup/active
+  projectileSpeed?: number;              // px/frame, for type 'projectile'
+  pose: string;                          // key into the rig's pose-program map (§2.7) — the bridge to the figure system
+}</code></pre>
+<h3>5.2 The rules that make it a fighting game</h3>
+<ul>
+  <li><strong>Hitstop:</strong> light <strong>6f</strong> / medium <strong>8f</strong> / heavy <strong>11f</strong>, counter-hit <strong>+3f</strong> (a counter-heavy measured exactly 14f, frozen frames counted by an independent script). Data rows and sim agree.</li>
+  <li><strong>Input buffer:</strong> <strong>6 frames</strong>, and its TTL ticks only on non-hitstop frames — a heavy pressed during a jab's recovery, outside the cancel window, with no further input, fires the frame the jab ends. A dropped-input engine cannot do that; this is the test that separates a real buffer from a comment claiming one.</li>
+  <li><strong>Motion recognition with a mandatory diagonal:</strong> quarter-circle-forward requires the chronological 2→3→6 inside a <strong>14f</strong> window; the near-miss 2→5→6 does NOT fire. Near-miss rejection is half the feature.</li>
+  <li><strong>Blocking matrix:</strong> <code>low</code> is blocked by crouch-back only; <code>mid</code> by stand-back or crouch-back; <code>high</code> (overhead) by stand-back only; throws are unblockable.</li>
+  <li><strong>Throw tech window: 7 frames.</strong> Tech at +7f succeeds (0 damage); at +8f the throw completes for full damage (120). Tested at the boundary, not near it.</li>
+  <li><strong>Juggle scaling:</strong> damage scales <strong>100 / 90 / 80 / 70 / 60…%, floor 10%</strong> per successive juggle hit. An independent corner juggle (different seed and positions from the engine's own test) reproduced the exact scaled sequence [90+36+32+28+24] = 210.</li>
+  <li><strong>Chip damage: 10%, specials only.</strong> A blocked normal costs 0 HP; a blocked 100-damage special costs exactly 10.</li>
+  <li><strong>Rounds:</strong> 60-second rounds (3,600 frames), best-of-3 (first to 2 rounds).</li>
+  <li><strong>Determinism, proven not asserted:</strong> a 600-frame scripted match (independent input stream, both fighters, full-state SHA-256 every 60 frames) produced identical hashes at every checkpoint under seed 42, and diverged under seed 43. When a prompt asks for determinism, name the hash test in the prompt.</li>
+  <li><strong>An honest CPU:</strong> the lab opponent is restricted to delayed, screen-visible perceptual observations (14-frame delay) — it plays fair by construction instead of reading inputs.</li>
+</ul>
+<h3>5.3 One complete move table — Kaze (Rushdown Striker), all 8 rows, copied from the engine</h3>
+<p>Fighter frame: maxHp 1000, walk forward 4.4, walk back 3.4, jump velocity Y 14.5 / X 4.5, body width 52, stand height 132, crouch height 84.</p>
+<div class="scroll"><table>
+<tr><th>Cmd</th><th>Name</th><th class="n">Startup</th><th class="n">Active</th><th class="n">Recovery</th><th class="n">Dmg</th><th class="n">Hitstun</th><th class="n">Blockstun</th><th class="n">Pushback</th><th class="n">Hitstop</th><th>Cancel window</th><th>Type</th><th>Height</th><th>Weight</th><th class="n">Special</th><th class="n">Prio</th></tr>
+<tr><td>5L</td><td>Flash Jab</td><td class="n">5</td><td class="n">3</td><td class="n">7</td><td class="n">40</td><td class="n">14</td><td class="n">10</td><td class="n">24</td><td class="n">6</td><td>[6, 10]</td><td>strike</td><td>mid</td><td>light</td><td class="n">no</td><td class="n">1</td></tr>
+<tr><td>2L</td><td>Ankle Tap</td><td class="n">6</td><td class="n">3</td><td class="n">8</td><td class="n">40</td><td class="n">14</td><td class="n">10</td><td class="n">22</td><td class="n">6</td><td>[7, 11]</td><td>strike</td><td>low</td><td>light</td><td class="n">no</td><td class="n">1</td></tr>
+<tr><td>6L</td><td>Snap Kick</td><td class="n">8</td><td class="n">4</td><td class="n">11</td><td class="n">70</td><td class="n">18</td><td class="n">14</td><td class="n">34</td><td class="n">8</td><td>[9, 13]</td><td>strike</td><td>mid</td><td>medium</td><td class="n">no</td><td class="n">2</td></tr>
+<tr><td>5H</td><td>Crimson Straight</td><td class="n">10</td><td class="n">4</td><td class="n">16</td><td class="n">100</td><td class="n">24</td><td class="n">18</td><td class="n">48</td><td class="n">11</td><td>[11, 16]</td><td>strike</td><td>mid</td><td>heavy</td><td class="n">no</td><td class="n">3</td></tr>
+<tr><td>2H</td><td>Sky Upper</td><td class="n">10</td><td class="n">4</td><td class="n">19</td><td class="n">90</td><td class="n">34</td><td class="n">16</td><td class="n">26</td><td class="n">11</td><td>[11, 15]</td><td>strike</td><td>mid</td><td>heavy</td><td class="n">no</td><td class="n">3</td></tr>
+<tr><td>jH</td><td>Axe Heel</td><td class="n">7</td><td class="n">6</td><td class="n">10</td><td class="n">80</td><td class="n">20</td><td class="n">15</td><td class="n">30</td><td class="n">8</td><td>null</td><td>strike</td><td>high</td><td>medium</td><td class="n">no</td><td class="n">2</td></tr>
+<tr><td>THROW</td><td>Shoulder Toss</td><td class="n">5</td><td class="n">2</td><td class="n">19</td><td class="n">120</td><td class="n">30</td><td class="n">0</td><td class="n">96</td><td class="n">8</td><td>null</td><td>throw</td><td>mid</td><td>medium</td><td class="n">no</td><td class="n">0</td></tr>
+<tr><td>236P</td><td>Gale Pulse</td><td class="n">11</td><td class="n">3</td><td class="n">22</td><td class="n">100</td><td class="n">22</td><td class="n">16</td><td class="n">42</td><td class="n">8</td><td>null</td><td>projectile</td><td>mid</td><td>medium</td><td class="n"><strong>yes</strong></td><td class="n">4</td></tr>
+</table></div>
+<pre><code>// Remaining fields per row (hitbox = {offsetX, offsetY, width, height} from fighter origin):
+// 5L    hitbox {54, 96, 68, 26}    lungeVx 0.6   pose 'jab'
+// 2L    hitbox {58, 22, 72, 24}    lungeVx 0.5   pose 'low_kick'
+// 6L    hitbox {66, 74, 82, 30}    lungeVx 1.8   pose 'mid_kick'
+// 5H    hitbox {72, 90, 92, 34}    lungeVx 2.0   pose 'heavy_punch'
+// 2H    hitbox {52, 92, 70, 76}    lungeVx 1.0   launch {vx: 2.2, vy: 12.8}   pose 'launcher'
+// jH    hitbox {48, 36, 72, 42}    airOnly: true   pose 'air_kick'
+// THROW hitbox {42, 78, 64, 74}    pose 'throw'
+// 236P  hitbox {58, 84, 42, 32}    projectileSpeed 9.2   pose 'special'</code></pre>
+<p class="note">Packaging warning, learned twice: AI-Studio exports of this stack have arrived with a broken <code>npm install</code> (an esbuild pin conflicting with vite's peer range — <code>--legacy-peer-deps</code> succeeds; the fix is a one-line version bump) and, in a sibling export, six zero-byte scaffolding files. Inventory every export ZIP by file size before trusting it (§8).</p>
+
+<h2>6. Jam Fight — the game</h2>
+<h3>6.1 Match rules</h3>
+<ul>
+  <li><strong>1v1, half court, first to 21</strong> or highest score at the <strong>3:00</strong> clock. Tied at 0:00 → overtime, sudden death, next basket wins. Baskets: <strong>+2</strong> inside the arc, <strong>+3</strong> beyond it, dunks +2.</li>
+  <li><strong>Make-it-take-it:</strong> the scorer keeps possession; play resets at the top of the arc.</li>
+  <li><strong>TAKE-BACK rule:</strong> after a change of possession (defensive rebound or a steal that crosses half-court possession), the new offence must dribble the ball back <strong>beyond the 3-point arc</strong> before a score counts. Scoring without clearing: the basket is void <em>and</em> possession flips to the opponent ("NO TAKE-BACK!"). A steal already beyond the arc needs no take-back. This rule is load-bearing — it is what makes the half court play like a full game.</li>
+  <li><strong>Momentum movement:</strong> speed builds smoothly over ~2 s of moving in one direction and bleeds on a sharp turn or stop; the rig's lean, stride and dribble all read off the same momentum value (§2.7 context).</li>
+  <li><strong>ON FIRE:</strong> 3 consecutive makes puts a fighter on fire until the streak breaks: sprint ×1.18, shot effective distance −2.4 (shots play as if closer), +0.14 shot bonus, a jagged flame crown at the feet and a flame shell on the ball.</li>
+  <li><strong>Tricks:</strong> one trick move per fighter on a <strong>2.0 s cooldown</strong>, with a dodge window that makes melee hits whiff.</li>
+  <li><strong>Knockdowns and KOs:</strong> knockdown time 2.5 s; a full KO (health emptied by the fighting layer) takes 5.0 s and awards the opponent a free shot.</li>
+</ul>
+<pre><code>// Court + match constants (engine source, verbatim values):
+WIN_SCORE: 21,        MATCH_SECONDS: 180,
+HOOP_Y: 3.05,         RIM_RADIUS: 0.28,       BACKBOARD_X: 5.68,
+THREE_PT_RADIUS: 5.3, TOP_OF_ARC_X: -1.15,
+PAINT_MIN_X: 1.4,     PAINT_HALF_Z: 1.75,
+TRICK_COOLDOWN: 2.0,  KNOCKDOWN_TIME: 2.5,    KO_TIME: 5.0,
+GRAVITY: 21.5,        BALL_RADIUS: 0.145</code></pre>
+<h3>6.2 The fighting layer — one button, a 5-move chain</h3>
+<p>There is ONE attack button. Pressing it repeatedly walks an automatic 5-step combo chain; each step is an attack spec (seconds, not frames — this layer runs on the game clock, not the §5 frame engine). The spec type, verbatim:</p>
+<pre><code>interface AttackSpec {
+  move: AttackMoveType;   // closed union: 'jab1' | 'jab2' | 'hook' | 'roundhouse' | 'uppercut' | 'hadouken'
+                          // (extend the union to add a new chain move; signature tricks don't use it)
+  duration: number;       // total move time, seconds
+  windup: number;         // seconds before the hit can land
+  activeEnd: number;      // seconds at which the hit window closes
+  range: number;          // reach, world units
+  baseDamage: number;     // the field is baseDamage, not damage
+  knockback: number;
+  stun: number;
+  forcesKnockdown: boolean;
+  audioType: 'punch' | 'kick' | 'uppercut' | 'hadouken';
+}</code></pre>
+<div class="scroll"><table>
+<tr><th>Step</th><th>Move</th><th class="n">Duration</th><th class="n">Windup</th><th class="n">Active end</th><th class="n">Range</th><th class="n">Damage</th><th class="n">Knockback</th><th class="n">Stun</th><th>Knockdown</th></tr>
+<tr><td>1</td><td>jab1</td><td class="n">0.28</td><td class="n">0.08</td><td class="n">0.17</td><td class="n">1.25</td><td class="n">8</td><td class="n">2.2</td><td class="n">16</td><td>no</td></tr>
+<tr><td>2</td><td>jab2</td><td class="n">0.30</td><td class="n">0.08</td><td class="n">0.18</td><td class="n">1.35</td><td class="n">10</td><td class="n">2.8</td><td class="n">20</td><td>no</td></tr>
+<tr><td>3</td><td>hook</td><td class="n">0.38</td><td class="n">0.12</td><td class="n">0.24</td><td class="n">1.48</td><td class="n">15</td><td class="n">4.5</td><td class="n">28</td><td>no</td></tr>
+<tr><td>4</td><td>roundhouse</td><td class="n">0.46</td><td class="n">0.14</td><td class="n">0.30</td><td class="n">1.72</td><td class="n">19</td><td class="n">6.2</td><td class="n">36</td><td>no</td></tr>
+<tr><td>5</td><td>uppercut</td><td class="n">0.56</td><td class="n">0.15</td><td class="n">0.32</td><td class="n">1.52</td><td class="n">24</td><td class="n">7.4</td><td class="n">100</td><td><strong>yes</strong></td></tr>
+</table></div>
+<ul>
+  <li>A defending player auto-guards and takes cut damage; clean hits can <strong>pop the ball loose</strong>. Health is the DEF stat; empty it and the victim is KO'd (free shot, above).</li>
+  <li><strong>Signature moves are pose programs, not renamed generics</strong> — each is its own program in the rig plus an engine spec. Ryu: <em>Tatsumaki</em> trick (spins through the defender, x −1.5 → 3.82 measured under live input), <em>Shoryuken Dunk</em> (selected at the rim when momentum ≥ 0.4 or on fire; crouches ~16% of the flight, then rockets), and the <em>Hadouken</em>, which <strong>replaces chain step 5 for Ryu only</strong> — spec: duration 0.54, windup 0.14, active end 0.32, range 1.35, damage 20, knockback 6.4, stun 65 — spawning a real projectile (speed 9.5, life 0.95 s) that pops the ball loose on hit. Guile: <em>Sonic Boom</em> trick (crescent projectile; measured defender shove x 0.9 → 2.0 on impact), <em>Flash Kick Dunk</em>, and a <em>Flash Kick Block</em> (launch vy 10.2 vs ~8 standard, block range extended to 2.05).</li>
+  <li><strong>Dunks are selected automatically</strong> by context (distance, momentum, defender position, character) from 13 labelled types: layup "FINGER ROLL!", windmill, 360, tomahawk, reverse, between-the-legs, double clutch, self alley-oop, elbow hang, free-throw leap, poster (defender contests late — "POSTERIZED!"), plus the two signature dunks (Shoryuken Dunk, Flash Kick Dunk).</li>
+</ul>
+<h3>6.3 Shooting</h3>
+<p>Shot outcome is a make-chance roll from distance and contest (the HUD distinguishes OPEN vs CONTESTED), then the shipping rim-out rule below. Measured anchor: an open shot at distance 3.2 has makeChance 0.7814 before the rim-out roll.</p>
+<h3>6.4 The AI — honest by construction</h3>
+<p>The CPU picks inputs from a difficulty profile. There is <strong>no rubber-banding</strong>: no score term exists anywhere in the AI — measured, an independent probe counted AI decisions over 20 sim-seconds with the AI leading 16–2 vs trailing 2–16 and got <strong>112 vs 112, identical cadence</strong>; a regression test additionally asserts the full input struct is deep-equal in both states. The profiles (the only thing difficulty touches — no shooting assists, no stat scaling):</p>
+<div class="scroll"><table>
+<tr><th>Profile</th><th class="n">Reaction (s)</th><th class="n">Open-shot threshold</th><th class="n">Steal aggression</th><th class="n">Block reaction</th><th class="n">Fight aggression</th><th class="n">Trick chance</th><th class="n">Combo follow-up</th></tr>
+<tr><td>ROOKIE</td><td class="n">0.34</td><td class="n">0.44</td><td class="n">0.16</td><td class="n">0.25</td><td class="n">0.24</td><td class="n">0.22</td><td class="n">0.38</td></tr>
+<tr><td>PRO</td><td class="n">0.17</td><td class="n">0.54</td><td class="n">0.36</td><td class="n">0.56</td><td class="n">0.48</td><td class="n">0.50</td><td class="n">0.68</td></tr>
+<tr><td>ALL-STAR</td><td class="n">0.08</td><td class="n">0.62</td><td class="n">0.56</td><td class="n">0.82</td><td class="n">0.68</td><td class="n">0.72</td><td class="n">0.90</td></tr>
+</table></div>
+<h3>6.5 Current shipping rules (November 19, 2026 — the brief describes the game as it ships today)</h3>
+<div class="rule"><strong>No difficulty choice.</strong> The ROOKIE/PRO/ALL-STAR selector is deleted from the UI; a module constant <code>GAME_DIFFICULTY = 'ROOKIE'</code> feeds every match creation (initial load, match start, back-to-title), so the CPU always runs the ROOKIE profile. There is no stored difficulty preference anywhere in the game. The engine's <code>Difficulty</code> type and profiles remain as an internal API so tests can still construct PRO/ALL-STAR states directly.</div>
+<div class="rule"><strong>Jump shots rim out 25% at random.</strong> In <code>startJumpShot</code> — the single shot-outcome path both players resolve through — after the normal make roll: <code>if (willMake &amp;&amp; nextRand(state) &lt; JUMP_SHOT_RIM_OUT_CHANCE) willMake = false;</code> with <code>JUMP_SHOT_RIM_OUT_CHANCE = 0.25</code>. Net effect: even a perfect shooter makes at most ~3 of 4; shots stay easy, never automatic. It uses the game's own seeded RNG, so replays stay deterministic. <strong>Dunks and layups are exempt</strong> (they resolve through a different path and were not touched). Verified by sampling the real sim: 800 jump shots → 462 made = 57.75% realised vs 58.61% predicted (0.7814 × 0.75); dunks 40/40 scored, exactly as before.</div>
+<h3>6.6 Roster (stats are SPD/SHT/DNK/PWR/DEF; body is width/height/headScale/handScale)</h3>
+<div class="scroll"><table>
+<tr><th>Fighter</th><th class="n">SPD</th><th class="n">SHT</th><th class="n">DNK</th><th class="n">PWR</th><th class="n">DEF</th><th class="n">Sum</th><th>Body</th><th>Signature</th></tr>
+<tr><td>RYU</td><td class="n">7</td><td class="n">8</td><td class="n">8</td><td class="n">8</td><td class="n">8</td><td class="n">39</td><td>1.10 / 1.01 / 1.24 / 1.28</td><td>Tatsumaki, Shoryuken Dunk, Hadouken finisher</td></tr>
+<tr><td>GUILE</td><td class="n">5</td><td class="n">6</td><td class="n">8</td><td class="n">9</td><td class="n">9</td><td class="n">37</td><td>1.16 / 1.12 / 1.22 / 1.32</td><td>Sonic Boom, Flash Kick Dunk, Flash Kick Block</td></tr>
+<tr><td>WEMBANYAMA</td><td class="n">7</td><td class="n">8</td><td class="n">9</td><td class="n">6</td><td class="n">9</td><td class="n">39</td><td>0.70 / 1.40 / 0.92 / 1.45</td><td>reach build (§2.4 row)</td></tr>
+<tr><td>SONIC</td><td class="n">10</td><td class="n">5</td><td class="n">8</td><td class="n">4</td><td class="n">5</td><td class="n">32</td><td>0.86 / 0.98 / 1.36 / 1.36</td><td>Spin Dash trick, Spinball Slam dunk</td></tr>
+<tr><td>LINK</td><td class="n">7</td><td class="n">9</td><td class="n">7</td><td class="n">6</td><td class="n">7</td><td class="n">36</td><td>0.98 / 1.00 / 1.30 / 1.26</td><td>tunic outfit, shield prop on the back pivot</td></tr>
+<tr><td>MARIO</td><td class="n">7</td><td class="n">6</td><td class="n">9</td><td class="n">6</td><td class="n">7</td><td class="n">35</td><td>1.14 / 0.85 / 1.46 / 1.50</td><td>plumber outfit (legs ×0.88, widened belly lathe)</td></tr>
+</table></div>
+<p class="note">Known builder-choice traps, both from leaving things unspecified: in 1P mode the opponent is a <em>random draw</em> because nobody specified it; and the start button's label changed between rounds, breaking an audit script's selector. Pin opponent selection, defaults, and labels — or accept the builder's.</p>
+<h3>6.7 Framing law and presentation</h3>
+<div class="law"><strong>Portrait framing is a law, not a preference.</strong> Fighters measure <strong>530–570 px tall in a 1,720 px-tall capture — 31–33% of frame height</strong>. The court/apron texture runs continuously to the bottom edge: <strong>0 dead rows</strong>; the total scene (court + players + crowd + city) fills the frame from under the HUD to 100%. The camera is a dedicated portrait branch: low (y ≈ 2.75), close (z ≈ 8.45 + spread), angled along the court, FOV 46. The failure this replaced: round 1 shipped fighters at ~16% of frame height with 22–27% of the frame as dead dark foreground — every internal check passed and the game looked empty. Measure fighter height and dead rows in your captures; do not eyeball them.</div>
+<ul>
+  <li>HUD in live play shows "TO 21" and the 3:00 clock; action-button labels swap with possession (SHOOT/TRICK ↔ JUMP/STEAL); SFX starburst callouts carry the comic words (§3.3).</li>
+  <li>Performance: pixel ratio capped at <code>min(devicePixelRatio, 2)</code>, forced to 1 under software GL; the crowd is five <code>THREE.InstancedMesh</code> sets (body/head/cap/arms) plus an instanced particle pool; an FPS readout (EMA tracker) lives behind the pause menu so the claim is verifiable on hardware.</li>
+</ul>
+<h3>6.8 Engine API — wiring a match</h3>
+<pre><code>// Create a match. GameMode = '1p' | '2p'; Difficulty = 'ROOKIE' | 'PRO' | 'ALL-STAR'
+// (§6.5: the shipped game always passes 'ROOKIE'). Seed defaults to 1337.
+const state = createInitialMatchState(p1Char: CharacterId, p2Char: CharacterId,
+                                      mode: GameMode, difficulty: Difficulty, seed = 1337);
+// A fresh state sits in phase 'title'; a headless driver sets state.phase = 'playing'
+// (the app does it through its title flow). Then step the sim:
+stepMatch(state, [inputP1, inputP2], rawDt);   // the engine tests step at dt = 1/30
+
+interface PlayerInput {
+  moveX: number;          // -1..1 (court X: left/right)
+  moveZ: number;          // -1..1 (court Z: away/toward camera)
+  shootPressed: boolean;  // Shoot on offence, Jump/Block on defence
+  trickPressed: boolean;  // Trick on offence, Steal on defence
+  attackPressed: boolean; // the combo-chain button, always attack
+}
+// The CPU's inputs come from computeAiInput(state, slot, aiState, dt) with
+// aiState = createAiState() — profile-driven, §6.4.</code></pre>
+
+<h2>7. Controls — the gptouch standard</h2>
+<p>Every action game gets the modern mobile layout. No fixed pads, no tiny rectangles — the layout Brawl Stars / Genshin / Archero converged on:</p>
+<div class="scroll"><table>
+<tr><th>Component</th><th>Placement</th><th>Behaviour</th></tr>
+<tr><td>Virtual stick</td><td>Left 50% (<code>x &lt; innerWidth/2</code>)</td><td>Floating anchor on pointerdown, wherever the thumb lands; drag vector clamped to maxRadius (default 56 px), normalised to [−1, 1], deadzone 0.18; resets on release</td></tr>
+<tr><td>Action buttons</td><td>Bottom-right cluster</td><td>Circular, 64–84 px targets (+8 px invisible padding), scale-tween on press. Button <code>a</code> = primary (attack / shoot), <code>b</code> = secondary; a third (<code>c</code>) when the game needs it</td></tr>
+<tr><td>Events</td><td>PointerEvent API</td><td>Distinct <code>pointerId</code> per touch — stick drag and button taps never cancel each other</td></tr>
+<tr><td>Hygiene</td><td>everywhere</td><td><code>touch-action: none</code> on the overlay and as a backstop on <code>html, body</code>; no scroll, zoom, rubber-banding, or text selection</td></tr>
+<tr><td>Pinch-zoom (iOS)</td><td>overlay</td><td>iOS Safari ignores <code>touch-action</code> alone: the overlay swallows <code>touchstart</code>/<code>touchmove</code> (non-passive), blocks <code>gesturestart</code>/<code>gesturechange</code>, and preventDefaults every pointerdown — a second finger landing off-button used to zoom the page mid-game</td></tr>
+</table></div>
+<pre><code>import { TouchController, isTouchDevice } from '../_vendor/gptouch.js';
+
+// Only on real touch devices. Desktop: null, keyboard path runs untouched.
+// ?touch=0 forces it off (testing). Headless/bot runs see no touch -&gt; null.
+const TC = isTouchDevice() ? new TouchController({
+  buttons: [
+    { id: 'a', label: '⚔' },   // primary, big, bottom-most
+    { id: 'b', label: '🛡' },   // secondary
+  ],
+  maxRadius: 56,   // stick throw, px
+  deadzone: 0.18,  // stick deadzone, 0..1
+}) : null;
+
+function update(dt) {
+  const ti = TC ? TC.getInput() : null;  // call ONCE per frame — the *Pressed
+                                         // flags auto-consume on read
+  const left  = (ti &amp;&amp; ti.x &lt; -0.35) || g.keys.ArrowLeft;   // merge with keyboard via ||
+  const right = (ti &amp;&amp; ti.x &gt;  0.35) || g.keys.ArrowRight;
+  const jumpP = (ti &amp;&amp; ti.aPressed)  || g.pressed.Space;    // edge
+  const jumpH = (ti &amp;&amp; ti.a)          || g.keys.Space;      // held
+  // getInput() returns { x, y } (stick, deadzone applied; up is negative Y)
+  // plus per button { [id]: held, [id]Pressed: edge }.
+  // When ti is non-null, skip canvas-drawn buttons — the DOM overlay replaces them.
+}</code></pre>
+<ul>
+  <li><strong>z-index:</strong> the touch overlay sits at z-index 1000 and covers the whole screen on touch devices — any in-game HTML button below 1000 is unreachable on phones while working fine in desktop tests. In-game HTML UI gets <strong>z-index ≥ 1100</strong>, and button verification must run in a touch-enabled context (touch tap + <code>elementFromPoint</code> check), never mouse clicks alone.</li>
+  <li>Use the standard for: platformers, brawlers, duel/fighting, run-and-gun, kart, shmup — anything with movement + 1–3 actions. Don't for tap-anywhere or drag-only games; the overlay would swallow the taps those games need.</li>
+  <li><strong>iOS audio unlock recipe:</strong> on audio init, <code>if (navigator.audioSession) navigator.audioSession.type = 'playback'</code> (iOS 17+; without it the silent switch mutes WebAudio); play a 1-sample silent buffer inside the first user gesture; resume the context on every pointerdown/touchend and on <code>visibilitychange</code> (a suspended <em>or interrupted</em> context both need it); expose the AudioContext state in a debug handle so headless probes can prove it reads 'running'. Real-device verification is still a human gate.</li>
+</ul>
+
+<h2>8. Prove it — the verification discipline</h2>
+<p>Nothing in this brief was accepted from a builder's summary. Every claim above was verified by running the thing, most of them twice (the builder's own suite plus an independent probe). Reproduce that discipline:</p>
+<h3>8.1 The named test suites</h3>
+<p><strong>Jam Fight engine — 11 tests</strong> (all behavioural, driving the real <code>stepMatch</code>): (1) momentum builds smoothly over ~2 s and bleeds on sharp turn or stop; (2) take-back: defensive rebound requires clearing beyond the 3pt arc before a shot counts; (3) take-back clears once the player dribbles beyond the 3-point line; (4) make-it-take-it keeps possession at the top of the arc, and 3 consecutive makes triggers ON FIRE; (5) fighting: 5-step auto-combo chain, auto-guard damage cut, ball pop loose, full-KO free shot; (6) trick move has a 2 s cooldown and its dodge window causes melee hits to whiff; (7) automatic dunk selection covers layup, free-throw leap, poster dunk, and showstopper dunks; (8) shot evaluation distinguishes OPEN vs CONTESTED and the honest AI produces valid inputs; (9) Ryu signature moves: Tatsumaki trick, Shoryuken Dunk, Hadouken combo finisher knocking the ball loose; (10) Guile signature moves: Sonic Boom shoves the defender back, Flash Kick Dunk, Flash Kick high block; (11) AI has zero rubber-banding: decision cadence identical whether leading or trailing by 14.</p>
+<p><strong>Fight Engine — 7 tests</strong> (the 6 the spec named, plus one the builder added): (1) frame-exactness — a scripted jab with startup 5 connects on frame 6, never 5; (2) hitstop — measured freeze frames equal the table (6/8/11, counter +3); (3) juggle scaling — a scripted 5-hit juggle deals the exact scaled sum (100/90/80/70/60%) with the 10% floor; (4) motion input — a recorded quarter-circle stream triggers the special, the near-miss does not; (5) determinism — two runs of seed 42 + identical inputs produce identical outcome hashes; (6) throw tech — inside 7f succeeds, at 8f fails; (7) combat invariants — high/low blocking matrix, 10% special-only chip, cancel-window edges (cancel at moveFrame 9 succeeds, at 12 fails).</p>
+<h3>8.2 The methods</h3>
+<ul>
+  <li><strong>Independent probe, not the builder's tests alone:</strong> write your own driver that feeds scripted inputs through the real sim and observes events, HP, positions, and freeze frames. The audits' probes re-derived headline numbers the builder never reported (AI cadence 112 vs 112; the juggle sum; throw tech at the exact boundary).</li>
+  <li><strong>Determinism hash:</strong> scripted match, hash the full state at fixed intervals (SHA-256 every 60 frames over 600), same seed twice → identical at every checkpoint; a neighbouring seed must diverge. Jam Fight's RNG is a seeded integer hash in the match state (<code>nextRand</code>: <code>t = state.rngState += 0x6D2B79F5</code>, then imul/xorshift mixing) — replays stay deterministic because every random call, including the rim-out roll, draws from it.</li>
+  <li><strong>Probability claims get sampled, not argued:</strong> any "X% chance" mechanic is verified by driving the real resolution path hundreds of times and comparing realised vs predicted within binomial noise (the rim-out: 800 shots, 57.75% realised vs 58.61% predicted; dunks 40/40 as the untouched control).</li>
+  <li><strong>Art is accepted only as a full-size side-by-side</strong> against an independent ground truth (the original presenting the same coordinates, or real reference captures), comparing <em>presentation</em>, not just data — plus the measured checks: silhouette IoU / palette ΔE (§4), fighter height % and dead rows (§6.7), outline pixel-probes (§3.2), joint dumps over screenshots (§4). A visible anomaly is a stop-and-check, never a footnote.</li>
+  <li><strong>Phone-size play check:</strong> serve the production build at production path depth (a build that passes at the wrong depth can still 404 its assets live), play it headless at 420×860 across real sessions — title → select → match → pause — with <strong>0 page errors</strong>, in a touch-enabled context for buttons. Verify the <em>served</em> bytes after publishing, not the staged ones: read back byte size + a changed marker string after every push (a push reporting success has shipped stale bytes before), and poll the live URL until served bytes match — Pages lags minutes.</li>
+  <li><strong>Performance honesty:</strong> a headless software-GL rate (this VM renders at ~3 FPS under SwiftShader) is not a phone measurement, in either direction. Ship the FPS readout and verify on hardware.</li>
+  <li><strong>Inventory every AI-Studio export ZIP by file size before trusting it:</strong> one export arrived with six zero-byte scaffolding files (<code>package.json</code>, <code>index.html</code>, <code>src/main.tsx</code>, <code>vite.config.ts</code>, <code>tsconfig.json</code>, <code>bun.lock</code>) — sources intact, app unbuildable as delivered. A sibling export the same day was complete (37 files, zero zero-byte). It varies by run; check every time.</li>
+</ul>
+
+<h2>9. What to steal first — cold-start order</h2>
+<ol>
+  <li><strong>The kit:</strong> one parametric builder, pivot-at-top primitives, joint spheres, the PROPORTIONS table with its leg-sum invariant. Build one figure and plant its feet at y = 0 at both slider corners.</li>
+  <li><strong>One fighter row:</strong> copy §2.8's shape — body, sampled palette, hair enum, a canvas torso texture (after a quadrant test for your build's front u). Then a second row that is only different data.</li>
+  <li><strong>The damper + pose programs:</strong> <code>1 − exp(−16·dt)</code> on all 51 channels, the four idioms, base gait/dribble layers. Author idle + one strike; feel is done when the strike's fist and the engine's hit window agree.</li>
+  <li><strong>The toon pass:</strong> cel ramp, hulls displaced along the raw <code>normal</code> (pixel-probe them), shade-gated halftone. This is the look; everything else is a game wearing it.</li>
+  <li><strong>One move table:</strong> the §5 contract — 8 rows, all fields, hitstop by weight, a 6f buffer that survives hitstop, one motion input with near-miss rejection. Write the determinism hash test before you tune anything.</li>
+  <li><strong>The court and the rules:</strong> half court, WIN_SCORE 21, MATCH_SECONDS 180, make-it-take-it, take-back, momentum, ON FIRE at 3. The possession rules are the game; the fighting layer is the spice.</li>
+  <li><strong>The honest AI:</strong> profile-driven inputs, no score term anywhere, cadence measured ahead and behind. If you can't prove it's not cheating, players will assume it is.</li>
+  <li><strong>Controls last, to the standard:</strong> gptouch floating stick + round buttons, z-index ≥ 1100, iOS audio unlock — verified with touch taps, not mouse clicks.</li>
+</ol>
+<p class="note">Provenance: Jam Fight (Gemini 4 Neon, AI Studio, Nov 18–19 2026) and its round-2/round-5 audits; the gamepress rigkit + Figure Factory filings; the Fight Engine audit (13/13 spec claims verified in code and in live behaviour); the sprite-goal and toon passes on the rigkit harness. All measurements quoted are from those audits' runs.</p>
+
+</main>
+</body>
+</html>
