@@ -51,12 +51,16 @@ export class SiegeRenderer {
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
 
-    // ---- sky: apricot golden hour -> rose -> deep indigo, and the skyline
+    // ---- sky: apricot golden hour -> rose -> deep indigo, and the skyline (cached per tod bucket)
     const top = t < 0.55 ? mixc([242, 170, 112], [214, 112, 120], t / 0.55) : mixc([214, 112, 120], [22, 30, 78], (t - 0.55) / 0.45);
     const bot = t < 0.55 ? mixc([255, 214, 150], [250, 160, 120], t / 0.55) : mixc([250, 160, 120], [64, 52, 120], (t - 0.55) / 0.45);
-    const sky = g.createLinearGradient(0, 0, 0, gy);
-    sky.addColorStop(0, rgb(top)); sky.addColorStop(1, rgb(bot));
-    g.fillStyle = sky; g.fillRect(0, 0, vw, gy + 2);
+    const gk = Math.round(t * 50);
+    if (!this._sky || this._skyGy !== gy || this._skyGk !== gk) {
+      const sky = g.createLinearGradient(0, 0, 0, gy);
+      sky.addColorStop(0, rgb(top)); sky.addColorStop(1, rgb(bot));
+      this._sky = sky; this._skyGy = gy; this._skyGk = gk;
+    }
+    g.fillStyle = this._sky; g.fillRect(0, 0, vw, gy + 2);
     // the low sun (golden hour) sinking behind the skyline, then gone
     if (t < 0.6) {
       const su = t / 0.6, sx = vw * 0.22 - camX * 4, sy = gy - 300 + su * 260;
@@ -159,11 +163,14 @@ export class SiegeRenderer {
       g.lineWidth = 5; g.strokeStyle = 'rgba(30,10,30,0.5)'; g.beginPath(); g.arc(x, y, 11, 0, 7); g.stroke();
       g.strokeStyle = '#ff4a5c'; g.beginPath(); g.arc(x, y, 11, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(1, h.arrest / 1.5)); g.stroke();
     }
-    // vignette
-    const vg = g.createRadialGradient(vw / 2, vh / 2, vh * 0.32, vw / 2, vh / 2, vh * 0.72);
-    vg.addColorStop(0, `rgba(${G.vigCol[0]},${G.vigCol[1]},${G.vigCol[2]},0)`);
-    vg.addColorStop(1, `rgba(${G.vigCol[0]},${G.vigCol[1]},${G.vigCol[2]},${G.vigAlpha})`);
-    g.fillStyle = vg; g.fillRect(0, 0, vw, vh);
+    // vignette (cached per viewport/tod bucket)
+    if (!this._vig || this._vigVh !== vh || this._vigGk !== gk) {
+      const vg = g.createRadialGradient(vw / 2, vh / 2, vh * 0.32, vw / 2, vh / 2, vh * 0.72);
+      vg.addColorStop(0, `rgba(${G.vigCol[0]},${G.vigCol[1]},${G.vigCol[2]},0)`);
+      vg.addColorStop(1, `rgba(${G.vigCol[0]},${G.vigCol[1]},${G.vigCol[2]},${G.vigAlpha})`);
+      this._vig = vg; this._vigVh = vh; this._vigGk = gk;
+    }
+    g.fillStyle = this._vig; g.fillRect(0, 0, vw, vh);
     // the cut in and out
     const fade = sg.outT >= 0 ? clamp01(sg.outT / 0.5) : clamp01(1 - sg.enterT / 0.35);
     if (fade > 0) { g.fillStyle = `rgba(14,8,28,${fade})`; g.fillRect(0, 0, vw, vh); }
