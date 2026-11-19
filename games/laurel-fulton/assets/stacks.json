@@ -1,0 +1,112 @@
+{
+ "astro_billy": {
+  "cols": 8,
+  "file": "cars/stack_astro_billy.webp",
+  "heightM": 1.88,
+  "layers": 37,
+  "length": 48.2,
+  "lh": 39,
+  "lw": 96,
+  "width": 19.7
+ },
+ "astro_jimmy": {
+  "cols": 8,
+  "file": "cars/stack_astro_jimmy.webp",
+  "heightM": 1.88,
+  "layers": 37,
+  "length": 48.2,
+  "lh": 39,
+  "lw": 96,
+  "width": 19.7
+ },
+ "brougham_grant": {
+  "cols": 8,
+  "file": "cars/stack_brougham_grant.webp",
+  "heightM": 1.42,
+  "layers": 27,
+  "length": 56.2,
+  "lh": 39,
+  "lw": 112,
+  "width": 19.5
+ },
+ "camaro_brad": {
+  "cols": 8,
+  "file": "cars/stack_camaro_brad.webp",
+  "heightM": 1.26,
+  "layers": 24,
+  "length": 48.8,
+  "lh": 37,
+  "lw": 98,
+  "width": 18.3
+ },
+ "camaro_clayton": {
+  "cols": 8,
+  "file": "cars/stack_camaro_clayton.webp",
+  "heightM": 1.26,
+  "layers": 24,
+  "length": 48.8,
+  "lh": 37,
+  "lw": 98,
+  "width": 18.3
+ },
+ "camry_jason": {
+  "cols": 8,
+  "file": "cars/stack_camry_jason.webp",
+  "heightM": 1.38,
+  "layers": 27,
+  "length": 45.2,
+  "lh": 34,
+  "lw": 90,
+  "width": 16.9
+ },
+ "cavalier_black": {
+  "cols": 8,
+  "file": "cars/stack_cavalier_black.webp",
+  "heightM": 1.3,
+  "layers": 25,
+  "length": 45.0,
+  "lh": 34,
+  "lw": 90,
+  "width": 16.8
+ },
+ "cavalier_kosack": {
+  "cols": 8,
+  "file": "cars/stack_cavalier_kosack.webp",
+  "heightM": 1.37,
+  "layers": 26,
+  "length": 46.0,
+  "lh": 34,
+  "lw": 92,
+  "width": 16.9
+ },
+ "celica_rigg": {
+  "cols": 8,
+  "file": "cars/stack_celica_rigg.webp",
+  "heightM": 1.25,
+  "layers": 24,
+  "length": 43.7,
+  "lh": 34,
+  "lw": 87,
+  "width": 16.9
+ },
+ "mustang_lamar": {
+  "cols": 8,
+  "file": "cars/stack_mustang_lamar.webp",
+  "heightM": 1.29,
+  "layers": 25,
+  "length": 45.6,
+  "lh": 35,
+  "lw": 91,
+  "width": 17.6
+ },
+ "tracer_zack": {
+  "cols": 8,
+  "file": "cars/stack_tracer_zack.webp",
+  "heightM": 1.32,
+  "layers": 25,
+  "length": 41.7,
+  "lh": 33,
+  "lw": 83,
+  "width": 16.5
+ }
+}
