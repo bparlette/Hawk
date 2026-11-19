@@ -11,6 +11,7 @@ import { CHUNK } from './ground.js';
 import { mulberry32 } from './world.js';
 import { TrackLayer } from './skid.js';
 import { drawWatercraft } from './watercraft.js';
+import { drawPlaneLow, drawPlaneHigh, drawPlaneShadow } from './seaplane.js';
 import { markers } from './activities.js';
 import { CHOPPER } from './pressure.js';
 import { JOBS } from './jobs.js';
@@ -586,6 +587,7 @@ export class Renderer {
       sg.save(); sg.globalAlpha = 0.5 - a * 0.16; sg.translate(H.x + CHOPPER.ALT * 0.8 * a, H.y - CHOPPER.ALT * 0.3 * a); sg.rotate(H.h + Math.PI / 2);
       sg.drawImage(e.img, e.ox, e.oy, e.w, e.h); sg.restore();
     }
+    if (S.plane) drawPlaneShadow(sg, S.plane);         // the seaplane's altitude shadow (seaplane.js): separates and shrinks as it climbs
     sg.setTransform(1, 0, 0, 1, 0, 0);
     sg.globalCompositeOperation = 'source-in';
     sg.fillStyle = G.shadowStyle;
@@ -622,6 +624,7 @@ export class Renderer {
       g.drawImage(f.img, f.ox, f.oy, f.w, f.h); g.restore();
     }
     if (S.water) drawWatercraft(g, S, time, vx0, vy0, vx1, vy1);   // buoys, spray, the craft at the pier (rider drawn with the peds, on top)
+    drawPlaneLow(g, S, time, vx0, vy0, vx1, vy1);      // the seaplane on the water, beside the craft (seaplane.js)
     if (S.bushes) for (const B of S.bushes) if (B.stage >= 3 && B.x > vx0 - 20 && B.x < vx1 + 20 && B.y > vy0 - 20 && B.y < vy1 + 20) this.drawRootPit(g, B);
     if (S.lamps) for (const s of this.statics) {      // downed lamps too
       if (s.kind !== 'lamp' || !inView(s.bb, 60)) continue;
@@ -732,6 +735,7 @@ export class Renderer {
     this.drawActivityMarkers(g, S, time, vx0, vy0, vx1, vy1);   // painted tags over everything you can start
     if (S.chopper) this.drawChopper(g, S.chopper, t, time);    // above roofs and palms
     if (S.heli) this.drawHeli(g, S, t, time, vx0, vy0, vx1, vy1);   // the hospital helicopter, parked or flying (heli.js)
+    drawPlaneHigh(g, S, time, vx0, vy0, vx1, vy1);     // the seaplane airborne, above the roofs (seaplane.js)
     if (S.player.roof) this.drawRoofPlayer(g, S);              // the hero, up on the hospital roof
 
     P && P('sprites');

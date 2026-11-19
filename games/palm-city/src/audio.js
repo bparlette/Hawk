@@ -100,6 +100,15 @@ export class Audio {
       this.burst(70, 0.9, 0.20 * ph.rotor, 0.07); this.burst(240, 1.4, 0.05 * ph.rotor, 0.05);
       this.rotorT2 = t + 0.09;
     }
+    // the seaplane's prop (seaplane.js): a puttering buzz at distance zero while you're in it,
+    // rising in pitch and rate with the throttle — the same burst idiom as the rotors above
+    const pp = sim.plane;
+    if (pp && pp.prop > 0.2 && t >= (this.propT || 0)) {
+      const g2 = 0.085 * pp.prop;
+      this.burst(150 + (pp.throttle || 0) * 300, 1.1, g2, 0.055);
+      this.burst(820 + (pp.throttle || 0) * 500, 2.2, g2 * 0.4, 0.04, 'bandpass');
+      this.propT = t + 0.06 - (pp.throttle || 0) * 0.022;
+    }
   }
 
   env(node, a, peak, d, t0) {

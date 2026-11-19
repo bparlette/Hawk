@@ -98,7 +98,7 @@ export function helpRows(sim) { return (sim.activities || []).filter(a => a.grou
 // Events: in a car on the ring, START armed. Returns true if the jump happened.
 export function jump(sim, id) {
   const a = (sim.activities || []).find(q => q.id === id), P = sim.player, p = P.ped;
-  if (!a || a.group === 'hub' || P.mode === 'siege' || P.mode === 'air' || sim.siege || sim.busted) return false;
+  if (!a || a.group === 'hub' || P.mode === 'siege' || P.mode === 'air' || P.mode === 'flight' || sim.siege || sim.busted) return false;
   quitJob(sim); quitEvent(sim);
   if (P.mode === 'board') dismount(sim);
   const leave = () => {
