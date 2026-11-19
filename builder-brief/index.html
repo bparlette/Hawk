@@ -507,7 +507,7 @@ GRAVITY: 21.5,        BALL_RADIUS: 0.145</code></pre>
 <h3>6.7 Framing law and presentation</h3>
 <div class="law"><strong>Portrait framing is a law, not a preference.</strong> Fighters measure <strong>530–570 px tall in a 1,720 px-tall capture — 31–33% of frame height</strong>. The court/apron texture runs continuously to the bottom edge: <strong>0 dead rows</strong>; the total scene (court + players + crowd + city) fills the frame from under the HUD to 100%. The camera is a dedicated portrait branch: low (y ≈ 2.75), close (z ≈ 8.45 + spread), angled along the court, FOV 46. The failure this replaced: round 1 shipped fighters at ~16% of frame height with 22–27% of the frame as dead dark foreground — every internal check passed and the game looked empty. Measure fighter height and dead rows in your captures; do not eyeball them.</div>
 <ul>
-  <li>HUD in live play shows "TO 21" and the 3:00 clock; action-button labels swap with possession (SHOOT/TRICK ↔ JUMP/STEAL); SFX starburst callouts carry the comic words (§3.3).</li>
+  <li>HUD in live play shows "TO 21" and the 3:00 clock; action-button labels swap with possession (SHOOT/TRICK ↔ JUMP/STEAL); SFX starburst callouts carry the comic words (§3.3). Full HUD / backdrop / court-paint composition: §6.9.</li>
   <li>Performance: pixel ratio capped at <code>min(devicePixelRatio, 2)</code>, forced to 1 under software GL; the crowd is five <code>THREE.InstancedMesh</code> sets (body/head/cap/arms) plus an instanced particle pool; an FPS readout (EMA tracker) lives behind the pause menu so the claim is verifiable on hardware.</li>
 </ul>
 <h3>6.8 Engine API — wiring a match</h3>
@@ -528,6 +528,20 @@ interface PlayerInput {
 }
 // The CPU's inputs come from computeAiInput(state, slot, aiState, dt) with
 // aiState = createAiState() — profile-driven, §6.4.</code></pre>
+
+<h3>6.9 Presentation spec — HUD, backdrop, court paint</h3>
+<p class="note">Added by cold pass 2 (Nov 19). Pass 1 rebuilt the system from §§1–6.8 but produced a <em>bare court</em>: §6.7 named the HUD's contents without its composition, and the backdrop and court paint had no spec at all. Everything below is sampled from a live-build capture by the §4 method (pixel sampling, never eyeballed). A builder with only §§1–6.8 will invent all of this silently — that is exactly the failure §6.6's traps warn about, one layer up.</p>
+<p><strong>HUD (top bar, HTML, z-index ≥ 1100 per §7).</strong> Three panels on dark navy <code>#1b1a2d</code>, rounded corners, laid out left / centre / right:</p>
+<ul>
+  <li><strong>P1 panel (left):</strong> fighter name in the fighter's <code>accentHex</code> (§2 game row), bold italic; score in bold white at the panel's inner edge; a health bar under the name spanning the panel — fill <code>#fde047</code> at <code>health / maxHealth</code>, with the trailing <code>displayHealth</code> ghost behind it in a darker shade. This is the fighting layer's health (§6.2), not a stamina meter.</li>
+  <li><strong>Centre panel:</strong> filled yellow <code>#fde047</code>, black text — the clock (<code>m:ss</code>) large over a small <code>TO 21</code> beneath it.</li>
+  <li><strong>P2 panel (right):</strong> the mirror of P1 — score at the inner edge, name in P2's accent colour.</li>
+  <li><strong>Utility buttons</strong> stacked at the far top-right, also HTML at z ≥ 1100: sound toggle (yellow tile, speaker glyph) over pause (red tile, ❚❚). The pause button opens the menu that hides the FPS readout (§6.7).</li>
+</ul>
+<p><strong>Backdrop (far side, behind the court).</strong> Flat comic building facades fill the frame width from under the HUD down to the fence line — sampled facades <code>#882214</code> (red-brown) and <code>#493159</code> (purple), window grids lit <code>#f1bc32</code> / unlit dark, a green dome <code>#1d742e</code> between blocks. A chain-link fence spans the full width in front of the buildings: grey <code>#959490</code> diamond mesh, semi-transparent, on a solid base rail <code>#676a6c</code>. In the shipped framing the buildings occlude the sky almost entirely; where sky does show, §3.3's halftone-band sunset shader applies.</p>
+<p><strong>Crowd.</strong> One row of spectators along the far sideline, standing behind the fence, heads above the rail line. Construction per §6.7 (instanced body/head/cap/arms sets); the look is simple rounded figures in bright varied shirt colours — sampled set <code>#ea4278</code>, <code>#0da5a7</code>, <code>#f56910</code>, <code>#a94ec2</code>, <code>#18a864</code>, <code>#3c75c2</code> — with varied skin tones. Bounce amplitude reads the engine's <code>crowdExcitement</code>.</p>
+<p><strong>Court paint.</strong> Surface <code>#3f81b4</code> with halftone dots baked into the texture (§3.3), cel-shaded steps toward <code>#326f9e</code>. Centre circle filled <code>#ffa109</code>, radius <strong>1.8</strong> (the one court dimension §6.1's constants omit). The paint/key is filled <code>#f22821</code> inside the §6.1 paint box (<code>PAINT_MIN_X</code> → hoop, <code>±PAINT_HALF_Z</code>). Lines: 3-pt arc and centre ring <code>#ffe43f</code>, boundary lines off-white <code>#f4f2eb</code>.</p>
+<p><strong>Control overlay skin (the game's styling on §7's standard).</strong> Buttons are filled discs with a dark ink ring: SHOOT/JUMP <code>#f97316</code>, TRICK/STEAL <code>#06b6d4</code>, ATTACK <code>#ef4444</code>. Label in bold white caps, with the desktop key hint under it (<code>J</code> / <code>K</code> / <code>L</code>). The stick's rest state is a translucent olive disc <code>#686f48</code> labelled <code>MOVE</code>, anchored bottom-left; it floats to the thumb per §7. Labels swap with possession (§6.7).</p>
 
 <h2>7. Controls — the gptouch standard</h2>
 <p>Every action game gets the modern mobile layout. No fixed pads, no tiny rectangles — the layout Brawl Stars / Genshin / Archero converged on:</p>
