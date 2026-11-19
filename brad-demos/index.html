@@ -36,6 +36,13 @@
 #pickBody > #game-builder-prompt:first-child { display: none; }
 @media (max-width: 420px) { #gbpText { font-size: 12px; padding: 10px; } #game-builder-prompt { padding: 12px 10px 14px; } }
 </style>
+<style id="arc-css">
+#arcades { margin: 8px 2px 6px; }
+#arcades .cat { margin-top: 6px; }
+#arcades a.card { text-decoration: none; }
+#arcades .th { display: flex; align-items: center; justify-content: center; font: 900 46px/1 Impact, "Arial Black", system-ui, sans-serif; letter-spacing: 2px; color: #ffd23c; text-shadow: 3px 3px 0 #a3201a; }
+#arcades .nm { white-space: normal; }
+</style>
 </head>
 <body>
 <header id="top">
@@ -70,6 +77,16 @@
     <button id="pickClose" type="button" aria-label="Back to game" hidden>✕</button>
   </div>
   <div id="pickBody">
+  <section id="arcades" aria-label="Arcades">
+    <div class="cat">Arcades</div>
+    <div class="grid">
+      <a class="card" href="g/arcade/index.html"><span class="th">30</span><span class="nm">Cat Arcade V1 — 30 games, 1 level each</span></a>
+      <a class="card" href="g/_v2/index.html"><span class="th">V2</span><span class="nm">Cat Arcade V2</span></a>
+      <a class="card" href="arcade.html"><span class="th">ALL</span><span class="nm">THE ARCADE — full library</span></a>
+      <a class="card" href="https://bparlette.github.io/Hawk-Ads/brad-demos/pixel-games.html"><span class="th">24</span><span class="nm">Pixel Games — 24 playable ads</span></a>
+      <a class="card" href="demos.html"><span class="th">15</span><span class="nm">Demos — 15 games</span></a>
+    </div>
+  </section>
   <section id="game-builder-prompt" aria-labelledby="gbpH">
     <h2 id="gbpH">Build your own: Game Builder Prompt</h2>
     <p class="gbp-lead">Describe your game at the top, paste it into any AI (Gemini, ChatGPT, Claude), then send the follow-up prompts one at a time.</p>
@@ -162,6 +179,21 @@ FOLLOW-UP PROMPTS (send one at a time after it works)
       e.preventDefault(); history.replaceState(null, "", "#" + a.dataset.play); s.start(a.dataset.play);
     });
   });
+})();
+</script>
+<script id="arc-js">
+(function () {
+  // buildPicker() rebuilds #pickBody from games.json; keep the Arcades section
+  // pinned as the first content section, right under the search box.
+  var body = document.getElementById("pickBody"), sec = document.getElementById("arcades");
+  if (!body || !sec) return;
+  function keepFirst() {
+    var q = body.querySelector(".psearch");
+    if (!q || !body.querySelector(".foot") || !body.querySelector(".catbtn")) return;
+    if (q.nextElementSibling !== sec) body.insertBefore(sec, q.nextSibling);
+  }
+  new MutationObserver(keepFirst).observe(body, { childList: true });
+  keepFirst();
 })();
 </script>
 </body>
