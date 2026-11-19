@@ -27,14 +27,14 @@ export class Input {
     addEventListener('keydown', e => {
       this.first();
       if (map[e.code]) { this.keys[map[e.code]] = true; e.preventDefault(); }
-      if ((e.code === 'Space' || e.code === 'KeyE' || e.code === 'Enter') && !e.repeat) { this.actionEdge = true; e.preventDefault(); }
+      if (e.code === 'Space' || e.code === 'KeyE' || e.code === 'Enter') { this.actKey = true; if (!e.repeat) { this.actionEdge = true; e.preventDefault(); } }
       if (e.code === 'KeyM' && !e.repeat) this.mapOpen = !this.mapOpen;
       if ((e.code === 'KeyH' || e.code === 'Slash') && !e.repeat) this.helpOpen = !this.helpOpen;
       if (e.code === 'Escape') this.helpOpen = false;
       if (this.panelKey && this.panelKey(e.code)) { e.preventDefault(); return; }
       if (e.code === 'KeyF' || e.code === 'KeyX' || e.code === 'KeyJ') { if (!e.repeat) this.punchEdge = true; this.fightKey = true; e.preventDefault(); }
     });
-    addEventListener('keyup', e => { if (map[e.code]) this.keys[map[e.code]] = false; if (e.code === 'KeyF' || e.code === 'KeyX' || e.code === 'KeyJ') this.fightKey = false; });
+    addEventListener('keyup', e => { if (map[e.code]) this.keys[map[e.code]] = false; if (e.code === 'Space' || e.code === 'KeyE' || e.code === 'Enter') this.actKey = false; if (e.code === 'KeyF' || e.code === 'KeyX' || e.code === 'KeyJ') this.fightKey = false; });
   }
 
   first() { if (this.onFirst) { const f = this.onFirst; this.onFirst = null; f(); } }
@@ -99,6 +99,6 @@ export class Input {
     }
     const a = this.actionEdge, f = this.punchEdge;
     this.actionEdge = false; this.punchEdge = false;
-    return { jx, jy, jm, action: a, punch: f, turbo: this.fightDown || !!this.fightKey, keys: this.keys };   // turbo = A held
+    return { jx, jy, jm, action: a, punch: f, turbo: this.fightDown || !!this.fightKey, btn: this.btnDown || !!this.actKey, keys: this.keys };   // turbo = A held; btn = the big button held (the seaplane's throttle-down)
   }
 }

@@ -20,6 +20,11 @@ export function buttonA(sim) {
     if (!cr) return null;
     return { kind: 'turbo', label: cr.turboLock > 0 ? 'COOLING' : 'TURBO', cooling: cr.turboLock > 0, heat: (cr.turboHeat || 0) / TURBO.burn };
   }
+  if (P.mode === 'flight') {                       // in the seaplane the A button is the THROTTLE quadrant (seaplane.js): hold to spool up
+    const pl = sim.plane;
+    if (!pl || pl.state === 'wreck' || pl.state === 'gone' || pl.state === 'falling') return null;
+    return { kind: 'turbo', label: 'THROTTLE', cooling: false, heat: 1 - (pl.throttle || 0) };   // the arc fills as the throttle opens
+  }
   if (P.mode !== 'car') return null;
   const jb = jobButton(sim);
   if (jb) return { kind: 'job', label: jb.label };

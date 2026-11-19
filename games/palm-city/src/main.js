@@ -319,6 +319,10 @@ function frame(now) {
     const cr = sim.water.ride;
     if (cr) { tx += cr.vx * 0.35; ty += cr.vy * 0.35; tz = 1 - Math.min(0.12, Math.hypot(cr.vx, cr.vy) / 470 * 0.12); }
   }
+  if (sim.player.mode === 'flight') {
+    const pl = sim.plane;   // the seaplane (seaplane.js eases zoom like the heli's): velocity lead + a pull-back with altitude
+    if (pl) { tx += pl.vx * 0.4; ty += pl.vy * 0.4; tz = 1 - 0.46 * (pl.zoom || 0); }
+  }
   if (sim.player.mode === 'foot' || sim.player.mode === 'board') tz *= dyn.f;   // DYNAMIC ZOOM: the local-area factor rides on the foot/board framing only
   const hz = sim.heli ? sim.heli.zoom : 0;   // airborne: the walking camera, pulled out to ~1.7x the width (heli.js eases zoom)
   if (hz > 0.01) {

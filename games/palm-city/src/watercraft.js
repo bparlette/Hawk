@@ -35,7 +35,8 @@ function makeCraft(kind, x, y, h) {
 
 // The pier's baked sprite carries three moored boats of its own (two north, one south);
 // they are scenery, and solid. Centres/radii read off assets/pier.webp.
-const BAKED_BOATS = [{ x: 1520, y: 1005, r: 30 }, { x: 1619, y: 999, r: 40 }, { x: 1508, y: 1069, r: 45 }];
+// exported: the seaplane (seaplane.js) pushes off the same painted hulls when it taxis
+export const BAKED_BOATS = [{ x: 1520, y: 1005, r: 30 }, { x: 1619, y: 999, r: 40 }, { x: 1508, y: 1069, r: 45 }];
 
 export function initWatercraft(sim) {
   const P = sim.W.L.pier;

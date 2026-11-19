@@ -13,6 +13,7 @@ import { initActivities, jump } from './activities.js';
 import { initEvents, stepEvents, startEvent } from './events.js';
 import { initSkate, stepBoard, stepCombo, nearBoard, mount, boardSpeed } from './skate.js';
 import { initWatercraft, stepCraft, stepWaterFx, nearCraft, mountCraft } from './watercraft.js';
+import { initPlane, stepPlane, stepPlaneState, nearPlane, boardPlane } from './seaplane.js';
 import { initDestruct, stepDestruct, punchWorld, carState, carImpact, carsCollide, hitThing, palmImpact, initProps, propImpact } from './destruct.js';
 import { openRoadArmed, stepRouteCar } from './openroad.js';
 import { stepLabels } from './labels.js';
@@ -65,7 +66,8 @@ export class Sim {
     for (const p of world.L.props) this.obst.push({ x: p.x, y: p.y, r: p.type === 'fountain' ? 30 : 12, kind: p.type });
     initProps(this);                                     // benches, lamps, lifeguard towers can be broken (destruct.js)
     initPressure(this);                                  // the chopper, roadblocks, spikes (pressure.js)
-    initHeli(this);                                      // the hospital helicopter + its walkable roof (heli.js)
+    initHeli(this);
+    initPlane(this);                                      // the hospital helicopter + its walkable roof (heli.js)
     initJobs(this);                                      // job vehicles + the one job slot (jobs.js)
     initEvents(this);                                    // WRECK IT! + VALET sites and the one event slot (events.js)
     initActivities(this);                    // the registry the markers, map and HELP read
@@ -219,8 +221,10 @@ export class Sim {
     else if (P.mode === 'water') stepCraft(this, dt, input);
     else if (P.mode === 'siege') stepSiege(this, dt, input);
     else if (P.mode === 'air') stepHeli(this, dt, input);
+    else if (P.mode === 'flight') stepPlane(this, dt, input);
     else this.stepPlayerCar(dt, input);
     stepHeliState(this, dt);
+    stepPlaneState(this, dt);
     stepJobs(this, dt, input);
     stepEvents(this, dt);
     stepLabels(this, dt);                   // helper labels retire after ~3 s of continuous use (labels.js)
@@ -300,6 +304,7 @@ export class Sim {
     if (inp.action) {
       boardRack(this);   // INSTANT-START: recall a stray board to the pier rack before the mount test below
       if (nearHeli(this)) { stealOrBoard(this); return; }   // the hospital helicopter (heli.js)
+      if (nearPlane(this)) { boardPlane(this); return; }   // the seaplane at the pier end (seaplane.js)
       if (this.player.roof) return;                          // nothing else to use up on the roof
       // the board wins if it's right at your feet and nearer than any car; a moored craft at
       // the pier wins over both — you came to the dock for it
@@ -565,6 +570,8 @@ export class Sim {
       if (!W.isDrivable(px, py)) return true;
       const H = this.heli;   // a helicopter parked on the ground is a solid (heli.js)
       if (H && H.state === 'parked' && !H.onRoof && (px - H.x) ** 2 + (py - H.y) ** 2 < 27 * 27) return true;
+      const PL = this.plane;   // a seaplane wrecked on land is a solid (seaplane.js)
+      if (PL && PL.state === 'wreck' && PL.onLand && (px - PL.x) ** 2 + (py - PL.y) ** 2 < 30 * 30) return true;
       for (const o of this.obst) if ((px - o.x) ** 2 + (py - o.y) ** 2 < o.r * o.r) { this.hitObst = o; return true; }
       const tr = W.hitTrunk(px, py, 1);
       if (tr) { this.hitTree = tr; return true; }
@@ -771,7 +778,7 @@ export class Sim {
       pinned = still && (police.some(c => dist(c, p) < 46 && Math.abs(c.v) < 50) ||
                this.peds.some(o => o.mode === 'cop' && dist(o, p) < 14));
     }
-    if (this.player.mode === 'air' || this.player.roof) pinned = false;   // unreachable: airborne, or up on the hospital roof
+    if (this.player.mode === 'air' || this.player.mode === 'flight' || this.player.roof) pinned = false;   // unreachable: airborne, or up on the hospital roof
     // fill: 2.8 s standing in a cop's grip (car), 1.5 s on foot; drain at 3x the fill rate once you are moving
     this.bustT = pinned ? this.bustT + dt : Math.max(0, this.bustT - dt * 3);
     if (this.bustT > (this.player.mode === 'car' ? 2.8 : 1.5)) {
@@ -800,6 +807,10 @@ export class Sim {
       this.water.cop = null;
     }
     if (P.mode === 'air') { P.mode = 'foot'; P.ped.hidden = false; }
+    if (P.mode === 'flight') {               // busted out of the seaplane: it is lost; a fresh one docks shortly (seaplane.js)
+      P.mode = 'foot'; P.ped.hidden = false;
+      if (this.plane) { this.plane.ridden = false; this.plane.state = 'gone'; this.plane.respawnT = 20; this.plane.throttle = 0; this.plane.alt = 0; }
+    }
     const [rx, ry] = this.W.L.spawn.respawn;
     P.ped.x = rx; P.ped.y = ry; P.ped.h = -Math.PI / 2; P.ped.hidden = false;
     this.stars = 0;
