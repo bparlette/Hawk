@@ -22,7 +22,9 @@ export const DRIFT = {
 };
 
 export function initDrift(sim) {
-  sim.drift = { bank: 0, mult: 1, chainT: 0, gripT: 0, total: 0, popups: [] };   // popups: {x, y, txt, kind, t}
+  // log lives HERE, not in sim.events: that array is the physics/world event bus other systems
+  // (and specs, e.g. spec_l1's empty-events drive) read as contact-only — drift keeps its own.
+  sim.drift = { bank: 0, mult: 1, chainT: 0, gripT: 0, total: 0, popups: [], log: [] };   // popups: {x, y, txt, kind, t}
 }
 
 // Called from LFSim.driveCar for the player's car only, with the slip layMarks just measured
@@ -49,7 +51,7 @@ export function cashDrift(sim, c) {
   if (pts >= DRIFT.minCash) {
     D.total += pts;
     D.popups.push({ x: c.x, y: c.y, txt: 'DRIFT +' + pts, kind: 'cash', t: 0 });
-    sim.events.push({ t: sim.time, kind: 'drift_cash', model: c.model, pts });
+    D.log.push({ t: sim.time, kind: 'drift_cash', model: c.model, pts });
   }
 }
 
@@ -60,7 +62,7 @@ export function loseDrift(sim, c) {
   D.bank = 0; D.gripT = 0; D.chainT = 0; D.mult = 1;
   if (pts >= DRIFT.minCash) {
     D.popups.push({ x: c.x, y: c.y, txt: 'DRIFT LOST', kind: 'lost', t: 0 });
-    sim.events.push({ t: sim.time, kind: 'drift_lost', model: c.model, pts });
+    D.log.push({ t: sim.time, kind: 'drift_lost', model: c.model, pts });
   }
 }
 
