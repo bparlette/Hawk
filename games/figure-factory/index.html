@@ -25,6 +25,8 @@
   #stageHint{position:absolute; left:0; right:0; bottom:6px; text-align:center; font-size:11px;
     color:rgba(230,236,250,.55); pointer-events:none; letter-spacing:.4px;}
   .row{display:flex; gap:8px; margin-top:10px;}
+  .grid{display:flex; flex-wrap:wrap; gap:8px; margin:2px 0 8px;}
+  .grid button{flex:1 1 28%; padding:10px 4px; font-size:12.5px;}
   button{flex:1; border:1px solid var(--line); background:var(--panel2); color:var(--ink);
     border-radius:12px; padding:12px 6px; font-size:14px; font-weight:700; letter-spacing:.6px; cursor:pointer;}
   button:active{transform:translateY(1px);}
@@ -46,6 +48,16 @@
   input[type=range]::-moz-range-thumb{width:26px; height:26px; border-radius:50%; background:var(--accent); border:3px solid #0d0f16;}
   #err{display:none; margin-top:10px; background:#3a1620; border:1px solid #7a2438; color:#ffb9c6;
     border-radius:10px; padding:10px 12px; font-size:13px;}
+  .note{font-size:12px; color:var(--muted); line-height:1.45; margin:6px 0 4px;}
+  .srow{display:flex; justify-content:space-between; align-items:center; margin:8px 0;
+    font-size:13px; font-weight:700; letter-spacing:.5px;}
+  input[type=number]{width:84px; background:var(--panel2); color:var(--ink); border:1px solid var(--line);
+    border-radius:8px; padding:7px 9px; font-size:14px; font-weight:700;}
+  .mvrow{display:flex; align-items:center; gap:8px; margin-top:8px; background:var(--panel2);
+    border:1px solid var(--line); border-radius:10px; padding:7px 10px;}
+  .mvrow .mvname{flex:1; font-size:13px; font-weight:700; letter-spacing:.5px;}
+  .mvrow .mvmeta{color:var(--muted); font-size:11.5px; font-weight:600;}
+  .mvrow button{flex:0 0 auto; padding:7px 12px; font-size:12px;}
   footer{margin-top:14px; text-align:center; color:var(--muted); font-size:11.5px; line-height:1.5;}
 </style>
 </head>
@@ -72,10 +84,34 @@
     <button id="dlBtn" class="blue">SAVE PNG</button>
   </div>
 
+  <div class="panel" id="outfitPanel">
+    <h2>OUTFIT</h2>
+    <div class="grid" role="group" aria-label="Outfits">
+      <button data-outfit="street" class="on">STREET</button>
+      <button data-outfit="superhero">SUPERHERO</button>
+      <button data-outfit="knight">KNIGHT</button>
+      <button data-outfit="astronaut">ASTRONAUT</button>
+      <button data-outfit="pirate">PIRATE</button>
+      <button data-outfit="chef">CHEF</button>
+      <button data-outfit="firefighter">FIREFIGHTER</button>
+      <button data-outfit="doctor">DOCTOR</button>
+      <button data-outfit="suit">BUSINESS</button>
+    </div>
+  </div>
+
+  <div class="panel" id="bodyStylePanel">
+    <h2>BODY STYLE</h2>
+    <div class="grid" role="group" aria-label="Body styles">
+      <button data-body="default" class="on">DEFAULT</button>
+      <button data-body="chibi">CHIBI</button>
+      <button data-body="heroic">HEROIC</button>
+    </div>
+  </div>
+
   <div class="panel" id="bodyPanel">
     <h2>BODY &mdash; SLIDE TO RESHAPE</h2>
     <div class="ctl"><label>HEIGHT <output id="o_height">1.00&times;</output></label>
-      <input type="range" id="s_height" min="0.82" max="1.25" step="0.01" value="1"></div>
+      <input type="range" id="s_height" min="0.62" max="1.25" step="0.01" value="1"></div>
     <div class="ctl"><label>WEIGHT <output id="o_weight">1.00&times;</output></label>
       <input type="range" id="s_weight" min="0.68" max="1.50" step="0.01" value="1"></div>
     <div class="ctl"><label>HEAD SIZE <output id="o_head">1.30&times;</output></label>
@@ -98,6 +134,26 @@
       <input type="range" id="s_fx" min="-60" max="60" step="1" value="0"></div>
     <div class="ctl"><label>FACE &varr; <output id="o_fy">0%</output></label>
       <input type="range" id="s_fy" min="-60" max="60" step="1" value="0"></div>
+  </div>
+
+  <div class="panel" id="spritePanel">
+    <h2>SPRITE SHEET &mdash; BRING YOUR OWN CHARACTER</h2>
+    <p class="note">Upload one sprite sheet, or several separate move images. Each row of a
+    sheet is one move; the frames in a row loop as that move's animation, performed live on
+    the little stage beside your figure. Your images never leave this device &mdash; slicing
+    and playback happen right here. This mode plays your sprite frames exactly as they are;
+    it does not convert them into the 3D figure.</p>
+    <button id="sheetBtn" class="primary" style="width:100%; padding:13px 6px;">UPLOAD SPRITE SHEET</button>
+    <button id="movesBtn" style="width:100%; margin-top:8px;">OR UPLOAD MOVE IMAGES</button>
+    <input type="file" id="sheetFile" accept="image/*" hidden>
+    <input type="file" id="movesFile" accept="image/*" multiple hidden>
+    <div id="sliceCtl" style="display:none">
+      <div class="srow"><span>ROWS</span><input type="number" id="n_srows" min="1" max="24" step="1" value="1"></div>
+      <div class="srow"><span>COLUMNS</span><input type="number" id="n_scols" min="1" max="32" step="1" value="1"></div>
+      <p class="note" id="sliceInfo"></p>
+      <button id="resliceBtn" style="width:100%;">RE-SLICE ON THIS GRID</button>
+    </div>
+    <div id="moveList"></div>
   </div>
 
   <div id="err"></div>
@@ -222,20 +278,330 @@ function drawDefaultFace(){
 }
 drawDefaultFace();
 
+/* ============================================================
+   OUTFITS — enum-gated data on the same figure (gamepress
+   docs/FIGURE-FACTORY.md §3): a canvas texture painter for the
+   torso, a material palette for sleeves/forearms/legs/pants/
+   shoes, a head rule ('hair' keeps the hair shell; 'covered'
+   drops it because a hat/helmet prop replaces it), and a props
+   builder that parents small meshes to the existing pivots.
+   STREET (the default) is the original sampled-colour look.
+   Texture space: 512x512 wraps the torso lathe; the FRONT is
+   centred at x=128 (u=0.25), the BACK at x=384; canvas top is
+   the neck, canvas bottom is the waist.
+   ============================================================ */
+let OUTFIT = 'street';
+
+function shadeSides(g){
+  g.fillStyle = 'rgba(0,0,0,0.22)';
+  g.fillRect(0,0,26,512); g.fillRect(256,0,26,512); g.fillRect(486,0,26,512);
+}
+function starPath(g, cx, cy, r){
+  g.beginPath();
+  for (let i = 0; i < 10; i++){
+    const a = -Math.PI/2 + i * Math.PI/5, rr = i % 2 ? r * 0.45 : r;
+    if (i) g.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr);
+    else g.moveTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr);
+  }
+  g.closePath();
+}
+
+function paintStreet(g){
+  const base = '#' + PAL.shirt.getHexString();
+  g.fillStyle = base; g.fillRect(0,0,512,512);
+  g.fillStyle = 'rgba(0,0,0,0.20)'; g.fillRect(0,428,512,84);            // hem shade
+  g.fillStyle = 'rgba(255,255,255,0.85)'; g.fillRect(0,150,512,20);      // chest stripe
+  g.fillStyle = 'rgba(0,0,0,0.16)'; g.fillRect(0,182,512,10);
+  shadeSides(g);
+  g.fillStyle = 'rgba(255,255,255,0.10)';
+  for(let y=16;y<512;y+=14) for(let x=8;x<512;x+=14){ g.fillRect(x,y,2,2); }  // perforation dots
+}
+function paintSuperhero(g){
+  g.fillStyle = '#2456c8'; g.fillRect(0,0,512,512);                       // hero blue suit
+  g.fillStyle = 'rgba(255,255,255,0.10)'; g.fillRect(0,60,512,26);
+  g.fillStyle = '#d9a441'; g.fillRect(0,424,512,26);                      // gold belt
+  g.fillStyle = '#c22f2f'; g.fillRect(0,450,512,62);                      // red briefs zone
+  g.fillStyle = '#f5c518'; g.beginPath(); g.arc(128,192,52,0,Math.PI*2); g.fill();  // emblem disc
+  g.fillStyle = '#c22f2f'; g.beginPath(); g.arc(128,192,44,0,Math.PI*2); g.fill();
+  g.fillStyle = '#ffffff'; starPath(g, 128, 192, 36); g.fill();           // the star
+  shadeSides(g);
+}
+function paintKnight(g){
+  g.fillStyle = '#59616d'; g.fillRect(0,0,512,512);                       // mail under tabard
+  g.fillStyle = 'rgba(255,255,255,0.07)';
+  for(let y=10;y<512;y+=12) for(let x=6;x<512;x+=12){ g.fillRect(x,y,3,3); }        // mail rings hint
+  g.fillStyle = '#e9e2d0';                                                // tabard panel (front)
+  g.beginPath(); g.moveTo(74,36); g.lineTo(182,36); g.lineTo(182,430);
+  g.lineTo(128,502); g.lineTo(74,430); g.closePath(); g.fill();
+  g.fillStyle = '#b3312c';                                                // the cross
+  g.fillRect(116,120,24,190); g.fillRect(84,178,88,24);
+  g.fillStyle = 'rgba(0,0,0,0.18)'; g.fillRect(74,36,5,430); g.fillRect(177,36,5,430);
+  shadeSides(g);
+}
+function paintAstronaut(g){
+  g.fillStyle = '#e8e9ea'; g.fillRect(0,0,512,512);                       // white suit
+  g.fillStyle = 'rgba(0,0,0,0.10)';
+  g.fillRect(0,300,512,6); g.fillRect(0,96,512,5);
+  g.fillStyle = '#9aa0a6'; g.fillRect(0,428,512,40);                      // waist band
+  g.fillStyle = '#39424e'; g.fillRect(152,148,74,92);                     // chest control panel
+  g.fillStyle = '#7fd4ff'; g.fillRect(160,156,58,30);                     // its little screen
+  const dots = ['#ff5a4e','#ffd23e','#58e08a'];
+  dots.forEach((c,i)=>{ g.fillStyle = c; g.beginPath(); g.arc(166 + i*22, 214, 7, 0, Math.PI*2); g.fill(); });
+  g.fillStyle = '#c8372d'; g.fillRect(84,148,34,52);                      // mission patch
+  g.fillStyle = '#ffffff'; starPath(g, 101, 174, 12); g.fill();
+  shadeSides(g);
+}
+function paintPirate(g){
+  g.fillStyle = '#7a2430'; g.fillRect(0,0,512,512);                       // deep red coat
+  g.save();                                                               // sash, diagonal, wraps the chest
+  g.translate(256,256); g.rotate(-0.46); g.fillStyle = '#c22f45'; g.fillRect(-360,52,720,58); g.restore();
+  g.fillStyle = '#e8e0cc';                                                // shirt wedge at the opening
+  g.beginPath(); g.moveTo(104,54); g.lineTo(152,54); g.lineTo(128,216); g.closePath(); g.fill();
+  g.strokeStyle = '#d9a441'; g.lineWidth = 7;                             // gold coat trim
+  g.beginPath(); g.moveTo(100,54); g.lineTo(100,512); g.stroke();
+  g.beginPath(); g.moveTo(156,54); g.lineTo(156,512); g.stroke();
+  g.fillStyle = '#d9a441';                                                // buttons
+  for(let y=250;y<500;y+=52){ g.beginPath(); g.arc(88,y,6,0,Math.PI*2); g.fill();
+    g.beginPath(); g.arc(168,y,6,0,Math.PI*2); g.fill(); }
+  g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(0,470,512,42);
+  shadeSides(g);
+}
+function paintChef(g){
+  g.fillStyle = '#f4f4f2'; g.fillRect(0,0,512,512);                       // whites
+  g.fillStyle = '#c22f2f';                                                // neckerchief
+  g.beginPath(); g.moveTo(86,16); g.lineTo(170,16); g.lineTo(128,112); g.closePath(); g.fill();
+  g.fillStyle = '#3a3f47';                                                // double-breast buttons
+  for(let y=160;y<=330;y+=42){ g.beginPath(); g.arc(106,y,6,0,Math.PI*2); g.fill();
+    g.beginPath(); g.arc(150,y,6,0,Math.PI*2); g.fill(); }
+  g.fillStyle = '#e7e7e3'; g.fillRect(64,318,128,194);                    // apron panel (front)
+  g.fillStyle = 'rgba(0,0,0,0.28)'; g.fillRect(64,318,128,8);             // apron waist strap
+  g.fillStyle = 'rgba(0,0,0,0.10)'; g.fillRect(64,318,5,194); g.fillRect(187,318,5,194);
+  shadeSides(g);
+}
+function paintFirefighter(g){
+  g.fillStyle = '#23242c'; g.fillRect(0,0,512,512);                       // turnout coat
+  const band = y => {                                                     // yellow-silver-yellow trim
+    g.fillStyle = '#e8d23a'; g.fillRect(0,y,512,36);
+    g.fillStyle = '#cfd2d6'; g.fillRect(0,y+11,512,14);
+  };
+  band(206); band(398);
+  g.fillStyle = 'rgba(0,0,0,0.45)'; g.fillRect(124,0,8,512);             // front closure
+  g.fillStyle = 'rgba(255,255,255,0.06)'; g.fillRect(0,60,512,20);
+  shadeSides(g);
+}
+function paintDoctor(g){
+  g.fillStyle = '#f2f2f0'; g.fillRect(0,0,512,512);                       // white coat
+  g.fillStyle = '#' + PAL.shirt.getHexString();                           // shirt V underneath
+  g.beginPath(); g.moveTo(96,26); g.lineTo(160,26); g.lineTo(128,196); g.closePath(); g.fill();
+  g.strokeStyle = 'rgba(0,0,0,0.30)'; g.lineWidth = 5;                    // lapels
+  g.beginPath(); g.moveTo(96,26); g.lineTo(128,196); g.lineTo(104,240); g.stroke();
+  g.beginPath(); g.moveTo(160,26); g.lineTo(128,196); g.lineTo(152,240); g.stroke();
+  g.fillStyle = '#8a8f96';                                                // coat buttons below the V
+  for(let y=262;y<=402;y+=46){ g.beginPath(); g.arc(140,y,5,0,Math.PI*2); g.fill(); }
+  g.strokeStyle = 'rgba(0,0,0,0.25)'; g.lineWidth = 4;                    // breast pocket
+  g.strokeRect(176,206,36,30);
+  shadeSides(g);
+}
+function paintSuit(g){
+  g.fillStyle = '#363b45'; g.fillRect(0,0,512,512);                       // charcoal jacket
+  g.fillStyle = '#eceff2';                                                // shirt
+  g.beginPath(); g.moveTo(92,22); g.lineTo(164,22); g.lineTo(128,208); g.closePath(); g.fill();
+  g.fillStyle = '#8c2233';                                                // tie
+  g.beginPath(); g.moveTo(116,26); g.lineTo(140,26); g.lineTo(135,132);
+  g.lineTo(128,168); g.lineTo(121,132); g.closePath(); g.fill();
+  g.fillStyle = 'rgba(0,0,0,0.30)';                                       // lapels
+  g.beginPath(); g.moveTo(92,22); g.lineTo(128,208); g.lineTo(98,244); g.lineTo(80,120); g.closePath(); g.fill();
+  g.beginPath(); g.moveTo(164,22); g.lineTo(128,208); g.lineTo(158,244); g.lineTo(176,120); g.closePath(); g.fill();
+  g.fillStyle = '#ffffff'; g.fillRect(78,182,28,14);                      // pocket square
+  g.fillStyle = '#6a7280';
+  g.beginPath(); g.arc(146,300,6,0,Math.PI*2); g.fill();
+  g.beginPath(); g.arc(146,358,6,0,Math.PI*2); g.fill();
+  shadeSides(g);
+}
+
+/* ---- props: small meshes on the existing pivots ---- */
+function propsSuperhero(c){
+  const red = c.mat(0xb3272d, { rough: 0.85 });
+  const pivot = new THREE.Group();
+  pivot.position.set(0, 0.60, -0.155); pivot.rotation.x = 0.10;
+  const capeGeo = new THREE.PlaneGeometry(0.48 * c.wS, 0.95, 6, 8);
+  capeGeo.translate(0, -0.475, 0);
+  const cape = new THREE.Mesh(capeGeo, new THREE.MeshStandardMaterial({
+    color: 0xb3272d, roughness: 0.85, side: THREE.DoubleSide }));
+  c.regMat(cape.material); cape.castShadow = true;
+  pivot.add(cape); c.torso.add(pivot); c.capePivot = pivot;
+  const clasp = ball3(0.035, c.mat(0xd9a441, { rough: 0.35, metal: 0.6 }));
+  clasp.position.set(0, 0.615, 0.175); c.torso.add(clasp);
+  for (const shin of [c.shinL, c.shinR]){                                 // boot cuffs
+    const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.086 * c.wS, 0.074 * c.wS, 0.20, 12), red);
+    cuff.position.y = -c.calf + 0.13; cuff.castShadow = true; shin.add(cuff);
+  }
+}
+function propsKnight(c){
+  const steel = c.mat(0xb9c0c9, { rough: 0.34, metal: 0.85 });
+  const dark = c.mat(0x14161a, { rough: 0.6 });
+  const gauntlet = c.mat(0x9aa2ad, { rough: 0.4, metal: 0.8 });           // steel gauntlets
+  for (const h of [c.handL, c.handR])
+    h.traverse(o => { if (o.isMesh && o.material === c.skin) o.material = gauntlet; });
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(c.headR * 1.15, 24, 12, 0, Math.PI * 2, 0, 0.66), steel);
+  dome.castShadow = true; c.skull.add(dome);
+  const back = new THREE.Mesh(new THREE.SphereGeometry(c.headR * 1.15, 24, 16,
+    Math.PI / 2 + 1.04, Math.PI * 2 - 2.08, 0.58, 1.82), steel);
+  back.castShadow = true; c.skull.add(back);
+  const brow = new THREE.Mesh(new THREE.SphereGeometry(c.headR * 1.16, 20, 6,
+    Math.PI / 2 - 1.0, 2.0, 0.60, 0.30), steel);
+  brow.castShadow = true; c.skull.add(brow);
+  const plume = box(0.035, 0.11, 0.34, c.mat(0xb3312c, { rough: 0.8 }));   // crest
+  plume.position.set(0, c.headR * 1.12, -0.02); plume.rotation.x = 0.15; c.skull.add(plume);
+  /* shield on the left forearm */
+  const shield = new THREE.Group();
+  shield.position.set(-0.105, -c.foLen * 0.52, 0.01); shield.rotation.z = 0.06;
+  const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.175, 0.165, 0.028, 24), steel);
+  disc.rotation.z = Math.PI / 2; disc.castShadow = true; shield.add(disc);
+  const faceDisc = new THREE.Mesh(new THREE.CylinderGeometry(0.148, 0.148, 0.030, 24),
+    c.mat(0xb3312c, { rough: 0.55 }));
+  faceDisc.rotation.z = Math.PI / 2; faceDisc.position.x = -0.002; shield.add(faceDisc);
+  const boss = ball3(0.048, steel); boss.position.x = -0.026; shield.add(boss);
+  const crossV = box(0.010, 0.20, 0.055, c.mat(0xe9e2d0, { rough: 0.5 }));
+  crossV.position.x = -0.020; shield.add(crossV);
+  const crossH = box(0.010, 0.055, 0.20, crossV.material);
+  crossH.position.x = -0.020; shield.add(crossH);
+  c.foreL.add(shield);
+  /* sword in the right hand */
+  const sword = new THREE.Group(); sword.position.set(0, -0.03, 0.025);
+  const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.017, 0.017, 0.10, 8), dark);
+  grip.position.y = -0.05; sword.add(grip);
+  const guard = box(0.135, 0.026, 0.045, c.mat(0xd9a441, { rough: 0.35, metal: 0.7 }));
+  guard.position.y = -0.115; sword.add(guard);
+  const blade = box(0.056, 0.40, 0.013, c.mat(0xd7dde6, { rough: 0.22, metal: 0.9 }));
+  blade.position.y = -0.335; sword.add(blade);
+  const pommel = ball3(0.026, guard.material); pommel.position.y = 0.012; sword.add(pommel);
+  c.handR.add(sword);
+}
+function propsAstronaut(c){
+  const white = c.mat(0xdfe1e3, { rough: 0.5 });
+  const gray = c.mat(0x8b9096, { rough: 0.45, metal: 0.4 });
+  const glove = c.mat(0xe8e9ea, { rough: 0.6 });                            // suit gloves
+  for (const h of [c.handL, c.handR])
+    h.traverse(o => { if (o.isMesh && o.material === c.skin) o.material = glove; });
+  const bubble = new THREE.Mesh(new THREE.SphereGeometry(c.headR * 1.42, 28, 20),
+    new THREE.MeshPhysicalMaterial({ color: 0xdfeaf2, transparent: true, opacity: 0.16,
+      roughness: 0.06, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.08, depthWrite: false }));
+  c.regMat(bubble.material); bubble.renderOrder = 10; c.skull.add(bubble);
+  const collar = new THREE.Mesh(new THREE.TorusGeometry(c.headR * 1.02, 0.030, 10, 26), gray);
+  collar.rotation.x = Math.PI / 2; collar.position.y = -c.headR * 0.74; collar.castShadow = true;
+  c.skull.add(collar);
+  const pack = box(0.37 * c.wS, 0.47, 0.15, white);                        // life-support backpack
+  pack.position.set(0, 0.35, -0.265); c.torso.add(pack);
+  for (const s of [-1, 1]){
+    const tank = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.052, 0.36, 12), gray);
+    tank.position.set(s * 0.095, 0.37, -0.36); tank.castShadow = true; c.torso.add(tank);
+  }
+  const lampR = box(0.05, 0.03, 0.02, c.mat(0xff5a4e, { rough: 0.4 }));
+  lampR.position.set(-0.10, 0.615, -0.30); c.torso.add(lampR);
+  const lampB = box(0.05, 0.03, 0.02, c.mat(0x4e8aff, { rough: 0.4 }));
+  lampB.position.set(0.10, 0.615, -0.30); c.torso.add(lampB);
+}
+function propsPirate(c){
+  const darkWood = c.mat(0x2a1c12, { rough: 0.8 });
+  const hat = new THREE.Group(); hat.position.y = c.headR * 0.60; hat.rotation.x = -0.05;
+  const brim = new THREE.Mesh(new THREE.CylinderGeometry(c.headR * 1.20, c.headR * 1.24, 0.026, 24), darkWood);
+  brim.castShadow = true; hat.add(brim);
+  const crown = new THREE.Mesh(new THREE.CylinderGeometry(c.headR * 0.60, c.headR * 0.80, c.headR * 0.58, 20), darkWood);
+  crown.position.y = c.headR * 0.30; crown.castShadow = true; hat.add(crown);
+  const band = new THREE.Mesh(new THREE.TorusGeometry(c.headR * 0.81, 0.017, 8, 22),
+    c.mat(0xd9a441, { rough: 0.4, metal: 0.5 }));
+  band.rotation.x = Math.PI / 2; band.position.y = c.headR * 0.07; hat.add(band);
+  c.skull.add(hat);
+  const sash = new THREE.Mesh(new THREE.CylinderGeometry(0.228 * c.wS, 0.238 * c.wS, 0.11, 18),
+    c.mat(0xc22f45, { rough: 0.8 }));
+  sash.scale.z = 0.82; sash.rotation.z = 0.42; sash.position.y = 0.03; sash.castShadow = true;
+  c.hips.add(sash);
+}
+function propsChef(c){
+  const white = c.mat(0xf6f6f4, { rough: 0.9 });
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(c.headR * 0.80, c.headR * 0.84, c.headR * 0.36, 20), white);
+  band.position.y = c.headR * 0.72; band.castShadow = true; c.skull.add(band);
+  const puff = ball3(c.headR * 0.98, white, 20, 14);
+  puff.scale.set(1, 0.62, 1); puff.position.y = c.headR * 1.02; c.skull.add(puff);
+  const knot = ball3(0.040, c.mat(0xc22f2f, { rough: 0.8 }));
+  knot.position.set(0, 0.615, 0.155); c.torso.add(knot);
+}
+function propsFirefighter(c){
+  const yellow = c.mat(0xe8b62a, { rough: 0.42 });
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(c.headR * 1.14, 24, 14, 0, Math.PI * 2, 0, 1.12), yellow);
+  dome.castShadow = true; c.skull.add(dome);
+  const brim = new THREE.Mesh(new THREE.CylinderGeometry(c.headR * 1.44, c.headR * 1.50, 0.024, 26), yellow);
+  brim.position.y = c.headR * 0.30; brim.castShadow = true; c.skull.add(brim);
+  const shieldF = box(0.088, 0.118, 0.020, c.mat(0xb3312c, { rough: 0.5 }));
+  shieldF.position.set(0, c.headR * 0.22, c.headR * 1.13); shieldF.rotation.x = -0.10; c.skull.add(shieldF);
+  const shieldIn = box(0.042, 0.056, 0.022, c.mat(0xf2ead8, { rough: 0.5 }));
+  shieldIn.position.copy(shieldF.position); shieldIn.position.z += 0.002;
+  shieldIn.rotation.x = -0.10; c.skull.add(shieldIn);
+}
+function propsDoctor(c){
+  const tube = c.mat(0x2c2f36, { rough: 0.5 });
+  const scope = new THREE.Group();
+  const arc = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.014, 8, 26, Math.PI * 1.15), tube);
+  arc.rotation.z = 2.90; scope.add(arc);
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.010, 0.010, 0.14, 8), tube);
+  stem.position.set(0.082, -0.165, 0.004); stem.rotation.z = 0.25; scope.add(stem);
+  const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.036, 0.016, 16),
+    c.mat(0xb9c0c9, { rough: 0.3, metal: 0.8 }));
+  disc.rotation.x = Math.PI / 2; disc.position.set(0.099, -0.24, 0.006); scope.add(disc);
+  scope.position.set(0, 0.46, 0.238); c.torso.add(scope);
+  const band = new THREE.Mesh(new THREE.TorusGeometry(c.headR * 1.03, 0.015, 8, 22),
+    c.mat(0x3a3f47, { rough: 0.6 }));
+  band.rotation.x = Math.PI / 2 - 0.18; band.position.y = c.headR * 0.34; c.skull.add(band);
+  const mirror = new THREE.Mesh(new THREE.CylinderGeometry(0.040, 0.040, 0.010, 18),
+    c.mat(0xd7dde6, { rough: 0.15, metal: 0.9 }));
+  mirror.rotation.x = Math.PI / 2 - 0.18;
+  mirror.position.set(0, c.headR * 0.46, c.headR * 1.07); c.skull.add(mirror);
+}
+const OUTFITS = {
+  street:     { paint: paintStreet,     sleeve: 'shirt',  fore: 'skin',  legs: 'skin',
+                pants: null,     shoe: null,     shoeA: null,     belt: null,     head: 'hair',    props: null },
+  superhero:  { paint: paintSuperhero,  sleeve: 0x2456c8, fore: 0x2456c8, legs: 0x2456c8,
+                pants: 0xc22f2f, shoe: 0xc22f2f, shoeA: 0x8f1f1f, belt: 0xd9a441, head: 'hair',    props: propsSuperhero },
+  knight:     { paint: paintKnight,     sleeve: 0x767e8a, fore: 0x767e8a, legs: 0x5a5148,
+                pants: 0x59616d, shoe: 0x3c3f45, shoeA: 0x2c2e33, belt: 0x8a6f3c, head: 'covered', props: propsKnight },
+  astronaut:  { paint: paintAstronaut,  sleeve: 0xe8e9ea, fore: 0xe8e9ea, legs: 0xdfe1e3,
+                pants: 0xe8e9ea, shoe: 0x8b9096, shoeA: 0x6e7278, belt: 0x9aa0a6, head: 'hair',    props: propsAstronaut },
+  pirate:     { paint: paintPirate,     sleeve: 0x7a2430, fore: 'skin',  legs: 0x2e2a33,
+                pants: 0x2e2a33, shoe: 0x241a12, shoeA: 0x17100b, belt: 0xd9a441, head: 'covered', props: propsPirate },
+  chef:       { paint: paintChef,       sleeve: 0xf4f4f2, fore: 'skin',  legs: 0x5a6472,
+                pants: 0x5a6472, shoe: 0x1c1c1e, shoeA: 0x101012, belt: 0xd8d8d4, head: 'covered', props: propsChef },
+  firefighter:{ paint: paintFirefighter, sleeve: 0x23242c, fore: 0x23242c, legs: 0x23242c,
+                pants: 0x1d1e24, shoe: 0x141416, shoeA: 0x0e0e10, belt: 0xe8d23a, head: 'covered', props: propsFirefighter },
+  doctor:     { paint: paintDoctor,     sleeve: 0xf2f2f0, fore: 'skin',  legs: 0x6a6f76,
+                pants: 0x6a6f76, shoe: 0x2a2320, shoeA: 0x1c1713, belt: 0xd8d8d4, head: 'hair',    props: propsDoctor },
+  suit:       { paint: paintSuit,       sleeve: 0x363b45, fore: 0x363b45, legs: 0x363b45,
+                pants: 0x2f333c, shoe: 0x17181c, shoeA: 0x0e0e10, belt: 0x17181c, head: 'hair',    props: null },
+};
+const BODY_PRESETS = {
+  default: { height: 1,    weight: 1,    head: 1.30, hands: 1.30, arms: 1,    legs: 1,    shoulders: 1 },
+  chibi:   { height: 0.68, weight: 1.05, head: 1.55, hands: 1.45, arms: 0.85, legs: 0.72, shoulders: 0.85 },
+  heroic:  { height: 1.12, weight: 1.18, head: 0.92, hands: 1.30, arms: 1.10, legs: 1.05, shoulders: 1.35 },
+};
+
 /* ---------- shirt texture (lathe wrap: front design at u=0.25) ---------- */
 const shirtC = document.createElement('canvas'); shirtC.width = shirtC.height = 512;
 const shirtTex = new THREE.CanvasTexture(shirtC);
 shirtTex.colorSpace = THREE.SRGBColorSpace;
 function drawShirt(){
   const g = shirtC.getContext('2d');
-  const base = '#' + PAL.shirt.getHexString();
-  g.fillStyle = base; g.fillRect(0,0,512,512);
-  g.fillStyle = 'rgba(0,0,0,0.20)'; g.fillRect(0,428,512,84);            // hem shade
-  g.fillStyle = 'rgba(255,255,255,0.85)'; g.fillRect(0,150,512,20);      // chest stripe
-  g.fillStyle = 'rgba(0,0,0,0.16)'; g.fillRect(0,182,512,10);
-  g.fillStyle = 'rgba(0,0,0,0.22)'; g.fillRect(0,0,26,512); g.fillRect(256,0,26,512); g.fillRect(486,0,26,512); // side panels at wrap points
-  g.fillStyle = 'rgba(255,255,255,0.10)';
-  for(let y=16;y<512;y+=14) for(let x=8;x<512;x+=14){ g.fillRect(x,y,2,2); }  // perforation dots
+  OUTFITS[OUTFIT].paint(g);
+  if (OUTFIT !== 'street'){
+    /* Measured on this page's lathe (rotY = PI/2): the texture's front
+       lands at u = 0.75, not the u = 0.25 the painters draw for — the
+       v1/v2 street art is wrap-symmetric so nobody could see it until
+       the outfit packs painted one-sided designs (emblem, tabard, tie).
+       Roll the wrap half a turn so the painted front faces the camera.
+       Street is exempt: its art was authored against the real mapping. */
+    const tmp = document.createElement('canvas'); tmp.width = tmp.height = 512;
+    tmp.getContext('2d').drawImage(shirtC, 0, 0);
+    g.drawImage(tmp, -256, 0); g.drawImage(tmp, 256, 0);
+  }
   shirtTex.needsUpdate = true;
 }
 drawShirt();
@@ -275,16 +641,33 @@ function buildFigure(){
   const headR = 0.185 * P.head;
   const shoulderX = 0.30 * P.shoulders * (0.72 + 0.28 * wS);
 
+  const OD = OUTFITS[OUTFIT];
+  const std = (c, rough = 0.75) => new THREE.MeshStandardMaterial({ color: c, roughness: rough });
   MATS = {
     skin:  new THREE.MeshPhysicalMaterial({ color: PAL.skin, roughness: 0.5, clearcoat: 0.42, clearcoatRoughness: 0.25 }),
     hair:  new THREE.MeshStandardMaterial({ color: PAL.hair, roughness: 0.85 }),
     shirt: new THREE.MeshStandardMaterial({ map: shirtTex, roughness: 0.7 }),
     shorts:new THREE.MeshStandardMaterial({ color: PAL.shorts, roughness: 0.8 }),
-    shoe:  new THREE.MeshStandardMaterial({ color: PAL.shoe, roughness: 0.45 }),
-    shoeA: new THREE.MeshStandardMaterial({ color: PAL.shoeAccent, roughness: 0.5 }),
+    shoe:  std(OD.shoe ?? PAL.shoe, 0.45),
+    shoeA: std(OD.shoeA ?? PAL.shoeAccent, 0.5),
+    belt:  std(OD.belt ?? PAL.shoeAccent, 0.5),
+    sleeve: OD.sleeve === 'shirt' ? null : std(OD.sleeve),
+    fore:   OD.fore === 'skin' ? null : std(OD.fore),
+    legm:   OD.legs === 'skin' ? null : std(OD.legs),
+    pants:  OD.pants == null ? null : std(OD.pants, 0.8),
     face:  new THREE.MeshStandardMaterial({ map: faceTex, transparent: true, roughness: 0.55,
              polygonOffset: true, polygonOffsetFactor: -2 }),
     ball:  new THREE.MeshStandardMaterial({ color: 0xe8722a, roughness: 0.6 }),
+  };
+  MATS.sleeve = MATS.sleeve || MATS.shirt;
+  MATS.fore = MATS.fore || MATS.skin;
+  MATS.legm = MATS.legm || MATS.skin;
+  MATS.pants = MATS.pants || MATS.shorts;
+  /* prop materials register into MATS so the rebuild disposal loop frees them */
+  let pcount = 0;
+  const pmat = (color, opts = {}) => {
+    const m = new THREE.MeshStandardMaterial({ color, roughness: opts.rough ?? 0.6, metalness: opts.metal ?? 0 });
+    MATS['prop' + (pcount++)] = m; return m;
   };
 
   const root = new THREE.Group();
@@ -292,9 +675,9 @@ function buildFigure(){
   const hips = new THREE.Group(); hips.position.y = hipY; bodyPivot.add(hips);
 
   /* pelvis */
-  const pelvis = new THREE.Mesh(new THREE.CylinderGeometry(0.20*wS, 0.185*wS, 0.17, 18), MATS.shorts);
+  const pelvis = new THREE.Mesh(new THREE.CylinderGeometry(0.20*wS, 0.185*wS, 0.17, 18), MATS.pants);
   pelvis.castShadow = true; pelvis.scale.z = 0.8; hips.add(pelvis);
-  const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.205*wS, 0.205*wS, 0.05, 18), MATS.shoeA);
+  const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.205*wS, 0.205*wS, 0.05, 18), MATS.belt);
   belt.position.y = 0.07; belt.scale.z = 0.8; hips.add(belt);
 
   /* torso — a lathe, squashed front-to-back, texture front at u=0.25 */
@@ -322,7 +705,8 @@ function buildFigure(){
   skull.add(patch);
   /* hair: a tilted cap shell */
   const hair = new THREE.Mesh(new THREE.SphereGeometry(headR*1.07, 28, 18, 0, Math.PI*2, 0, 1.30), MATS.hair);
-  hair.rotation.x = -0.38; hair.castShadow = true; skull.add(hair);
+  hair.rotation.x = -0.38; hair.castShadow = true;
+  if (OD.head === 'hair') skull.add(hair);   // hats/helmets replace the hair shell
   for (const s of [-1, 1]){
     const ear = ball3(headR*0.26, MATS.skin, 12, 10);
     ear.scale.set(0.45, 1, 0.8); ear.position.set(s*headR*0.97, -0.01, 0); headGroup.add(ear);
@@ -333,11 +717,11 @@ function buildFigure(){
   function buildArm(side){ // side: -1 left, +1 right
     const arm = new THREE.Group();
     arm.position.set(side * shoulderX, 0.54, 0); torso.add(arm);
-    const delt = ball3(0.095*wS, MATS.shirt); arm.add(delt);
-    arm.add(tapered(0.080*wS, 0.066*wS, upLen, MATS.shirt));
+    const delt = ball3(0.095*wS, MATS.sleeve); arm.add(delt);
+    arm.add(tapered(0.080*wS, 0.066*wS, upLen, MATS.sleeve));
     const fore = new THREE.Group(); fore.position.y = -upLen; arm.add(fore);
-    const elb = ball3(0.065*wS, MATS.skin); fore.add(elb);
-    fore.add(tapered(0.066*wS, 0.052*wS, foLen, MATS.skin));
+    const elb = ball3(0.065*wS, MATS.fore); fore.add(elb);
+    fore.add(tapered(0.066*wS, 0.052*wS, foLen, MATS.fore));
     const hand = new THREE.Group(); hand.position.y = -foLen; hand.scale.setScalar(P.hands); fore.add(hand);
     const palm = box(0.088, 0.105, 0.046, MATS.skin); palm.position.y = -0.055; hand.add(palm);
     const fing = box(0.084, 0.07, 0.042, MATS.skin); fing.position.set(0, -0.125, 0.008);
@@ -356,12 +740,12 @@ function buildFigure(){
   function buildLeg(side){
     const leg = new THREE.Group();
     leg.position.set(side * 0.135 * wS, -legDrop, 0); hips.add(leg);
-    const shortLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.115*wS, 0.135*wS, 0.20, 14), MATS.shorts);
+    const shortLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.115*wS, 0.135*wS, 0.20, 14), MATS.pants);
     shortLeg.geometry.translate(0, -0.10, 0); shortLeg.castShadow = true; leg.add(shortLeg);
-    leg.add(tapered(0.092*wS, 0.074*wS, thigh, MATS.skin));
+    leg.add(tapered(0.092*wS, 0.074*wS, thigh, MATS.legm));
     const shin = new THREE.Group(); shin.position.y = -thigh; leg.add(shin);
-    const knee = ball3(0.074*wS, MATS.skin); shin.add(knee);
-    shin.add(tapered(0.075*wS, 0.056*wS, calf, MATS.skin));
+    const knee = ball3(0.074*wS, MATS.legm); shin.add(knee);
+    shin.add(tapered(0.075*wS, 0.056*wS, calf, MATS.legm));
     const sock = new THREE.Mesh(new THREE.CylinderGeometry(0.058*wS, 0.055*wS, 0.09, 12), MATS.shoe);
     sock.position.y = -calf + 0.045; shin.add(sock);
     const foot = new THREE.Group(); foot.position.y = -calf; shin.add(foot); // ankle joint; sole bottom is `ankle` below it
@@ -374,12 +758,23 @@ function buildFigure(){
   }
   const lL = buildLeg(-1), lR = buildLeg(1);
 
+  /* outfit props — small meshes on the pivots built above */
+  const pctx = { torso, skull, headGroup, hips,
+    foreL: aL.fore, foreR: aR.fore, handL: aL.hand, handR: aR.hand,
+    shinL: lL.shin, shinR: lR.shin, skin: MATS.skin,
+    headR, wS, foLen, calf, mat: pmat,
+    regMat(m){ MATS['prop' + (pcount++)] = m; },
+    capePivot: null };
+  if (OD.props) OD.props(pctx);
+
   root.scale.setScalar(P.height);
   scene.add(root);
   fig = { root, bodyPivot, hips, torso, headGroup,
           armL: aL.arm, foreL: aL.fore, armR: aR.arm, foreR: aR.fore,
+          handL: aL.hand, handR: aR.hand,
           legL: lL.leg, shinL: lL.shin, legR: lR.leg, shinR: lR.shin,
           footL: lL.foot, footR: lR.foot, ball,
+          capePivot: pctx.capePivot,
           totalH: (hipY + 0.10 + 0.74 + 0.15 + headR * 1.06) * P.height };
   return fig;
 }
@@ -451,6 +846,15 @@ function applyPose(dt, t){
   f.legR.rotation.x = cur.legRX; f.shinR.rotation.x = cur.shinRX;
   f.bodyPivot.position.y = cur.bodyY;
   f.bodyPivot.scale.set(1 + (1 - cur.bodySY) * 0.55, cur.bodySY, 1 + (1 - cur.bodySY) * 0.55);
+  if (f.capePivot){
+    /* the cape streams as the figure leaves the floor, with a fast
+       flutter while the dunk is airborne; a slow sway otherwise */
+    const liftC = Math.max(0, cur.bodyY);
+    const flut = (pose === 'dunk' && dunkT >= 0)
+      ? Math.sin(t * 24) * 0.10 * Math.min(1, liftC + 0.3)
+      : Math.sin(t * 2.2) * 0.02;
+    f.capePivot.rotation.x = 0.10 + liftC * 1.15 + flut;
+  }
   const lift = Math.max(0, cur.bodyY);
   blob.scale.setScalar(Math.max(0.45, 1 - lift * 0.38));
   blob.material.opacity = Math.max(0.35, 1 - lift * 0.5);
@@ -458,19 +862,20 @@ function applyPose(dt, t){
 
 /* ---------- camera orbit (drag / wheel / pinch) ---------- */
 let yaw = 0.38, pitch = 0.14, dist = 4.4;
+let camTX = 0, stageMode = false;   // sprite stage: camera eases sideways + back to frame both
 function placeCamera(){
   /* during a dunk the camera eases back and rises with the figure,
      so the whole jump stays in frame */
   const lift = (pose === 'dunk') ? Math.max(0, cur.bodyY) : 0;
   const fit = fig ? THREE.MathUtils.clamp(fig.totalH / 2.19, 0.8, 1.5) : 1;  // auto-frame giant/tiny builds
-  const d = dist * fit * (1 + lift * 0.38);
+  const d = dist * fit * (1 + lift * 0.38) * (1 + camTX * 0.9);
   const targetY = 1.04 * P.height + lift * 0.48;
   const cp = Math.cos(pitch), sp = Math.sin(pitch);
   camera.position.set(
-    Math.sin(yaw) * cp * d,
+    camTX + Math.sin(yaw) * cp * d,
     targetY + sp * d,
     Math.cos(yaw) * cp * d);
-  camera.lookAt(0, targetY, 0);
+  camera.lookAt(camTX, targetY, 0);
 }
 {
   const ptrs = new Map(); let lastPinch = 0;
@@ -662,6 +1067,34 @@ poseIdle.addEventListener('click', () => setPose('idle'));
 poseGuard.addEventListener('click', () => setPose('guard'));
 poseDunk.addEventListener('click', () => setPose('dunk'));
 
+/* ---------- outfit + body-style pickers ---------- */
+function applyOutfit(name){
+  if (!OUTFITS[name]) return;
+  OUTFIT = name;
+  document.querySelectorAll('[data-outfit]').forEach(b =>
+    b.classList.toggle('on', b.dataset.outfit === name));
+  drawShirt();                       // repaint the torso for the new outfit
+  buildFigure();
+  if (pose === 'dunk' && fig) fig.ball.visible = true;
+}
+function applyBody(name){
+  const pr = BODY_PRESETS[name]; if (!pr) return;
+  for (const k in pr){
+    P[k] = pr[k];
+    const el = document.getElementById('s_' + k), out = document.getElementById('o_' + k);
+    if (el) el.value = pr[k];
+    if (out) out.textContent = pr[k].toFixed(2) + '×';
+  }
+  document.querySelectorAll('[data-body]').forEach(b =>
+    b.classList.toggle('on', b.dataset.body === name));
+  buildFigure();
+  if (pose === 'dunk' && fig) fig.ball.visible = true;
+}
+document.querySelectorAll('[data-outfit]').forEach(b =>
+  b.addEventListener('click', () => applyOutfit(b.dataset.outfit)));
+document.querySelectorAll('[data-body]').forEach(b =>
+  b.addEventListener('click', () => applyBody(b.dataset.body)));
+
 const fileInput = document.getElementById('file');
 document.getElementById('uploadBtn').addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', () => {
@@ -686,6 +1119,215 @@ document.getElementById('dlBtn').addEventListener('click', () => {
   }, 'image/png');
 });
 
+/* ============================================================
+   SPRITE SHEET MODE — the user's own sprite character, sliced
+   and played as-is on a billboard stage beside the figure.
+   A sheet's ROWS are moves; frames in a row loop. Separate move
+   images are one move each (a horizontal strip slices into
+   frames). Playback only — no conversion to the 3D rig.
+   ============================================================ */
+let sheetImg = null;
+let spriteMoves = [];        // [{ name, frames: [{img, sx, sy, sw, sh}] }]
+let spriteCur = 0, spriteFrame = 0, spritePlaying = true, spriteAll = false;
+let spriteTimer = 0, moveTimer = 0;
+let spriteTex = null, spritePlane = null, spriteStage = null;
+const sprC = document.createElement('canvas'); sprC.width = sprC.height = 256;
+
+/* find content runs along each axis: transparent gaps if the sheet has
+   alpha, otherwise distance from the corner (background) colour */
+function analyzeGaps(img){
+  const MAXD = 1600;
+  const s = Math.min(1, MAXD / Math.max(img.naturalWidth, img.naturalHeight));
+  const w = Math.max(1, Math.round(img.naturalWidth * s)), h = Math.max(1, Math.round(img.naturalHeight * s));
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  const g = cv.getContext('2d'); g.drawImage(img, 0, 0, w, h);
+  let data;
+  try { data = g.getImageData(0, 0, w, h).data; } catch (e) { return null; }
+  let hasAlpha = false;
+  for (let i = 3; i < data.length; i += 4) if (data[i] < 250) { hasAlpha = true; break; }
+  const bg = [data[0], data[1], data[2]];
+  const colHas = new Array(w).fill(false), rowHas = new Array(h).fill(false);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){
+    const i = (y * w + x) * 4;
+    const on = hasAlpha ? data[i + 3] > 24
+      : ((data[i] - bg[0]) ** 2 + (data[i + 1] - bg[1]) ** 2 + (data[i + 2] - bg[2]) ** 2) > 900;
+    if (on) { colHas[x] = true; rowHas[y] = true; }
+  }
+  const runs = arr => { const out = []; let st = -1;
+    for (let i = 0; i <= arr.length; i++){
+      const on = i < arr.length && arr[i];
+      if (on && st < 0) st = i;
+      if (!on && st >= 0) { if (i - st >= 3) out.push([st, i - 1]); st = -1; }
+    } return out; };
+  const inv = 1 / s;
+  return { cols: runs(colHas).map(([a, b]) => [a * inv, (b + 1) * inv]),
+           rows: runs(rowHas).map(([a, b]) => [a * inv, (b + 1) * inv]) };
+}
+
+function sliceSheet(img, det){
+  if (det && det.rows.length > 0 && det.cols.length > 0){
+    const moves = det.rows.map((ry, ri) => ({
+      name: 'Row ' + (ri + 1),
+      frames: det.cols.map(cx => ({ img, sx: cx[0], sy: ry[0], sw: cx[1] - cx[0], sh: ry[1] - ry[0] })),
+    }));
+    return { moves, note: `Detected ${det.rows.length} rows × ${det.cols.length} columns from the gaps between frames. Wrong? Set the grid and RE-SLICE.` };
+  }
+  const R = Math.max(1, Math.min(24, parseInt(document.getElementById('n_srows').value) || 1));
+  const C = Math.max(1, Math.min(32, parseInt(document.getElementById('n_scols').value) || 1));
+  const W = img.naturalWidth, H = img.naturalHeight, moves = [];
+  for (let r = 0; r < R; r++){
+    const frames = [];
+    for (let c = 0; c < C; c++)
+      frames.push({ img, sx: c * W / C, sy: r * H / R, sw: W / C, sh: H / R });
+    moves.push({ name: 'Row ' + (r + 1), frames });
+  }
+  return { moves, note: `Sliced on the ${R} × ${C} grid (no usable gaps found, or a manual grid). Adjust ROWS / COLUMNS and RE-SLICE if that's wrong.` };
+}
+
+function ensureSpriteStage(){
+  if (spritePlane) return;
+  spriteStage = new THREE.Group();
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(0.66, 36),
+    new THREE.MeshStandardMaterial({ color: 0x141a29, roughness: 0.9 }));
+  disc.rotation.x = -Math.PI / 2; disc.position.y = 0.002; disc.receiveShadow = true;
+  spriteStage.add(disc);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.575, 0.66, 36),
+    new THREE.MeshBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.55, side: THREE.DoubleSide }));
+  ring.rotation.x = -Math.PI / 2; ring.position.y = 0.004; spriteStage.add(ring);
+  const sblob = new THREE.Mesh(new THREE.CircleGeometry(0.42, 30),
+    new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, opacity: 0.5, depthWrite: false }));
+  sblob.rotation.x = -Math.PI / 2; sblob.position.y = 0.006; spriteStage.add(sblob);
+  spriteTex = new THREE.CanvasTexture(sprC);
+  spriteTex.colorSpace = THREE.SRGBColorSpace;
+  spritePlane = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.5),
+    new THREE.MeshBasicMaterial({ map: spriteTex, transparent: true, side: THREE.DoubleSide, depthWrite: false }));
+  spritePlane.position.y = 0.75;
+  spriteStage.add(spritePlane);
+  spriteStage.position.set(1.35, 0, -0.35);
+  scene.add(spriteStage);
+}
+
+function drawSpriteFrame(){
+  const mv = spriteMoves[spriteCur]; if (!mv || !mv.frames.length) return;
+  const fr = mv.frames[spriteFrame % mv.frames.length];
+  const g = sprC.getContext('2d');
+  g.clearRect(0, 0, 256, 256);
+  const sc = Math.min(250 / fr.sw, 250 / fr.sh);
+  const w = fr.sw * sc, h = fr.sh * sc;
+  g.imageSmoothingEnabled = false;
+  g.drawImage(fr.img, fr.sx, fr.sy, fr.sw, fr.sh, (256 - w) / 2, 253 - h, w, h);
+  if (spriteTex) spriteTex.needsUpdate = true;
+}
+
+function setSpriteMoves(moves){
+  spriteMoves = moves; spriteCur = 0; spriteFrame = 0;
+  spritePlaying = true; spriteAll = false; spriteTimer = 0; moveTimer = 0;
+  ensureSpriteStage();
+  stageMode = spriteMoves.length > 0;
+  drawSpriteFrame();
+  renderMoveList();
+}
+
+function stepSprite(dt){
+  if (!spriteMoves.length) return;
+  if (spritePlane) spritePlane.rotation.y = yaw;      // billboard: always face the camera
+  if (!spritePlaying) return;
+  spriteTimer += dt;
+  if (spriteTimer >= 0.1){
+    spriteTimer = 0;
+    const mv = spriteMoves[spriteCur];
+    spriteFrame = (spriteFrame + 1) % mv.frames.length;
+    drawSpriteFrame();
+  }
+  if (spriteAll){
+    moveTimer += dt;
+    if (moveTimer >= 2.6){
+      moveTimer = 0;
+      spriteCur = (spriteCur + 1) % spriteMoves.length;
+      spriteFrame = 0; drawSpriteFrame(); renderMoveList();
+    }
+  }
+}
+
+function renderMoveList(){
+  const el = document.getElementById('moveList');
+  if (!spriteMoves.length) { el.innerHTML = ''; return; }
+  let html = `<div class="mvrow"><span class="mvname">ALL MOVES LOOP</span>` +
+    `<button data-all="1" class="${spriteAll ? 'on' : ''}">${spriteAll ? 'ON' : 'OFF'}</button></div>`;
+  spriteMoves.forEach((mv, i) => {
+    const active = i === spriteCur && spritePlaying;
+    html += `<div class="mvrow"><span class="mvname">${mv.name}</span>` +
+      `<span class="mvmeta">${mv.frames.length} frame${mv.frames.length > 1 ? 's' : ''}</span>` +
+      `<button data-mv="${i}" class="${active ? 'on' : ''}">${active ? 'PAUSE' : 'PLAY'}</button></div>`;
+  });
+  el.innerHTML = html;
+  el.querySelectorAll('[data-mv]').forEach(b => b.addEventListener('click', () => {
+    const i = +b.dataset.mv;
+    if (i === spriteCur && spritePlaying) spritePlaying = false;
+    else { spriteCur = i; spritePlaying = true; spriteAll = false; spriteFrame = 0; moveTimer = 0; drawSpriteFrame(); }
+    renderMoveList();
+  }));
+  const all = el.querySelector('[data-all]');
+  if (all) all.addEventListener('click', () => {
+    spriteAll = !spriteAll; if (spriteAll) spritePlaying = true; moveTimer = 0; renderMoveList();
+  });
+}
+
+function loadImageFile(file){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { res(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('unreadable image')); };
+    img.src = url;
+  });
+}
+
+const sheetInput = document.getElementById('sheetFile');
+document.getElementById('sheetBtn').addEventListener('click', () => sheetInput.click());
+sheetInput.addEventListener('change', async () => {
+  const f = sheetInput.files && sheetInput.files[0]; if (!f) return;
+  try {
+    sheetImg = await loadImageFile(f);
+    const det = analyzeGaps(sheetImg);
+    if (det && det.rows.length && det.cols.length){
+      document.getElementById('n_srows').value = det.rows.length;
+      document.getElementById('n_scols').value = det.cols.length;
+    }
+    const { moves, note } = sliceSheet(sheetImg, det);
+    document.getElementById('sliceInfo').textContent = note;
+    document.getElementById('sliceCtl').style.display = 'block';
+    setSpriteMoves(moves);
+  } catch (e) { showErr('That sprite sheet could not be read as an image — try a PNG or JPG.'); }
+});
+document.getElementById('resliceBtn').addEventListener('click', () => {
+  if (!sheetImg) return;
+  const { moves, note } = sliceSheet(sheetImg, null);
+  document.getElementById('sliceInfo').textContent = note;
+  setSpriteMoves(moves);
+});
+
+const movesInput = document.getElementById('movesFile');
+document.getElementById('movesBtn').addEventListener('click', () => movesInput.click());
+movesInput.addEventListener('change', async () => {
+  const files = [...(movesInput.files || [])]; if (!files.length) return;
+  try {
+    const moves = [];
+    for (const f of files){
+      const img = await loadImageFile(f);
+      const det = analyzeGaps(img);
+      let frames;
+      if (det && det.rows.length === 1 && det.cols.length > 1)
+        frames = det.cols.map(cx => ({ img, sx: cx[0], sy: det.rows[0][0], sw: cx[1] - cx[0], sh: det.rows[0][1] - det.rows[0][0] }));
+      else frames = [{ img, sx: 0, sy: 0, sw: img.naturalWidth, sh: img.naturalHeight }];
+      moves.push({ name: 'Move ' + (moves.length + 1), frames });
+    }
+    sheetImg = null;
+    document.getElementById('sliceCtl').style.display = 'none';
+    setSpriteMoves(moves);
+  } catch (e) { showErr('One of those move images could not be read — try PNG or JPG files.'); }
+});
+
 /* ---------- main loop ---------- */
 let booted = false;
 function loop(){
@@ -694,6 +1336,8 @@ function loop(){
   const t = clock.elapsedTime;
   if (needsRebuild){ needsRebuild = false; buildFigure(); if (pose === 'dunk') fig.ball.visible = true; }
   applyPose(dt, t);
+  camTX += ((stageMode ? 0.55 : 0) - camTX) * Math.min(1, dt * 4);
+  stepSprite(dt);
   placeCamera();
   renderer.render(scene, camera);
   if (!booted){ booted = true; window.__ffReady = true; }
@@ -705,6 +1349,15 @@ loop();
 window.__ff = {
   P, FIT, setPose,
   setParam(k, v){ P[k] = v; buildFigure(); },
+  setOutfit(name){ applyOutfit(name); },
+  outfit(){ return OUTFIT; },
+  setBody(name){ applyBody(name); },
+  spriteInfo(){ return { moves: spriteMoves.length,
+    frames: spriteMoves.map(m => m.frames.length), names: spriteMoves.map(m => m.name),
+    cur: spriteCur, frame: spriteFrame, playing: spritePlaying, all: spriteAll, stageMode }; },
+  setSpriteMove(i){ if (spriteMoves[i]) { spriteCur = i; spriteFrame = 0; spritePlaying = true;
+    spriteAll = false; drawSpriteFrame(); renderMoveList(); } },
+  sceneMinY(){ return +new THREE.Box3().setFromObject(fig.root).min.y.toFixed(4); },
   setFit(k, v){ FIT[k] = v; if (photoImg) processPhoto(); },
   hasPhoto(){ return !!photoImg; },
   faceStatus(){ return faceStatus; },
