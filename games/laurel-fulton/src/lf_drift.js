@@ -29,11 +29,13 @@ export function initDrift(sim) {
 
 // Called from LFSim.driveCar for the player's car only, with the slip layMarks just measured
 // (the same step's number — no second detector), the steer/grip driveCar used, and dt.
-export function stepDrift(sim, c, slip, steer, grip, dt) {
+// gm is the car's per-model grip multiplier (lf_handling) when it has one: the lateral minimum
+// scales with it exactly as slipOf's own threshold does, so the detectors never disagree.
+export function stepDrift(sim, c, slip, steer, grip, dt, gm) {
   const D = sim.drift; if (!D) return;
   const v = Math.abs(c.v), lat = v * Math.abs(steer) * 2.7 * grip;
   const drifting = slip >= DRIFT.slipMin && v >= DRIFT.speedMin && !(c.z > 0) &&
-    (lat > DRIFT.latMin * (sim.gripMul || 1) || (c.spinT || 0) > 0);
+    (lat > DRIFT.latMin * (gm !== undefined ? gm : (sim.gripMul || 1)) || (c.spinT || 0) > 0);
   if (drifting) {
     D.gripT = 0; D.chainT += dt;
     D.mult = Math.min(DRIFT.multCap, 1 + D.chainT * DRIFT.multRate);

@@ -52,10 +52,10 @@ function put(sim, x0, y0, x1, y1, width, alpha, soft) {
 // segment joins the last: the marks follow the car's real path.
 // Returns the step's slip magnitude (0..1) — lf_drift.js banks the player's drifts off this
 // exact number, so there is only ever one slip detector.
-export function layMarks(sim, c, throttle, steer, grip, dt) {
+export function layMarks(sim, c, throttle, steer, grip, dt, gm) {
   if (c.spinT > 0) c.spinT -= dt;
   const W = sim.W, surf = W.surfaceAt(c.x, c.y, c.layer), soft = surf === 'ground';
-  let s = slipOf(c, throttle, steer, grip, soft, sim.gripMul || 1);
+  let s = slipOf(c, throttle, steer, grip, soft, gm !== undefined ? gm : (sim.gripMul || 1));
   const front = s < 0; s = Math.abs(s);
   const wp = c.wheels || (c.wheels = new Float32Array(8));
   const ca = Math.cos(c.h), sa = Math.sin(c.h), ax = c.len * 0.3, ay = c.wid * 0.36, tw = Math.max(2.2, c.wid * 0.15);

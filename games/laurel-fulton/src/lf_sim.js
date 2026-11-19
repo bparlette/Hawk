@@ -9,6 +9,7 @@
 
 import { initSkid, layMarks } from './lf_skid.js';   // Palm City's skid module, stolen (owner, Nov 17)
 import { initDrift, stepDrift, loseDrift, ageDrift, DRIFT } from './lf_drift.js';   // drift banking off the skid slip (owner, Nov 18)
+import { handlingOf } from './lf_handling.js';   // per-car handling for the player + convoy (owner, Nov 18)
 import { buildRails, railsNear, bushesNear } from './lf_veg.js';   // crashable guardrails + bushes (owner, Nov 18)
 
 const TAU = Math.PI * 2;
@@ -308,7 +309,9 @@ export class LFSim {
   // Palm City driveCar, verbatim numbers — plus the L3 airborne state (z, vz)
   driveCar(c, throttle, steer, dt, vmax) {
     if (c.wreck) { throttle = 0; steer = 0; }             // a wreck goes nowhere (Palm City) — until Laurel's 10 s self-heal revives it
+    const H = handlingOf(c, this);                        // per-car handling: player + convoy followers only (lf_handling.js); everyone else stock
     vmax *= 1 - 0.4 * (c.dmg || 0);                       // a battered car is slower (Palm City: vmax x (1 - 0.4 dmg))
+    if (H) vmax *= H.top;
     if (c.z > 0) {                                        // airborne: no grip, no throttle — you keep the line you left on
       c.z += c.vz * dt; c.vz -= BUMP.g * dt; c.airSteer += Math.abs(steer) * dt;
       c.x += c.dirx * c.v * dt; c.y += c.diry * c.v * dt;
@@ -319,7 +322,7 @@ export class LFSim {
       }
       c.surface = this.W.surfaceAt(c.x, c.y, c.layer); return;
     }
-    const accel = throttle > 0 ? (c.v < 0 ? 520 : 240) : throttle < 0 ? (c.v > 0 ? 520 : 200) : 0;
+    const accel = (throttle > 0 ? (c.v < 0 ? 520 : 240) : throttle < 0 ? (c.v > 0 ? 520 : 200) : 0) * (H ? H.accel : 1);
     c.v += throttle * accel * dt;
     if (throttle === 0) c.v *= Math.pow(0.35, dt);
     const surf = this.W.surfaceAt(c.x, c.y, c.layer);
@@ -327,9 +330,9 @@ export class LFSim {
     c.v = clamp(c.v, -100, vmax);
     c.v *= Math.pow(0.9, dt);
     const grip = Math.min(1, Math.abs(c.v) / 70);
-    c.h = wrap(c.h + steer * 2.7 * grip * Math.sign(c.v) * dt);
+    c.h = wrap(c.h + steer * 2.7 * (H ? H.turn : 1) * grip * Math.sign(c.v) * dt);
     c.dirx = Math.cos(c.h); c.diry = Math.sin(c.h);
-    if (c === this.player || c.driveFn) { const sl = layMarks(this, c, throttle, steer, grip, dt); if (c === this.player) stepDrift(this, c, sl, steer, grip, dt); }   // slipping tyres leave marks (Palm City); the player's slip also feeds drift banking (lf_drift.js)
+    if (c === this.player || c.driveFn) { const sl = layMarks(this, c, throttle, steer, grip, dt, H ? H.grip : undefined); if (c === this.player) stepDrift(this, c, sl, steer, grip, dt, H ? H.grip : undefined); }   // slipping tyres leave marks (Palm City); the player's slip also feeds drift banking (lf_drift.js)
     const nx = c.x + c.dirx * c.v * dt, ny = c.y + c.diry * c.v * dt;
     const bump = this.bumps.length && c.layer === 0 ? this.bumpCrossed(c, nx, ny) : null;
     if (bump) {
