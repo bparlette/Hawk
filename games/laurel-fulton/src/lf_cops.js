@@ -41,7 +41,7 @@ export const PATROL_JOIN = 900;                       // a patrol cruiser this c
 export const PATROL_GAP = [40, 80];                   // s between patrol spawns (one cruiser at a time)
 export const PATROL_MAX = 1;
 export const COOL_NEAR = 450, COOL_SIGHT = 900;       // a chaser inside COOL_NEAR, or in sight inside COOL_SIGHT, keeps the heat on
-export const COOL_TIME = 11;                          // s unseen and away: the level drops by one
+export const COOL_TIME = 20;                          // s unseen and away: the level drops by one (owner, Nov 18: Gridline's 20 s star decay — and now the clock is VISIBLE, see the gauges in drawHud)
 export const BUST_SPEED = 45, BUST_R = 105, BUST_TIME = 2.5;   // pinned = slower than this with a chaser inside BUST_R; fills BUST_TIME, drains 3x
 export const BUST_HOLD = 2.6;                         // s of the BUSTED beat (your input is held), then control comes back
 export const STUCK_UNSTICK = 3.5;                     // s a chaser sits still before sim.unstick lifts it back onto the road
@@ -219,6 +219,10 @@ export class Cops {
     if (this.lostT > COOL_TIME) { this.lostT = 0; this.level--; this.lastOffense = this.S.time; this.say(this.level ? 'LEVEL DOWN' : 'LOST THEM', 2.4); if (this.level === 0) for (const c of this.chasers.slice()) this.standDown(c); }
   }
 
+  // ---- the gauges (owner, Nov 18): the two timers above, exposed — the HUD draws them, tests assert them ----
+  escapeFrac() { return this.level > 0 ? Math.min(1, this.lostT / COOL_TIME) : 0; }   // fills while unseen AND away; a star drops when it reaches 1
+  bustFrac() { return Math.min(1, this.bustT / BUST_TIME); }                          // fills while pinned; BUSTED when it reaches 1
+
   // busted: only while PINNED — slow, a chaser right on you — for BUST_TIME; drains 3x while you move (Palm City's 7C rule)
   bust(dt, P) {
     if (this.level === 0 || P.z > 0) { this.bustT = 0; return; }
@@ -246,6 +250,21 @@ export class Cops {
       const flash = this.chasers.length && Math.floor(t * 3) % 2 === 0;
       g.save(); g.fillStyle = 'rgba(27,20,48,0.55)'; g.beginPath(); g.roundRect(b.x, b.y, b.w, b.h, 11); g.fill();
       for (let i = 0; i < MAX_STARS; i++) star(g, b.x + STAR_GAP / 2 + i * STAR_GAP, b.y + b.h / 2, (i < this.level && flash) ? STAR_R + 1.5 : STAR_R, i < this.level);
+      // WANTED GAUGES (owner, Nov 18): the decay ring + the two progress bars, all driven by the
+      // timers themselves (lostT / bustT) — nothing new is simulated, the invisible is just shown.
+      if (this.level > 0 && this.lostT > 0) {           // the decay ring: round the star that drops next, shrinking as the 20 s runs out
+        const sx = b.x + STAR_GAP / 2 + (this.level - 1) * STAR_GAP, sy = b.y + b.h / 2;
+        g.beginPath(); g.arc(sx, sy, STAR_R + 5.5, -Math.PI / 2, -Math.PI / 2 + (1 - this.escapeFrac()) * TAU);
+        g.lineWidth = 2.6; g.strokeStyle = '#ffd45c'; g.stroke();
+      }
+      const bf = this.bustFrac(), ef = bf > 0 ? 0 : this.escapeFrac();
+      if (bf > 0 || ef > 0) {                          // under the stars: BUSTED filling while pinned, ESCAPING while the heat is off
+        const gy = b.y + b.h + 5;
+        g.fillStyle = 'rgba(27,20,48,0.55)'; g.beginPath(); g.roundRect(b.x, gy, b.w, 13, 6); g.fill();
+        g.fillStyle = bf > 0 ? '#ff4a5c' : '#ffd45c'; g.beginPath(); g.roundRect(b.x, gy, Math.max(13, b.w * (bf || ef)), 13, 6); g.fill();
+        g.font = '800 8.5px system-ui'; g.textAlign = 'center'; g.lineWidth = 2.5; g.strokeStyle = 'rgba(27,20,48,0.85)';
+        const label = bf > 0 ? 'BUSTED' : 'ESCAPING'; g.strokeText(label, b.x + b.w / 2, gy + 10); g.fillStyle = '#fff3d0'; g.fillText(label, b.x + b.w / 2, gy + 10);
+      }
       g.restore();
     }
     if (this.msg) {                                        // Palm City hud.js: big red BUSTED, otherwise the quiet message pill
