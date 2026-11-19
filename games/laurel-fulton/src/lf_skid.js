@@ -50,6 +50,8 @@ function put(sim, x0, y0, x1, y1, width, alpha, soft) {
 
 // Called once per step for a car that may mark. Wheel positions are remembered on the car so each
 // segment joins the last: the marks follow the car's real path.
+// Returns the step's slip magnitude (0..1) — lf_drift.js banks the player's drifts off this
+// exact number, so there is only ever one slip detector.
 export function layMarks(sim, c, throttle, steer, grip, dt) {
   if (c.spinT > 0) c.spinT -= dt;
   const W = sim.W, surf = W.surfaceAt(c.x, c.y, c.layer), soft = surf === 'ground';
@@ -68,6 +70,7 @@ export function layMarks(sim, c, throttle, steer, grip, dt) {
     wp[k * 2] = x; wp[k * 2 + 1] = y;
     c.skidOn = on ? (c.skidOn | bit) : (c.skidOn & ~bit);
   }
+  return s;
 }
 
 // ------------------------------------------------------------------------------- render side

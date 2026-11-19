@@ -332,8 +332,11 @@ function drawMissionHud() {
   if (!M) return;
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   const n = M.convoy.length, total = M.convoy.length + M.stops.filter(s => !s.done).reduce((a, s) => a + s.people.length, 0);
-  ctx.textAlign = 'left'; ctx.font = '900 13px system-ui'; ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(12, 74, 150, 26, 12); ctx.fill();
-  ctx.fillStyle = '#ffd25c'; ctx.fillText(M.complete ? 'CREW ASSEMBLED' : `CREW ${n + 1}/${total + 1}`, 24, 92);
+  // DRIFT BANKING (Nov 18): the game has no cash/score of its own, so cashed drift points bank
+  // into the rally pill itself — the session total rides next to CREW once it exists.
+  const crewTxt = (M.complete ? 'CREW ASSEMBLED' : `CREW ${n + 1}/${total + 1}`) + (sim.drift && sim.drift.total > 0 ? ` · DRIFT ${sim.drift.total}` : '');
+  ctx.textAlign = 'left'; ctx.font = '900 13px system-ui'; ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(12, 74, Math.max(150, ctx.measureText(crewTxt).width + 48), 26, 12); ctx.fill();
+  ctx.fillStyle = '#ffd25c'; ctx.fillText(crewTxt, 24, 92);
   if (M.msgT > 0) { ctx.textAlign = 'center'; ctx.font = '900 22px system-ui'; ctx.fillStyle = 'rgba(27,20,48,0.7)'; const w = ctx.measureText(M.msg).width + 30; ctx.beginPath(); ctx.roundRect(VIEW_W / 2 - w / 2, view.h * 0.22 - 24, w, 38, 14); ctx.fill(); ctx.fillStyle = '#ffe4b0'; ctx.fillText(M.msg, VIEW_W / 2, view.h * 0.22 + 2); }
   // the edge arrow: nearest pickup, then the school
   if (M.complete || M.beat) return;
@@ -346,6 +349,31 @@ function drawMissionHud() {
   ctx.beginPath(); ctx.moveTo(16, 0); ctx.lineTo(-10, 11); ctx.lineTo(-4, 0); ctx.lineTo(-10, -11); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
   ctx.textAlign = 'center'; ctx.font = '800 11px system-ui'; ctx.fillStyle = '#fff1d8'; ctx.fillText(`${tgt.people.map(p => p.name.split(' ')[0]).join(' + ')} · ${(d / 10 / 1609).toFixed(1)} mi`, rx, ry + 26);
 } renderer.resize(VIEW_W, view.h, DPR);
+// DRIFT BANKING (Nov 18, lf_drift.js): while a drift banks, the growing bank rides just over the
+// player's car (transient — it exists only while the bank does, no new persistent HUD); on
+// cash-in / loss a popup floats up from the car and fades. The compass arrow (when it lands)
+// orbits OUTSIDE this readout's slot, so the two never stack.
+function drawDrift() {
+  const D = sim.drift, c = sim.player;
+  if (!D || !c || picking || inside || (foot && foot.active)) return;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.textAlign = 'center';
+  if (D.bank >= 1) {
+    const x = (c.x - cam.x) * cam.zoom + VIEW_W / 2, y = (c.y - cam.y) * cam.zoom + view.h / 2;
+    ctx.font = '900 15px system-ui';
+    const t = `DRIFT ${Math.floor(D.bank)}` + (D.mult > 1.05 ? ` ×${D.mult.toFixed(1)}` : '');
+    const w = ctx.measureText(t).width + 22;
+    ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(x - w / 2, y - 64, w, 24, 10); ctx.fill();
+    ctx.fillStyle = '#ffd25c'; ctx.fillText(t, x, y - 47);
+  }
+  for (const p of D.popups) {
+    const px = (p.x - cam.x) * cam.zoom + VIEW_W / 2, py = (p.y - cam.y) * cam.zoom + view.h / 2 - 54 - p.t * 30;
+    if (px < -80 || px > VIEW_W + 80 || py < -20 || py > view.h + 20) continue;
+    ctx.font = '900 17px system-ui'; ctx.globalAlpha = Math.max(0, 1 - p.t / 1.25);
+    ctx.fillStyle = p.kind === 'lost' ? '#ff9a7a' : '#ffd25c';
+    ctx.fillText(p.txt, px, py);
+    ctx.globalAlpha = 1;
+  }
+}
 const input = new Input(canvas, view); input.fightOn = true;
 const fixed = Q.get('cam') ? Q.get('cam').split(',').map(Number) : null;
 const B0 = W.bounds, fitZ = Math.max(MIN_ZOOM, Math.min(VIEW_W / (B0.x1 - B0.x0), view.h / (B0.y1 - B0.y0)) * 0.98 * 1.5);   // Nov 18 (owner): the opening sits halfway back from the whole-map fit (~2,830 m across, never wider — the MIN_ZOOM cap); startIntro() recomputes this same fit via openFit() so the flight's start never depends on the live camera
@@ -596,6 +624,7 @@ renderer.draw = (S, cam, t, tod) => {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.font = '800 13px system-ui'; ctx.textAlign = 'center';
   ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(VIEW_W - 72, 14, 60, 28, 12); ctx.fill(); ctx.fillStyle = '#ffe4b0'; ctx.fillText('MAP', VIEW_W - 42, 33);
   drawMissionHud();
+  drawDrift();
   if (M && M.barks && M.barks.drawScreen) M.barks.drawScreen(ctx, cam, VIEW_W, view.h);   // L17: the convoy's speech bubbles (lf_barks.js)
   fakeCop.drawHud(ctx, VIEW_W);
   cops.drawHud(ctx, VIEW_W, view.h);                        // L15: wanted stars + BUSTED / LOST THEM
