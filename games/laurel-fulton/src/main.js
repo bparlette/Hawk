@@ -30,6 +30,7 @@ import { Traffic } from './lf_traffic.js';                              // L15: 
 import { Cops } from './lf_cops.js';                                    // L15: cops / wanted v1 (stars, pursuit, BUSTED, siren)
 import { LFHelp } from './lf_help.js';                                   // Palm City easy win: '?' HELP / JUMP quick-teleporter
 import { compassTarget, COMPASS } from './lf_compass.js';               // easy-five: the orbiting target arrow (Nov 18)
+import { Breadcrumb, isCollegePark } from './lf_breadcrumb.js';         // easy-five: GPS breadcrumb, College Park only (Nov 18)
 
 const Q = new URLSearchParams(location.search);
 const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
@@ -396,6 +397,29 @@ function drawCompass() {
   ctx.beginPath(); ctx.moveTo(13, 0); ctx.lineTo(-8, 9); ctx.lineTo(-3, 0); ctx.lineTo(-8, -9); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.restore();
 }
+// GPS BREADCRUMB (Nov 18, lf_breadcrumb.js) — COLLEGE PARK ONLY: Laurel keeps its existing
+// guidance. A fading dotted line along the real road network (lf_pilot's roadPath, the router
+// the autopilot and cops already use) from the car to the compass's target. Drawn under the
+// HUD, over the world; dots fade with distance along the route.
+let crumb = null;
+function drawBreadcrumb() {
+  if (!isCollegePark(TITLE)) return;
+  if (picking || inside || (foot && foot.active)) return;
+  const c = sim.player; if (!c) return;
+  const t = compassTarget(M, party, c, W.bounds);
+  if (!t || Math.hypot(t.x - c.x, t.y - c.y) < COMPASS.arriveDist) return;
+  if (!crumb) crumb = new Breadcrumb(W, sim);
+  const dots = crumb.dots(c, t);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  for (const d of dots) {
+    const sx = (d.x - cam.x) * cam.zoom + VIEW_W / 2, sy = (d.y - cam.y) * cam.zoom + view.h / 2;
+    if (sx < -12 || sx > VIEW_W + 12 || sy < -12 || sy > view.h + 12) continue;
+    ctx.globalAlpha = 0.25 + 0.75 * d.f;
+    ctx.fillStyle = '#ffd25c'; ctx.beginPath(); ctx.arc(sx, sy, 5, 0, 7); ctx.fill();
+    ctx.globalAlpha = 0.5; ctx.strokeStyle = '#2a1430'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+}
 const input = new Input(canvas, view); input.fightOn = true;
 const fixed = Q.get('cam') ? Q.get('cam').split(',').map(Number) : null;
 const B0 = W.bounds, fitZ = Math.max(MIN_ZOOM, Math.min(VIEW_W / (B0.x1 - B0.x0), view.h / (B0.y1 - B0.y0)) * 0.98 * 1.5);   // Nov 18 (owner): the opening sits halfway back from the whole-map fit (~2,830 m across, never wider — the MIN_ZOOM cap); startIntro() recomputes this same fit via openFit() so the flight's start never depends on the live camera
@@ -645,6 +669,7 @@ renderer.draw = (S, cam, t, tod) => {
   _draw(S, cam, t, tod);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.font = '800 13px system-ui'; ctx.textAlign = 'center';
   ctx.fillStyle = 'rgba(27,20,48,0.72)'; ctx.beginPath(); ctx.roundRect(VIEW_W - 72, 14, 60, 28, 12); ctx.fill(); ctx.fillStyle = '#ffe4b0'; ctx.fillText('MAP', VIEW_W - 42, 33);
+  drawBreadcrumb();
   drawMissionHud();
   drawDrift();
   drawCompass();
