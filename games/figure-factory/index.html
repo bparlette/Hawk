@@ -181,6 +181,25 @@ const faceC = document.createElement('canvas'); faceC.width = faceC.height = 512
 const faceTex = new THREE.CanvasTexture(faceC);
 faceTex.colorSpace = THREE.SRGBColorSpace;
 
+/* elliptical feather mask for the face patch (built once): fully opaque
+   inside 0.82 of the ellipse, smoothstepping to clear at the rim — the
+   seam dissolves into the head's own skin tone instead of ending at a
+   hard circle */
+const faceMaskC = document.createElement('canvas'); faceMaskC.width = faceMaskC.height = 512;
+{
+  const mg = faceMaskC.getContext('2d');
+  const im = mg.createImageData(512, 512);
+  for (let y = 0; y < 512; y++) for (let x = 0; x < 512; x++){
+    const dx = (x - 256) / 250, dy = (y - 256) / 300;
+    const d = Math.sqrt(dx * dx + dy * dy);
+    let a = 1;
+    if (d > 0.82){ const t = Math.min(1, (d - 0.82) / 0.18); a = 1 - t * t * (3 - 2 * t); }
+    const i = (y * 512 + x) * 4;
+    im.data[i] = im.data[i+1] = im.data[i+2] = 255; im.data[i+3] = Math.round(a * 255);
+  }
+  mg.putImageData(im, 0, 0);
+}
+
 function drawDefaultFace(){
   const g = faceC.getContext('2d');
   g.clearRect(0,0,512,512);
@@ -295,9 +314,11 @@ function buildFigure(){
   const cranium = ball3(headR, MATS.skin, 28, 22); skull.add(cranium);
   const jaw = new THREE.Mesh(new THREE.CylinderGeometry(headR*0.62, headR*0.46, headR*0.55, 16), MATS.skin);
   jaw.position.y = -headR*0.52; jaw.castShadow = true; skull.add(jaw);
-  /* face patch: a sphere segment hugging the cranium's front */
+  /* face patch: a wide sphere segment hugging the cranium's front —
+     v2 widened (phi 1.90, theta 0.60..2.15) so a tightly-cropped face
+     fills the front of the head instead of sitting on it as a sticker */
   const patch = new THREE.Mesh(
-    new THREE.SphereGeometry(headR*1.03, 40, 28, Math.PI/2 - 0.725, 1.45, 0.82, 1.28), MATS.face);
+    new THREE.SphereGeometry(headR*1.04, 48, 32, Math.PI/2 - 1.00, 2.00, 0.60, 1.55), MATS.face);
   skull.add(patch);
   /* hair: a tilted cap shell */
   const hair = new THREE.Mesh(new THREE.SphereGeometry(headR*1.07, 28, 18, 0, Math.PI*2, 0, 1.30), MATS.hair);
@@ -484,8 +505,56 @@ function resize(){
 }
 window.addEventListener('resize', resize);
 
-/* ---------- photo: sample colours + draw the face ---------- */
+/* ---------- photo: detect the face, sample colours, draw the face ---------- */
 let photoImg = null;
+let faceDet = null;        // largest detected face, image px: {cx, cy, w, h, eyeY}
+let faceStatus = 'idle';   // idle | loading | found | none | error
+
+/* Face detector — MediaPipe Tasks Vision (BlazeFace short-range), loaded
+   lazily from CDN on the first photo. Detection runs entirely on-device:
+   the model comes to the photo; the photo never leaves the device. Any
+   failure (offline, unsupported browser) leaves faceDet null and the
+   manual crop + FIT sliders carry on exactly as before. */
+const MP_BUNDLE = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs';
+const MP_WASM   = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm';
+const MP_MODEL  = 'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite';
+let mpDetector = null;
+async function getDetector(){
+  if (mpDetector) return mpDetector;
+  const mod = await import(MP_BUNDLE);
+  const vision = await mod.FilesetResolver.forVisionTasks(MP_WASM);
+  mpDetector = await mod.FaceDetector.createFromOptions(vision, {
+    baseOptions: { modelAssetPath: MP_MODEL, delegate: 'CPU' },
+    runningMode: 'IMAGE', minDetectionConfidence: 0.5,
+  });
+  return mpDetector;
+}
+function detectFace(img){
+  faceStatus = 'loading'; faceDet = null;
+  (async () => {
+    try {
+      const det = await getDetector();
+      const res = det.detect(img);
+      const ds = (res && res.detections) || [];
+      let best = null, bestArea = -1;
+      for (const d of ds){
+        const b = d.boundingBox; if (!b) continue;
+        const a = b.width * b.height;
+        if (a > bestArea){ bestArea = a; best = d; }
+      }
+      if (!best){ faceStatus = 'none'; return; }
+      const b = best.boundingBox, H = img.naturalHeight;
+      let eyeY = b.originY + b.height * 0.40;
+      const kp = best.keypoints || [];
+      if (kp.length >= 2) eyeY = (kp[0].y + kp[1].y) / 2 * H;   // keypoints are normalized
+      faceDet = { cx: b.originX + b.width / 2, cy: b.originY + b.height / 2,
+                  w: b.width, h: b.height, eyeY };
+      faceStatus = 'found';
+    } catch (e) { faceStatus = 'error'; }
+    if (photoImg === img) processPhoto();
+  })();
+}
+
 function avgColor(g, W, H, x0, y0, x1, y1, darkest = 0){
   const d = g.getImageData(Math.max(0, x0|0), Math.max(0, y0|0),
     Math.max(1, (x1 - x0)|0), Math.max(1, (y1 - y0)|0)).data;
@@ -504,33 +573,61 @@ function avgColor(g, W, H, x0, y0, x1, y1, darkest = 0){
 function processPhoto(){
   const img = photoImg; if (!img) return;
   const W = img.naturalWidth, H = img.naturalHeight;
-  /* face crop window FIRST — colour sampling is relative to it, so the
-     samples land on the actual face wherever the user frames it */
-  const side = Math.min(W, H) * 0.66 / FIT.zoom;
-  let cx = W * 0.5 - (FIT.x / 100) * side;
-  let cy = H * 0.38 - (FIT.y / 100) * side;
-  cx = THREE.MathUtils.clamp(cx, side/2, W - side/2);
-  cy = THREE.MathUtils.clamp(cy, side/2, H - side/2);
+  /* crop rect (source px). With a detected face the crop is built around
+     it — face height ≈ 78% of the crop, eye line at 42% — so the face
+     fills the head patch. Without one, the v1 manual window is used.
+     The FIT sliders fine-tune either way: zoom scales the crop around
+     the face, x/y shift it (same sign convention as v1). */
+  let cw, ch, left, top;
+  if (faceDet){
+    ch = faceDet.h / 0.78 / FIT.zoom;
+    cw = ch * 1.18;                       // ≈ the patch's arc aspect, so the face isn't stretched
+    const ccx = faceDet.cx - (FIT.x / 100) * cw;
+    const eey = faceDet.eyeY - (FIT.y / 100) * ch;
+    left = ccx - cw / 2; top = eey - 0.42 * ch;
+  } else {
+    const side = Math.min(W, H) * 0.66 / FIT.zoom;
+    cw = ch = side;
+    left = W * 0.5 - (FIT.x / 100) * side - side / 2;
+    top  = H * 0.38 - (FIT.y / 100) * side - side / 2;
+  }
+  cw = Math.min(cw, W); ch = Math.min(ch, H);
+  left = THREE.MathUtils.clamp(left, 0, W - cw);
+  top  = THREE.MathUtils.clamp(top, 0, H - ch);
+  /* colour sampling on a scaled copy of the photo */
   const sc = document.createElement('canvas');
   const s = Math.min(512, Math.max(W, H)); sc.width = s; sc.height = Math.round(s * H / W);
   const sg = sc.getContext('2d'); sg.drawImage(img, 0, 0, sc.width, sc.height);
   const kx = sc.width / W, ky = sc.height / H;
   const sample = (fx, fy, fw, fh, darkest = 0) => avgColor(sg, sc.width, sc.height,
     (fx - fw/2) * kx, (fy - fh/2) * ky, (fx + fw/2) * kx, (fy + fh/2) * ky, darkest);
-  PAL.skin.copy(sample(cx, cy + side * 0.10, side * 0.22, side * 0.22));            // cheek, inside the face
-  const hairC = sample(cx, cy - side * 0.52, side * 0.50, side * 0.16, 0.3);        // above the face, darkest slice
-  if (cy - side * 0.44 > 0) PAL.hair.copy(hairC);
-  const shirtC = sample(cx, cy + side * 0.80, side * 0.55, side * 0.22);           // chest, below the face
-  if (cy + side * 0.69 < H) PAL.shirt.copy(shirtC);
+  if (faceDet){
+    /* samples relative to the detected face, so they land on the actual
+       subject wherever they are in the frame */
+    const b = faceDet;
+    PAL.skin.copy(sample(b.cx, b.cy + 0.12 * b.h, b.w * 0.30, b.h * 0.25));              // cheek
+    if (b.cy - b.h * 0.65 > 0) PAL.hair.copy(sample(b.cx, b.cy - b.h * 0.65, b.w * 0.70, b.h * 0.30, 0.3)); // above, darkest slice
+    if (b.cy + b.h * 0.80 < H) PAL.shirt.copy(sample(b.cx, b.cy + b.h * 0.80, b.w * 0.80, b.h * 0.40));     // chest below the chin
+  } else {
+    const ccx = left + cw / 2, ccy = top + ch / 2;
+    PAL.skin.copy(sample(ccx, ccy + ch * 0.10, cw * 0.22, ch * 0.22));            // cheek, inside the face
+    const hairC = sample(ccx, ccy - ch * 0.52, cw * 0.50, ch * 0.16, 0.3);        // above the face, darkest slice
+    if (ccy - ch * 0.44 > 0) PAL.hair.copy(hairC);
+    const shirtC = sample(ccx, ccy + ch * 0.80, cw * 0.55, ch * 0.22);           // chest, below the face
+    if (ccy + ch * 0.69 < H) PAL.shirt.copy(shirtC);
+  }
   drawShirt();
+  /* the face itself: skin-tinted backing first (feathered pixels blend
+     toward the head's own skin tone), then the crop, then the elliptical
+     feathered mask — no hard circle, no visible seam */
   const g = faceC.getContext('2d');
+  g.globalCompositeOperation = 'source-over';
   g.clearRect(0, 0, 512, 512);
-  g.drawImage(img, cx - side/2, cy - side/2, side, side, 0, 0, 512, 512);
-  g.globalCompositeOperation = 'destination-in';               // feather the patch edges
-  const rg = g.createRadialGradient(256, 250, 150, 256, 250, 252);
-  rg.addColorStop(0, 'rgba(0,0,0,1)'); rg.addColorStop(0.82, 'rgba(0,0,0,1)');
-  rg.addColorStop(1, 'rgba(0,0,0,0)');
-  g.fillStyle = rg; g.fillRect(0, 0, 512, 512);
+  g.fillStyle = '#' + PAL.skin.getHexString();
+  g.fillRect(0, 0, 512, 512);
+  g.drawImage(img, left, top, cw, ch, 0, 0, 512, 512);
+  g.globalCompositeOperation = 'destination-in';
+  g.drawImage(faceMaskC, 0, 0);
   g.globalCompositeOperation = 'source-over';
   faceTex.needsUpdate = true;
   buildFigure();
@@ -571,7 +668,10 @@ fileInput.addEventListener('change', () => {
   const f = fileInput.files && fileInput.files[0]; if (!f) return;
   const url = URL.createObjectURL(f);
   const img = new Image();
-  img.onload = () => { photoImg = img; processPhoto(); URL.revokeObjectURL(url); };
+  img.onload = () => { photoImg = img; faceDet = null; faceStatus = 'idle';
+    processPhoto();            // manual-crop figure immediately…
+    detectFace(img);           // …then the detected tight crop replaces it when ready
+    URL.revokeObjectURL(url); };
   img.onerror = () => showErr('That file could not be read as an image — try a JPG or PNG photo.');
   img.src = url;
 });
@@ -607,6 +707,9 @@ window.__ff = {
   setParam(k, v){ P[k] = v; buildFigure(); },
   setFit(k, v){ FIT[k] = v; if (photoImg) processPhoto(); },
   hasPhoto(){ return !!photoImg; },
+  faceStatus(){ return faceStatus; },
+  faceBox(){ return faceDet ? { cx: +faceDet.cx.toFixed(1), cy: +faceDet.cy.toFixed(1),
+    w: +faceDet.w.toFixed(1), h: +faceDet.h.toFixed(1), eyeY: +faceDet.eyeY.toFixed(1) } : null; },
   soles(){
     const out = [];
     for (const foot of [fig.footL, fig.footR]){
