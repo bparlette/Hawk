@@ -1,0 +1,3901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>CLASH PLAZA — 3D Ring Fighter</title>
+<style>
+  html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#1a1024;
+    font-family: system-ui, -apple-system, sans-serif; -webkit-user-select:none; user-select:none;
+    touch-action:none; overscroll-behavior:none; }
+  #app, #app canvas { position:fixed; inset:0; display:block; touch-action:none; }
+
+  /* ---- HUD: health bars + timer + round pips only ---- */
+  #hud { position:fixed; top:0; left:0; right:0; z-index:1100; display:none;
+    padding:calc(8px + env(safe-area-inset-top)) 12px 0; pointer-events:none; }
+  .hudRow { display:flex; align-items:flex-start; gap:10px; }
+  .sideBox { flex:1 1 0; min-width:0; }
+  .sideBox.right { text-align:right; }
+  .fname { color:#fff; font-weight:900; font-size:15px; letter-spacing:.08em;
+    text-shadow:0 2px 6px rgba(0,0,0,.8); white-space:nowrap; }
+  .pips { color:#ffd34d; font-size:10px; letter-spacing:.25em; text-shadow:0 1px 4px rgba(0,0,0,.8); }
+  .hpOuter { height:14px; margin-top:3px; background:rgba(8,6,16,.62);
+    border:1.5px solid rgba(255,255,255,.55); border-radius:7px; overflow:hidden; }
+  .hpFill { height:100%; width:100%; border-radius:6px;
+    background:linear-gradient(180deg,#8dff6a,#37b324);
+    transition:width .18s ease-out; }
+  .sideBox.right .hpFill { float:right; background:linear-gradient(180deg,#ffb35c,#e03418); }
+  #timer { flex:0 0 auto; min-width:52px; text-align:center; color:#ffe9b0; font-weight:900;
+    font-size:26px; line-height:1; text-shadow:0 2px 8px rgba(0,0,0,.85);
+    background:rgba(8,6,16,.5); border:1.5px solid rgba(255,255,255,.4); border-radius:10px; padding:4px 0 5px; }
+
+  /* ---- centre banner (transient) ---- */
+  #bannerWrap { position:fixed; inset:0; z-index:1250; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; pointer-events:none; }
+  #banner { color:#ffd34d; font-weight:900; font-size:min(64px,13vw); letter-spacing:.06em;
+    text-shadow:0 4px 0 #8c1f28, 0 8px 26px rgba(0,0,0,.75); opacity:0; transition:opacity .18s;
+    text-align:center; padding:0 12px; }
+  #bannerSub { color:#fff; font-weight:800; font-size:min(19px,4.6vw); letter-spacing:.22em;
+    text-shadow:0 2px 10px rgba(0,0,0,.85); opacity:0; transition:opacity .18s; margin-top:6px; text-align:center; }
+
+  /* ---- pick screen ---- */
+  #pick { position:fixed; inset:0; z-index:1300; display:none; flex-direction:column;
+    align-items:center; justify-content:flex-end; pointer-events:none;
+    padding:0 14px calc(16px + env(safe-area-inset-bottom)); }
+  #pickTitle { color:#ffe9b0; font-weight:900; letter-spacing:.3em; font-size:21px;
+    text-shadow:0 3px 12px rgba(0,0,0,.8); margin-bottom:2px; text-align:center; }
+  #pickSub { color:#fff; opacity:.85; font-size:12px; letter-spacing:.14em; font-weight:700;
+    text-shadow:0 2px 8px rgba(0,0,0,.85); margin-bottom:12px; text-align:center; }
+  #pickGrid { display:grid; grid-template-columns:1fr 1fr; gap:9px; width:100%; max-width:430px; pointer-events:auto; }
+  .pickCard { border:2px solid rgba(255,255,255,.5); background:rgba(12,10,24,.72); color:#fff;
+    border-radius:14px; padding:13px 10px 11px; cursor:pointer; text-align:center;
+    -webkit-tap-highlight-color:transparent; font-family:inherit; }
+  .pickCard:active { background:#ffd34d; color:#22160a; border-color:#ffd34d; }
+  .pickName { display:block; font-weight:900; font-size:19px; letter-spacing:.1em; }
+  .pickSpec { display:block; font-size:10px; font-weight:700; letter-spacing:.12em; opacity:.85; margin-top:3px; }
+  #pickHint { color:#fff; opacity:.7; font-size:11px; margin-top:11px; text-align:center;
+    text-shadow:0 1px 6px rgba(0,0,0,.9); letter-spacing:.05em; }
+
+  /* ---- match-end buttons ---- */
+  #endBtns { position:fixed; left:0; right:0; bottom:calc(26px + env(safe-area-inset-bottom));
+    z-index:1300; display:none; gap:10px; justify-content:center; padding:0 16px; }
+  .endBtn { border:2px solid rgba(255,255,255,.55); background:rgba(12,10,24,.78); color:#fff;
+    font-family:inherit; font-weight:900; letter-spacing:.1em; font-size:15px; border-radius:999px;
+    padding:13px 22px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .endBtn.primary { background:#ffd34d; color:#22160a; border-color:#ffd34d; }
+  .endBtn:active { transform:scale(.95); }
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+<div id="app"></div>
+
+<div id="hud">
+  <div class="hudRow">
+    <div class="sideBox">
+      <div class="fname" id="p1name">RYU</div>
+      <div class="hpOuter"><div class="hpFill" id="p1hp"></div></div>
+      <div class="pips" id="p1pips">○○</div>
+    </div>
+    <div id="timer">60</div>
+    <div class="sideBox right">
+      <div class="fname" id="p2name">KEN</div>
+      <div class="hpOuter"><div class="hpFill" id="p2hp"></div></div>
+      <div class="pips" id="p2pips">○○</div>
+    </div>
+  </div>
+</div>
+
+<div id="bannerWrap"><div id="banner"></div><div id="bannerSub"></div></div>
+
+<div id="pick">
+  <div id="pickTitle">CLASH PLAZA</div>
+  <div id="pickSub">CHOOSE YOUR FIGHTER</div>
+  <div id="pickGrid"></div>
+  <div id="pickHint">Move: stick / WASD · Light: J · Heavy: K · Block: L (hold) · Special: U</div>
+</div>
+
+<div id="endBtns">
+  <button class="endBtn primary" id="rematchBtn">REMATCH</button>
+  <button class="endBtn" id="changeBtn">CHANGE FIGHTER</button>
+</div>
+
+<script type="module">
+// src/app.js
+import * as THREE3 from "three";
+
+// src/rigkit.ts
+import * as THREE from "three";
+var PROPORTIONS = {
+  hipHeight: 0.94,
+  // hip pivot height
+  hipDrop: 0.05,
+  // hip pivot → leg pivot
+  thigh: 0.42,
+  calf: 0.39,
+  ankleToSole: 0.08,
+  torsoRise: 0.1,
+  // hip pivot → torso pivot
+  shoulderY: 0.54,
+  // torso pivot → shoulder pivot (height)
+  shoulderX: 0.31,
+  // torso pivot → shoulder pivot (lateral, × width)
+  upperArm: 0.31,
+  forearm: 0.29,
+  headY: 0.72,
+  // torso pivot → head pivot
+  hipX: 0.135
+  // hip pivot → leg pivot (lateral, × width)
+};
+function taperedLimb(rTop, rBot, len, radialSegs = 12) {
+  const geo = new THREE.CylinderGeometry(rTop, rBot, len, radialSegs, 1);
+  geo.translate(0, -len / 2, 0);
+  return geo;
+}
+function mesh(geo, mat, shadow = true) {
+  const m = new THREE.Mesh(geo, mat);
+  m.castShadow = shadow;
+  return m;
+}
+function buildHand(mat, scale, side) {
+  const g = new THREE.Group();
+  const s = scale;
+  const palm = mesh(new THREE.BoxGeometry(0.11 * s, 0.13 * s, 0.065 * s), mat);
+  palm.position.set(0, -0.06 * s, 0);
+  g.add(palm);
+  const fingers = mesh(new THREE.BoxGeometry(0.105 * s, 0.085 * s, 0.06 * s), mat);
+  fingers.position.set(0, -0.145 * s, 0.015 * s);
+  fingers.rotation.x = 0.25;
+  g.add(fingers);
+  const thumb = mesh(new THREE.BoxGeometry(0.04 * s, 0.075 * s, 0.045 * s), mat);
+  thumb.position.set(side * -0.065 * s, -0.065 * s, 0.03 * s);
+  thumb.rotation.z = side * 0.45;
+  g.add(thumb);
+  return g;
+}
+function buildBareFoot(skinMat) {
+  const g = new THREE.Group();
+  const heelBlock = mesh(new THREE.BoxGeometry(0.098, 0.062, 0.14), skinMat);
+  heelBlock.position.set(0, 0.031, -0.035);
+  g.add(heelBlock);
+  const forefoot = mesh(new THREE.BoxGeometry(0.104, 0.046, 0.14), skinMat);
+  forefoot.position.set(0, 0.023, 0.082);
+  forefoot.rotation.x = -0.1;
+  g.add(forefoot);
+  const toes = mesh(new THREE.SphereGeometry(0.052, 10, 8), skinMat, false);
+  toes.scale.set(0.98, 0.48, 1);
+  toes.position.set(0, 0.024, 0.148);
+  g.add(toes);
+  const heel = new THREE.Object3D();
+  heel.position.set(0, 0.012, -0.085);
+  g.add(heel);
+  const toe = new THREE.Object3D();
+  toe.position.set(0, 0.012, 0.185);
+  g.add(toe);
+  return { group: g, heel, toe };
+}
+function makeContactShadowTexture() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 128;
+  const ctx = c.getContext("2d");
+  const grad = ctx.createRadialGradient(64, 64, 4, 64, 64, 62);
+  grad.addColorStop(0, "rgba(0,0,0,0.85)");
+  grad.addColorStop(0.6, "rgba(0,0,0,0.4)");
+  grad.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+var DEFAULT_TOON = {
+  outlineWidth: 0.026,
+  outlineColor: 1511949,
+  halftone: 0.5,
+  halftoneScale: 2,
+  steps: 4
+};
+var _gradientCache = /* @__PURE__ */ new Map();
+function toonGradientMap(steps = 4) {
+  const hit = _gradientCache.get(steps);
+  if (hit) return hit;
+  const ramps = {
+    3: [120, 190, 255],
+    4: [105, 160, 212, 255]
+  };
+  const vals = ramps[steps] ?? ramps[4];
+  const data = new Uint8Array(vals.length * 4);
+  vals.forEach((v, i) => {
+    data[i * 4] = v;
+    data[i * 4 + 1] = v;
+    data[i * 4 + 2] = v;
+    data[i * 4 + 3] = 255;
+  });
+  const tex = new THREE.DataTexture(data, vals.length, 1);
+  tex.minFilter = THREE.NearestFilter;
+  tex.magFilter = THREE.NearestFilter;
+  tex.needsUpdate = true;
+  _gradientCache.set(steps, tex);
+  return tex;
+}
+var _whiteMap = null;
+function plainWhiteMap() {
+  if (_whiteMap) return _whiteMap;
+  const c = document.createElement("canvas");
+  c.width = c.height = 4;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, 4, 4);
+  _whiteMap = new THREE.CanvasTexture(c);
+  _whiteMap.colorSpace = THREE.SRGBColorSpace;
+  return _whiteMap;
+}
+var HALFTONE_GLSL = (
+  /* glsl */
+  `
+{
+  #if NUM_DIR_LIGHTS > 0
+    vec3 halftoneNormal = normalize( vNormal );
+    float halftoneDotNL = saturate( dot( halftoneNormal, directionalLights[ 0 ].direction ) );
+    float halftoneGrad = texture2D( gradientMap, vec2( halftoneDotNL * 0.5 + 0.5, 0.0 ) ).r;
+    float halftoneShade = clamp( ( 1.0 - halftoneGrad ) * 1.45, 0.0, 1.0 );
+    vec2 halftoneCell = fract( vMapUv * uHalftoneDensity ) - 0.5;
+    float halftoneDist = length( halftoneCell );
+    float halftoneRadius = halftoneShade * 0.46;
+    float halftoneInk = 1.0 - smoothstep( halftoneRadius - 0.14, halftoneRadius + 0.03, halftoneDist );
+    outgoingLight *= 1.0 - halftoneInk * uHalftoneStrength * step( 0.01, halftoneShade );
+  #endif
+}
+#include <opaque_fragment>`
+);
+function makeToonMaterial(opts, toon) {
+  const mat = new THREE.MeshToonMaterial({
+    color: opts.color,
+    map: opts.map ?? (toon.halftone > 0 ? plainWhiteMap() : null),
+    gradientMap: toonGradientMap(toon.steps)
+  });
+  if (toon.halftone > 0 && mat.map) {
+    const strength = toon.halftone * 0.8;
+    const density = 15 * toon.halftoneScale;
+    mat.onBeforeCompile = (shader) => {
+      shader.uniforms.uHalftoneStrength = { value: strength };
+      shader.uniforms.uHalftoneDensity = { value: density };
+      shader.fragmentShader = ("uniform float uHalftoneStrength;\nuniform float uHalftoneDensity;\n" + shader.fragmentShader).replace("#include <opaque_fragment>", HALFTONE_GLSL);
+    };
+    mat.customProgramCacheKey = () => `toon-halftone:${strength}:${density}:${toon.steps}`;
+  }
+  return mat;
+}
+function makeOutlineMaterial(width, color) {
+  const m = new THREE.MeshBasicMaterial({ color, side: THREE.BackSide });
+  m.onBeforeCompile = (shader) => {
+    shader.uniforms.uOutlineWidth = { value: width };
+    shader.vertexShader = "uniform float uOutlineWidth;\n" + shader.vertexShader.replace(
+      "#include <begin_vertex>",
+      "#include <begin_vertex>\n  transformed += normal * uOutlineWidth;"
+    );
+  };
+  m.customProgramCacheKey = () => `outline:${width}`;
+  return m;
+}
+function addInvertedHullOutlines(rootObj, width, color = 1511949, minRadius = 0.06) {
+  if (width <= 0) return 0;
+  const mat = makeOutlineMaterial(width, color);
+  const targets = [];
+  rootObj.traverse((o) => {
+    const m = o;
+    if (!m.isMesh || m.userData.isOutlineHull) return;
+    const mats = Array.isArray(m.material) ? m.material : [m.material];
+    if (mats.some((mm) => mm.transparent)) return;
+    targets.push(m);
+  });
+  let added = 0;
+  for (const m of targets) {
+    if (!m.geometry.boundingSphere) m.geometry.computeBoundingSphere();
+    const bs = m.geometry.boundingSphere;
+    const maxScale = Math.max(Math.abs(m.scale.x), Math.abs(m.scale.y), Math.abs(m.scale.z));
+    if (bs.radius * maxScale < minRadius) continue;
+    const hull = new THREE.Mesh(m.geometry, mat);
+    hull.castShadow = false;
+    hull.receiveShadow = false;
+    hull.userData.isOutlineHull = true;
+    m.add(hull);
+    added++;
+  }
+  return added;
+}
+function buildHumanoid(params2) {
+  const { width: wS, height: hS, headScale, handScale } = params2.body;
+  const pal = params2.palette;
+  const P = params2.proportions ? { ...PROPORTIONS, ...params2.proportions } : PROPORTIONS;
+  const footScale = params2.proportions?.footScale ?? 1;
+  const root = new THREE.Group();
+  const bodyPivot = new THREE.Group();
+  root.add(bodyPivot);
+  const toonMode = params2.renderMode === "toon";
+  const toon = { ...DEFAULT_TOON };
+  if (params2.toon) {
+    for (const k of Object.keys(params2.toon)) {
+      const v = params2.toon[k];
+      if (v !== void 0) toon[k] = v;
+    }
+  }
+  const partMat = (smooth, color, map = null) => toonMode ? makeToonMaterial({ color, map }, toon) : smooth();
+  const featureMat = (color, roughness) => toonMode ? new THREE.MeshBasicMaterial({ color }) : new THREE.MeshStandardMaterial({ color, roughness });
+  const skinMat = partMat(
+    () => new THREE.MeshPhysicalMaterial({
+      color: pal.skin,
+      roughness: 0.44,
+      metalness: 0,
+      clearcoat: 0.42,
+      clearcoatRoughness: 0.24
+    }),
+    pal.skin
+  );
+  const clothMat = partMat(
+    () => new THREE.MeshStandardMaterial({
+      map: params2.torsoTexture ?? null,
+      color: params2.torsoTexture ? 16777215 : pal.jersey,
+      roughness: 0.78,
+      metalness: 0.04
+    }),
+    params2.torsoTexture ? 16777215 : pal.jersey,
+    params2.torsoTexture ?? null
+  );
+  const shortsMat = partMat(
+    () => new THREE.MeshStandardMaterial({ color: pal.shorts, roughness: 0.8, metalness: 0.04 }),
+    pal.shorts
+  );
+  const trimMat = partMat(
+    () => new THREE.MeshStandardMaterial({ color: pal.trim, roughness: 0.55, metalness: 0.12 }),
+    pal.trim
+  );
+  const hairMat = partMat(
+    () => new THREE.MeshStandardMaterial({ color: pal.hair, roughness: 0.88, metalness: 0.02 }),
+    pal.hair
+  );
+  const bandMat = partMat(
+    () => new THREE.MeshStandardMaterial({ color: pal.band, roughness: 0.68, metalness: 0.05 }),
+    pal.band
+  );
+  const gloveMat = pal.glove !== void 0 ? partMat(
+    () => new THREE.MeshStandardMaterial({ color: pal.glove, roughness: 0.6, metalness: 0.05 }),
+    pal.glove
+  ) : null;
+  const giMat = partMat(
+    () => new THREE.MeshStandardMaterial({ color: pal.shorts, roughness: 0.85, metalness: 0.02 }),
+    pal.shorts
+  );
+  const hips = new THREE.Group();
+  hips.position.y = P.hipHeight * hS;
+  bodyPivot.add(hips);
+  const waist = mesh(new THREE.CylinderGeometry(0.22 * wS, 0.245 * wS, 0.22 * hS, 14), shortsMat);
+  hips.add(waist);
+  const waistband = mesh(new THREE.CylinderGeometry(0.228 * wS, 0.228 * wS, 0.045, 14), trimMat);
+  waistband.position.y = 0.1 * hS;
+  hips.add(waistband);
+  const beltTailGeo = new THREE.BoxGeometry(0.05, 0.3 * hS, 0.016);
+  beltTailGeo.translate(0, -0.15 * hS, 0);
+  for (const s of [-1, 1]) {
+    const bt = mesh(beltTailGeo, trimMat, false);
+    bt.position.set(s * 0.05 * wS, 0.09 * hS, 0.222 * wS);
+    bt.rotation.x = 0.14;
+    bt.rotation.z = s * 0.12;
+    hips.add(bt);
+  }
+  const torso = new THREE.Group();
+  torso.position.y = P.torsoRise * hS;
+  hips.add(torso);
+  const profile = [
+    new THREE.Vector2(0.215 * wS, 0),
+    new THREE.Vector2(0.23 * wS, 0.16 * hS),
+    new THREE.Vector2(0.275 * wS, 0.42 * hS),
+    new THREE.Vector2(0.26 * wS, 0.56 * hS),
+    new THREE.Vector2(0.14 * wS, 0.62 * hS)
+  ];
+  const torsoGeo = new THREE.LatheGeometry(profile, 18);
+  torsoGeo.scale(1, 1, 0.78);
+  const torsoMesh = mesh(torsoGeo, clothMat);
+  torsoMesh.rotation.y = Math.PI * 0.5;
+  torsoMesh.receiveShadow = true;
+  torso.add(torsoMesh);
+  const neck = mesh(new THREE.CylinderGeometry(0.085, 0.105, 0.14, 10), skinMat);
+  neck.position.y = 0.64 * hS;
+  torso.add(neck);
+  const head = new THREE.Group();
+  head.position.y = P.headY * hS;
+  torso.add(head);
+  const hs = headScale;
+  const cranium = mesh(new THREE.SphereGeometry(0.185 * hs, 16, 14), skinMat);
+  cranium.scale.set(0.95, 1.06, 1.02);
+  cranium.position.y = 0.16 * hs;
+  head.add(cranium);
+  const jaw = mesh(new THREE.CylinderGeometry(0.135 * hs, 0.11 * hs, 0.12 * hs, 12), skinMat);
+  jaw.scale.set(1, 1, 1.08);
+  jaw.position.set(0, 0.06 * hs, 0.025 * hs);
+  head.add(jaw);
+  for (const side of [-1, 1]) {
+    const ear = mesh(new THREE.SphereGeometry(0.042 * hs, 8, 8), skinMat, false);
+    ear.scale.set(0.45, 0.98, 0.72);
+    ear.position.set(side * 0.175 * hs, 0.14 * hs, -0.01 * hs);
+    head.add(ear);
+    const eye = mesh(
+      new THREE.SphereGeometry(0.03 * hs, 10, 8),
+      featureMat(16316661, 0.2),
+      false
+    );
+    eye.scale.set(1, 1, 0.6);
+    eye.position.set(side * 0.068 * hs, 0.18 * hs, 0.155 * hs);
+    head.add(eye);
+    const pupil = mesh(
+      new THREE.SphereGeometry(0.018 * hs, 8, 8),
+      featureMat(1118481, 0.1),
+      false
+    );
+    pupil.position.set(side * 0.068 * hs, 0.18 * hs, 0.182 * hs);
+    head.add(pupil);
+  }
+  const nose = mesh(new THREE.ConeGeometry(0.036 * hs, 0.085 * hs, 8), skinMat, false);
+  nose.rotation.x = Math.PI * 0.42;
+  nose.position.set(0, 0.14 * hs, 0.185 * hs);
+  head.add(nose);
+  const browGeo = new THREE.BoxGeometry(0.068 * hs, 0.02 * hs, 0.028 * hs);
+  const browL = mesh(browGeo, hairMat, false);
+  browL.position.set(-0.068 * hs, 0.228 * hs, 0.168 * hs);
+  head.add(browL);
+  const browR = mesh(browGeo.clone(), hairMat, false);
+  browR.position.set(0.068 * hs, 0.228 * hs, 0.168 * hs);
+  head.add(browR);
+  const mouth = mesh(
+    new THREE.BoxGeometry(0.085 * hs, 0.028 * hs, 0.025 * hs),
+    featureMat(3872020, 0.6),
+    false
+  );
+  mouth.position.set(0, 0.072 * hs, 0.158 * hs);
+  head.add(mouth);
+  const headband = mesh(new THREE.TorusGeometry(0.175 * hs, 0.028 * hs, 8, 20), bandMat, false);
+  headband.rotation.x = Math.PI / 2;
+  headband.position.set(0, 0.255 * hs, 5e-3 * hs);
+  head.add(headband);
+  const tailGeo = new THREE.BoxGeometry(0.046 * hs, 0.016 * hs, 0.38 * hs);
+  tailGeo.translate(0, 0, -0.19 * hs);
+  const bandTailL = mesh(tailGeo, bandMat, false);
+  bandTailL.position.set(-0.03 * hs, 0.255 * hs, -0.17 * hs);
+  bandTailL.rotation.y = 0.13;
+  head.add(bandTailL);
+  const bandTailR = mesh(tailGeo.clone(), bandMat, false);
+  bandTailR.position.set(0.03 * hs, 0.255 * hs, -0.17 * hs);
+  bandTailR.rotation.y = -0.13;
+  head.add(bandTailR);
+  if (params2.hairStyle === "mohawk") {
+    const crest = mesh(new THREE.BoxGeometry(0.065 * hs, 0.13 * hs, 0.28 * hs), hairMat);
+    crest.position.set(0, 0.35 * hs, -0.01 * hs);
+    head.add(crest);
+  } else if (params2.hairStyle === "dreads") {
+    for (let i = 0; i < 9; i++) {
+      const a = i / 9 * Math.PI * 1.4 - Math.PI * 0.7;
+      const dread = mesh(new THREE.CylinderGeometry(0.024 * hs, 0.018 * hs, 0.24 * hs, 6), hairMat, false);
+      dread.position.set(Math.sin(a) * 0.14 * hs, 0.29 * hs, -Math.cos(a) * 0.12 * hs - 0.04 * hs);
+      dread.rotation.x = -0.55;
+      dread.rotation.z = -Math.sin(a) * 0.3;
+      head.add(dread);
+    }
+  } else if (params2.hairStyle === "fade") {
+    const top = mesh(new THREE.CylinderGeometry(0.16 * hs, 0.17 * hs, 0.1 * hs, 14), hairMat);
+    top.position.set(0, 0.33 * hs, 0);
+    head.add(top);
+  } else if (params2.hairStyle === "buzz") {
+    const cap = mesh(new THREE.SphereGeometry(0.186 * hs, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.48), hairMat, false);
+    cap.position.set(0, 0.175 * hs, -5e-3 * hs);
+    head.add(cap);
+  } else if (params2.hairStyle === "spiky") {
+    const cap = mesh(new THREE.SphereGeometry(0.19 * hs, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.46), hairMat, false);
+    cap.scale.set(0.97, 1.02, 1.04);
+    cap.position.set(0, 0.185 * hs, -8e-3 * hs);
+    head.add(cap);
+    const spikeGeo = new THREE.ConeGeometry(0.058 * hs, 0.2 * hs, 6);
+    const spikes = [
+      // [x, z, tiltX (negative = swept back), tiltZ, lengthScale]
+      [0, 0.05, -0.5, 0, 1.15],
+      [-0.07, 0.02, -0.55, 0.35, 1],
+      [0.07, 0.02, -0.55, -0.35, 1],
+      [-0.05, -0.06, -0.8, 0.25, 0.9],
+      [0.05, -0.06, -0.8, -0.25, 0.9],
+      [0, -0.11, -1, 0, 0.8]
+    ];
+    for (const [sx, sz, tx, tz, ls] of spikes) {
+      const sp = mesh(spikeGeo, hairMat, false);
+      sp.scale.set(1, ls, 1);
+      sp.position.set(sx * hs, 0.355 * hs, sz * hs);
+      sp.rotation.x = tx;
+      sp.rotation.z = tz;
+      head.add(sp);
+    }
+  }
+  const buildArm = (side) => {
+    const shoulder = new THREE.Group();
+    shoulder.position.set(side * P.shoulderX * wS, P.shoulderY * hS, 0);
+    torso.add(shoulder);
+    const delt = mesh(new THREE.SphereGeometry(0.095 * wS, 10, 10), skinMat);
+    shoulder.add(delt);
+    const sleeve = mesh(taperedLimb(0.105 * wS, 0.128 * wS, 0.09 * hS), giMat);
+    sleeve.position.y = 0.03;
+    shoulder.add(sleeve);
+    const upper = mesh(taperedLimb(0.08 * wS, 0.066 * wS, P.upperArm * hS), skinMat);
+    shoulder.add(upper);
+    const forearm = new THREE.Group();
+    forearm.position.y = -P.upperArm * hS;
+    shoulder.add(forearm);
+    const elbow = mesh(new THREE.SphereGeometry(0.065 * wS, 8, 8), skinMat, false);
+    forearm.add(elbow);
+    const lower = mesh(taperedLimb(0.066 * wS, 0.052 * wS, P.forearm * hS), skinMat);
+    forearm.add(lower);
+    const hand = buildHand(gloveMat ?? skinMat, handScale, side);
+    hand.position.y = -P.forearm * hS;
+    forearm.add(hand);
+    const fist = new THREE.Object3D();
+    fist.position.set(0, -0.1, 0.01);
+    hand.add(fist);
+    return { shoulder, forearm, hand, fist };
+  };
+  const armL = buildArm(-1);
+  const armR = buildArm(1);
+  const buildLeg = (side) => {
+    const leg = new THREE.Group();
+    leg.position.set(side * P.hipX * wS, -P.hipDrop * hS, 0);
+    hips.add(leg);
+    const pantThigh = mesh(taperedLimb(0.128 * wS, 0.104 * wS, P.thigh * hS), giMat);
+    leg.add(pantThigh);
+    const shin = new THREE.Group();
+    shin.position.y = -P.thigh * hS;
+    leg.add(shin);
+    const knee = mesh(new THREE.SphereGeometry(0.082 * wS, 10, 8), giMat, false);
+    shin.add(knee);
+    const pantCalf = mesh(taperedLimb(0.096 * wS, 0.07 * wS, (P.calf - 0.13) * hS), giMat);
+    shin.add(pantCalf);
+    const ankleSkin = mesh(new THREE.CylinderGeometry(0.052 * wS, 0.048 * wS, 0.15, 10), skinMat, false);
+    ankleSkin.position.y = -(P.calf - 0.065) * hS;
+    shin.add(ankleSkin);
+    const ankle = new THREE.Object3D();
+    ankle.position.y = -P.calf * hS;
+    shin.add(ankle);
+    const footPivot = new THREE.Group();
+    footPivot.position.y = -P.calf * hS;
+    shin.add(footPivot);
+    const foot = buildBareFoot(skinMat);
+    foot.group.position.y = -P.ankleToSole;
+    if (footScale !== 1) foot.group.scale.setScalar(footScale);
+    footPivot.add(foot.group);
+    return { leg, shin, ankle, heel: foot.heel, toe: foot.toe, foot: footPivot };
+  };
+  const legL = buildLeg(-1);
+  const legR = buildLeg(1);
+  const shadowTex = makeContactShadowTexture();
+  const contactShadow = new THREE.Mesh(
+    new THREE.CircleGeometry(0.58 * wS, 24),
+    new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, opacity: 0.55, depthWrite: false })
+  );
+  contactShadow.rotation.x = -Math.PI / 2;
+  contactShadow.position.y = 0.015;
+  root.add(contactShadow);
+  if (toonMode) addInvertedHullOutlines(root, toon.outlineWidth, toon.outlineColor);
+  return {
+    root,
+    bodyPivot,
+    hips,
+    torso,
+    head,
+    armL: armL.shoulder,
+    forearmL: armL.forearm,
+    handL: armL.hand,
+    armR: armR.shoulder,
+    forearmR: armR.forearm,
+    handR: armR.hand,
+    legL: legL.leg,
+    shinL: legL.shin,
+    footL: legL.foot,
+    legR: legR.leg,
+    shinR: legR.shin,
+    footR: legR.foot,
+    bandTailL,
+    bandTailR,
+    mouth,
+    browL,
+    browR,
+    contactShadow,
+    headC: cranium,
+    fistL: armL.fist,
+    fistR: armR.fist,
+    ankleL: legL.ankle,
+    ankleR: legR.ankle,
+    heelL: legL.heel,
+    heelR: legR.heel,
+    toeL: legL.toe,
+    toeR: legR.toe,
+    skinMat,
+    clothMat,
+    params: params2,
+    dispose: () => {
+      shadowTex.dispose();
+      root.traverse((obj) => {
+        const m = obj;
+        if (m.isMesh) {
+          m.geometry.dispose();
+          const mats = Array.isArray(m.material) ? m.material : [m.material];
+          mats.forEach((mat) => mat.dispose());
+        }
+      });
+    }
+  };
+}
+var NEUTRAL_POSE = {
+  bodyY: 0,
+  bodyPitch: 0,
+  bodyRoll: 0,
+  spin: null,
+  hipsPitch: 0,
+  hipsYaw: 0,
+  hipsRoll: 0,
+  torsoPitch: 0,
+  torsoYaw: 0,
+  torsoRoll: 0,
+  headPitch: 0,
+  headYaw: 0,
+  headRoll: 0,
+  armLX: 0,
+  armLY: 0,
+  armLZ: 0.15,
+  foreLX: -0.35,
+  foreLY: 0,
+  foreLZ: 0,
+  armRX: 0,
+  armRY: 0,
+  armRZ: -0.15,
+  foreRX: -0.35,
+  foreRY: 0,
+  foreRZ: 0,
+  handLX: 0,
+  handLY: 0,
+  handLZ: 0,
+  handRX: 0,
+  handRY: 0,
+  handRZ: 0,
+  legLX: 0,
+  legLY: 0,
+  legLZ: 0,
+  shinLX: 0.08,
+  shinLY: 0,
+  shinLZ: 0,
+  legRX: 0,
+  legRY: 0,
+  legRZ: 0,
+  shinRX: 0.08,
+  shinRY: 0,
+  shinRZ: 0,
+  footLX: 0,
+  footLY: 0,
+  footLZ: 0,
+  footRX: 0,
+  footRY: 0,
+  footRZ: 0,
+  mouth: 1,
+  brow: 0.14
+};
+var snapEnv = (u) => Math.sin(Math.min(1, u * 1.45) * Math.PI);
+var jabProgram = (_t, _ctx, out) => {
+  const snap = snapEnv(_t);
+  out.torsoYaw = 0.55 * snap;
+  out.torsoPitch = 0.18 * snap;
+  out.armLX = -1.65 * snap;
+  out.foreLX = -0.1;
+  out.armRX = -0.9;
+  out.foreRX = -1.4;
+  out.legLX = -0.28 * snap;
+  out.legRX = 0.28 * snap;
+  out.brow = 0.36;
+  out.mouth = 1.9;
+};
+var windmillProgram = (t, _ctx, out) => {
+  out.armRX = -Math.PI * 0.5 - t * Math.PI * 2.2;
+  out.foreRX = -0.15;
+  out.armLX = -0.8;
+  out.armLZ = 0.6;
+  out.torsoPitch = 0.22 * Math.sin(t * Math.PI);
+  out.legLX = -0.55;
+  out.legRX = 0.45;
+  out.shinLX = 0.9;
+  out.shinRX = 0.7;
+  out.brow = 0.35;
+  out.mouth = 2.7;
+};
+var spinProgram = (t, _ctx, out) => {
+  out.spin = t * Math.PI * 2;
+  out.armRX = -2.45;
+  out.armLX = -2.2;
+  out.foreRX = -0.35;
+  out.legLX = -0.45;
+  out.legRX = -0.45;
+  out.shinLX = 0.85;
+  out.shinRX = 0.85;
+  out.mouth = 2.7;
+};
+var tomahawkProgram = (t, _ctx, out) => {
+  const cock = t < 0.65 ? -3.15 * (t / 0.65) : -3.15 + (t - 0.65) / 0.35 * 1.95;
+  out.armRX = cock;
+  out.foreRX = -0.3;
+  out.armLX = -0.7;
+  out.torsoPitch = t < 0.65 ? -0.32 : 0.42;
+  out.legLX = -0.65;
+  out.legRX = 0.5;
+  out.shinLX = 0.95;
+  out.mouth = 2.7;
+};
+var knockdownProgram = (t, _ctx, out) => {
+  const k = Math.min(1, t / 0.25);
+  out.bodyPitch = -Math.PI * 0.48 * k;
+  out.bodyY = (1 - k) * 0.15 + k * 0.18;
+  out.armLX = -1.4 * k;
+  out.armLZ = 0.95 * k;
+  out.armRX = -1.1 * k;
+  out.armRZ = -0.95 * k;
+  out.legLX = 0.35 * k;
+  out.legRX = -0.25 * k;
+  out.shinLX = 0.45 * k;
+  out.headPitch = -0.3;
+  out.mouth = 2.8;
+  out.brow = -0.35;
+};
+var EXAMPLE_PROGRAMS = {
+  jab: jabProgram,
+  windmill: windmillProgram,
+  spin: spinProgram,
+  tomahawk: tomahawkProgram,
+  knockdown: knockdownProgram
+};
+var DAMP_RATE = 16;
+function applyBaseLayers(s, out) {
+  if (s.moving) {
+    const swing = Math.sin(s.runPhase);
+    const stride = 0.55 + s.momentum * 0.55;
+    const bounce = Math.abs(Math.cos(s.runPhase)) * (0.06 + s.momentum * 0.06);
+    out.bodyY = s.airY + bounce;
+    out.torsoPitch = 0.14 + s.lean * 1.15;
+    out.torsoYaw = swing * 0.18;
+    out.legLX = swing * stride;
+    out.legRX = -swing * stride;
+    out.shinLX = Math.max(0.08, -swing * stride * 0.95 + 0.35);
+    out.shinRX = Math.max(0.08, swing * stride * 0.95 + 0.35);
+    if (s.hasBall) {
+      const drib = Math.sin(s.dribblePhase);
+      out.armRX = -0.65 + drib * 0.45;
+      out.foreRX = -0.65 - drib * 0.45;
+      out.armLX = -0.55 - swing * 0.35;
+      out.armLZ = 0.38;
+      out.foreLX = -0.95;
+    } else {
+      out.armLX = -swing * stride * 0.9;
+      out.armRX = swing * stride * 0.9;
+      out.foreLX = -0.9 - s.momentum * 0.4;
+      out.foreRX = -0.9 - s.momentum * 0.4;
+    }
+    return;
+  }
+  const breathe = Math.sin(s.time * 4.2 + (s.slot ?? 0) * 2.1);
+  out.bodyY = s.airY + breathe * 0.025;
+  if (s.guarding) {
+    out.torsoPitch = 0.2;
+    out.armLX = -1.25;
+    out.armLZ = -0.25;
+    out.foreLX = -1.65;
+    out.armRX = -1.25;
+    out.armRZ = 0.25;
+    out.foreRX = -1.65;
+    out.legLX = -0.22;
+    out.legRX = 0.22;
+    out.shinLX = 0.42;
+    out.shinRX = 0.42;
+    out.brow = 0.26;
+  } else if (s.hasBall) {
+    const drib = Math.sin(s.dribblePhase);
+    out.torsoPitch = 0.16;
+    out.armRX = -0.58 + drib * 0.38;
+    out.foreRX = -0.68 - drib * 0.38;
+    out.armLX = -0.35;
+    out.armLZ = 0.32;
+    out.foreLX = -0.8;
+    out.legLX = -0.18;
+    out.legRX = 0.18;
+    out.shinLX = 0.36;
+    out.shinRX = 0.36;
+  } else {
+    out.torsoPitch = 0.12;
+    out.armLX = -0.28 + breathe * 0.08;
+    out.armLZ = 0.28;
+    out.foreLX = -0.75;
+    out.armRX = -0.28 - breathe * 0.08;
+    out.armRZ = -0.28;
+    out.foreRX = -0.75;
+    out.legLX = -0.14;
+    out.legRX = 0.14;
+    out.shinLX = 0.28;
+    out.shinRX = 0.28;
+  }
+}
+function updateHumanoid(rig, s, dt, programs = EXAMPLE_PROGRAMS) {
+  const damp = 1 - Math.exp(-DAMP_RATE * dt);
+  const hS = rig.params.body.height;
+  rig.root.position.set(s.x, 0, s.z);
+  const shadowScale = Math.max(0.42, 1 - s.airY * 0.18);
+  rig.contactShadow.scale.setScalar(shadowScale);
+  rig.contactShadow.material.opacity = Math.max(0.15, 0.55 - s.airY * 0.12);
+  const out = { ...NEUTRAL_POSE };
+  if (s.action && programs[s.action]) {
+    programs[s.action](s.actionT, s, out);
+    out.bodyY += s.airY;
+  } else {
+    applyBaseLayers(s, out);
+  }
+  const sq = s.squash;
+  const stretchY = s.airY > 0.35 ? 1.07 : 1 - sq * 0.18;
+  const stretchXZ = s.airY > 0.35 ? 0.94 : 1 + sq * 0.15;
+  rig.bodyPivot.scale.set(stretchXZ, stretchY, stretchXZ);
+  const ease = (obj, axis, target) => {
+    obj.rotation[axis] += (target - obj.rotation[axis]) * damp;
+  };
+  rig.bodyPivot.position.y += (out.bodyY - rig.bodyPivot.position.y) * damp;
+  ease(rig.bodyPivot, "x", out.bodyPitch);
+  ease(rig.bodyPivot, "z", out.bodyRoll);
+  if (out.spin !== null) {
+    rig.bodyPivot.rotation.y = s.facingYaw + out.spin;
+  } else {
+    let diff = s.facingYaw - rig.bodyPivot.rotation.y;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    rig.bodyPivot.rotation.y += diff * damp;
+  }
+  rig.hips.position.y = (rig.params.proportions?.hipHeight ?? PROPORTIONS.hipHeight) * hS;
+  ease(rig.hips, "x", out.hipsPitch);
+  ease(rig.hips, "y", out.hipsYaw);
+  ease(rig.hips, "z", out.hipsRoll);
+  ease(rig.torso, "x", out.torsoPitch);
+  ease(rig.torso, "y", out.torsoYaw);
+  ease(rig.torso, "z", out.torsoRoll);
+  ease(rig.head, "x", out.headPitch);
+  ease(rig.head, "y", out.headYaw);
+  ease(rig.head, "z", out.headRoll);
+  rig.mouth.scale.y += (out.mouth - rig.mouth.scale.y) * damp;
+  ease(rig.browL, "z", -out.brow);
+  ease(rig.browR, "z", out.brow);
+  const flutterFreq = 7 + s.momentum * 18 + (s.airY > 0.2 ? 8 : 0);
+  const flutterAmp = 0.08 + s.momentum * 0.28;
+  const tailDrape = -0.84 + s.momentum * 0.62 + (s.vy < -1 ? 0.35 : 0);
+  rig.bandTailL.rotation.x = tailDrape + Math.sin(s.time * flutterFreq) * flutterAmp;
+  rig.bandTailR.rotation.x = tailDrape + Math.cos(s.time * flutterFreq * 1.15) * flutterAmp;
+  ease(rig.armL, "x", out.armLX);
+  ease(rig.armL, "y", out.armLY);
+  ease(rig.armL, "z", out.armLZ);
+  ease(rig.forearmL, "x", out.foreLX);
+  ease(rig.forearmL, "y", out.foreLY);
+  ease(rig.forearmL, "z", out.foreLZ);
+  ease(rig.handL, "x", out.handLX);
+  ease(rig.handL, "y", out.handLY);
+  ease(rig.handL, "z", out.handLZ);
+  ease(rig.armR, "x", out.armRX);
+  ease(rig.armR, "y", out.armRY);
+  ease(rig.armR, "z", out.armRZ);
+  ease(rig.forearmR, "x", out.foreRX);
+  ease(rig.forearmR, "y", out.foreRY);
+  ease(rig.forearmR, "z", out.foreRZ);
+  ease(rig.handR, "x", out.handRX);
+  ease(rig.handR, "y", out.handRY);
+  ease(rig.handR, "z", out.handRZ);
+  ease(rig.legL, "x", out.legLX);
+  ease(rig.legL, "y", out.legLY);
+  ease(rig.legL, "z", out.legLZ);
+  ease(rig.shinL, "x", out.shinLX);
+  ease(rig.shinL, "y", out.shinLY);
+  ease(rig.shinL, "z", out.shinLZ);
+  ease(rig.footL, "x", out.footLX);
+  ease(rig.footL, "y", out.footLY);
+  ease(rig.footL, "z", out.footLZ);
+  ease(rig.legR, "x", out.legRX);
+  ease(rig.legR, "y", out.legRY);
+  ease(rig.legR, "z", out.legRZ);
+  ease(rig.shinR, "x", out.shinRX);
+  ease(rig.shinR, "y", out.shinRY);
+  ease(rig.shinR, "z", out.shinRZ);
+  ease(rig.footR, "x", out.footRX);
+  ease(rig.footR, "y", out.footRY);
+  ease(rig.footR, "z", out.footRZ);
+}
+
+// src/ryu.ts
+import * as THREE2 from "three";
+function makeGiTexture(skinCss = "#cf945f", baseCss = "#f4f1ea") {
+  const c = document.createElement("canvas");
+  c.width = c.height = 512;
+  const ctx = c.getContext("2d");
+  if (new URLSearchParams(location.search).has("texdebug")) {
+    ctx.fillStyle = "#ff2020";
+    ctx.fillRect(0, 0, 512, 128);
+    ctx.fillStyle = "#2020ff";
+    ctx.fillRect(0, 384, 512, 128);
+    ctx.fillStyle = "#20ff20";
+    ctx.fillRect(64, 128, 128, 256);
+    const t = new THREE2.CanvasTexture(c);
+    t.colorSpace = THREE2.SRGBColorSpace;
+    return t;
+  }
+  ctx.fillStyle = baseCss;
+  ctx.fillRect(0, 0, 512, 512);
+  const grad = ctx.createLinearGradient(0, 0, 0, 512);
+  grad.addColorStop(0, "rgba(255,255,255,0)");
+  grad.addColorStop(1, "rgba(120,112,96,0.20)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 512, 512);
+  for (const sx of [0, 256, 512]) {
+    const sg = ctx.createLinearGradient(sx - 40, 0, sx + 40, 0);
+    sg.addColorStop(0, "rgba(110,102,88,0)");
+    sg.addColorStop(0.5, "rgba(110,102,88,0.12)");
+    sg.addColorStop(1, "rgba(110,102,88,0)");
+    ctx.fillStyle = sg;
+    ctx.fillRect(sx - 40, 0, 80, 512);
+  }
+  const FX = 384;
+  const skin = skinCss;
+  ctx.fillStyle = skin;
+  ctx.beginPath();
+  ctx.moveTo(FX - 58, 0);
+  ctx.lineTo(FX + 58, 0);
+  ctx.lineTo(FX, 218);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#d9d2c2";
+  ctx.lineWidth = 13;
+  ctx.beginPath();
+  ctx.moveTo(FX - 58, 0);
+  ctx.lineTo(FX, 218);
+  ctx.lineTo(FX + 58, 0);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(105,96,80,0.55)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(FX - 66, 0);
+  ctx.lineTo(FX, 226);
+  ctx.lineTo(FX + 66, 0);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(105,96,80,0.35)";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(FX, 226);
+  ctx.lineTo(FX - 16, 512);
+  ctx.stroke();
+  const tex = new THREE2.CanvasTexture(c);
+  tex.colorSpace = THREE2.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+var RYU = {
+  body: { width: 1.56, height: 1, headScale: 1.42, handScale: 1.6 },
+  palette: {
+    skin: 15907470,
+    // sprite skin light (#f4be92/#e7a283 family)
+    jersey: 15328975,
+    // gi cream (sprite gi light #e6e5cb)
+    shorts: 15328975,
+    // gi cream (pants / waist)
+    trim: 1315860,
+    // belt — sprite's exact near-black
+    hair: 1511950,
+    band: 12589312,
+    // sprite headband red, sampled (#bb0000–#c01900)
+    glove: 8006940,
+    // dark red-brown glove leather (sprite fist zones)
+    shoePrimary: 13603935,
+    // unused (bare feet)
+    shoeAccent: 13603935
+    // unused
+  },
+  proportions: {
+    thigh: 0.46,
+    calf: 0.475,
+    hipHeight: 1.065,
+    torsoRise: 0.055,
+    headY: 0.575,
+    upperArm: 0.3,
+    forearm: 0.36,
+    shoulderX: 0.36,
+    hipX: 0.16,
+    footScale: 1.35
+  },
+  toon: { halftone: 0.25 },
+  // sprite shade is flat pixel clusters, not dots
+  hairStyle: "spiky"
+};
+var POSE_FIELDS = [
+  "bodyY",
+  "bodyPitch",
+  "bodyRoll",
+  "torsoPitch",
+  "torsoYaw",
+  "headPitch",
+  "armLX",
+  "armLZ",
+  "foreLX",
+  "armRX",
+  "armRZ",
+  "foreRX",
+  "legLX",
+  "shinLX",
+  "legRX",
+  "shinRX",
+  "mouth",
+  "brow"
+];
+function keyframed(keys2, spinFn) {
+  const sorted = [...keys2].sort((a, b) => a[0] - b[0]);
+  return (t, _ctx, out) => {
+    let a = sorted[0];
+    let b = sorted[sorted.length - 1];
+    if (t <= a[0]) {
+      b = a;
+    } else if (t >= b[0]) {
+      a = b;
+    } else {
+      for (let i = 0; i < sorted.length - 1; i++) {
+        if (t >= sorted[i][0] && t <= sorted[i + 1][0]) {
+          a = sorted[i];
+          b = sorted[i + 1];
+          break;
+        }
+      }
+    }
+    const span = b[0] - a[0];
+    const k = span > 0 ? (t - a[0]) / span : 0;
+    const smooth = k * k * (3 - 2 * k);
+    for (const f of POSE_FIELDS) {
+      const av = a[1][f] ?? NEUTRAL_POSE[f];
+      const bv = b[1][f] ?? NEUTRAL_POSE[f];
+      out[f] = av + (bv - av) * smooth;
+    }
+    if (spinFn) out.spin = spinFn(t);
+  };
+}
+var idleProgram = (t, ctx, out) => {
+  const breathe = Math.sin(ctx.time * 2.1) * 0.012;
+  out.bodyY = -0.14 + breathe;
+  out.torsoPitch = 0.27;
+  out.torsoYaw = -0.26;
+  out.headPitch = 0.08;
+  out.armLX = 0.4;
+  out.armLZ = 0.3;
+  out.foreLX = -1.95;
+  out.armRX = -0.42;
+  out.armRZ = -0.25;
+  out.foreRX = 0.8;
+  out.legLX = -0.62;
+  out.shinLX = 0.42;
+  out.legRX = 0.66;
+  out.shinRX = -0.42;
+  out.brow = 0.34;
+  out.mouth = 1;
+};
+var hadoukenProgram = keyframed([
+  [0, {
+    armLX: 0.3,
+    armLZ: 0.52,
+    foreLX: -0.55,
+    armRX: 0.3,
+    armRZ: -0.52,
+    foreRX: -0.55,
+    legLX: -0.4,
+    shinLX: 0.5,
+    legRX: 0.44,
+    shinRX: 0.14,
+    bodyY: -0.1,
+    torsoPitch: 0.16,
+    torsoYaw: -0.3,
+    mouth: 1.2,
+    brow: 0.3
+  }],
+  [0.34, {
+    armLX: 0.44,
+    armLZ: 0.58,
+    foreLX: -0.78,
+    armRX: 0.44,
+    armRZ: -0.58,
+    foreRX: -0.78,
+    legLX: -0.42,
+    shinLX: 0.52,
+    legRX: 0.46,
+    shinRX: 0.15,
+    bodyY: -0.13,
+    torsoPitch: 0.18,
+    torsoYaw: -0.38,
+    mouth: 1.5,
+    brow: 0.36
+  }],
+  [0.52, {
+    armLX: -1.4,
+    armLZ: 0.5,
+    foreLX: -0.1,
+    armRX: -1.33,
+    armRZ: -0.5,
+    foreRX: -0.12,
+    legLX: -0.42,
+    shinLX: 0.52,
+    legRX: 0.46,
+    shinRX: 0.15,
+    bodyY: -0.1,
+    torsoPitch: 0.26,
+    torsoYaw: 0.02,
+    headPitch: 0.04,
+    mouth: 2.3,
+    brow: 0.4
+  }],
+  [0.78, {
+    armLX: -1.36,
+    armLZ: 0.48,
+    foreLX: -0.12,
+    armRX: -1.29,
+    armRZ: -0.48,
+    foreRX: -0.14,
+    legLX: -0.42,
+    shinLX: 0.52,
+    legRX: 0.46,
+    shinRX: 0.15,
+    bodyY: -0.1,
+    torsoPitch: 0.22,
+    torsoYaw: 0,
+    mouth: 1.8,
+    brow: 0.36
+  }],
+  [1, {
+    armLX: 0.4,
+    armLZ: 0.3,
+    foreLX: -1.95,
+    armRX: -0.42,
+    armRZ: -0.25,
+    foreRX: 0.8,
+    legLX: -0.62,
+    shinLX: 0.42,
+    legRX: 0.66,
+    shinRX: -0.42,
+    bodyY: -0.14,
+    torsoPitch: 0.27,
+    torsoYaw: -0.26,
+    mouth: 1,
+    brow: 0.34
+  }]
+]);
+var shoryukenSpin = (t) => {
+  if (t < 0.26) return 0;
+  const k = Math.min(1, (t - 0.26) / 0.3);
+  const e = k * k * (3 - 2 * k);
+  return e * Math.PI * 2;
+};
+var shoryukenProgram = keyframed([
+  [0, {
+    armLX: 0.4,
+    armLZ: 0.3,
+    foreLX: -1.95,
+    armRX: -0.42,
+    armRZ: -0.25,
+    foreRX: 0.8,
+    legLX: -0.62,
+    shinLX: 0.42,
+    legRX: 0.66,
+    shinRX: -0.42,
+    bodyY: -0.14,
+    torsoPitch: 0.27,
+    torsoYaw: -0.26,
+    mouth: 1,
+    brow: 0.34
+  }],
+  [0.26, {
+    armLX: 0.38,
+    armLZ: 0.2,
+    foreLX: -2.25,
+    armRX: -0.45,
+    armRZ: -0.3,
+    foreRX: -1.7,
+    legLX: -0.8,
+    shinLX: 1.3,
+    legRX: 0.42,
+    shinRX: 0.95,
+    bodyY: -0.3,
+    torsoPitch: 0.4,
+    torsoYaw: -0.1,
+    headPitch: 0.15,
+    mouth: 1.6,
+    brow: 0.38
+  }],
+  [0.45, {
+    armLX: -2.2,
+    armLZ: 0.1,
+    foreLX: -0.4,
+    armRX: -0.9,
+    armRZ: -0.35,
+    foreRX: -1.2,
+    legLX: 0.25,
+    shinLX: 0.15,
+    legRX: -0.3,
+    shinRX: 0.6,
+    bodyY: -0.05,
+    torsoPitch: 0.05,
+    torsoYaw: 0,
+    headPitch: -0.05,
+    mouth: 2.2,
+    brow: 0.38
+  }],
+  [0.62, {
+    armLX: -3.02,
+    armLZ: 0.05,
+    foreLX: -0.08,
+    armRX: 1,
+    armRZ: -0.35,
+    foreRX: -0.55,
+    legLX: -0.62,
+    shinLX: 1.42,
+    legRX: 0.1,
+    shinRX: 0.02,
+    bodyY: 0,
+    torsoPitch: -0.1,
+    torsoYaw: 0,
+    headPitch: -0.06,
+    mouth: 2.5,
+    brow: 0.35
+  }],
+  [0.85, {
+    armLX: -2.6,
+    armLZ: 0.1,
+    foreLX: -0.3,
+    armRX: 0.4,
+    armRZ: -0.3,
+    foreRX: -0.9,
+    legLX: -0.2,
+    shinLX: 0.3,
+    legRX: 0.15,
+    shinRX: 0.25,
+    bodyY: -0.02,
+    torsoPitch: 0.1,
+    torsoYaw: -0.05,
+    headPitch: 0,
+    mouth: 1.8,
+    brow: 0.34
+  }],
+  [1, {
+    armLX: 0.4,
+    armLZ: 0.3,
+    foreLX: -1.95,
+    armRX: -0.58,
+    armRZ: -0.25,
+    foreRX: 1.02,
+    legLX: -0.52,
+    shinLX: 0.38,
+    legRX: 0.58,
+    shinRX: -0.5,
+    bodyY: -0.14,
+    torsoPitch: 0.24,
+    torsoYaw: -0.18,
+    mouth: 1.2,
+    brow: 0.34
+  }]
+], shoryukenSpin);
+var RYU_PROGRAMS = {
+  idle: idleProgram,
+  hadouken: hadoukenProgram,
+  shoryuken: shoryukenProgram
+};
+
+// src/sfposes.js
+var SF_POSES = {
+  "idle": {
+    "torsoPitch": 0.245,
+    "torsoYaw": -0.355,
+    "headPitch": 0.077,
+    "bodyY": 0,
+    "armLX": 0.405,
+    "armLZ": 0,
+    "foreLX": -1.976,
+    "legLX": -0.464,
+    "shinLX": 0.322,
+    "armRX": -0.611,
+    "armRZ": 0,
+    "foreRX": 0.7,
+    "legRX": 0.615,
+    "shinRX": -0.8
+  },
+  "walk_forward": {
+    "torsoPitch": 0.373,
+    "torsoYaw": -0.253,
+    "headPitch": 0.134,
+    "bodyY": -0.025,
+    "armLX": -0.322,
+    "armLZ": 0,
+    "foreLX": -1.069,
+    "legLX": -0.758,
+    "shinLX": 3e-3,
+    "armRX": -0.844,
+    "armRZ": 0,
+    "foreRX": -0.032,
+    "legRX": 0.41,
+    "shinRX": 0.678
+  },
+  "walk_back": {
+    "torsoPitch": 0.41,
+    "torsoYaw": -0.282,
+    "headPitch": 0.157,
+    "bodyY": 0.173,
+    "armLX": 1.2,
+    "armLZ": 0.4,
+    "foreLX": 0.7,
+    "legLX": -0.481,
+    "shinLX": 0.017,
+    "armRX": -0.896,
+    "armRZ": 0,
+    "foreRX": 0.034,
+    "legRX": 0.569,
+    "shinRX": 0.216
+  },
+  "turn": {
+    "torsoPitch": 0.136,
+    "torsoYaw": -0.263,
+    "headPitch": 0.423,
+    "bodyY": -0.049,
+    "armLX": 0.278,
+    "armLZ": 0,
+    "foreLX": -1.063,
+    "legLX": 0.292,
+    "shinLX": -0.175,
+    "armRX": -0.862,
+    "armRZ": 0,
+    "foreRX": 0.696,
+    "legRX": -0.188,
+    "shinRX": -0.057
+  },
+  "crouch": {
+    "torsoPitch": 0.405,
+    "torsoYaw": -0.282,
+    "headPitch": 0.058,
+    "bodyY": -0.5,
+    "armLX": 0.165,
+    "armLZ": 0,
+    "foreLX": -2.014,
+    "legLX": 0.464,
+    "shinLX": 0.464,
+    "armRX": -1.19,
+    "armRZ": 0,
+    "foreRX": -0.921,
+    "legRX": -1.326,
+    "shinRX": 1.099
+  },
+  "crouch_block": {
+    "torsoPitch": 0.053,
+    "torsoYaw": -0.331,
+    "headPitch": -0.053,
+    "bodyY": -0.5,
+    "armLX": 0.418,
+    "armLZ": 0,
+    "foreLX": -2.7,
+    "legLX": 0.738,
+    "shinLX": -0.627,
+    "armRX": -0.507,
+    "armRZ": 0,
+    "foreRX": 0.7,
+    "legRX": -0.738,
+    "shinRX": 0.627
+  },
+  "stand_block": {
+    "torsoPitch": -0.255,
+    "torsoYaw": 0.189,
+    "headPitch": -0.067,
+    "bodyY": 0.173,
+    "armLX": -0.92,
+    "armLZ": 0,
+    "foreLX": 0.7,
+    "legLX": 0.205,
+    "shinLX": 0.061,
+    "armRX": 0.615,
+    "armRZ": 0,
+    "foreRX": -2.538,
+    "legRX": -0.205,
+    "shinRX": 0.07
+  },
+  "jump_rise": {
+    "torsoPitch": -0.04,
+    "torsoYaw": 0.263,
+    "headPitch": 0.131,
+    "bodyY": 0.321,
+    "armLX": -1.893,
+    "armLZ": 0.4,
+    "foreLX": -1.34,
+    "legLX": -0.785,
+    "shinLX": 1.446,
+    "armRX": 0.611,
+    "armRZ": 0,
+    "foreRX": 0.7,
+    "legRX": 0.091,
+    "shinRX": -8e-3
+  },
+  "jump_apex": {
+    "torsoPitch": -0.124,
+    "torsoYaw": 0.263,
+    "headPitch": -0.073,
+    "bodyY": 0.321,
+    "armLX": -1.751,
+    "armLZ": 0.4,
+    "foreLX": -1.515,
+    "legLX": 0.149,
+    "shinLX": -0.104,
+    "armRX": 0.394,
+    "armRZ": 0,
+    "foreRX": -2.378,
+    "legRX": -0.046,
+    "shinRX": 0.156
+  },
+  "jump_fall": {
+    "torsoPitch": 0.188,
+    "torsoYaw": 0.298,
+    "headPitch": 0.193,
+    "bodyY": -0.247,
+    "armLX": -0.927,
+    "armLZ": 0,
+    "foreLX": 0.387,
+    "legLX": -0.519,
+    "shinLX": 1.502,
+    "armRX": 0.322,
+    "armRZ": 0,
+    "foreRX": -1.107,
+    "legRX": 0.519,
+    "shinRX": -0.139
+  },
+  "jab": {
+    "torsoPitch": -0.306,
+    "torsoYaw": 0.23,
+    "headPitch": -0.112,
+    "bodyY": 0.148,
+    "armLX": -1.571,
+    "armLZ": 0.4,
+    "foreLX": 0.045,
+    "legLX": -0.395,
+    "shinLX": 0.505,
+    "armRX": 0.588,
+    "armRZ": 0,
+    "foreRX": 0.7,
+    "legRX": 0.322,
+    "shinRX": -0
+  },
+  "medium_punch": {
+    "torsoPitch": 0.381,
+    "torsoYaw": 0.396,
+    "headPitch": 0.294,
+    "bodyY": 0.025,
+    "armLX": -1.466,
+    "armLZ": 0,
+    "foreLX": -0.049,
+    "legLX": -0.615,
+    "shinLX": 0.893,
+    "armRX": 0.464,
+    "armRZ": 0,
+    "foreRX": -1.022,
+    "legRX": 0.625,
+    "shinRX": -0.067
+  },
+  "heavy_punch": {
+    "torsoPitch": 0,
+    "torsoYaw": 0.158,
+    "headPitch": 0.695,
+    "bodyY": -0.173,
+    "armLX": -1.515,
+    "armLZ": 0,
+    "foreLX": -0.392,
+    "legLX": -0.91,
+    "shinLX": 0.847,
+    "armRX": -1.365,
+    "armRZ": 0,
+    "foreRX": 6e-3,
+    "legRX": 0.838,
+    "shinRX": 0.072
+  },
+  "heavy_punch_close": {
+    "torsoPitch": -0.165,
+    "torsoYaw": 0.263,
+    "headPitch": -0.08,
+    "bodyY": 0.123,
+    "armLX": -2.159,
+    "armLZ": 0.4,
+    "foreLX": -0.704,
+    "legLX": 0.245,
+    "shinLX": 0.046,
+    "armRX": 0.785,
+    "armRZ": 0,
+    "foreRX": -0,
+    "legRX": -0.083,
+    "shinRX": 0.183
+  },
+  "light_kick": {
+    "torsoPitch": 0.481,
+    "torsoYaw": -0.298,
+    "headPitch": -0.063,
+    "bodyY": 0.074,
+    "armLX": -0.124,
+    "armLZ": 0,
+    "foreLX": -0.174,
+    "legLX": -0.048,
+    "shinLX": 0.103,
+    "armRX": -1.107,
+    "armRZ": 0,
+    "foreRX": -1.494,
+    "legRX": -1.198,
+    "shinRX": 0.091
+  },
+  "medium_kick": {
+    "torsoPitch": -0.588,
+    "torsoYaw": 0.217,
+    "headPitch": 0.124,
+    "bodyY": 0.222,
+    "armLX": -1.052,
+    "armLZ": 0,
+    "foreLX": 0.069,
+    "legLX": -2.09,
+    "shinLX": 0.197,
+    "armRX": 0.464,
+    "armRZ": 0,
+    "foreRX": -2.313,
+    "legRX": -0.077,
+    "shinRX": 0.031
+  },
+  "roundhouse_kick": {
+    "torsoPitch": -0.172,
+    "torsoYaw": 0.158,
+    "headPitch": -0.246,
+    "bodyY": 0.321,
+    "armLX": -1.326,
+    "armLZ": 0,
+    "foreLX": -0.018,
+    "legLX": -1.782,
+    "shinLX": -0.288,
+    "armRX": -1.571,
+    "armRZ": 0.4,
+    "foreRX": -0.245,
+    "legRX": 0.077,
+    "shinRX": 0.014
+  },
+  "crouch_light_punch": {
+    "torsoPitch": 0.563,
+    "torsoYaw": 0.19,
+    "headPitch": -0.044,
+    "bodyY": -0.5,
+    "armLX": -1.654,
+    "armLZ": 0.4,
+    "foreLX": 0.083,
+    "legLX": -0.951,
+    "shinLX": 1.062,
+    "armRX": -0.589,
+    "armRZ": 0,
+    "foreRX": -0.577,
+    "legRX": 0.694,
+    "shinRX": 0.157
+  },
+  "crouch_medium_punch": {
+    "torsoPitch": 0.399,
+    "torsoYaw": 0.242,
+    "headPitch": 0.065,
+    "bodyY": -0.5,
+    "armLX": -1.686,
+    "armLZ": 0.4,
+    "foreLX": 0.079,
+    "legLX": -0.695,
+    "shinLX": 1.054,
+    "armRX": -0.322,
+    "armRZ": 0,
+    "foreRX": -0.464,
+    "legRX": 0.552,
+    "shinRX": 0.069
+  },
+  "crouch_heavy_punch": {
+    "torsoPitch": -0.245,
+    "torsoYaw": 0.242,
+    "headPitch": 0,
+    "bodyY": -0.5,
+    "armLX": -2.356,
+    "armLZ": 0.4,
+    "foreLX": -0.633,
+    "legLX": -0.644,
+    "shinLX": 0.18,
+    "armRX": -0.54,
+    "armRZ": 0,
+    "foreRX": -0.304,
+    "legRX": 0.165,
+    "shinRX": -0.165
+  },
+  "crouch_light_kick": {
+    "torsoPitch": 0.532,
+    "torsoYaw": 0.263,
+    "headPitch": -0.114,
+    "bodyY": -0.321,
+    "armLX": -1.107,
+    "armLZ": 0,
+    "foreLX": -0,
+    "legLX": -0.818,
+    "shinLX": 0.132,
+    "armRX": 0.323,
+    "armRZ": 0,
+    "foreRX": -2.172,
+    "legRX": 0.125,
+    "shinRX": -0.034
+  },
+  "crouch_medium_kick": {
+    "torsoPitch": 0,
+    "torsoYaw": -0.346,
+    "headPitch": 0,
+    "bodyY": -0.5,
+    "armLX": 0.709,
+    "armLZ": 0,
+    "foreLX": -0.449,
+    "legLX": -1.03,
+    "shinLX": -0.181,
+    "armRX": -1.212,
+    "armRZ": 0,
+    "foreRX": -1.286,
+    "legRX": -0.588,
+    "shinRX": 0.446
+  },
+  "sweep": {
+    "torsoPitch": -0.751,
+    "torsoYaw": -0.282,
+    "headPitch": 0.107,
+    "bodyY": -0.5,
+    "armLX": 0.62,
+    "armLZ": 0,
+    "foreLX": -0.018,
+    "legLX": -1.3,
+    "shinLX": -0.154,
+    "armRX": -1.768,
+    "armRZ": 0.4,
+    "foreRX": -0.73,
+    "legRX": 0.165,
+    "shinRX": 0.08
+  },
+  "hadoken": {
+    "torsoPitch": 0.18,
+    "torsoYaw": 0.043,
+    "headPitch": 0.284,
+    "bodyY": 0.074,
+    "armLX": -1.713,
+    "armLZ": 0.4,
+    "foreLX": 0.065,
+    "legLX": -0.427,
+    "shinLX": 0.537,
+    "armRX": -1.849,
+    "armRZ": 0.4,
+    "foreRX": 0.126,
+    "legRX": 0.395,
+    "shinRX": 0.164
+  },
+  "shoryuken": {
+    "torsoPitch": -0.077,
+    "torsoYaw": 0.242,
+    "headPitch": 0.077,
+    "bodyY": 0.222,
+    "armLX": -3.017,
+    "armLZ": 0.4,
+    "foreLX": -0.18,
+    "legLX": -0.675,
+    "shinLX": 1.461,
+    "armRX": 1.107,
+    "armRZ": 0,
+    "foreRX": -0.322,
+    "legRX": 0.1,
+    "shinRX": -9e-3
+  },
+  "tatsumaki": {
+    "torsoPitch": 0.418,
+    "torsoYaw": -0.312,
+    "headPitch": -0.221,
+    "bodyY": 0.35,
+    "armLX": 0.643,
+    "armLZ": 0,
+    "foreLX": -1.948,
+    "legLX": -1.48,
+    "shinLX": -0.153,
+    "armRX": -1.19,
+    "armRZ": 0,
+    "foreRX": -2.273,
+    "legRX": 0.349,
+    "shinRX": -0.058
+  },
+  "throw": {
+    "torsoPitch": 0.381,
+    "torsoYaw": 0.336,
+    "headPitch": 0.037,
+    "bodyY": 0.074,
+    "armLX": -1.515,
+    "armLZ": 0,
+    "foreLX": 0.016,
+    "legLX": -0.427,
+    "shinLX": 0.208,
+    "armRX": 1.19,
+    "armRZ": 0,
+    "foreRX": -0.405,
+    "legRX": 0.395,
+    "shinRX": 0.069
+  },
+  "hit_standing": {
+    "torsoPitch": -0.219,
+    "torsoYaw": -0.217,
+    "headPitch": -0.199,
+    "bodyY": -0.123,
+    "armLX": -0.785,
+    "armLZ": 0,
+    "foreLX": -0.266,
+    "legLX": 0.1,
+    "shinLX": -0.378,
+    "armRX": -1.768,
+    "armRZ": 0.4,
+    "foreRX": -0.833,
+    "legRX": -0.381,
+    "shinRX": -0.139
+  },
+  "hit_crouching": {
+    "torsoPitch": 0.1,
+    "torsoYaw": -0.312,
+    "headPitch": -0.1,
+    "bodyY": -0.5,
+    "armLX": -0.587,
+    "armLZ": 0,
+    "foreLX": -1.502,
+    "legLX": 0.588,
+    "shinLX": -0.424,
+    "armRX": -1.249,
+    "armRZ": 0,
+    "foreRX": -1.649,
+    "legRX": -0.695,
+    "shinRX": 1.159
+  },
+  "knockdown": {
+    "torsoPitch": -0.9,
+    "torsoYaw": 0.123,
+    "headPitch": -0.7,
+    "bodyY": -0.5,
+    "armLX": -0.927,
+    "armLZ": 0,
+    "foreLX": -0.544,
+    "legLX": -1.571,
+    "shinLX": 0.091,
+    "armRX": 1.2,
+    "armRZ": 0.4,
+    "foreRX": -0.91,
+    "legRX": -1.621,
+    "shinRX": 0.15
+  },
+  "get_up": {
+    "torsoPitch": -0.507,
+    "torsoYaw": -0.242,
+    "headPitch": 0.043,
+    "bodyY": -0.5,
+    "armLX": 0.405,
+    "armLZ": 0,
+    "foreLX": -0.139,
+    "legLX": -1.347,
+    "shinLX": -0.075,
+    "armRX": -0.54,
+    "armRZ": 0,
+    "foreRX": -0.08,
+    "legRX": -2.145,
+    "shinRX": 2.543
+  },
+  "dizzy": {
+    "torsoPitch": 0.399,
+    "torsoYaw": 0.263,
+    "headPitch": 0.189,
+    "bodyY": -0.123,
+    "armLX": -1.446,
+    "armLZ": 0,
+    "foreLX": 0.102,
+    "legLX": -0,
+    "shinLX": -0.432,
+    "armRX": -0.785,
+    "armRZ": 0,
+    "foreRX": -0.785,
+    "legRX": -0.588,
+    "shinRX": -0.023
+  },
+  "win_pose": {
+    "torsoPitch": -0.037,
+    "torsoYaw": -0.325,
+    "headPitch": 0.037,
+    "bodyY": 0.173,
+    "armLX": 1.2,
+    "armLZ": 0.4,
+    "foreLX": 0.163,
+    "legLX": 0.152,
+    "shinLX": 0.055,
+    "armRX": -0.643,
+    "armRZ": 0,
+    "foreRX": 0.7,
+    "legRX": -0.153,
+    "shinRX": 0.048
+  },
+  "shoryuken_alt": {
+    "torsoPitch": 0,
+    "torsoYaw": 0.282,
+    "headPitch": 0.244,
+    "bodyY": 0.197,
+    "armLX": -2.82,
+    "armLZ": 0.4,
+    "foreLX": -0.38,
+    "legLX": -0.083,
+    "shinLX": 0.138,
+    "armRX": 0.983,
+    "armRZ": 0,
+    "foreRX": -0.983,
+    "legRX": 0.245,
+    "shinRX": 0.076
+  },
+  "tatsumaki_horizontal": {
+    "torsoPitch": -0.9,
+    "torsoYaw": 0.158,
+    "headPitch": -0.207,
+    "bodyY": 0.197,
+    "armLX": -2.554,
+    "armLZ": 0.4,
+    "foreLX": 0.395,
+    "legLX": -1.951,
+    "shinLX": -0.139,
+    "armRX": 1.2,
+    "armRZ": 0.4,
+    "foreRX": 0,
+    "legRX": -0.464,
+    "shinRX": 0.172
+  },
+  "jump_kick": {
+    "torsoPitch": 0.484,
+    "torsoYaw": -0.312,
+    "headPitch": -0.265,
+    "bodyY": 0.123,
+    "armLX": 0.644,
+    "armLZ": 0,
+    "foreLX": -2.124,
+    "legLX": -2.232,
+    "shinLX": -0.191,
+    "armRX": -1.893,
+    "armRZ": 0.4,
+    "foreRX": -0.927,
+    "legRX": -0.266,
+    "shinRX": -0.037
+  },
+  "thrown_flip": {
+    "torsoPitch": 0.9,
+    "torsoYaw": 0.282,
+    "headPitch": 0.7,
+    "bodyY": -0.148,
+    "armLX": -0.464,
+    "armLZ": 0,
+    "foreLX": 0.218,
+    "legLX": 1.6,
+    "shinLX": -0.046,
+    "armRX": 0.463,
+    "armRZ": 0,
+    "foreRX": -0.104,
+    "legRX": 1.6,
+    "shinRX": 0.867
+  }
+};
+
+// src/gptouch.js
+function isTouchDevice() {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
+  try {
+    if (new URLSearchParams(location.search).get("touch") === "0") return false;
+  } catch (e) {
+  }
+  return "ontouchstart" in window || navigator.maxTouchPoints > 0 || typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
+}
+function clampStick(dx, dy, maxRadius) {
+  const dist = Math.hypot(dx, dy);
+  if (dist < 1e-9 || maxRadius <= 0) return { x: 0, y: 0, mag: 0 };
+  const cl = Math.min(dist, maxRadius);
+  const nx = dx / dist, ny = dy / dist, m = cl / maxRadius;
+  return { x: nx * m, y: ny * m, mag: m };
+}
+function stickVector(dx, dy, maxRadius, deadzone = 0) {
+  const c = clampStick(dx, dy, maxRadius);
+  if (c.mag < deadzone || c.mag < 1e-9) return { x: 0, y: 0, mag: 0 };
+  const m = deadzone >= 1 ? 1 : (c.mag - deadzone) / (1 - deadzone);
+  return { x: c.x / c.mag * m, y: c.y / c.mag * m, mag: m };
+}
+var BTN_STYLE = {
+  position: "absolute",
+  borderRadius: "50%",
+  border: "2px solid rgba(255,255,255,.45)",
+  background: "rgba(20,20,35,.38)",
+  color: "#fff",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontFamily: "system-ui, sans-serif",
+  fontWeight: "800",
+  transform: "scale(1)",
+  transition: "transform .06s ease, background .06s ease",
+  WebkitTapHighlightColor: "transparent",
+  userSelect: "none",
+  pointerEvents: "auto",
+  touchAction: "none"
+};
+var TouchController = class {
+  /**
+   * options:
+   *   buttons:  [{ id, label, size? }] — default A/B. Up to 4 supported.
+   *   maxRadius: stick throw in px (default 56)
+   *   deadzone:  stick deadzone 0..1 (default 0.18)
+   *   force:     build the DOM even on non-touch devices (testing)
+   *   zIndex:    overlay z-index (default 1000)
+   */
+  constructor(options = {}) {
+    this.maxRadius = options.maxRadius || 56;
+    this.deadzone = options.deadzone ?? 0.18;
+    this.zIndex = options.zIndex || 1e3;
+    this.enabled = false;
+    this.vector = { x: 0, y: 0 };
+    this._buttons = {};
+    this._defs = (options.buttons && options.buttons.length ? options.buttons : [
+      { id: "a", label: "A" },
+      { id: "b", label: "B" }
+    ]).slice(0, 4);
+    this._activeStickId = null;
+    this._stickOrigin = { x: 0, y: 0 };
+    this._els = null;
+    this._onDown = null;
+    this._onMove = null;
+    this._onUp = null;
+    const want = options.force === true || isTouchDevice();
+    if (want && typeof document !== "undefined") {
+      this._initDOM();
+      this._bindEvents();
+      this.enabled = true;
+    }
+  }
+  _initDOM() {
+    const overlay = document.createElement("div");
+    Object.assign(overlay.style, {
+      position: "fixed",
+      inset: "0",
+      width: "100vw",
+      height: "100vh",
+      pointerEvents: "auto",
+      touchAction: "none",
+      userSelect: "none",
+      WebkitUserSelect: "none",
+      WebkitTapHighlightColor: "transparent",
+      zIndex: String(this.zIndex)
+    });
+    const base = document.createElement("div");
+    Object.assign(base.style, {
+      position: "absolute",
+      width: this.maxRadius * 2 + "px",
+      height: this.maxRadius * 2 + "px",
+      borderRadius: "50%",
+      border: "2px solid rgba(255,255,255,.4)",
+      background: "rgba(255,255,255,.07)",
+      transform: "translate(-50%,-50%)",
+      display: "none",
+      pointerEvents: "none"
+    });
+    const knob = document.createElement("div");
+    Object.assign(knob.style, {
+      position: "absolute",
+      width: Math.round(this.maxRadius * 0.92) + "px",
+      height: Math.round(this.maxRadius * 0.92) + "px",
+      borderRadius: "50%",
+      background: "rgba(255,255,255,.5)",
+      boxShadow: "0 0 12px rgba(255,255,255,.35)",
+      transform: "translate(-50%,-50%)",
+      display: "none",
+      pointerEvents: "none"
+    });
+    overlay.appendChild(base);
+    overlay.appendChild(knob);
+    this._defs.forEach((def, i) => {
+      const size = def.size || (i === 0 ? 84 : 64);
+      const el = document.createElement("div");
+      Object.assign(el.style, BTN_STYLE, {
+        right: 20 + i * 92 + "px",
+        bottom: 96 - i * 30 + "px",
+        width: size + "px",
+        height: size + "px",
+        fontSize: Math.round(size * 0.32) + "px"
+      });
+      el.textContent = def.label || def.id.toUpperCase();
+      el.dataset.gptouch = def.id;
+      overlay.appendChild(el);
+      this._buttons[def.id] = { held: false, pressed: false, el, pointerId: null, def };
+    });
+    document.body.appendChild(overlay);
+    this._els = { overlay, base, knob };
+  }
+  _hitButton(x, y) {
+    for (const id in this._buttons) {
+      const b = this._buttons[id];
+      const r = b.el.getBoundingClientRect();
+      if (x >= r.left - 8 && x <= r.right + 8 && y >= r.top - 8 && y <= r.bottom + 8) return b;
+    }
+    return null;
+  }
+  _bindEvents() {
+    const { overlay, base, knob } = this._els;
+    this._onDown = (e) => {
+      if (e.cancelable) e.preventDefault();
+      const b = this._hitButton(e.clientX, e.clientY);
+      if (b && b.pointerId === null) {
+        b.pointerId = e.pointerId;
+        b.held = true;
+        b.pressed = true;
+        b.el.style.transform = "scale(0.86)";
+        b.el.style.background = "rgba(255,255,255,.45)";
+        e.preventDefault();
+        return;
+      }
+      if (e.clientX < window.innerWidth / 2 && this._activeStickId === null && !b) {
+        this._activeStickId = e.pointerId;
+        this._stickOrigin = { x: e.clientX, y: e.clientY };
+        base.style.left = e.clientX + "px";
+        base.style.top = e.clientY + "px";
+        base.style.display = "block";
+        knob.style.left = e.clientX + "px";
+        knob.style.top = e.clientY + "px";
+        knob.style.display = "block";
+        e.preventDefault();
+      }
+    };
+    this._onMove = (e) => {
+      if (e.pointerId !== this._activeStickId) return;
+      const dx = e.clientX - this._stickOrigin.x;
+      const dy = e.clientY - this._stickOrigin.y;
+      const v = stickVector(dx, dy, this.maxRadius, this.deadzone);
+      this.vector.x = v.x;
+      this.vector.y = v.y;
+      const c = clampStick(dx, dy, this.maxRadius);
+      const dist = Math.hypot(dx, dy) || 1e-9;
+      knob.style.left = this._stickOrigin.x + dx / dist * c.mag * this.maxRadius + "px";
+      knob.style.top = this._stickOrigin.y + dy / dist * c.mag * this.maxRadius + "px";
+      if (e.cancelable) e.preventDefault();
+    };
+    const release = (e) => {
+      if (e.pointerId === this._activeStickId) {
+        this._activeStickId = null;
+        this.vector.x = 0;
+        this.vector.y = 0;
+        base.style.display = "none";
+        knob.style.display = "none";
+      }
+      for (const id in this._buttons) {
+        const b = this._buttons[id];
+        if (e.pointerId === b.pointerId) {
+          b.pointerId = null;
+          b.held = false;
+          b.el.style.transform = "scale(1)";
+          b.el.style.background = "rgba(20,20,35,.38)";
+        }
+      }
+    };
+    this._onUp = release;
+    overlay.addEventListener("pointerdown", this._onDown);
+    overlay.addEventListener("pointermove", this._onMove);
+    overlay.addEventListener("pointerup", this._onUp);
+    overlay.addEventListener("pointercancel", this._onUp);
+    this._onTouch = (e) => {
+      if (e.cancelable) e.preventDefault();
+    };
+    overlay.addEventListener("touchstart", this._onTouch, { passive: false });
+    overlay.addEventListener("touchmove", this._onTouch, { passive: false });
+    this._onGesture = (e) => {
+      e.preventDefault();
+    };
+    document.addEventListener("gesturestart", this._onGesture, { passive: false });
+    document.addEventListener("gesturechange", this._onGesture, { passive: false });
+  }
+  /**
+   * Read the current input. Call exactly once per frame — the *Pressed edge
+   * flags auto-consume on read. Returns { x, y } (stick, -1..1) plus one
+   * entry per button: { [id]: held, [id]Pressed: edge }.
+   */
+  getInput() {
+    const out = { x: this.vector.x, y: this.vector.y };
+    for (const id in this._buttons) {
+      const b = this._buttons[id];
+      out[id] = b.held;
+      out[id + "Pressed"] = b.pressed;
+      b.pressed = false;
+    }
+    if (!("a" in out)) {
+      out.a = false;
+      out.aPressed = false;
+    }
+    if (!("b" in out)) {
+      out.b = false;
+      out.bPressed = false;
+    }
+    return out;
+  }
+  /** Remove the overlay and unbind. Safe to call when disabled. */
+  destroy() {
+    if (!this._els) return;
+    const { overlay } = this._els;
+    overlay.removeEventListener("pointerdown", this._onDown);
+    overlay.removeEventListener("pointermove", this._onMove);
+    overlay.removeEventListener("pointerup", this._onUp);
+    overlay.removeEventListener("pointercancel", this._onUp);
+    if (this._onTouch) {
+      overlay.removeEventListener("touchstart", this._onTouch);
+      overlay.removeEventListener("touchmove", this._onTouch);
+    }
+    if (this._onGesture) {
+      document.removeEventListener("gesturestart", this._onGesture);
+      document.removeEventListener("gesturechange", this._onGesture);
+    }
+    overlay.remove();
+    this._els = null;
+    this.enabled = false;
+    this._buttons = {};
+  }
+};
+
+// src/app.js
+var params = new URLSearchParams(location.search);
+var clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+var _seed = (parseInt(params.get("seed") || "", 10) || Date.now() % 2147483647) >>> 0;
+function rnd() {
+  _seed = _seed + 1831565813 | 0;
+  let t = Math.imul(_seed ^ _seed >>> 15, 1 | _seed);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+  return ((t ^ t >>> 14) >>> 0) / 4294967296;
+}
+var rr = (a, b) => a + rnd() * (b - a);
+var pick = (arr) => arr[Math.floor(rnd() * arr.length) % arr.length];
+var renderer = new THREE3.WebGLRenderer({ antialias: params.get("aa") !== "0", preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(parseFloat(params.get("pr") || "") || window.devicePixelRatio || 1, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = !params.has("noshadow");
+renderer.shadowMap.type = THREE3.PCFSoftShadowMap;
+renderer.toneMapping = THREE3.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+document.getElementById("app").appendChild(renderer.domElement);
+var scene = new THREE3.Scene();
+scene.fog = new THREE3.Fog(3485770, 30, 72);
+var camera = new THREE3.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 200);
+var key = new THREE3.DirectionalLight(16768942, 3);
+key.position.set(-7, 11, 5);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.left = -16;
+key.shadow.camera.right = 16;
+key.shadow.camera.top = 16;
+key.shadow.camera.bottom = -16;
+key.shadow.camera.far = 40;
+key.shadow.bias = -4e-4;
+scene.add(key);
+var rim = new THREE3.DirectionalLight(8366335, 1.1);
+rim.position.set(6, 4, -9);
+scene.add(rim);
+var fill = new THREE3.DirectionalLight(16767408, 0.5);
+fill.position.set(2, 3, 10);
+scene.add(fill);
+scene.add(new THREE3.AmbientLight(6310520, 0.85));
+function canvasTex(w, h, draw) {
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  draw(c.getContext("2d"), w, h);
+  const t = new THREE3.CanvasTexture(c);
+  t.colorSpace = THREE3.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+var glowTex = canvasTex(128, 128, (ctx) => {
+  const g = ctx.createRadialGradient(64, 64, 2, 64, 64, 62);
+  g.addColorStop(0, "rgba(255,255,255,1)");
+  g.addColorStop(0.35, "rgba(255,255,255,0.55)");
+  g.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 128, 128);
+});
+var groundTex = canvasTex(1024, 1024, (ctx, w, h) => {
+  const tile = 64;
+  for (let y = 0; y < h / tile; y++) for (let x = 0; x < w / tile; x++) {
+    const v = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453 % 1;
+    const l = 0.92 + Math.abs(v) * 0.16;
+    const warm = (x + y) % 2 === 0;
+    ctx.fillStyle = warm ? `rgb(${Math.round(196 * l)},${Math.round(158 * l)},${Math.round(118 * l)})` : `rgb(${Math.round(178 * l)},${Math.round(140 * l)},${Math.round(104 * l)})`;
+    ctx.fillRect(x * tile, y * tile, tile, tile);
+    ctx.strokeStyle = "rgba(90,60,40,0.35)";
+    ctx.strokeRect(x * tile + 0.5, y * tile + 0.5, tile - 1, tile - 1);
+  }
+  ctx.strokeStyle = "rgba(146,44,32,0.8)";
+  ctx.lineWidth = 10;
+  ctx.beginPath();
+  ctx.arc(512, 512, 300, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.arc(512, 512, 262, 0, Math.PI * 2);
+  ctx.stroke();
+  for (let i = 0; i < 8; i++) {
+    const a = i / 8 * Math.PI * 2;
+    const a2 = a + Math.PI / 8;
+    ctx.beginPath();
+    ctx.moveTo(512 + Math.cos(a) * 262, 512 + Math.sin(a) * 262);
+    ctx.lineTo(512 + Math.cos(a2) * 224, 512 + Math.sin(a2) * 224);
+    ctx.lineTo(512 + Math.cos(a + Math.PI / 4) * 262, 512 + Math.sin(a + Math.PI / 4) * 262);
+    ctx.stroke();
+  }
+});
+groundTex.wrapS = groundTex.wrapT = THREE3.RepeatWrapping;
+var signTex = canvasTex(1024, 192, (ctx, w, h) => {
+  ctx.fillStyle = "#241a30";
+  ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = "#ffd34d";
+  ctx.lineWidth = 6;
+  ctx.strokeRect(10, 10, w - 20, h - 20);
+  ctx.font = "900 104px system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#ffe9b0";
+  ctx.fillText("CLASH PLAZA", w / 2, h / 2 + 4);
+});
+var bannerTex = canvasTex(128, 448, (ctx, w, h) => {
+  ctx.fillStyle = "#8c1f28";
+  ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = "#f4ead2";
+  ctx.font = "900 74px system-ui, sans-serif";
+  ctx.textAlign = "center";
+  const word = "CLASH";
+  for (let i = 0; i < word.length; i++) ctx.fillText(word[i], w / 2, 84 + i * 78);
+});
+var skyTex = canvasTex(64, 512, (ctx, w, h) => {
+  const g = ctx.createLinearGradient(0, 0, 0, h);
+  g.addColorStop(0, "#2c2350");
+  g.addColorStop(0.42, "#7a3d6e");
+  g.addColorStop(0.62, "#d96f4e");
+  g.addColorStop(0.78, "#f7b267");
+  g.addColorStop(1, "#f9d976");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, w, h);
+});
+var windowsTex = canvasTex(256, 512, (ctx, w, h) => {
+  ctx.fillStyle = "#1d1830";
+  ctx.fillRect(0, 0, w, h);
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 6; x++) {
+    const lit = (x * 7 + y * 13) % 5 < 2;
+    ctx.fillStyle = lit ? "rgba(255,196,92,0.95)" : "rgba(70,64,110,0.6)";
+    ctx.fillRect(14 + x * 40, 14 + y * 31, 24, 17);
+  }
+});
+windowsTex.wrapS = windowsTex.wrapT = THREE3.RepeatWrapping;
+var world = new THREE3.Group();
+scene.add(world);
+{
+  const sky = new THREE3.Mesh(
+    new THREE3.SphereGeometry(90, 24, 16),
+    new THREE3.MeshBasicMaterial({ map: skyTex, side: THREE3.BackSide, fog: false })
+  );
+  sky.position.y = 6;
+  world.add(sky);
+  const ground = new THREE3.Mesh(
+    new THREE3.CircleGeometry(46, 48),
+    new THREE3.MeshStandardMaterial({ map: groundTex, roughness: 0.95 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  groundTex.repeat.set(3, 3);
+  world.add(ground);
+  const slab = new THREE3.Mesh(
+    new THREE3.CylinderGeometry(15.6, 16.2, 0.24, 40),
+    new THREE3.MeshStandardMaterial({ color: 9071182, roughness: 0.9 })
+  );
+  slab.position.y = -0.13;
+  slab.receiveShadow = true;
+  world.add(slab);
+  const ringDisc = new THREE3.Mesh(
+    new THREE3.CylinderGeometry(5.9, 6.15, 0.14, 44),
+    new THREE3.MeshStandardMaterial({ color: 3817310, roughness: 0.55, metalness: 0.15 })
+  );
+  ringDisc.position.y = 0.07;
+  ringDisc.receiveShadow = true;
+  world.add(ringDisc);
+  const ringGlowMat = new THREE3.MeshBasicMaterial({ color: 5499391 });
+  const ringGlow = new THREE3.Mesh(new THREE3.TorusGeometry(5.55, 0.045, 8, 72), ringGlowMat);
+  ringGlow.rotation.x = Math.PI / 2;
+  ringGlow.position.y = 0.16;
+  world.add(ringGlow);
+  world.userData.ringGlowMat = ringGlowMat;
+  const postMat = new THREE3.MeshStandardMaterial({ color: 2301998, roughness: 0.6, metalness: 0.4 });
+  for (let i = 0; i < 8; i++) {
+    const a = i / 8 * Math.PI * 2 + Math.PI / 8;
+    const post = new THREE3.Mesh(new THREE3.CylinderGeometry(0.05, 0.07, 1.5, 8), postMat);
+    post.position.set(Math.cos(a) * 5.55, 0.85, Math.sin(a) * 5.55);
+    post.castShadow = true;
+    world.add(post);
+    const bulb = new THREE3.Sprite(new THREE3.SpriteMaterial({
+      map: glowTex,
+      color: 5499391,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE3.AdditiveBlending,
+      depthWrite: false
+    }));
+    bulb.scale.set(0.85, 0.85, 1);
+    bulb.position.set(Math.cos(a) * 5.55, 1.62, Math.sin(a) * 5.55);
+    world.add(bulb);
+  }
+  const woodMat = new THREE3.MeshStandardMaterial({ color: 8016432, roughness: 0.85 });
+  const woodDark = new THREE3.MeshStandardMaterial({ color: 4994080, roughness: 0.9 });
+  const redMat = new THREE3.MeshStandardMaterial({ color: 10494744, roughness: 0.62 });
+  const darkMat = new THREE3.MeshStandardMaterial({ color: 2893875, roughness: 0.85 });
+  const torii = new THREE3.Group();
+  for (const sx of [-2.9, 2.9]) {
+    const pillar = new THREE3.Mesh(new THREE3.CylinderGeometry(0.26, 0.3, 5.4, 12), redMat);
+    pillar.position.set(sx, 2.7, 0);
+    pillar.castShadow = true;
+    torii.add(pillar);
+  }
+  const beamTop = new THREE3.Mesh(new THREE3.BoxGeometry(7.6, 0.46, 0.62), redMat);
+  beamTop.position.y = 5.35;
+  beamTop.castShadow = true;
+  torii.add(beamTop);
+  const beamTopCap = new THREE3.Mesh(new THREE3.BoxGeometry(7.9, 0.14, 0.7), darkMat);
+  beamTopCap.position.y = 5.65;
+  torii.add(beamTopCap);
+  const beamMid = new THREE3.Mesh(new THREE3.BoxGeometry(6.4, 0.36, 0.5), redMat);
+  beamMid.position.y = 4.35;
+  torii.add(beamMid);
+  torii.position.set(0, 0, -11.5);
+  world.add(torii);
+  const wall = new THREE3.Mesh(
+    new THREE3.BoxGeometry(30, 2.7, 0.6),
+    new THREE3.MeshStandardMaterial({ color: 6178354, roughness: 0.9 })
+  );
+  wall.position.set(0, 1.35, -14.6);
+  wall.castShadow = true;
+  wall.receiveShadow = true;
+  world.add(wall);
+  const sign = new THREE3.Mesh(
+    new THREE3.PlaneGeometry(11, 2.06),
+    new THREE3.MeshBasicMaterial({ map: signTex })
+  );
+  sign.position.set(0, 3.9, -14.25);
+  world.add(sign);
+  for (const bx of [-6.4, 6.4]) {
+    const pole = new THREE3.Mesh(new THREE3.CylinderGeometry(0.05, 0.05, 4.6, 8), darkMat);
+    pole.position.set(bx, 2.3, -13.6);
+    world.add(pole);
+    const banner = new THREE3.Mesh(
+      new THREE3.PlaneGeometry(0.95, 3.3),
+      new THREE3.MeshStandardMaterial({ map: bannerTex, side: THREE3.DoubleSide, roughness: 0.85 })
+    );
+    banner.position.set(bx, 2.6, -13.55);
+    world.add(banner);
+  }
+  for (let i = 0; i < 16; i++) {
+    const a = i / 16 * Math.PI * 2 + 0.19;
+    if (Math.abs(Math.sin(a)) < 0.2 && Math.cos(a) < 0) continue;
+    const dist = rr(30, 40);
+    const hgt = rr(9, 22);
+    const tex = windowsTex.clone();
+    tex.needsUpdate = true;
+    tex.repeat.set(1, Math.max(1, Math.round(hgt / 9)));
+    const tower = new THREE3.Mesh(
+      new THREE3.BoxGeometry(rr(5, 8), hgt, rr(5, 8)),
+      new THREE3.MeshStandardMaterial({ map: tex, roughness: 0.9 })
+    );
+    tower.position.set(Math.cos(a) * dist, hgt / 2 - 0.5, Math.sin(a) * dist);
+    tower.rotation.y = -a;
+    world.add(tower);
+  }
+  const barrelAt = (x, z, stack) => {
+    const g = new THREE3.Group();
+    const body = new THREE3.Mesh(new THREE3.CylinderGeometry(0.34, 0.34, 0.88, 14), woodMat);
+    body.position.y = 0.44;
+    body.castShadow = true;
+    g.add(body);
+    for (const by of [0.18, 0.7]) {
+      const band = new THREE3.Mesh(new THREE3.TorusGeometry(0.345, 0.022, 6, 20), woodDark);
+      band.rotation.x = Math.PI / 2;
+      band.position.y = by;
+      g.add(band);
+    }
+    if (stack) {
+      const top = body.clone();
+      top.position.y = 1.32;
+      g.add(top);
+    }
+    g.position.set(x, 0, z);
+    world.add(g);
+  };
+  const crateAt = (x, z, ry, level = 0) => {
+    const g = new THREE3.Group();
+    const box2 = new THREE3.Mesh(new THREE3.BoxGeometry(0.95, 0.95, 0.95), woodMat);
+    box2.position.y = 0.48;
+    box2.castShadow = true;
+    g.add(box2);
+    const frame = new THREE3.Mesh(new THREE3.BoxGeometry(1, 0.1, 1), woodDark);
+    frame.position.y = 0.42;
+    g.add(frame);
+    const frame2 = frame.clone();
+    frame2.position.y = -0.42 + 0.95;
+    g.add(frame2);
+    g.position.set(x, level * 0.95, z);
+    g.rotation.y = ry;
+    world.add(g);
+  };
+  barrelAt(-8.6, -6.5, true);
+  barrelAt(-9.4, -5.6, false);
+  barrelAt(9.1, -6.9, true);
+  barrelAt(10.2, 4.4, false);
+  barrelAt(-10.4, 3.8, true);
+  crateAt(8.3, 6.8, 0.4);
+  crateAt(8.3, 6.8, 0.9, 1);
+  crateAt(-8.9, 7.4, -0.3);
+  crateAt(11.8, -2.2, 0.2);
+  crateAt(-12.1, -1.6, 0.7);
+  const lanternAt = (x, z) => {
+    const g = new THREE3.Group();
+    const pole = new THREE3.Mesh(new THREE3.CylinderGeometry(0.045, 0.06, 2.7, 8), darkMat);
+    pole.position.y = 1.35;
+    pole.castShadow = true;
+    g.add(pole);
+    const headM = new THREE3.Mesh(
+      new THREE3.BoxGeometry(0.36, 0.42, 0.36),
+      new THREE3.MeshStandardMaterial({ color: 16763256, emissive: 16751164, emissiveIntensity: 0.9, roughness: 0.6 })
+    );
+    headM.position.y = 2.85;
+    g.add(headM);
+    const cap = new THREE3.Mesh(new THREE3.ConeGeometry(0.34, 0.22, 4), darkMat);
+    cap.position.y = 3.16;
+    cap.rotation.y = Math.PI / 4;
+    g.add(cap);
+    const glow = new THREE3.Sprite(new THREE3.SpriteMaterial({
+      map: glowTex,
+      color: 16758876,
+      transparent: true,
+      opacity: 0.5,
+      blending: THREE3.AdditiveBlending,
+      depthWrite: false
+    }));
+    glow.scale.set(1.6, 1.6, 1);
+    glow.position.y = 2.85;
+    g.add(glow);
+    g.position.set(x, 0, z);
+    world.add(g);
+  };
+  lanternAt(-7.4, -10.6);
+  lanternAt(7.4, -10.6);
+  lanternAt(-12.6, 0.5);
+  lanternAt(12.6, 0.5);
+  lanternAt(-7.2, 10.8);
+  lanternAt(7.2, 10.8);
+}
+var crowd = [];
+{
+  const grad = toonGradientMap(3);
+  const skinTones = [15907470, 13603935, 9067060, 7226406, 15251853];
+  const cloth = [12729134, 3039170, 4170573, 14722334, 9195472, 15262418, 2792880, 13656208];
+  const CROWD_N = parseInt(params.get("crowd") || "40", 10) || 0;
+  for (let i = 0; i < CROWD_N; i++) {
+    const a = i / Math.max(1, CROWD_N) * Math.PI * 2 + rr(-0.05, 0.05);
+    const rad = rr(7.3, 9.6);
+    const g = new THREE3.Group();
+    const cm = new THREE3.MeshToonMaterial({ color: pick(cloth), gradientMap: grad });
+    const sm = new THREE3.MeshToonMaterial({ color: pick(skinTones), gradientMap: grad });
+    const bodyH = rr(0.62, 0.78);
+    const body = new THREE3.Mesh(new THREE3.CylinderGeometry(0.16, 0.21, bodyH, 8), cm);
+    body.position.y = bodyH / 2 + 0.42;
+    g.add(body);
+    const legs = new THREE3.Mesh(
+      new THREE3.CylinderGeometry(0.15, 0.17, 0.44, 8),
+      new THREE3.MeshToonMaterial({ color: 2893875, gradientMap: grad })
+    );
+    legs.position.y = 0.22;
+    g.add(legs);
+    const head = new THREE3.Mesh(new THREE3.SphereGeometry(0.155, 10, 8), sm);
+    head.position.y = bodyH + 0.56;
+    g.add(head);
+    const hair = new THREE3.Mesh(
+      new THREE3.SphereGeometry(0.16, 10, 6, 0, Math.PI * 2, 0, 1.25),
+      new THREE3.MeshToonMaterial({ color: pick([1511950, 3810325, 9067050, 14209992, 11549230]), gradientMap: grad })
+    );
+    hair.position.y = bodyH + 0.585;
+    g.add(hair);
+    g.position.set(Math.cos(a) * rad, 0.14, Math.sin(a) * rad);
+    g.lookAt(0, 0.14, 0);
+    const s = rr(0.92, 1.08);
+    g.scale.setScalar(s);
+    world.add(g);
+    crowd.push({ g, phase: rr(0, Math.PI * 2), speed: rr(2.2, 3.6), baseY: 0.14 });
+  }
+}
+var POSE_FIELDS2 = [
+  "bodyY",
+  "bodyPitch",
+  "bodyRoll",
+  "torsoPitch",
+  "torsoYaw",
+  "headPitch",
+  "armLX",
+  "armLZ",
+  "foreLX",
+  "armRX",
+  "armRZ",
+  "foreRX",
+  "legLX",
+  "shinLX",
+  "legRX",
+  "shinRX",
+  "mouth",
+  "brow"
+];
+function keyframed2(keys2, spinFn) {
+  const sorted = [...keys2].sort((a, b) => a[0] - b[0]);
+  return (t, _ctx, out) => {
+    let a = sorted[0], b = sorted[sorted.length - 1];
+    if (t <= a[0]) b = a;
+    else if (t >= b[0]) a = b;
+    else for (let i = 0; i < sorted.length - 1; i++)
+      if (t >= sorted[i][0] && t <= sorted[i + 1][0]) {
+        a = sorted[i];
+        b = sorted[i + 1];
+        break;
+      }
+    const span = b[0] - a[0];
+    const k = span > 0 ? (t - a[0]) / span : 0;
+    const s = k * k * (3 - 2 * k);
+    for (const f of POSE_FIELDS2) {
+      const av = a[1][f] ?? NEUTRAL_POSE[f];
+      const bv = b[1][f] ?? NEUTRAL_POSE[f];
+      out[f] = av + (bv - av) * s;
+    }
+    if (spinFn) out.spin = spinFn(t);
+  };
+}
+var IDLE_POSE = SF_POSES.idle;
+function strikeProg(poseName, hit = 0.42, extra = {}) {
+  const pose = { ...SF_POSES[poseName], mouth: 1.7, brow: 0.38, ...extra };
+  return keyframed2([[0, IDLE_POSE], [hit, pose], [1, IDLE_POSE]]);
+}
+function constProg(poseObj) {
+  return (_t, _ctx, out) => {
+    for (const f of POSE_FIELDS2) if (poseObj[f] !== void 0) out[f] = poseObj[f];
+  };
+}
+var PROGRAMS = {
+  // Fighting stance: the measured SF2 idle, breathing.
+  guard: (t, ctx, out) => {
+    for (const f of POSE_FIELDS2) if (IDLE_POSE[f] !== void 0) out[f] = IDLE_POSE[f];
+    out.bodyY = (IDLE_POSE.bodyY || 0) + Math.sin(ctx.time * 4.2) * 0.022;
+    out.mouth = 1;
+    out.brow = 0.22;
+  },
+  block: constProg({ ...SF_POSES.stand_block, mouth: 1.2, brow: 0.3 }),
+  hit: keyframed2([[0, IDLE_POSE], [0.25, { ...SF_POSES.hit_standing, mouth: 2.6, brow: -0.2 }], [1, IDLE_POSE]]),
+  ko: keyframed2([[0, IDLE_POSE], [0.35, { ...SF_POSES.knockdown, mouth: 2.6, brow: -0.3 }], [1, { ...SF_POSES.knockdown, mouth: 2.2, brow: -0.3 }]]),
+  win: keyframed2([[0, IDLE_POSE], [0.3, { ...SF_POSES.win_pose, mouth: 1.6, brow: 0.2 }], [1, { ...SF_POSES.win_pose, mouth: 1.6, brow: 0.2 }]]),
+  jab: strikeProg("jab", 0.38),
+  lightKick: strikeProg("light_kick", 0.4),
+  heavyPunch: strikeProg("heavy_punch", 0.45),
+  roundhouse: strikeProg("roundhouse_kick", 0.46),
+  hadouken: RYU_PROGRAMS.hadouken,
+  // Sonic Boom: arms sweep back crossed, then both thrust forward (Guile sheet).
+  sonicBoom: keyframed2([
+    [0, IDLE_POSE],
+    [0.4, { armLX: 0.55, armLZ: -0.5, foreLX: -0.5, armRX: 0.55, armRZ: 0.5, foreRX: -0.5, torsoYaw: 0.3, torsoPitch: 0.15, bodyY: -0.12, legLX: -0.5, shinLX: 0.5, legRX: 0.5, shinRX: 0.3, mouth: 1.4, brow: 0.36 }],
+    [0.58, { armLX: -1.5, armLZ: 0.35, foreLX: -0.08, armRX: -1.42, armRZ: -0.35, foreRX: -0.1, torsoYaw: -0.1, torsoPitch: 0.24, bodyY: -0.08, legLX: -0.5, shinLX: 0.5, legRX: 0.5, shinRX: 0.3, mouth: 2.2, brow: 0.4 }],
+    [0.8, { armLX: -1.45, armLZ: 0.33, foreLX: -0.1, armRX: -1.38, armRZ: -0.33, foreRX: -0.12, torsoYaw: -0.08, torsoPitch: 0.2, bodyY: -0.08, legLX: -0.5, shinLX: 0.5, legRX: 0.5, shinRX: 0.3, mouth: 1.8, brow: 0.38 }],
+    [1, IDLE_POSE]
+  ]),
+  // Lightning Kick: rapid alternating kicks (Chun-Li).
+  lightningKick: (t, _ctx, out) => {
+    for (const f of POSE_FIELDS2) if (IDLE_POSE[f] !== void 0) out[f] = IDLE_POSE[f];
+    const env = Math.sin(Math.min(1, t * 1.25) * Math.PI);
+    const fl = Math.sin(t * Math.PI * 14) * 0.5 + 0.5;
+    out.legLX = (-0.35 - fl * 1.15) * env;
+    out.shinLX = (0.25 + (1 - fl) * 0.8) * env;
+    out.legRX = (-0.35 - (1 - fl) * 1.15) * env;
+    out.shinRX = (0.25 + fl * 0.8) * env;
+    out.torsoPitch = 0.16 * env;
+    out.armLX = -0.5 * env;
+    out.armRX = -0.5 * env;
+    out.foreLX = -1.1;
+    out.foreRX = -1.1;
+    out.mouth = 2.3 * env + 1;
+    out.brow = 0.4;
+  }
+};
+function toonMat(color, rough = 0.7) {
+  return new THREE3.MeshToonMaterial({ color, gradientMap: toonGradientMap(4) });
+}
+function box(w, h, d, mat) {
+  const m = new THREE3.Mesh(new THREE3.BoxGeometry(w, h, d), mat);
+  m.castShadow = true;
+  return m;
+}
+function sph(r, mat, sx = 1, sy = 1, sz = 1) {
+  const m = new THREE3.Mesh(new THREE3.SphereGeometry(r, 12, 10), mat);
+  m.scale.set(sx, sy, sz);
+  m.castShadow = true;
+  return m;
+}
+function setHeadband(rig, show) {
+  rig.bandTailL.visible = rig.bandTailR.visible = show;
+  rig.head.traverse((o) => {
+    if (o.isMesh && o.geometry && o.geometry.type === "TorusGeometry") o.visible = show;
+  });
+}
+function shoeBoxes(rig, mat) {
+  const { height: hS } = rig.params.body;
+  for (const shin of [rig.shinL, rig.shinR]) {
+    const s = box(0.13, 0.08, 0.28, mat);
+    s.position.set(0, -(0.39 * hS * (rig.params.proportions?.calf ?? 0.39) / 0.39) - 0.045, 0.04);
+    shin.add(s);
+  }
+}
+var PROPS = {
+  flattop(rig, def) {
+    const hs = rig.params.body.headScale;
+    const mat = toonMat(rig.params.palette.hair, 0.85);
+    const top = box(0.37 * hs, 0.13 * hs, 0.33 * hs, mat);
+    top.position.set(0, 0.31 * hs, 0);
+    rig.head.add(top);
+    const lip = box(0.37 * hs, 0.05 * hs, 0.12 * hs, mat);
+    lip.position.set(0, 0.26 * hs, 0.13 * hs);
+    rig.head.add(lip);
+  },
+  dogtag(rig) {
+    const { height: hS, width: wS } = rig.params.body;
+    const tag = box(0.05, 0.07, 0.012, toonMat(14080478, 0.35));
+    tag.position.set(0, 0.36 * hS, 0.185 * wS);
+    tag.rotation.x = -0.18;
+    rig.torso.add(tag);
+  },
+  buns(rig, def) {
+    const hs = rig.params.body.headScale;
+    const hairMat = toonMat(rig.params.palette.hair, 0.9);
+    for (const s of [-1, 1]) {
+      const bun = sph(0.09 * hs, hairMat);
+      bun.position.set(s * 0.16 * hs, 0.3 * hs, -0.01 * hs);
+      rig.head.add(bun);
+      const ribbon = sph(0.05 * hs, toonMat(15920610, 0.7));
+      ribbon.position.set(s * 0.17 * hs, 0.35 * hs, -0.01 * hs);
+      rig.head.add(ribbon);
+    }
+  },
+  bracelets(rig) {
+    for (const fore of [rig.forearmL, rig.forearmR]) {
+      const bandM = new THREE3.Mesh(new THREE3.TorusGeometry(0.082, 0.02, 6, 16), toonMat(12173512, 0.35));
+      bandM.position.y = -0.07;
+      bandM.rotation.x = Math.PI / 2;
+      fore.add(bandM);
+      for (let i = 0; i < 6; i++) {
+        const a = i / 6 * Math.PI * 2;
+        const spike = box(0.02, 0.05, 0.02, toonMat(12173512, 0.35));
+        spike.position.set(Math.cos(a) * 0.095, -0.07, Math.sin(a) * 0.095);
+        spike.rotation.z = -Math.cos(a) * 0.6;
+        spike.rotation.x = Math.sin(a) * 0.6;
+        fore.add(spike);
+      }
+    }
+  },
+  hairCap(rig, def) {
+    const hs = rig.params.body.headScale;
+    const cap = sph(0.186 * hs, toonMat(rig.params.palette.hair, 0.9), 1, 0.88, 1);
+    cap.position.set(0, 0.06 * hs, -0.012 * hs);
+    rig.head.add(cap);
+  }
+};
+var FIGHTERS = [
+  {
+    id: "ryu",
+    name: "RYU",
+    specialName: "HADOUKEN",
+    headband: true,
+    params: { ...RYU, renderMode: "toon", torsoTexture: makeGiTexture("#f2ba8e", "#e9e6cf") },
+    props: [],
+    lightProg: "jab",
+    heavyProg: "heavyPunch",
+    special: { kind: "projectile", prog: "hadouken", projColor: 10473727, projType: "ball" }
+  },
+  {
+    id: "ken",
+    name: "KEN",
+    specialName: "HADOUKEN",
+    headband: false,
+    params: {
+      body: { width: 1.24, height: 1.01, headScale: 1.18, handScale: 1.25 },
+      palette: { skin: 14458986, jersey: 14693400, shorts: 14693400, trim: 1513244, hair: 15909424, band: 14693400, glove: 6965802, shoePrimary: 14458986, shoeAccent: 14458986 },
+      hairStyle: "spiky",
+      renderMode: "toon",
+      torsoTexture: makeGiTexture("#dca06a", "#e03418")
+    },
+    props: [],
+    lightProg: "jab",
+    heavyProg: "heavyPunch",
+    special: { kind: "projectile", prog: "hadouken", projColor: 16752714, projType: "ball" }
+  },
+  {
+    id: "guile",
+    name: "GUILE",
+    specialName: "SONIC BOOM",
+    headband: false,
+    params: {
+      body: { width: 1.26, height: 1.03, headScale: 1.16, handScale: 1.28 },
+      palette: { skin: 14262374, jersey: 4153400, shorts: 5926982, trim: 6967606, hair: 15913546, band: 4153400, shoePrimary: 6965804, shoeAccent: 6965804 },
+      hairStyle: "none",
+      renderMode: "toon"
+    },
+    props: ["flattop", "dogtag"],
+    shoes: 6965804,
+    lightProg: "jab",
+    heavyProg: "roundhouse",
+    special: { kind: "projectile", prog: "sonicBoom", projColor: 13625599, projType: "disc" }
+  },
+  {
+    id: "chunli",
+    name: "CHUN-LI",
+    specialName: "LIGHTNING KICK",
+    headband: false,
+    params: {
+      body: { width: 0.95, height: 0.99, headScale: 1.14, handScale: 1.08 },
+      palette: { skin: 15251853, jersey: 2381512, shorts: 4862502, trim: 15788760, hair: 2759186, band: 2381512, shoePrimary: 15920610, shoeAccent: 15920610 },
+      hairStyle: "none",
+      renderMode: "toon"
+    },
+    props: ["hairCap", "buns", "bracelets"],
+    shoes: 15920610,
+    lightProg: "lightKick",
+    heavyProg: "roundhouse",
+    special: { kind: "flurry", prog: "lightningKick" }
+  }
+];
+var projPool = [];
+function getProjectile() {
+  let p = projPool.find((q) => !q.active);
+  if (!p) {
+    if (projPool.length >= 8) return null;
+    const group = new THREE3.Group();
+    const ball = new THREE3.Mesh(
+      new THREE3.SphereGeometry(0.15, 14, 12),
+      new THREE3.MeshBasicMaterial({ color: 16777215 })
+    );
+    const disc = new THREE3.Mesh(
+      new THREE3.CylinderGeometry(0.2, 0.2, 0.07, 18),
+      new THREE3.MeshBasicMaterial({ color: 16777215 })
+    );
+    disc.rotation.x = Math.PI / 2;
+    const glow = new THREE3.Sprite(new THREE3.SpriteMaterial({
+      map: glowTex,
+      color: 16777215,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE3.AdditiveBlending,
+      depthWrite: false
+    }));
+    glow.scale.set(1.1, 1.1, 1);
+    const ghosts = [0.26, 0.52].map((d) => {
+      const g = new THREE3.Sprite(new THREE3.SpriteMaterial({
+        map: glowTex,
+        color: 16777215,
+        transparent: true,
+        opacity: 0.3,
+        blending: THREE3.AdditiveBlending,
+        depthWrite: false
+      }));
+      g.scale.set(0.8, 0.8, 1);
+      g.position.z = -d;
+      group.add(g);
+      return g;
+    });
+    group.add(ball, disc, glow);
+    group.visible = false;
+    scene.add(group);
+    p = { group, ball, disc, glow, ghosts, active: false, x: 0, z: 0, vx: 0, vz: 0, age: 0, size: 0.3, type: "ball", owner: -1, color: 16777215 };
+    projPool.push(p);
+  }
+  return p;
+}
+var burstPool = [];
+function spawnBurst(x, y, z, color, scale = 0.9) {
+  let b = burstPool.find((q) => !q.active);
+  if (!b) {
+    if (burstPool.length >= 20) return;
+    const spr = new THREE3.Sprite(new THREE3.SpriteMaterial({
+      map: glowTex,
+      color: 16777215,
+      transparent: true,
+      opacity: 0,
+      blending: THREE3.AdditiveBlending,
+      depthWrite: false
+    }));
+    scene.add(spr);
+    b = { spr, active: false, age: 0, scale: 1 };
+    burstPool.push(b);
+  }
+  b.spr.position.set(x, y, z);
+  b.spr.material.color.set(color);
+  b.age = 0;
+  b.active = true;
+  b.scale = scale;
+  b.spr.visible = true;
+}
+function stepBursts(dt) {
+  for (const b of burstPool) {
+    if (!b.active) continue;
+    b.age += dt;
+    const t = b.age / 0.32;
+    if (t >= 1) {
+      b.active = false;
+      b.spr.visible = false;
+      continue;
+    }
+    b.spr.scale.setScalar(b.scale * (0.4 + t * 1.6));
+    b.spr.material.opacity = 0.9 * (1 - t);
+  }
+}
+var AC = null;
+var masterGain = null;
+var crowdGain = null;
+function ensureAudio() {
+  try {
+    if (navigator.audioSession) navigator.audioSession.type = "playback";
+  } catch (e) {
+  }
+  if (AC) {
+    if (AC.state === "suspended") AC.resume();
+    return;
+  }
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = AC.createGain();
+    masterGain.gain.value = 0.5;
+    masterGain.connect(AC.destination);
+    const buf = AC.createBuffer(1, 1, AC.sampleRate);
+    const src = AC.createBufferSource();
+    src.buffer = buf;
+    src.connect(masterGain);
+    src.start();
+    const nbuf = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate);
+    const data = nbuf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const noise = AC.createBufferSource();
+    noise.buffer = nbuf;
+    noise.loop = true;
+    const nf = AC.createBiquadFilter();
+    nf.type = "bandpass";
+    nf.frequency.value = 700;
+    nf.Q.value = 0.6;
+    crowdGain = AC.createGain();
+    crowdGain.gain.value = 0.015;
+    noise.connect(nf);
+    nf.connect(crowdGain);
+    crowdGain.connect(masterGain);
+    noise.start();
+  } catch (e) {
+    AC = null;
+  }
+}
+function tone(freq, dur, type = "sine", vol = 0.3, slideTo = null, delay = 0, ac = AC, dest = masterGain) {
+  if (!ac) return;
+  const t0 = (ac === AC ? ac.currentTime : 0) + delay;
+  const o = ac.createOscillator();
+  const g = ac.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(freq, t0);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), t0 + dur);
+  g.gain.setValueAtTime(vol, t0);
+  g.gain.exponentialRampToValueAtTime(1e-3, t0 + dur);
+  o.connect(g);
+  g.connect(dest);
+  o.start(t0);
+  o.stop(t0 + dur + 0.02);
+}
+function noiseHit(dur, vol, freq, delay = 0, ac = AC, dest = masterGain) {
+  if (!ac) return;
+  const t0 = (ac === AC ? ac.currentTime : 0) + delay;
+  const len = Math.max(1, Math.floor(ac.sampleRate * dur));
+  const buf = ac.createBuffer(1, len, ac.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+  const src = ac.createBufferSource();
+  src.buffer = buf;
+  const f = ac.createBiquadFilter();
+  f.type = "lowpass";
+  f.frequency.value = freq;
+  const g = ac.createGain();
+  g.gain.value = vol;
+  src.connect(f);
+  f.connect(g);
+  g.connect(dest);
+  src.start(t0);
+}
+function sfxAt(name, ac, dest, when = 0) {
+  if (!ac) return;
+  const T = (f, d, ty, v, sl, dl = 0) => tone(f, d, ty, v, sl, when + dl, ac, dest);
+  const N = (d, v, f, dl = 0) => noiseHit(d, v, f, when + dl, ac, dest);
+  switch (name) {
+    case "light":
+      N(0.08, 0.5, 1800);
+      T(160, 0.08, "triangle", 0.25, 60);
+      break;
+    case "heavy":
+      N(0.16, 0.7, 1100);
+      T(110, 0.18, "triangle", 0.4, 45);
+      break;
+    case "block":
+      T(320, 0.06, "square", 0.12, 240);
+      N(0.04, 0.2, 3e3);
+      break;
+    case "whoosh":
+      N(0.12, 0.16, 900);
+      break;
+    case "proj":
+      T(220, 0.35, "sawtooth", 0.1, 660);
+      break;
+    case "flurry":
+      N(0.05, 0.3, 2400);
+      break;
+    case "ko":
+      T(392, 0.16, "square", 0.25);
+      T(523, 0.16, "square", 0.25, null, 0.14);
+      T(659, 0.34, "square", 0.3, null, 0.28);
+      N(0.4, 0.5, 700);
+      break;
+    case "bell":
+      T(880, 0.5, "sine", 0.2);
+      T(1318, 0.4, "sine", 0.08);
+      break;
+    case "select":
+      T(660, 0.07, "square", 0.15);
+      T(990, 0.09, "square", 0.15, null, 0.06);
+      break;
+  }
+}
+function sfx(name) {
+  if (typeof match !== "undefined") match.sfxLog.push({ f: match.frame, n: name });
+  if (!AC) return;
+  sfxAt(name, AC, masterGain, 0);
+  if (name === "ko" && crowdGain) {
+    crowdGain.gain.cancelScheduledValues(AC.currentTime);
+    crowdGain.gain.setValueAtTime(0.09, AC.currentTime);
+    crowdGain.gain.exponentialRampToValueAtTime(0.015, AC.currentTime + 1.6);
+  }
+}
+var MOVES = {
+  light: { key: "light", startup: 5, active: 3, recovery: 10, damage: 5, hitstun: 12, blockstun: 8, pushback: 0.22, hitstop: 6, range: 1.5 },
+  heavy: { key: "heavy", startup: 12, active: 4, recovery: 22, damage: 11, hitstun: 18, blockstun: 12, pushback: 0.5, hitstop: 11, range: 1.62 },
+  specialProj: { key: "special", startup: 14, active: 1, recovery: 31, damage: 9, hitstun: 16, blockstun: 10, pushback: 0.35, hitstop: 8, range: 99, projSpeed: 7.5, special: true },
+  specialFlurry: { key: "special", startup: 9, active: 27, recovery: 10, damage: 3, hitstun: 9, blockstun: 6, pushback: 0.07, hitstop: 4, range: 1.55, hits: [9, 15, 21, 27], special: true }
+};
+var totalFrames = (m) => m.startup + m.active + m.recovery;
+var RING_R = 5;
+var MAX_HP = 100;
+var ROUND_FRAMES = 60 * 60;
+var WINS_NEEDED = 2;
+var $ = (id) => document.getElementById(id);
+var ui = {
+  hud: $("hud"),
+  p1name: $("p1name"),
+  p2name: $("p2name"),
+  p1hp: $("p1hp"),
+  p2hp: $("p2hp"),
+  p1pips: $("p1pips"),
+  p2pips: $("p2pips"),
+  timer: $("timer"),
+  banner: $("banner"),
+  bannerSub: $("bannerSub"),
+  pick: $("pick"),
+  pickGrid: $("pickGrid"),
+  endBtns: $("endBtns"),
+  rematch: $("rematchBtn"),
+  change: $("changeBtn")
+};
+var match = {
+  phase: "pick",
+  // pick | intro | fight | roundEnd | matchEnd
+  frame: 0,
+  // global logic frame counter (never resets)
+  phaseFrame: 0,
+  round: 1,
+  timer: ROUND_FRAMES,
+  hitstop: 0,
+  hitstopLog: [],
+  // {moveKey, setFrames, startFrame, endFrame, measured}
+  sfxLog: [],
+  // {f, n} — every sfx call, for the offline audio render
+  taking: false,
+  // true while an offline frame take owns the loop
+  pendingHitstop: null,
+  fighters: [],
+  // two sim fighters during a match
+  pickRigs: [],
+  // the four display rigs on the pick screen
+  shake: 0
+};
+function wavBase64(buffer) {
+  const nCh = buffer.numberOfChannels;
+  const sr = buffer.sampleRate;
+  const len = buffer.length;
+  const bytes = 44 + len * nCh * 2;
+  const ab = new ArrayBuffer(bytes);
+  const v = new DataView(ab);
+  const wstr = (off2, str) => {
+    for (let i = 0; i < str.length; i++) v.setUint8(off2 + i, str.charCodeAt(i));
+  };
+  wstr(0, "RIFF");
+  v.setUint32(4, bytes - 8, true);
+  wstr(8, "WAVE");
+  wstr(12, "fmt ");
+  v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true);
+  v.setUint16(22, nCh, true);
+  v.setUint32(24, sr, true);
+  v.setUint32(28, sr * nCh * 2, true);
+  v.setUint16(32, nCh * 2, true);
+  v.setUint16(34, 16, true);
+  wstr(36, "data");
+  v.setUint32(40, len * nCh * 2, true);
+  const chans = [];
+  for (let c = 0; c < nCh; c++) chans.push(buffer.getChannelData(c));
+  let off = 44;
+  for (let i = 0; i < len; i++) {
+    for (let c = 0; c < nCh; c++) {
+      const smp = Math.max(-1, Math.min(1, chans[c][i]));
+      v.setInt16(off, smp < 0 ? smp * 32768 : smp * 32767, true);
+      off += 2;
+    }
+  }
+  const u8 = new Uint8Array(ab);
+  let bin = "";
+  for (let i = 0; i < u8.length; i += 32768) bin += String.fromCharCode.apply(null, u8.subarray(i, i + 32768));
+  return btoa(bin);
+}
+window.__clash = {
+  match,
+  MOVES,
+  pick: (i) => pickFighter(i),
+  state: () => ({
+    phase: match.phase,
+    round: match.round,
+    frame: match.frame,
+    timer: Math.ceil(match.timer / 60),
+    fighters: match.fighters.map((f) => ({
+      id: f.def.id,
+      hp: f.hp,
+      x: +f.x.toFixed(2),
+      z: +f.z.toFixed(2),
+      state: f.state,
+      roundsWon: f.roundsWon
+    })),
+    hitstopLog: match.hitstopLog
+  }),
+  // Screen-height fraction of each fighter (for the portrait framing check).
+  measureHeights: () => match.fighters.map((f) => {
+    const box2 = new THREE3.Box3().setFromObject(f.rig.root);
+    let lo = 1, hi = -1;
+    for (const x of [box2.min.x, box2.max.x]) for (const y of [box2.min.y, box2.max.y]) for (const z of [box2.min.z, box2.max.z]) {
+      const v = new THREE3.Vector3(x, y, z).project(camera);
+      const sy = (v.y + 1) / 2;
+      lo = Math.min(lo, sy);
+      hi = Math.max(hi, sy);
+    }
+    return +(hi - lo).toFixed(3);
+  }),
+  takeInfo: null,
+  /** Offline trailer take: fast-forward to the action, then step the sim
+   *  deterministically at 60 Hz, rendering every 2nd frame (30 fps) and
+   *  streaming JPEGs out through window.__sendFrame(i, b64). */
+  take: async (seconds = 36) => {
+    const send = window.__sendFrame;
+    if (!send) return "no-binding";
+    match.taking = true;
+    let guard = 0;
+    while (guard++ < 3e4 && !(match.phase === "fight" && match.phaseFrame >= 20)) logicStep();
+    const baseFrame = match.frame;
+    const logStart = match.sfxLog.length;
+    const total = Math.round(seconds * 30);
+    let t = elapsed;
+    let done = 0;
+    for (let i = 0; i < total; i++) {
+      logicStep();
+      logicStep();
+      t += 1 / 30;
+      stepVisuals(1 / 30, t);
+      const blob = await new Promise((r) => renderer.domElement.toBlob(r, "image/jpeg", 0.86));
+      const buf = new Uint8Array(await blob.arrayBuffer());
+      let bin = "";
+      for (let j = 0; j < buf.length; j += 32768) bin += String.fromCharCode.apply(null, buf.subarray(j, j + 32768));
+      await send(i, btoa(bin));
+      done++;
+      if (match.phase === "matchEnd" && match.phaseFrame > 200) break;
+    }
+    match.taking = false;
+    window.__clash.takeInfo = { baseFrame, logStart, logEnd: match.sfxLog.length, frames: done, seconds: done / 30 };
+    return window.__clash.takeInfo;
+  },
+  /** Render the take's audio offline: the same synth recipes (sfxAt) replayed
+   *  at frame-accurate times over the crowd bed, via OfflineAudioContext. */
+  takeAudio: async () => {
+    const info = window.__clash.takeInfo;
+    if (!info) return "no-take";
+    const seconds = info.seconds;
+    const oc = new OfflineAudioContext(1, Math.ceil(44100 * seconds), 44100);
+    const master = oc.createGain();
+    master.gain.value = 0.5;
+    master.connect(oc.destination);
+    const nbuf = oc.createBuffer(1, oc.sampleRate * 2, oc.sampleRate);
+    const data = nbuf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const noise = oc.createBufferSource();
+    noise.buffer = nbuf;
+    noise.loop = true;
+    const nf = oc.createBiquadFilter();
+    nf.type = "bandpass";
+    nf.frequency.value = 700;
+    nf.Q.value = 0.6;
+    const cg = oc.createGain();
+    cg.gain.value = 0.015;
+    noise.connect(nf);
+    nf.connect(cg);
+    cg.connect(master);
+    noise.start(0);
+    noise.stop(seconds);
+    let koAt = -1;
+    for (let i = info.logStart; i < info.logEnd; i++) {
+      const ev = match.sfxLog[i];
+      const t = (ev.f - info.baseFrame) / 60;
+      if (t < 0 || t > seconds) continue;
+      if (ev.n === "ko") koAt = t;
+      sfxAt(ev.n, oc, master, t);
+    }
+    if (koAt >= 0) {
+      cg.gain.setValueAtTime(0.09, koAt);
+      cg.gain.exponentialRampToValueAtTime(0.015, Math.min(seconds, koAt + 1.6));
+    }
+    const buf = await oc.startRendering();
+    return wavBase64(buf);
+  }
+};
+function makeFighter(def, side) {
+  const rig = buildHumanoid(def.params);
+  setHeadband(rig, def.headband);
+  for (const p of def.props) PROPS[p](rig, def);
+  if (def.shoes) shoeBoxes(rig, toonMat(def.shoes, 0.7));
+  scene.add(rig.root);
+  return {
+    def,
+    rig,
+    side,
+    x: side === 0 ? -2.1 : 2.1,
+    z: 0,
+    facing: side === 0 ? Math.PI / 2 : -Math.PI / 2,
+    hp: MAX_HP,
+    roundsWon: 0,
+    state: "free",
+    // free | attack | hitstun | blockstun | ko | win
+    stateFrame: 0,
+    move: null,
+    moveFrame: 0,
+    hitDone: false,
+    hitIndex: 0,
+    fired: false,
+    blocking: false,
+    input: { x: 0, y: 0, light: false, heavy: false, block: false, special: false },
+    pressed: { light: false, heavy: false, special: false },
+    moving: false,
+    momentum: 0,
+    runPhase: side * 2.3,
+    squash: 0,
+    prevAirY: 0,
+    ai: { nextThink: 0, plan: "approach", planFrame: 0, blockUntil: 0 },
+    isBot: false
+  };
+}
+function showPick() {
+  match.phase = "pick";
+  match.phaseFrame = 0;
+  for (const f of match.fighters) {
+    scene.remove(f.rig.root);
+    f.rig.dispose();
+  }
+  match.fighters = [];
+  for (const p of projPool) {
+    p.active = false;
+    p.group.visible = false;
+  }
+  ui.hud.style.display = "none";
+  ui.endBtns.style.display = "none";
+  setBanner("", "");
+  match.pickRigs = FIGHTERS.map((def, i) => {
+    const rig = buildHumanoid(def.params);
+    setHeadband(rig, def.headband);
+    for (const p of def.props) PROPS[p](rig, def);
+    if (def.shoes) shoeBoxes(rig, toonMat(def.shoes, 0.7));
+    scene.add(rig.root);
+    return { def, rig, x: -3.3 + i * 2.2, z: 0.6, slot: i };
+  });
+  ui.pickGrid.innerHTML = "";
+  FIGHTERS.forEach((def, i) => {
+    const b = document.createElement("button");
+    b.className = "pickCard";
+    b.innerHTML = `<span class="pickName">${def.name}</span><span class="pickSpec">SPECIAL \xB7 ${def.specialName}</span>`;
+    b.addEventListener("click", () => {
+      ensureAudio();
+      pickFighter(i);
+    });
+    ui.pickGrid.appendChild(b);
+  });
+  ui.pick.style.display = "flex";
+  destroyTouch();
+}
+function clearPick() {
+  for (const p of match.pickRigs) {
+    scene.remove(p.rig.root);
+    p.rig.dispose();
+  }
+  match.pickRigs = [];
+  ui.pick.style.display = "none";
+}
+function pickFighter(i) {
+  ensureAudio();
+  sfx("select");
+  const pDef = FIGHTERS[i];
+  let ci = Math.floor(rnd() * (FIGHTERS.length - 1));
+  if (ci >= i) ci++;
+  const cDef = FIGHTERS[ci];
+  clearPick();
+  match.fighters = [makeFighter(pDef, 0), makeFighter(cDef, 1)];
+  if (params.get("bot") === "1") match.fighters[0].isBot = true;
+  match.round = 1;
+  ui.hud.style.display = "block";
+  ui.p1name.textContent = pDef.name;
+  ui.p2name.textContent = cDef.name;
+  startRound();
+  createTouch();
+}
+function startRound() {
+  const [a, b] = match.fighters;
+  for (const [f, x] of [[a, -2.1], [b, 2.1]]) {
+    f.x = x;
+    f.z = 0;
+    f.hp = MAX_HP;
+    f.state = "free";
+    f.stateFrame = 0;
+    f.move = null;
+    f.moveFrame = 0;
+    f.blocking = false;
+    f.hitDone = false;
+    f.fired = false;
+    f.ai.nextThink = 0;
+    f.ai.plan = "approach";
+    f.ai.blockUntil = 0;
+  }
+  for (const p of projPool) {
+    p.active = false;
+    p.group.visible = false;
+  }
+  match.timer = ROUND_FRAMES;
+  match.phase = "intro";
+  match.phaseFrame = 0;
+  updatePips();
+  updateHud();
+  setBanner(`ROUND ${match.round}`, "");
+}
+function updatePips() {
+  const pip = (n) => "\u25CF".repeat(n) + "\u25CB".repeat(Math.max(0, WINS_NEEDED - n));
+  if (match.fighters.length === 2) {
+    ui.p1pips.textContent = pip(match.fighters[0].roundsWon);
+    ui.p2pips.textContent = pip(match.fighters[1].roundsWon);
+  }
+}
+function setBanner(main, sub) {
+  ui.banner.textContent = main;
+  ui.bannerSub.textContent = sub;
+  ui.banner.style.opacity = main ? "1" : "0";
+  ui.bannerSub.style.opacity = sub ? "1" : "0";
+}
+function updateHud() {
+  if (match.fighters.length !== 2) return;
+  const [a, b] = match.fighters;
+  ui.p1hp.style.width = clamp(a.hp, 0, MAX_HP) + "%";
+  ui.p2hp.style.width = clamp(b.hp, 0, MAX_HP) + "%";
+  ui.timer.textContent = String(Math.max(0, Math.ceil(match.timer / 60)));
+}
+ui.rematch.addEventListener("click", () => {
+  ensureAudio();
+  sfx("select");
+  const [a, b] = match.fighters;
+  const idA = FIGHTERS.indexOf(a.def), idB = FIGHTERS.indexOf(b.def);
+  for (const f of match.fighters) {
+    scene.remove(f.rig.root);
+    f.rig.dispose();
+  }
+  match.fighters = [makeFighter(FIGHTERS[idA], 0), makeFighter(FIGHTERS[idB], 1)];
+  if (params.get("bot") === "1") match.fighters[0].isBot = true;
+  match.round = 1;
+  ui.endBtns.style.display = "none";
+  startRound();
+  createTouch();
+});
+ui.change.addEventListener("click", () => {
+  ensureAudio();
+  sfx("select");
+  showPick();
+});
+function faceOpponent(f, o) {
+  f.facing = Math.atan2(o.x - f.x, o.z - f.z);
+}
+function dist2d(a, b) {
+  return Math.hypot(b.x - a.x, b.z - a.z);
+}
+function startMove(f, moveKey) {
+  const base = moveKey === "special" ? f.def.special.kind === "flurry" ? MOVES.specialFlurry : MOVES.specialProj : MOVES[moveKey];
+  f.move = base;
+  f.state = "attack";
+  f.moveFrame = 0;
+  f.hitDone = false;
+  f.hitIndex = 0;
+  f.fired = false;
+  f.blocking = false;
+  if (moveKey !== "special") sfx("whoosh");
+}
+function applyHitstop(frames, moveKey) {
+  match.hitstop = Math.max(match.hitstop, frames);
+  match.pendingHitstop = { moveKey, setFrames: frames, startFrame: match.frame };
+  match.shake = Math.min(0.16, 0.05 + frames * 8e-3);
+}
+function resolveHit(att, def, row) {
+  const blocked = def.blocking && def.state === "free";
+  const chip = blocked && row.special ? Math.ceil(row.damage * 0.1) : 0;
+  const dmg = blocked ? chip : row.damage;
+  def.hp = Math.max(0, def.hp - dmg);
+  const dx = def.x - att.x, dz = def.z - att.z;
+  const d = Math.hypot(dx, dz) || 1;
+  def.x += dx / d * row.pushback;
+  def.z += dz / d * row.pushback;
+  const dc = Math.hypot(def.x, def.z);
+  if (dc > RING_R) {
+    def.x *= RING_R / dc;
+    def.z *= RING_R / dc;
+  }
+  applyHitstop(row.hitstop, row.key);
+  const hy = 1.25 * def.rig.params.body.height;
+  spawnBurst(def.x, hy, def.z, blocked ? 10473727 : 16765773, blocked ? 0.8 : 1.15);
+  if (def.hp <= 0) {
+    def.state = "ko";
+    def.stateFrame = 0;
+    sfx("ko");
+    endRound(att);
+    return;
+  }
+  def.state = blocked ? "blockstun" : "hitstun";
+  def.stateFrame = 0;
+  def.stunFrames = blocked ? row.blockstun : row.hitstun;
+  def.move = null;
+  sfx(blocked ? "block" : row.key === "heavy" ? "heavy" : row.key === "special" ? "heavy" : "light");
+}
+function spawnFighterProjectile(f) {
+  const p = getProjectile();
+  if (!p) return;
+  const o = match.fighters[1 - f.side];
+  const dx = o.x - f.x, dz = o.z - f.z;
+  const d = Math.hypot(dx, dz) || 1;
+  const spec = f.def.special;
+  p.x = f.x + dx / d * 0.6;
+  p.z = f.z + dz / d * 0.6;
+  p.vx = dx / d * MOVES.specialProj.projSpeed;
+  p.vz = dz / d * MOVES.specialProj.projSpeed;
+  p.size = spec.projType === "disc" ? 0.34 : 0.3;
+  p.type = spec.projType;
+  p.owner = f.side;
+  p.age = 0;
+  p.active = true;
+  p.color = spec.projColor;
+  p.group.visible = true;
+  p.ball.visible = p.type === "ball";
+  p.disc.visible = p.type === "disc";
+  p.ball.material.color.set(spec.projColor);
+  p.disc.material.color.set(spec.projColor);
+  p.glow.material.color.set(spec.projColor);
+  for (const g of p.ghosts) g.material.color.set(spec.projColor);
+  sfx("proj");
+}
+function stepProjectiles() {
+  const dt = 1 / 60;
+  for (const p of projPool) {
+    if (!p.active) continue;
+    p.age += dt;
+    p.x += p.vx * dt;
+    p.z += p.vz * dt;
+    const target = match.fighters[1 - p.owner];
+    if (target && target.state !== "ko" && Math.hypot(target.x - p.x, target.z - p.z) < 0.58) {
+      p.active = false;
+      p.group.visible = false;
+      resolveHit(match.fighters[p.owner], target, MOVES.specialProj);
+      continue;
+    }
+    if (p.age * MOVES.specialProj.projSpeed > 15 || Math.hypot(p.x, p.z) > 16) {
+      spawnBurst(p.x, 1.2, p.z, p.color, 1);
+      p.active = false;
+      p.group.visible = false;
+    }
+  }
+}
+function drawProjectiles(time) {
+  for (const p of projPool) {
+    if (!p.active) continue;
+    const y = 1.22;
+    p.group.position.set(p.x, y, p.z);
+    p.group.lookAt(p.x + p.vx, y, p.z + p.vz);
+    const pulse = 1 + 0.16 * Math.sin(time * 26 + p.age * 9);
+    p.ball.scale.setScalar(p.size / 0.15 * pulse);
+    p.disc.scale.setScalar(p.size / 0.2 * pulse);
+    p.disc.rotation.z += 0.24;
+    p.glow.scale.setScalar(3.4 * p.size * pulse);
+  }
+}
+function aiThink(f, o) {
+  const ai = f.ai;
+  const d = dist2d(f, o);
+  if (o.state === "attack" && d < 2.4 && rnd() < 0.5) {
+    ai.plan = "block";
+    ai.blockUntil = match.frame + Math.floor(rr(14, 30));
+    ai.nextThink = match.frame + 8;
+    return;
+  }
+  const r = rnd();
+  if (d > 3.4) ai.plan = r < 0.72 ? "approach" : r < 0.88 ? "special" : "wait";
+  else if (d > 1.7) ai.plan = r < 0.6 ? "approach" : r < 0.78 ? "special" : r < 0.9 ? "light" : "retreat";
+  else ai.plan = r < 0.42 ? "light" : r < 0.64 ? "heavy" : r < 0.78 ? "special" : r < 0.9 ? "block" : "retreat";
+  if (ai.plan === "block") ai.blockUntil = match.frame + Math.floor(rr(16, 34));
+  ai.nextThink = match.frame + Math.floor(rr(10, 22));
+}
+function aiInput(f, o) {
+  const inp = f.input;
+  inp.x = 0;
+  inp.y = 0;
+  inp.block = false;
+  f.pressed.light = f.pressed.heavy = f.pressed.special = false;
+  if (f.state !== "free") return;
+  if (match.frame >= f.ai.nextThink) aiThink(f, o);
+  const d = dist2d(f, o);
+  const toward = Math.atan2(o.x - f.x, o.z - f.z);
+  switch (f.ai.plan) {
+    case "approach":
+      if (d > 1.15) {
+        inp.x = Math.sin(toward);
+        inp.y = Math.cos(toward);
+      } else if (rnd() < 0.3) f.pressed.light = true;
+      break;
+    case "retreat": {
+      inp.x = -Math.sin(toward) * 0.8;
+      inp.y = -Math.cos(toward) * 0.8;
+      break;
+    }
+    case "block":
+      inp.block = match.frame < f.ai.blockUntil;
+      break;
+    case "light":
+      if (d < 1.7) f.pressed.light = true;
+      else {
+        inp.x = Math.sin(toward);
+        inp.y = Math.cos(toward);
+      }
+      break;
+    case "heavy":
+      if (d < 1.8) f.pressed.heavy = true;
+      else {
+        inp.x = Math.sin(toward);
+        inp.y = Math.cos(toward);
+      }
+      break;
+    case "special":
+      if (f.def.special.kind === "flurry" && d > 1.7) {
+        inp.x = Math.sin(toward);
+        inp.y = Math.cos(toward);
+      } else f.pressed.special = true;
+      break;
+    default:
+      break;
+  }
+}
+function endRound(winner) {
+  winner.roundsWon++;
+  match.phase = "roundEnd";
+  match.phaseFrame = 0;
+  const loser = match.fighters[1 - winner.side];
+  if (loser.hp <= 0) loser.state = "ko";
+  winner.state = "win";
+  updatePips();
+  updateHud();
+}
+function stepFighter(f, o) {
+  f.stateFrame++;
+  switch (f.state) {
+    case "free": {
+      faceOpponent(f, o);
+      f.blocking = !!f.input.block;
+      if (!f.blocking) {
+        if (f.pressed.light) {
+          startMove(f, "light");
+          break;
+        }
+        if (f.pressed.heavy) {
+          startMove(f, "heavy");
+          break;
+        }
+        if (f.pressed.special) {
+          startMove(f, "special");
+          break;
+        }
+        const mx = f.input.x, mz = f.input.y;
+        const mag = Math.hypot(mx, mz);
+        if (mag > 0.12) {
+          const sp = 3.1 / 60;
+          f.x += mx / Math.max(1, mag) * sp * Math.min(1, mag + 0.25);
+          f.z += mz / Math.max(1, mag) * sp * Math.min(1, mag + 0.25);
+          const dc = Math.hypot(f.x, f.z);
+          if (dc > RING_R) {
+            f.x *= RING_R / dc;
+            f.z *= RING_R / dc;
+          }
+          f.moving = true;
+        } else f.moving = false;
+      } else f.moving = false;
+      break;
+    }
+    case "attack": {
+      f.moving = false;
+      f.moveFrame++;
+      const m = f.move;
+      if (m === MOVES.specialProj) {
+        if (!f.fired && f.moveFrame >= m.startup) {
+          spawnFighterProjectile(f);
+          f.fired = true;
+        }
+      } else if (m.hits) {
+        if (m.hits.includes(f.moveFrame) && dist2d(f, o) <= m.range && o.state !== "ko") {
+          resolveHit(f, o, m);
+          if (match.phase !== "fight") return;
+        }
+      } else {
+        const activeStart = m.startup, activeEnd = m.startup + m.active;
+        if (!f.hitDone && f.moveFrame >= activeStart && f.moveFrame <= activeEnd) {
+          if (dist2d(f, o) <= m.range && o.state !== "ko") {
+            f.hitDone = true;
+            resolveHit(f, o, m);
+            if (match.phase !== "fight") return;
+          }
+        }
+        if (f.moveFrame === activeEnd && !f.hitDone) f.hitDone = true;
+      }
+      if (f.moveFrame >= totalFrames(m)) {
+        f.state = "free";
+        f.move = null;
+        f.stateFrame = 0;
+      }
+      break;
+    }
+    case "hitstun":
+    case "blockstun": {
+      f.moving = false;
+      if (f.stateFrame >= (f.stunFrames || 10)) {
+        f.state = "free";
+        f.stateFrame = 0;
+      }
+      break;
+    }
+    default:
+      f.moving = false;
+      break;
+  }
+  f.pressed.light = f.pressed.heavy = f.pressed.special = false;
+}
+function logicStep() {
+  match.frame++;
+  if (match.hitstop > 0) {
+    match.hitstop--;
+    if (match.hitstop === 0 && match.pendingHitstop) {
+      const p = match.pendingHitstop;
+      match.hitstopLog.push({ ...p, endFrame: match.frame, measured: match.frame - p.startFrame });
+      match.pendingHitstop = null;
+    }
+    return;
+  }
+  match.phaseFrame++;
+  const [a, b] = match.fighters;
+  switch (match.phase) {
+    case "intro": {
+      if (match.phaseFrame === 55) setBanner("FIGHT!", "");
+      if (match.phaseFrame >= 95) {
+        match.phase = "fight";
+        match.phaseFrame = 0;
+        setBanner("", "");
+        sfx("bell");
+      }
+      break;
+    }
+    case "fight": {
+      match.timer--;
+      if (a.isBot) aiInput(a, b);
+      aiInput(b, a);
+      stepFighter(a, b);
+      if (match.phase === "fight") stepFighter(b, a);
+      if (match.phase === "fight") {
+        stepProjectiles();
+        const d = dist2d(a, b);
+        if (d < 0.72 && d > 1e-4) {
+          const push = (0.72 - d) / 2;
+          const nx = (b.x - a.x) / d, nz = (b.z - a.z) / d;
+          if (a.state === "free") {
+            a.x -= nx * push;
+            a.z -= nz * push;
+          }
+          if (b.state === "free") {
+            b.x += nx * push;
+            b.z += nz * push;
+          }
+        }
+        if (match.timer <= 0) {
+          match.timer = 0;
+          endRound(a.hp === b.hp ? rnd() < 0.5 ? a : b : a.hp > b.hp ? a : b);
+          setBanner("TIME!", "");
+        }
+        updateHud();
+      }
+      break;
+    }
+    case "roundEnd": {
+      if (match.phaseFrame === 2) {
+        const winner = match.fighters.find((f) => f.roundsWon > 0 && f.state === "win") || match.fighters[0];
+        setBanner("K.O.!", `${winner.def.name} TAKES THE ROUND`);
+        if (match.timer <= 0 && match.fighters.every((f) => f.state !== "ko")) setBanner("TIME!", `${winner.def.name} TAKES THE ROUND`);
+      }
+      if (match.phaseFrame >= 170) {
+        const champ = match.fighters.find((f) => f.roundsWon >= WINS_NEEDED);
+        if (champ) {
+          match.phase = "matchEnd";
+          match.phaseFrame = 0;
+          setBanner(`${champ.def.name} WINS!`, "CHAMPION OF THE PLAZA");
+          ui.endBtns.style.display = "flex";
+          destroyTouch();
+        } else {
+          match.round++;
+          startRound();
+        }
+      }
+      break;
+    }
+    default:
+      break;
+  }
+}
+var keys = {};
+var pressQueue = { light: false, heavy: false, special: false };
+window.addEventListener("keydown", (e) => {
+  ensureAudio();
+  if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Space"].includes(e.code)) e.preventDefault();
+  if (!e.repeat) {
+    if (e.code === "KeyJ") pressQueue.light = true;
+    if (e.code === "KeyK") pressQueue.heavy = true;
+    if (e.code === "KeyU" || e.code === "Space") pressQueue.special = true;
+  }
+  keys[e.code] = true;
+});
+window.addEventListener("keyup", (e) => {
+  keys[e.code] = false;
+});
+window.addEventListener("pointerdown", ensureAudio, { passive: true });
+var TC = null;
+function createTouch() {
+  if (TC || !isTouchDevice()) return;
+  TC = new TouchController({
+    buttons: [
+      { id: "a", label: "LIGHT", size: 84 },
+      { id: "b", label: "HEAVY", size: 68 },
+      { id: "c", label: "BLOCK", size: 68 },
+      { id: "d", label: "SPEC", size: 68 }
+    ],
+    maxRadius: 56,
+    deadzone: 0.18,
+    zIndex: 1150
+  });
+}
+function destroyTouch() {
+  if (TC) {
+    TC.destroy();
+    TC = null;
+  }
+}
+function pollPlayerInput() {
+  const f = match.fighters[0];
+  if (!f || f.isBot) return;
+  const ti = TC ? TC.getInput() : null;
+  let x = 0, y = 0;
+  if (keys.ArrowLeft || keys.KeyA) x -= 1;
+  if (keys.ArrowRight || keys.KeyD) x += 1;
+  if (keys.ArrowUp || keys.KeyW) y -= 1;
+  if (keys.ArrowDown || keys.KeyS) y += 1;
+  if (ti) {
+    x += ti.x;
+    y += ti.y;
+  }
+  f.input.x = clamp(x, -1, 1);
+  f.input.y = clamp(y, -1, 1);
+  f.input.block = !!(keys.KeyL || ti && ti.c);
+  if (keys.KeyJ || ti && ti.aPressed) pressQueue.light = true;
+  if (keys.KeyK || ti && ti.bPressed) pressQueue.heavy = true;
+  if (keys.KeyU || keys.Space || ti && ti.dPressed) pressQueue.special = true;
+  if (pressQueue.light) {
+    f.pressed.light = true;
+    pressQueue.light = false;
+  }
+  if (pressQueue.heavy) {
+    f.pressed.heavy = true;
+    pressQueue.heavy = false;
+  }
+  if (pressQueue.special) {
+    f.pressed.special = true;
+    pressQueue.special = false;
+  }
+}
+var camTarget = new THREE3.Vector3(0, 3.4, 10);
+var camLook = new THREE3.Vector3(0, 1, 0);
+camera.position.copy(camTarget);
+function fighterSample(f, dt, time) {
+  let action = "guard", actionT = 0;
+  if (f.state === "attack" && f.move) {
+    action = f.move.key === "light" ? f.def.lightProg : f.move.key === "heavy" ? f.def.heavyProg : f.def.special.prog;
+    actionT = clamp(f.moveFrame / totalFrames(f.move), 0, 1);
+  } else if (f.state === "hitstun") {
+    action = "hit";
+    actionT = clamp(f.stateFrame / Math.max(1, f.stunFrames || 10), 0, 1);
+  } else if (f.state === "blockstun" || f.state === "free" && f.blocking) {
+    action = "block";
+    actionT = 0.5;
+  } else if (f.state === "ko") {
+    action = "ko";
+    actionT = clamp(f.stateFrame / 40, 0, 1);
+  } else if (f.state === "win") {
+    action = "win";
+    actionT = clamp(f.stateFrame / 70, 0, 1);
+  } else if (f.moving) {
+    action = null;
+  }
+  if (f.moving) f.runPhase += 3.1 * dt * 2.6;
+  return {
+    x: f.x,
+    z: f.z,
+    facingYaw: f.facing,
+    moving: !!f.moving,
+    momentum: f.moving ? 0.55 : 0,
+    runPhase: f.runPhase,
+    lean: 0,
+    airY: 0,
+    vy: 0,
+    squash: 0,
+    guarding: false,
+    hasBall: false,
+    dribblePhase: 0,
+    spinDir: 1,
+    time,
+    slot: f.side,
+    action,
+    actionT
+  };
+}
+var lastTs = performance.now();
+var accumulator = 0;
+var elapsed = 0;
+function stepVisuals(dt, time) {
+  if (match.phase === "pick") {
+    for (const p of match.pickRigs) {
+      updateHumanoid(p.rig, {
+        x: p.x,
+        z: p.z,
+        facingYaw: time * 0.07 + Math.sin(time * 0.4 + p.slot) * 0.14,
+        moving: false,
+        momentum: 0,
+        runPhase: 0,
+        lean: 0,
+        airY: 0,
+        vy: 0,
+        squash: 0,
+        guarding: false,
+        hasBall: false,
+        dribblePhase: 0,
+        spinDir: 1,
+        time,
+        slot: p.slot,
+        action: "guard",
+        actionT: 0
+      }, dt, PROGRAMS);
+    }
+  } else {
+    for (const f of match.fighters) updateHumanoid(f.rig, fighterSample(f, dt, time), dt, PROGRAMS);
+  }
+  drawProjectiles(time);
+  stepBursts(dt);
+  const excite = match.phase === "roundEnd" || match.phase === "matchEnd" ? 2.2 : 1;
+  for (const c of crowd) {
+    c.g.position.y = c.baseY + Math.abs(Math.sin(time * c.speed * excite + c.phase)) * 0.05 * excite;
+  }
+  const pulse = 0.75 + 0.25 * Math.sin(time * 2.4);
+  world.userData.ringGlowMat.color.setHSL(0.52, 1, 0.45 + pulse * 0.18);
+  if (match.phase === "pick") {
+    const a = time * 0.07;
+    camTarget.set(Math.sin(a) * 10.5, 4.4, Math.cos(a) * 10.5);
+    camLook.set(0, 1.1, 0);
+  } else if (match.fighters.length === 2) {
+    const [a, b] = match.fighters;
+    const mx = (a.x + b.x) / 2, mz = (a.z + b.z) / 2;
+    const sep = Math.max(1.2, dist2d(a, b));
+    const ax = (b.x - a.x) / sep, az = (b.z - a.z) / sep;
+    let px = -az, pz = ax;
+    if (pz < 0) {
+      px = -px;
+      pz = -pz;
+    }
+    let dx = px * 0.6 + 0.42, dz = pz * 0.6 + 0.91;
+    const dl = Math.hypot(dx, dz);
+    dx /= dl;
+    dz /= dl;
+    const aspect = window.innerWidth / window.innerHeight;
+    const tanV = Math.tan(THREE3.MathUtils.degToRad(camera.fov / 2));
+    const distForWidth = (sep / 2 + 0.6) / (tanV * aspect);
+    const dist = clamp(Math.max(4.3 + sep * 0.5, distForWidth), 4.8, 11);
+    camTarget.set(mx + dx * dist, dist * 0.46, mz + dz * dist);
+    camLook.set(mx, 1.02, mz);
+  }
+  const k = 1 - Math.exp(-dt * 4.6);
+  camera.position.lerp(camTarget, k);
+  match.shake = Math.max(0, match.shake - dt * 0.5);
+  const shX = (rnd() - 0.5) * match.shake, shY = (rnd() - 0.5) * match.shake;
+  camera.lookAt(camLook.x + shX, camLook.y + shY, camLook.z);
+  camera.rotation.z += Math.sin(time * 0.5) * 2e-3;
+  renderer.render(scene, camera);
+}
+function animate(now) {
+  requestAnimationFrame(animate);
+  const dtReal = Math.min(0.25, (now - lastTs) / 1e3);
+  lastTs = now;
+  elapsed += dtReal;
+  if (match.taking) return;
+  if (match.phase !== "pick") {
+    pollPlayerInput();
+    accumulator += dtReal * (parseFloat(params.get("ts") || "") || 1);
+    const step = 1 / 60;
+    let n = 0;
+    while (accumulator >= step && n < 90) {
+      logicStep();
+      accumulator -= step;
+      n++;
+    }
+    if (n === 90) accumulator = 0;
+  } else {
+    accumulator = 0;
+  }
+  stepVisuals(dtReal, elapsed);
+}
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+showPick();
+if (params.get("bot") === "1" || params.has("pick")) {
+  const i = clamp(parseInt(params.get("pick") || "0", 10) || 0, 0, FIGHTERS.length - 1);
+  pickFighter(i);
+}
+requestAnimationFrame(animate);
+
+</script>
+</body>
+</html>
