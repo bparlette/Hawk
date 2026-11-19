@@ -8,6 +8,7 @@
 //   const S = new LFSim(world, roster, fleet); S.step(dt, input)   input: Palm City's {jx, jy, jm, keys, action, turbo}
 
 import { initSkid, layMarks } from './lf_skid.js';   // Palm City's skid module, stolen (owner, Nov 17)
+import { initDrift, stepDrift, loseDrift, ageDrift, DRIFT } from './lf_drift.js';   // drift banking off the skid slip (owner, Nov 18)
 import { buildRails, railsNear, bushesNear } from './lf_veg.js';   // crashable guardrails + bushes (owner, Nov 18)
 
 const TAU = Math.PI * 2;
@@ -34,6 +35,7 @@ export class LFSim {
     this.W = W; this.roster = roster; this.fleet = fleet; this.time = 0; this.cars = []; this.events = [];
     this.kothBoost = false;   // Cul-de-Sac King of the Hill sets this during a round (bumper rules)
     initSkid(this);
+    initDrift(this);
     // task L3: speed bumps (data/bumps.json), indexed by 256-unit cell for the crossing test
     this.bumps = opts.bumps || []; this.bumpGrid = new Map();
     this.bumps.forEach((b, i) => { const k = Math.floor(b.x / 256) * 100003 + Math.floor(b.y / 256); let l = this.bumpGrid.get(k); if (!l) this.bumpGrid.set(k, l = []); l.push(i); });
@@ -239,6 +241,7 @@ export class LFSim {
           if (Math.abs(c.v) > 40) this.events.push({ t: this.time, kind: 'house', model: c.model, v: Math.abs(c.v) });
           // Palm City carImpact: running into something solid dents the leading panel too
           const sp = Math.abs(c.v), sgn = c.v >= 0 ? 1 : -1;
+          if (c === this.player && sp >= DRIFT.hardHit) loseDrift(this, c);   // DRIFT BANKING: a hard building hit loses the bank (lf_drift.js)
           this.hitCar(c, impactDamage(sp) * (c === this.player && !c.parked ? HERO : 1), -(c.dirx || 1) * sgn, -(c.diry || 0) * sgn);
           c.v *= 0.45; if (c.z > 0) c.vz = Math.min(c.vz, 0);
           c.jolt = 0.22;
@@ -248,6 +251,7 @@ export class LFSim {
 
   step(dt, inp = {}) {
     this.time += dt;
+    ageDrift(this, dt);   // drift-bank popups age in sim time, whatever mode the player is in
     if (this.player && inp) this.stickDrive(this.player, inp, dt);
     for (const o of this.cars) if (o !== this.player && !o.parked && !o.remote && o.driveFn) o.driveFn(o, dt);
     this.collide();
@@ -325,7 +329,7 @@ export class LFSim {
     const grip = Math.min(1, Math.abs(c.v) / 70);
     c.h = wrap(c.h + steer * 2.7 * grip * Math.sign(c.v) * dt);
     c.dirx = Math.cos(c.h); c.diry = Math.sin(c.h);
-    if (c === this.player || c.driveFn) layMarks(this, c, throttle, steer, grip, dt);   // slipping tyres leave marks (Palm City)
+    if (c === this.player || c.driveFn) { const sl = layMarks(this, c, throttle, steer, grip, dt); if (c === this.player) stepDrift(this, c, sl, steer, grip, dt); }   // slipping tyres leave marks (Palm City); the player's slip also feeds drift banking (lf_drift.js)
     const nx = c.x + c.dirx * c.v * dt, ny = c.y + c.diry * c.v * dt;
     const bump = this.bumps.length && c.layer === 0 ? this.bumpCrossed(c, nx, ny) : null;
     if (bump) {
