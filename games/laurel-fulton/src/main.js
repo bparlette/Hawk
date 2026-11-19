@@ -5,6 +5,7 @@ import { GraphWorld } from './world_graph.js';
 import { LFSim } from './lf_sim.js';
 import { GroundPainter, CHUNK } from './lf_ground.js';
 import { Renderer } from './lf_render.js';
+import { CarStack } from './lf_stack.js';
 import { Input } from '../../palm-city/src/input.js';
 import { Areas, poly } from './lf_areas.js';
 import { players, startRally, stepRally, swapPlayerCar, pushTrail, makeBeat, stepBeat } from './lf_mission.js';
@@ -90,6 +91,16 @@ const files = new Set(); for (const m of Object.values(fleet)) for (const k of [
 const imgs = {};
 const BLANK = new Image(); BLANK.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 await Promise.all([...files].map(async (f) => { const im = new Image(); im.src = 'assets/' + f; try { await im.decode(); imgs[f] = im; } catch (e) { imgs[f] = BLANK; } }));   // a bad sprite must not kill the game
+// SPRITE STACKS (Nov 19): layer sheets cut from the same parametric bodies as the bake (tools/build_stacks.py) —
+// cars with height that turn to any angle. Optional by design: a city without assets/stacks.json (College Park)
+// or a sheet that fails to decode just keeps the baked sprites.
+let carStacks = null;
+try {
+  const SM = await j('assets/stacks.json');
+  const built = {};
+  await Promise.all(Object.entries(SM).map(async ([model, meta]) => { const im = new Image(); im.src = 'assets/' + meta.file; try { await im.decode(); built[model] = new CarStack(im, meta); } catch (e) { } }));
+  if (Object.keys(built).length) carStacks = built;
+} catch (e) { }
 msg(TITLE + ' — building the map…'); await new Promise(r => setTimeout(r, 0));   // paint that line before the heavy setup
 const W = new GraphWorld(G);
 let areas = new Areas({ buildings: [], parking: [], green: [], heroes: [] }, W);   // real areas land in phase 2
@@ -103,6 +114,7 @@ if (!opts.spawn) {                                       // Ledo Pizza: face out
   if (r && r.pts.length > 3) sim.player.h = Math.atan2(r.pts[3][1] - r.pts[0][1], r.pts[3][0] - r.pts[0][0]);
 }
 renderer = new Renderer(ctx, W, ground, fleet, imgs, areas);
+if (carStacks) renderer.stacks = carStacks;
 let RF = null;   // the roof lands in phase 2
 // ---- task L7: walk-in interiors (data/interiors/<id>.json, tools/interior_build.py). A run as someone with one STARTS inside.
 const KITS = {};   // interiors land in phase 2

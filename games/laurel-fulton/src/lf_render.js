@@ -9,6 +9,7 @@ import { CHUNK } from './lf_ground.js';
 import { drawLightBar, drawSirenGlow } from './lf_cops.js';   // L15: cop light bar + siren glow
 import { poly } from './lf_areas.js';
 import { HeroArt } from './lf_heroes.js';
+import { drawStackCar } from './lf_stack.js';   // sprite-stacked cars (height!) when a stack exists for the model
 import { bushesNear } from './lf_veg.js';
 import * as FX from './lf_fx.js';
 
@@ -46,7 +47,7 @@ export function grade(t) {
 
 const SUN = { x: 0.8, y: -0.3 }, FAR_CHUNKS = 90;                       // the bake's sun: shadows fall east-north-east
 export class Renderer {
-  constructor(ctx, W, ground, fleet, imgs, areas = null) { this.areas = areas; this.ctx = ctx; this.W = W; this.ground = ground; this.fleet = fleet; this.imgs = imgs; }
+  constructor(ctx, W, ground, fleet, imgs, areas = null) { this.areas = areas; this.ctx = ctx; this.W = W; this.ground = ground; this.fleet = fleet; this.imgs = imgs; this.stacks = null; }
   resize(vw, vh, dpr) { this.vw = vw; this.vh = vh; this.dpr = dpr; }
   cell(m, k, which) {                                   // a car sheet frame -> [img, sx, sy, sw, sh, ox, oy, w, h]
     const e = m[which], img = this.imgs[e.file], cols = m.cols, rows = Math.ceil(m.angles / cols);
@@ -59,6 +60,8 @@ export class Renderer {
     const [img, sx, sy, sw, sh, ox, oy, w, h] = this.cell(m, k, which);
     let [jx, jy] = this.time != null ? FX.shake(this.S, c, this.time) : [0, 0];   // bass cars vibrate
     if (c.jolt > 0) { jx += Math.sin(this.time * 90) * 2.2 * c.jolt / 0.22; jy += Math.cos(this.time * 77) * 2.2 * c.jolt / 0.22; }   // the bump's jolt
+    const st = this.stacks && this.stacks[c.model];
+    if (st && (this.zNow || 1) * (m.length || 46) >= 26) { drawStackCar(this, g, c, st, which, jx, jy); return; }   // stacked: any angle, with height — but at map zoom a car is a speck, so the flat sheet draws there (and both passes agree)
     if (which === 'color' && c.z > 0) {                   // L3 airborne: the body rises toward you and grows; the shadow stays down
       const k = 1 + c.z * 0.012; g.save(); g.translate(c.x + jx - c.z * 0.25, c.y + jy - c.z * 1.5); g.scale(k, k);   // presentation only: lift + loom so a 3 m arc reads at phone zoom
       g.drawImage(img, sx, sy, sw, sh, ox, oy, w, h); g.restore(); return;
@@ -129,6 +132,7 @@ export class Renderer {
   draw(S, cam, time, tod = 0.18) {
     this.gr = grade(tod); this.tod = tod;
     const g = this.ctx, { vw, vh, dpr } = this, z = cam.zoom, hw = vw / 2 / z, hh = vh / 2 / z;
+    this.zNow = z;
     const vx0 = cam.x - hw, vy0 = cam.y - hh, vx1 = cam.x + hw, vy1 = cam.y + hh;
     g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#4c7a3c'; g.fillRect(0, 0, vw, vh);
     g.setTransform(dpr * z, 0, 0, dpr * z, dpr * (vw / 2 - cam.x * z), dpr * (vh / 2 - cam.y * z));
