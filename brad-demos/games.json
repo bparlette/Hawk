@@ -46,6 +46,14 @@
   },
   {
    "category": "AI Bake-Off",
+   "id": "voxel-cascade",
+   "note": "Voxel Rube Goldberg machine simulator (Neon AI Studio build, Moth polish pass): queue a 3-trigger sequence per zone, launch, and watch the cinematic chain reaction roll with ASMR audio. 4 unlockable worlds: Clockwork Workshop, Zen Bamboo Garden, Alpine Toy Foundry, Starlight Observatory. Three.js + Matter.js, gamepress touch standard.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/voxel-cascade/",
+   "title": "Voxel Cascade \u2014 Rube Goldberg Machine"
+  },
+  {
+   "category": "AI Bake-Off",
    "id": "flappy-showdown",
    "keys": {
     "jump": "Space"
