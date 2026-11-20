@@ -25,7 +25,7 @@
    "orientation": "landscape",
    "path": "flappy-showdown.html",
    "thumb": "thumbs/one-tap-reflex-v2.webp",
-   "title": "FLAPPY BIRD — 4-Way AI Showdown"
+   "title": "FLAPPY BIRD \u2014 4-Way AI Showdown"
   },
   {
    "category": "AI Bake-Off",
@@ -102,14 +102,14 @@
     "jump": "KeyK"
    },
    "labels": {
-    "attack": "FAN · HOLD",
-    "jump": "THRUST · TAP"
+    "attack": "FAN \u00b7 HOLD",
+    "jump": "THRUST \u00b7 TAP"
    },
-   "note": "Tesla Roadster 2.0 fan game: the car drives itself, you get two buttons — hold the fan for sonic loops, tap thrusters to kickflip over Teslas crossing the 4-way at Starbase. Built with gamepress.",
+   "note": "Tesla Roadster 2.0 fan game: the car drives itself, you get two buttons \u2014 hold the fan for sonic loops, tap thrusters to kickflip over Teslas crossing the 4-way at Starbase. Built with gamepress.",
    "orientation": "portrait",
    "path": "g/roadster-flip/index.html",
    "thumb": "thumbs/roadster-flip.webp?v=1792369872",
-   "title": "ROADSTER // FLIP — Starbase Run",
+   "title": "ROADSTER // FLIP \u2014 Starbase Run",
    "video": "g/roadster-flip/ROADSTER-FLIP-short-9x16.mp4"
   },
   {
@@ -119,7 +119,7 @@
    "orientation": "portrait",
    "path": "player.html",
    "thumb": "thumbs/roadster-flip.webp?v=1792369872",
-   "title": "ROADSTER // FLIP — 30s Short & Showcase",
+   "title": "ROADSTER // FLIP \u2014 30s Short & Showcase",
    "video": "g/roadster-flip/ROADSTER-FLIP-short-9x16.mp4"
   },
   {
@@ -246,9 +246,9 @@
     "start": "Enter"
    },
    "labels": {
-    "attack": "B · ATTACK",
-    "jump": "C · JUMP",
-    "special": "A · SPECIAL"
+    "attack": "B \u00b7 ATTACK",
+    "jump": "C \u00b7 JUMP",
+    "special": "A \u00b7 SPECIAL"
    },
    "note": "surge: shellshock16.surge.sh. Real ROM in a GPGX wasm player.",
    "orientation": "landscape",
@@ -332,7 +332,7 @@
    "orientation": "any",
    "path": "g/survivors-plus/index.html",
    "thumb": "thumbs/survivors-plus.webp?v=1791962719",
-   "title": "★ Vampire Survivors Remake — Hark Edition (fan remake)"
+   "title": "\u2605 Vampire Survivors Remake \u2014 Hark Edition (fan remake)"
   },
   {
    "autostart": [],
@@ -372,7 +372,7 @@
    "extras": [
     {
      "key": "Enter",
-     "label": "★ STAR"
+     "label": "\u2605 STAR"
     },
     {
      "key": "KeyM",
@@ -562,7 +562,7 @@
    "orientation": "any",
    "path": "https://notebook-arcade.surge.sh/excitebike/",
    "thumb": "https://notebook-arcade.surge.sh/excitebike/og.jpg",
-   "title": "Excitebike — Track 1"
+   "title": "Excitebike \u2014 Track 1"
   },
   {
    "autostart": [],
@@ -580,7 +580,7 @@
    "orientation": "any",
    "path": "https://notebook-arcade.surge.sh/punch-out/",
    "thumb": "https://notebook-arcade.surge.sh/punch-out/og.jpg",
-   "title": "Punch-Out — Minor Circuit"
+   "title": "Punch-Out \u2014 Minor Circuit"
   },
   {
    "autostart": [],
@@ -598,7 +598,7 @@
    "orientation": "any",
    "path": "https://notebook-arcade.surge.sh/kung-fu-master/",
    "thumb": "https://notebook-arcade.surge.sh/kung-fu-master/og.jpg",
-   "title": "Kung Fu Master — Level 1"
+   "title": "Kung Fu Master \u2014 Level 1"
   },
   {
    "autostart": [],
@@ -616,7 +616,7 @@
    "orientation": "any",
    "path": "https://notebook-arcade.surge.sh/bad-dudes/",
    "thumb": "https://notebook-arcade.surge.sh/bad-dudes/og.jpg",
-   "title": "Bad Dudes — Stage 2"
+   "title": "Bad Dudes \u2014 Stage 2"
   },
   {
    "autostart": [],
@@ -742,15 +742,15 @@
     "up": "KeyW"
    },
    "labels": {
-    "attack": "J · FIRE",
-    "jump": "E · USE / HIDE",
-    "special": "K · LASER AIM"
+    "attack": "J \u00b7 FIRE",
+    "jump": "E \u00b7 USE / HIDE",
+    "special": "K \u00b7 LASER AIM"
    },
    "note": "Hark's featured fan build (2026-10-13), single file, procedural. Source: /workspace/work/re-requiem/game/index.html",
    "orientation": "any",
    "path": "g/re-requiem/index.html",
    "thumb": "thumbs/re-requiem.webp?v=1791938512",
-   "title": "Resident Evil: Requiem · FINAL"
+   "title": "Resident Evil: Requiem \u00b7 FINAL"
   },
   {
    "autostart": [],
@@ -767,15 +767,15 @@
     "up": "KeyW"
    },
    "labels": {
-    "attack": "E · USE",
+    "attack": "E \u00b7 USE",
     "jump": "SPACE",
-    "special": "F · LIGHT"
+    "special": "F \u00b7 LIGHT"
    },
    "note": "Earlier build v1 of Brad's Requiem fan game, pasted 2026-10-13, added as-is with no fixes. Mouse to look.",
    "orientation": "landscape",
    "path": "g/re-requiem-v1/index.html",
    "thumb": "thumbs/re-requiem-v1.webp?v=1791939086",
-   "title": "Requiem v1 · Spencer Estate Wing"
+   "title": "Requiem v1 \u00b7 Spencer Estate Wing"
   },
   {
    "autostart": [],
@@ -792,15 +792,15 @@
     "up": "KeyW"
    },
    "labels": {
-    "attack": "E · USE",
+    "attack": "E \u00b7 USE",
     "jump": "SPACE",
-    "special": "F · LIGHT"
+    "special": "F \u00b7 LIGHT"
    },
    "note": "Earlier build v2 of Brad's Requiem fan game, pasted 2026-10-13, added as-is with no fixes. Mouse to look.",
    "orientation": "landscape",
    "path": "g/re-requiem-v2/index.html",
    "thumb": "thumbs/re-requiem-v2.webp?v=1791939086",
-   "title": "Requiem v2 · RE Engine WebGL Edition"
+   "title": "Requiem v2 \u00b7 RE Engine WebGL Edition"
   },
   {
    "autostart": [],
@@ -817,15 +817,15 @@
     "up": "KeyW"
    },
    "labels": {
-    "attack": "E · USE",
+    "attack": "E \u00b7 USE",
     "jump": "SPACE",
-    "special": "F · LIGHT"
+    "special": "F \u00b7 LIGHT"
    },
    "note": "Earlier build v3 of Brad's Requiem fan game, pasted 2026-10-13, added as-is with no fixes. Mouse to look.",
    "orientation": "landscape",
    "path": "g/re-requiem-v3/index.html",
    "thumb": "thumbs/re-requiem-v3.webp?v=1791939086",
-   "title": "Requiem v3 · Director's Cut"
+   "title": "Requiem v3 \u00b7 Director's Cut"
   },
   {
    "autostart": [],
@@ -865,7 +865,7 @@
    "orientation": "any",
    "path": "g/blox-dough-raid-plus/index.html",
    "thumb": "thumbs/blox-dough-raid-plus.webp?v=1791933461",
-   "title": "★ Blox Fruits: Dough Raid — Turtles Edition"
+   "title": "\u2605 Blox Fruits: Dough Raid \u2014 Turtles Edition"
   },
   {
    "autostart": [],
@@ -898,14 +898,14 @@
    "labels": {
     "attack": "GAS",
     "jump": "BRAKE",
-    "special": "⚑ CHECKPOINT",
+    "special": "\u2691 CHECKPOINT",
     "start": "RESTART"
    },
    "note": "Hark fan remake of PolyTrack (Kodub), 2026-10-13. three.js r160 local, raycast-suspension physics, loop/jumps/banked turns, medals, localStorage ghost, track builder. Boots in an autopilot attract lap; any key/tap = race. Source: /workspace/work/polytrack-plus/game",
    "orientation": "any",
    "path": "g/polytrack-plus/index.html",
    "thumb": "thumbs/polytrack-plus.webp?v=1791950094",
-   "title": "★ PolyTrack Remake — Hark Edition (fan remake)"
+   "title": "\u2605 PolyTrack Remake \u2014 Hark Edition (fan remake)"
   },
   {
    "autostart": [],
@@ -1592,14 +1592,14 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z · FIGHT",
-    "special": "X · YARN / SWING"
+    "attack": "Z \u00b7 FIGHT",
+    "special": "X \u00b7 YARN / SWING"
    },
    "note": "Three.js 3D brawler-runner: ninja cat Miso fights dog gangs through Amber Market, dashes the alley runner, and faces Big Bruno the Bulldog. Exaggerated comic combat (hit-stop, POW!/THWACK! popups), foreground crossings, and a yarn swing off the lamp poles. Full source in games/miso-city-3d/.",
    "orientation": "landscape",
    "path": "../games/miso-city-3d/index.html",
    "thumb": "thumbs/miso-city-3d.webp",
-   "title": "Miso City 3D — Level 1"
+   "title": "Miso City 3D \u2014 Level 1"
   },
   {
    "autostart": [],
@@ -1621,10 +1621,10 @@
     "up": "ArrowUp"
    },
    "labels": {
-    "attack": "Z · SMASH",
-    "jump": "X · DASH"
+    "attack": "Z \u00b7 SMASH",
+    "jump": "X \u00b7 DASH"
    },
-   "note": "Pac-Man x Wrecking Crew: eat every pellet before the maze seals in 150 seconds — smash brick walls with the hammer to open shortcuts and reroute three ghosts (chaser, ambusher, roamer). Power pellets turn the tables. Moth build: 28px painted art, floating touch stick, spectate attract mode.",
+   "note": "Pac-Man x Wrecking Crew: eat every pellet before the maze seals in 150 seconds \u2014 smash brick walls with the hammer to open shortcuts and reroute three ghosts (chaser, ambusher, roamer). Power pellets turn the tables. Moth build: 28px painted art, floating touch stick, spectate attract mode.",
    "orientation": "portrait",
    "path": "../games/maze-wrecker/index.html",
    "thumb": "thumbs/maze-wrecker.webp",
@@ -1703,10 +1703,10 @@
     "start": "Enter"
    },
    "labels": {},
-   "note": "Planko — Seed Garden (beauty rebuild of Seed Plinko): painted ASMR plinko garden, 38 procedurally-grown species in 16 forms (common/rare/luminous), dew/stone/firefly peg board at golden hour, synthesized marimba-plink + shimmer + bloom-chime audio, seed-packet picker with pollen unlocks, garden journal, persistent session garden v3: endless seeds with no stop screens, nothing locked (all 38 species from the start), rapid-fire seed placement, double-speed growth — on top of v2's random seeds, three-row garden (small in front), and scythe gardener.",
+   "note": "Planko \u2014 Seed Garden (beauty rebuild of Seed Plinko): painted ASMR plinko garden, 38 procedurally-grown species in 16 forms (common/rare/luminous), dew/stone/firefly peg board at golden hour, synthesized marimba-plink + shimmer + bloom-chime audio, seed-packet picker with pollen unlocks, garden journal, persistent session garden v3: endless seeds with no stop screens, nothing locked (all 38 species from the start), rapid-fire seed placement, double-speed growth \u2014 on top of v2's random seeds, three-row garden (small in front), and scythe gardener.",
    "orientation": "any",
    "path": "../games/seed-plinko/index.html",
-   "title": "Planko — Seed Garden"
+   "title": "Planko \u2014 Seed Garden"
   },
   {
    "autostart": [],
@@ -1729,7 +1729,7 @@
     "start": "Enter"
    },
    "labels": {},
-   "note": "Blow the driveway clear under a blue-hour sky — while snow still falls.",
+   "note": "Blow the driveway clear under a blue-hour sky \u2014 while snow still falls.",
    "orientation": "any",
    "path": "../games/snow-rows/index.html",
    "title": "Snow Rows"
@@ -1771,7 +1771,7 @@
    "note": "Shell Shock 16 variant built for speed runs.",
    "orientation": "landscape",
    "path": "../games/shell-shock-16-speedrun/index.html",
-   "title": "Shell Shock 16 — Speed Run"
+   "title": "Shell Shock 16 \u2014 Speed Run"
   },
   {
    "autostart": [],
@@ -1810,7 +1810,7 @@
    "note": "The Rendered 100 as a game: 68 walkable worlds on a four-wall grid, a relic in every world, and the Glitch haunting every few rooms.",
    "orientation": "landscape",
    "path": "https://bparlette.github.io/worlds/art/game/play.html",
-   "title": "Back Roms — The Rendered 100 Game"
+   "title": "Back Roms \u2014 The Rendered 100 Game"
   },
   {
    "autostart": [],
@@ -1836,7 +1836,7 @@
    "note": "First-person Back Rooms gallery: 100 framed Rendered 100 paintings across ten halls.",
    "orientation": "landscape",
    "path": "https://bparlette.github.io/worlds/art/rendered-walk.html",
-   "title": "The Back Rooms — Painting Walker"
+   "title": "The Back Rooms \u2014 Painting Walker"
   },
   {
    "autostart": [],
@@ -1849,7 +1849,7 @@
    "note": "The original Back Roms walker through the 1,000-world catalog: a relic in every world, the Glitch in every few rooms.",
    "orientation": "landscape",
    "path": "https://bparlette.github.io/worlds/walk/walker.html",
-   "title": "Back Roms — World Walker"
+   "title": "Back Roms \u2014 World Walker"
   },
   {
    "autostart": [],
@@ -1872,7 +1872,7 @@
     "start": "Enter"
    },
    "labels": {},
-   "note": "Cabinet graft: Maze Wrecker (g7) x Boom Balloons (g4). The maze, patrol bots and hidden dots, but B drops balloon bombs — blasts break walls, stun bots, chain other bombs, and bomb you if you linger.",
+   "note": "Cabinet graft: Maze Wrecker (g7) x Boom Balloons (g4). The maze, patrol bots and hidden dots, but B drops balloon bombs \u2014 blasts break walls, stun bots, chain other bombs, and bomb you if you linger.",
    "orientation": "landscape",
    "path": "../games/graft-maze-boom/index.html",
    "title": "Maze Boom"
@@ -1885,7 +1885,7 @@
     "start": "Enter"
    },
    "labels": {},
-   "note": "Cabinet graft: Maze Wrecker (g7) x Kung Fu Knockout (g6). No hammer — A punches (two crack a wall), B kicks (longer reach, breaks in one), and chained stuns build a combo multiplier.",
+   "note": "Cabinet graft: Maze Wrecker (g7) x Kung Fu Knockout (g6). No hammer \u2014 A punches (two crack a wall), B kicks (longer reach, breaks in one), and chained stuns build a combo multiplier.",
    "orientation": "landscape",
    "path": "../games/graft-maze-fu/index.html",
    "title": "Maze Fu"
@@ -1911,7 +1911,7 @@
     "start": "Enter"
    },
    "labels": {},
-   "note": "Two Rendered-100 worlds mashed into every room, split at a glowing seam — 34 rooms, a relic in each, four-wall travel, the Glitch on patrol.",
+   "note": "Two Rendered-100 worlds mashed into every room, split at a glowing seam \u2014 34 rooms, a relic in each, four-wall travel, the Glitch on patrol.",
    "orientation": "landscape",
    "path": "https://bparlette.github.io/worlds/art/game/collide.html",
    "title": "Worlds Collide"
@@ -1924,7 +1924,7 @@
     "start": "Enter"
    },
    "labels": {},
-   "note": "The Prop Smith sourcing gallery: the 100 best single-object 3D props on Sketchfab — gnome, treasure chest, kart, chair — eyeball-verified, with the CC-licensed downloadable ones flagged as the Qwen conversion queue.",
+   "note": "The Prop Smith sourcing gallery: the 100 best single-object 3D props on Sketchfab \u2014 gnome, treasure chest, kart, chair \u2014 eyeball-verified, with the CC-licensed downloadable ones flagged as the Qwen conversion queue.",
    "orientation": "landscape",
    "path": "https://bparlette.github.io/worlds/art/props.html",
    "title": "The Prop 100"
@@ -1946,7 +1946,7 @@
    "note": "The Keep It Lit! (Abyssal Mangrove) survival loop as a tiny web game, built from the Roblox game's real exported meshes: feed the brazier, haul fuel out of the dark, sweep Silt Striders back, ring in the dawn.",
    "orientation": "any",
    "path": "../games/keep-it-lit-night-watch/index.html",
-   "title": "Keep It Lit — Night Watch"
+   "title": "Keep It Lit \u2014 Night Watch"
   },
   {
    "autostart": [],
@@ -1970,7 +1970,7 @@
    "note": "Ryu dropped into a full Super Mario World-style level with his whole move set: punch, kick, Hadouken, Shoryuken, air Tatsumaki. Stomp enemies or fight them, punch bricks apart, kick Koopa shells down the course, reach the flagpole.",
    "orientation": "landscape",
    "path": "../games/mario-fighter/index.html",
-   "title": "Mario × Street Fighter"
+   "title": "Mario \u00d7 Street Fighter"
   },
   {
    "autostart": [],
@@ -2021,10 +2021,10 @@
    "id": "side-quest-run",
    "keys": {},
    "labels": {},
-   "note": "Side Quest! — 12 Worlds as a web game: the Roblox megaworld shrunk to one small flat circle (r=2048). Run through all 12 environments, build speed to ×3 with unbroken running, collect 216 stars. Same worlds, landmarks and rim creatures, web-drawn in three.js.",
+   "note": "Side Quest! \u2014 12 Worlds as a web game: the Roblox megaworld shrunk to one small flat circle (r=2048). Run through all 12 environments, build speed to \u00d73 with unbroken running, collect 216 stars. Same worlds, landmarks and rim creatures, web-drawn in three.js.",
    "orientation": "any",
    "path": "../games/side-quest-run/index.html",
-   "title": "Side Quest! — 12 Worlds · Web Run"
+   "title": "Side Quest! \u2014 12 Worlds \u00b7 Web Run"
   },
   {
    "autostart": [],
@@ -2032,7 +2032,7 @@
    "id": "starfall-sentry",
    "keys": {},
    "labels": {},
-   "note": "React + Astryx proof game: survivors-style arena — steer with WASD or drag, auto-fire, grab XP, pick upgrades, survive 2:30. Canvas core, React chrome.",
+   "note": "React + Astryx proof game: survivors-style arena \u2014 steer with WASD or drag, auto-fire, grab XP, pick upgrades, survive 2:30. Canvas core, React chrome.",
    "orientation": "any",
    "path": "../games/starfall-sentry/index.html",
    "title": "STARFALL SENTRY"
@@ -2051,7 +2051,7 @@
     "up": "ArrowUp"
    },
    "labels": {},
-   "note": "Link in Mario's world with his FULL move set — the non-button-mashing sibling of Ocarina of Stride: sword stab, low stab, upward and downward thrusts, sword beam at full hearts, fireball, charged bow & arrow, and a fairy glide. Same level, same flagpole, rupees not coins.",
+   "note": "Link in Mario's world with his FULL move set \u2014 the non-button-mashing sibling of Ocarina of Stride: sword stab, low stab, upward and downward thrusts, sword beam at full hearts, fireball, charged bow & arrow, and a fairy glide. Same level, same flagpole, rupees not coins.",
    "orientation": "landscape",
    "path": "../games/link-unleashed/index.html",
    "title": "LINK UNLEASHED"
@@ -2066,7 +2066,7 @@
    "orientation": "any",
    "path": "../games/pokemon-room/index.html",
    "thumb": "thumbs/pokemon-room.png",
-   "title": "Pokémon Room"
+   "title": "Pok\u00e9mon Room"
   },
   {
    "autostart": [],
@@ -2102,7 +2102,7 @@
    "orientation": "any",
    "path": "../games/quicklook-pokemon/index.html",
    "thumb": "thumbs/quicklook-pokemon.png",
-   "title": "Quick Look: Pokémon"
+   "title": "Quick Look: Pok\u00e9mon"
   },
   {
    "autostart": [],
@@ -2130,7 +2130,7 @@
     "up": "ArrowUp"
    },
    "labels": {},
-   "note": "The LINK UNLEASHED engine on an endless 10-world run: Dinosaur Land, Green Hill Zone, Kongo Jungle, Vegetable Valley, the Palace, Metal Man's stage, Brinstar, Dracula's Castle, the Moon, the Graveyard — then they loop, faster. Full move set — sword stab and thrusts, sword beam at full hearts, fireball, charged bow, fairy glide. Three hearts; score is distance plus rupees. How far can you get?",
+   "note": "The LINK UNLEASHED engine on an endless 10-world run: Dinosaur Land, Green Hill Zone, Kongo Jungle, Vegetable Valley, the Palace, Metal Man's stage, Brinstar, Dracula's Castle, the Moon, the Graveyard \u2014 then they loop, faster. Full move set \u2014 sword stab and thrusts, sword beam at full hearts, fireball, charged bow, fairy glide. Three hearts; score is distance plus rupees. How far can you get?",
    "orientation": "landscape",
    "path": "../games/worldhop-action/index.html",
    "title": "WORLDHOP ACTION!"
@@ -2165,7 +2165,7 @@
    "id": "outrun-the-hole",
    "keys": {},
    "labels": {},
-   "note": "you're the car, the black hole is the hunter — race 6 gates and escape the city; 2P mode lets a friend drive the hole",
+   "note": "you're the car, the black hole is the hunter \u2014 race 6 gates and escape the city; 2P mode lets a friend drive the hole",
    "orientation": "any",
    "path": "../games/outrun-the-hole/index.html",
    "thumb": "thumbs/outrun-the-hole.png",
@@ -2181,7 +2181,7 @@
    "orientation": "any",
    "path": "../games/ar-games/index.html",
    "thumb": "thumbs/pokemon-room.png",
-   "title": "🕶️ ALL AR GAMES"
+   "title": "\ud83d\udd76\ufe0f ALL AR GAMES"
   },
   {
    "autostart": [],
@@ -2234,7 +2234,7 @@
   {
    "autostart": [],
    "category": "AR",
-   "desc": "Original hand-modeled Hana-chan — browser AR: she walks around your room; tap the floor and she walks there. Plus Quick Look USDZ.",
+   "desc": "Original hand-modeled Hana-chan \u2014 browser AR: she walks around your room; tap the floor and she walks there. Plus Quick Look USDZ.",
    "id": "hana-chan",
    "keys": {},
    "labels": {},
@@ -2250,7 +2250,7 @@
    "id": "zombie-kill-ar",
    "keys": {},
    "labels": {},
-   "note": "Zombies burst up through cracks in your real floor and shamble at you — headshots drop them in one. Five waves: normals, fast ones, tanks. Survive them all.",
+   "note": "Zombies burst up through cracks in your real floor and shamble at you \u2014 headshots drop them in one. Five waves: normals, fast ones, tanks. Survive them all.",
    "orientation": "any",
    "path": "../games/zombie-kill-ar/index.html",
    "thumb": "thumbs/bonk-yard.png",
@@ -2262,7 +2262,7 @@
    "id": "cat-ninja-ar",
    "keys": {},
    "labels": {},
-   "note": "Fruit flies at your face in your own room — slash it mid-air with fast swipes. Combos score big, bombs cost a life. 75 seconds, ranks up to Grand Master Nyaa.",
+   "note": "Fruit flies at your face in your own room \u2014 slash it mid-air with fast swipes. Combos score big, bombs cost a life. 75 seconds, ranks up to Grand Master Nyaa.",
    "orientation": "any",
    "path": "../games/cat-ninja-ar/index.html",
    "thumb": "thumbs/bonk-yard.png",
@@ -2286,7 +2286,7 @@
    "id": "spooksnap-ar",
    "keys": {},
    "labels": {},
-   "note": "Ghosts haunt your room — line them up in the frame and SNAP a photo. Your photo strip scores every shot. 90 seconds.",
+   "note": "Ghosts haunt your room \u2014 line them up in the frame and SNAP a photo. Your photo strip scores every shot. 90 seconds.",
    "orientation": "any",
    "path": "../games/spooksnap-ar/index.html",
    "thumb": "thumbs/bonk-yard.png",
@@ -2310,7 +2310,7 @@
    "id": "voxel-demolition-ar",
    "keys": {},
    "labels": {},
-   "note": "A voxel castle on your table — 2,950 blocks, 12 shells, knock 85% of it down. Blasts wake the blocks above and chain the collapse.",
+   "note": "A voxel castle on your table \u2014 2,950 blocks, 12 shells, knock 85% of it down. Blasts wake the blocks above and chain the collapse.",
    "orientation": "any",
    "path": "../games/voxel-demolition-ar/index.html",
    "thumb": "thumbs/bonk-yard.png",
@@ -2334,7 +2334,7 @@
    "id": "pickleball-ar",
    "keys": {},
    "labels": {},
-   "note": "First-person pickleball in your room: the CPU pixel player DINK hits balls right at you — tap HIT as the timing ring closes. Green is a clean corner return. First to 7.",
+   "note": "First-person pickleball in your room: the CPU pixel player DINK hits balls right at you \u2014 tap HIT as the timing ring closes. Green is a clean corner return. First to 7.",
    "orientation": "any",
    "path": "../games/pickleball-ar/index.html",
    "thumb": "thumbs/bonk-yard.png",
@@ -2346,7 +2346,7 @@
    "id": "hot-city-pursuit",
    "keys": {},
    "labels": {},
-   "note": "Clean-room city mayhem: grab cash drops to raise your wanted stars, outrun the cop AI until they bust you. Endless until busted — how long can you last?",
+   "note": "Clean-room city mayhem: grab cash drops to raise your wanted stars, outrun the cop AI until they bust you. Endless until busted \u2014 how long can you last?",
    "orientation": "any",
    "path": "../games/hot-city-pursuit/index.html",
    "thumb": "thumbs/bonk-yard.png",
@@ -2378,7 +2378,7 @@
   },
   {
    "category": "AR",
-   "desc": "Horror AR: find 5 sigils in your room — but something is behind you. Turn slowly.",
+   "desc": "Horror AR: find 5 sigils in your room \u2014 but something is behind you. Turn slowly.",
    "id": "dont-turn-around-ar",
    "thumb": "thumbs/bonk-yard.png",
    "title": "DON'T TURN AROUND!",
@@ -2386,15 +2386,15 @@
   },
   {
    "category": "AR",
-   "desc": "Hana standing still in your room — walk around her. Plus Quick Look USDZ.",
+   "desc": "Hana standing still in your room \u2014 walk around her. Plus Quick Look USDZ.",
    "id": "hana-chan-giant",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "GIANT HANA — Still AR",
+   "title": "GIANT HANA \u2014 Still AR",
    "url": "../games/hana-chan-giant/"
   },
   {
    "category": "AR",
-   "desc": "Drag the black hole around your real floor and eat the city — grow until you can swallow the bus.",
+   "desc": "Drag the black hole around your real floor and eat the city \u2014 grow until you can swallow the bus.",
    "id": "snack-hole-ar",
    "thumb": "thumbs/bonk-yard.png",
    "title": "SNACK HOLE AR",
@@ -2402,10 +2402,10 @@
   },
   {
    "category": "AR",
-   "desc": "Hannah generated from a photo of the real plush (HY3D), seated — browser AR plus Quick Look.",
+   "desc": "Hannah generated from a photo of the real plush (HY3D), seated \u2014 browser AR plus Quick Look.",
    "id": "hana-mesh",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "NEW MESH HANNAH — Photo Mesh AR",
+   "title": "NEW MESH HANNAH \u2014 Photo Mesh AR",
    "url": "../games/hana-mesh/"
   },
   {
@@ -2413,29 +2413,29 @@
    "desc": "The photo-generated Hannah, stood up.",
    "id": "hana-stand",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "STANDING PHOTO-MESH HANNAH — AR",
+   "title": "STANDING PHOTO-MESH HANNAH \u2014 AR",
    "url": "../games/hana-stand/"
   },
   {
    "category": "AR",
-   "desc": "Link generated from a gameplay photo (HY3D) — browser AR plus Quick Look.",
+   "desc": "Link generated from a gameplay photo (HY3D) \u2014 browser AR plus Quick Look.",
    "id": "link-hy3d",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "LINK — 3D Mesh AR",
+   "title": "LINK \u2014 3D Mesh AR",
    "url": "../games/link-hy3d/"
   },
   {
    "category": "AR",
-   "desc": "One page, one tap each: every Hana — walking, giant hand-made, photo-mesh seated and standing, with Quick Look buttons.",
+   "desc": "One page, one tap each: every Hana \u2014 walking, giant hand-made, photo-mesh seated and standing, with Quick Look buttons.",
    "id": "hana",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "HANA — All Look-Arounds",
+   "title": "HANA \u2014 All Look-Arounds",
    "url": "../games/hana/"
   },
   {
    "added": "2026-11-08",
    "category": "Originals",
-   "desc": "First-person corridor shooter — shotgun, code-drawn demons, fight to the exit.",
+   "desc": "First-person corridor shooter \u2014 shotgun, code-drawn demons, fight to the exit.",
    "id": "demon-corridor",
    "thumb": "thumbs/bonk-yard.png",
    "title": "DEMON CORRIDOR!",
@@ -2444,7 +2444,7 @@
   {
    "added": "2026-11-08",
    "category": "AR",
-   "desc": "Demons burst up through glowing cracks in your floor — blast them and seal the rift.",
+   "desc": "Demons burst up through glowing cracks in your floor \u2014 blast them and seal the rift.",
    "id": "demon-room-ar",
    "thumb": "thumbs/bonk-yard.png",
    "title": "DEMON ROOM AR!",
@@ -2453,7 +2453,7 @@
   {
    "added": "2026-11-08",
    "category": "AR",
-   "desc": "A tiny kaiju stomps a toy city on your floor — aim his crushes and flatten 20 buildings.",
+   "desc": "A tiny kaiju stomps a toy city on your floor \u2014 aim his crushes and flatten 20 buildings.",
    "id": "tiny-kaiju-ar",
    "thumb": "thumbs/bonk-yard.png",
    "title": "TINY KAIJU AR!",
@@ -2461,15 +2461,15 @@
   },
   {
    "category": "AR",
-   "desc": "Link hand-modeled in Blender — browser AR plus Quick Look.",
+   "desc": "Link hand-modeled in Blender \u2014 browser AR plus Quick Look.",
    "id": "link-blender",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "LINK — Hand-Built AR",
+   "title": "LINK \u2014 Hand-Built AR",
    "url": "../games/link-blender/"
   },
   {
    "category": "Viral Demos",
-   "desc": "Bullet-heaven survivor built from the best-1000 pixel sprite set — survive the storm, level up with real sprite weapons.",
+   "desc": "Bullet-heaven survivor built from the best-1000 pixel sprite set \u2014 survive the storm, level up with real sprite weapons.",
    "id": "sprite-storm",
    "thumb": "thumbs/bonk-yard.png",
    "title": "SPRITE STORM!",
@@ -2477,7 +2477,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "Vertical rage climb on the measured SM64-feel controller — triple jump, ledge grab, long jump, dive and wall-kick to the summit. No checkpoints.",
+   "desc": "Vertical rage climb on the measured SM64-feel controller \u2014 triple jump, ledge grab, long jump, dive and wall-kick to the summit. No checkpoints.",
    "id": "the-climb",
    "thumb": "thumbs/bonk-yard.png",
    "title": "THE CLIMB!",
@@ -2485,7 +2485,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "Storybook open-town sandbox: two switchable couriers, borrowable hover-carts, rooftop escapes from the Lantern Watch, three jobs — on the verified SM64-feel controller.",
+   "desc": "Storybook open-town sandbox: two switchable couriers, borrowable hover-carts, rooftop escapes from the Lantern Watch, three jobs \u2014 on the verified SM64-feel controller.",
    "id": "lanternport",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Lanternport",
@@ -2493,7 +2493,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "2v2 bumper-car ball: ram an oversized ball into the other team's net — six arenas, five switchable style packs, shunt and T-bone spin-out tactics, items and a season ladder against bots.",
+   "desc": "2v2 bumper-car ball: ram an oversized ball into the other team's net \u2014 six arenas, five switchable style packs, shunt and T-bone spin-out tactics, items and a season ladder against bots.",
    "id": "big-bumpin-arena",
    "thumb": "thumbs/bonk-yard.png",
    "title": "BIG BUMPIN' ARENA!",
@@ -2501,7 +2501,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "Dragon’s Lair-style FMV dive game cut from real captured Lanternport footage — she struts, she bounces, and when the arrow flashes you tap or she flops.",
+   "desc": "Dragon\u2019s Lair-style FMV dive game cut from real captured Lanternport footage \u2014 she struts, she bounces, and when the arrow flashes you tap or she flops.",
    "id": "pool-day",
    "thumb": "thumbs/bonk-yard.png",
    "title": "POOL DAY!",
@@ -2509,7 +2509,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "Carnival pickleball in Big Bumpin' Fairground style — real rules (kitchen, two-bounce, diagonal serves), three shots (drive, dink, lob), rally scoring, first to 5 under the midway lights.",
+   "desc": "Carnival pickleball in Big Bumpin' Fairground style \u2014 real rules (kitchen, two-bounce, diagonal serves), three shots (drive, dink, lob), rally scoring, first to 5 under the midway lights.",
    "id": "big-dinkin",
    "thumb": "thumbs/bonk-yard.png",
    "title": "BIG DINKIN'!",
@@ -2517,7 +2517,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "BALL x PIT-style pit survival: Verity, an icy buster-bot at the bottom of a frozen shaft, ricochets shots through grid formations of snow statue heads — catch to refire instantly, fuse orbs, clear 18 handcrafted pits.",
+   "desc": "BALL x PIT-style pit survival: Verity, an icy buster-bot at the bottom of a frozen shaft, ricochets shots through grid formations of snow statue heads \u2014 catch to refire instantly, fuse orbs, clear 18 handcrafted pits.",
    "id": "pitball-verity",
    "thumb": "thumbs/pitball-verity.png",
    "title": "PITBALL VERITY",
@@ -2525,23 +2525,23 @@
   },
   {
    "category": "AR",
-   "desc": "Linkle in your room — browser AR plus Quick Look: tap her for a crossbow spin, or call the cucco airlift.",
+   "desc": "Linkle in your room \u2014 browser AR plus Quick Look: tap her for a crossbow spin, or call the cucco airlift.",
    "id": "linkle-blender",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "LINKLE — Cucco Airlift AR",
+   "title": "LINKLE \u2014 Cucco Airlift AR",
    "url": "../games/linkle-blender/"
   },
   {
    "category": "Viral Demos",
-   "desc": "The Lanternport fountain plaza as a living oil painting — walk her through it while every brush dab repaints every frame (Smooth/Rich toggle).",
+   "desc": "The Lanternport fountain plaza as a living oil painting \u2014 walk her through it while every brush dab repaints every frame (Smooth/Rich toggle).",
    "id": "oil-paint-plaza",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "PAINTED PLAZA — Painted Live",
+   "title": "PAINTED PLAZA \u2014 Painted Live",
    "url": "../games/oil-paint-plaza/"
   },
   {
    "category": "Viral Demos",
-   "desc": "The Lanternport fountain plaza rebuilt in cubist facets — same walk, every surface fractured into planes.",
+   "desc": "The Lanternport fountain plaza rebuilt in cubist facets \u2014 same walk, every surface fractured into planes.",
    "id": "cubism-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Cubism Plaza",
@@ -2549,7 +2549,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "The painted plaza at photographic grade — real light and texture, still repainted live every frame.",
+   "desc": "The painted plaza at photographic grade \u2014 real light and texture, still repainted live every frame.",
    "id": "realism-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Realism Plaza",
@@ -2557,7 +2557,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "The painted plaza in spray paint and marker — bold colour, hard outlines.",
+   "desc": "The painted plaza in spray paint and marker \u2014 bold colour, hard outlines.",
    "id": "graffiti-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Graffiti Plaza",
@@ -2565,7 +2565,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "The painted plaza cel-inked — flat colour bands and thick ink outlines.",
+   "desc": "The painted plaza cel-inked \u2014 flat colour bands and thick ink outlines.",
    "id": "cartoon-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Cartoon Plaza",
@@ -2573,7 +2573,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "The painted plaza in wet watercolor washes — colours bleed and the paper shows through.",
+   "desc": "The painted plaza in wet watercolor washes \u2014 colours bleed and the paper shows through.",
    "id": "watercolor-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Watercolor Plaza",
@@ -2581,7 +2581,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "The painted plaza as leaded stained glass — glowing panes divided by black leading.",
+   "desc": "The painted plaza as leaded stained glass \u2014 glowing panes divided by black leading.",
    "id": "stained-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Stained Glass Plaza",
@@ -2589,7 +2589,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "The painted plaza drawn in graphite — hatched shading on warm paper.",
+   "desc": "The painted plaza drawn in graphite \u2014 hatched shading on warm paper.",
    "id": "pencil-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Pencil Plaza",
@@ -2597,7 +2597,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "The painted plaza as a De Stijl grid — red, blue, yellow, black and white.",
+   "desc": "The painted plaza as a De Stijl grid \u2014 red, blue, yellow, black and white.",
    "id": "mondrian-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Mondrian Plaza",
@@ -2605,7 +2605,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "The painted plaza in Ben-Day dots — comic-print colour, halftone shade, black contours.",
+   "desc": "The painted plaza in Ben-Day dots \u2014 comic-print colour, halftone shade, black contours.",
    "id": "pop-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Pop Art Plaza",
@@ -2613,7 +2613,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "The painted plaza as a woodblock print — flat mineral inks and sumi key lines.",
+   "desc": "The painted plaza as a woodblock print \u2014 flat mineral inks and sumi key lines.",
    "id": "ukiyoe-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Ukiyo-e Plaza",
@@ -2621,7 +2621,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "The painted plaza in Van Gogh impasto — swirling directional strokes, violet against chrome yellow.",
+   "desc": "The painted plaza in Van Gogh impasto \u2014 swirling directional strokes, violet against chrome yellow.",
    "id": "vangogh-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Van Gogh Plaza",
@@ -2629,7 +2629,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "The painted plaza carved as a woodcut — black ink masses and white gouge cuts on paper.",
+   "desc": "The painted plaza carved as a woodcut \u2014 black ink masses and white gouge cuts on paper.",
    "id": "woodcut-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Woodcut Plaza",
@@ -2637,7 +2637,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "The painted plaza in pure pointillist dots — colour blends in your eye, not on the canvas.",
+   "desc": "The painted plaza in pure pointillist dots \u2014 colour blends in your eye, not on the canvas.",
    "id": "pointillism-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Pointillism Plaza",
@@ -2645,50 +2645,50 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "The real Starry Night, alive — drag the sky, tap a star for a shooting star",
+   "desc": "The real Starry Night, alive \u2014 drag the sky, tap a star for a shooting star",
    "id": "starry-night",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "The Starry Night — Living Painting",
+   "title": "The Starry Night \u2014 Living Painting",
    "url": "../games/starry-night/"
   },
   {
    "category": "Viral Demos",
-   "desc": "Seurat's Grande Jatte, alive — drag to sail the white boat, the girl runs, the dogs trot",
+   "desc": "Seurat's Grande Jatte, alive \u2014 drag to sail the white boat, the girl runs, the dogs trot",
    "id": "grande-jatte",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "La Grande Jatte — Living Painting",
+   "title": "La Grande Jatte \u2014 Living Painting",
    "url": "../games/grande-jatte/"
   },
   {
    "category": "Viral Demos",
-   "desc": "Bruegel's Hunters in the Snow, alive — drag on the pond to skate",
+   "desc": "Bruegel's Hunters in the Snow, alive \u2014 drag on the pond to skate",
    "id": "hunters-snow",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "Hunters in the Snow — Living Painting",
+   "title": "Hunters in the Snow \u2014 Living Painting",
    "url": "../games/hunters-snow/"
   },
   {
    "category": "Viral Demos",
-   "desc": "Hopper's Nighthawks, alive — tap a customer with an empty cup and the counterman pours",
+   "desc": "Hopper's Nighthawks, alive \u2014 tap a customer with an empty cup and the counterman pours",
    "id": "nighthawks",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "Nighthawks — Living Painting",
+   "title": "Nighthawks \u2014 Living Painting",
    "url": "../games/nighthawks/"
   },
   {
    "category": "Viral Demos",
-   "desc": "A paintbrush ninja brawler — every hit bursts into paint and the street keeps the splatter",
+   "desc": "A paintbrush ninja brawler \u2014 every hit bursts into paint and the street keeps the splatter",
    "id": "ink-ronin",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "INK RONIN — Paint Ninja Brawler",
+   "title": "INK RONIN \u2014 Paint Ninja Brawler",
    "url": "../games/ink-ronin/"
   },
   {
    "category": "Viral Demos",
-   "desc": "Linkle walks through a living oil-paint Starry Night — swirling sky, ringed stars, the village and cypress, every dab repainted each frame (Painted Live).",
+   "desc": "Linkle walks through a living oil-paint Starry Night \u2014 swirling sky, ringed stars, the village and cypress, every dab repainted each frame (Painted Live).",
    "id": "linkle-starry",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "LINKLE IN THE STARRY NIGHT — Painted Live",
+   "title": "LINKLE IN THE STARRY NIGHT \u2014 Painted Live",
    "url": "../games/linkle-starry/"
   },
   {
@@ -2701,7 +2701,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "Oil Paint Plaza rebuilt as stained glass — leaded panes, jewel tones.",
+   "desc": "Oil Paint Plaza rebuilt as stained glass \u2014 leaded panes, jewel tones.",
    "id": "stained-glass-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Stained Glass Plaza",
@@ -2709,7 +2709,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "Oil Paint Plaza redrawn in charcoal — smudged masses, velvet blacks, warm paper.",
+   "desc": "Oil Paint Plaza redrawn in charcoal \u2014 smudged masses, velvet blacks, warm paper.",
    "id": "charcoal-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Charcoal Plaza",
@@ -2717,7 +2717,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "Oil Paint Plaza re-laid as mosaic — world-anchored tesserae, grout lines, glassy lifts.",
+   "desc": "Oil Paint Plaza re-laid as mosaic \u2014 world-anchored tesserae, grout lines, glassy lifts.",
    "id": "mosaic-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Mosaic Plaza",
@@ -2725,7 +2725,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "Oil Paint Plaza in Fauvist slabs — flat unblended colour, warm/cool bands, orange contours.",
+   "desc": "Oil Paint Plaza in Fauvist slabs \u2014 flat unblended colour, warm/cool bands, orange contours.",
    "id": "fauvism-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Fauvism Plaza",
@@ -2733,7 +2733,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "Oil Paint Plaza drawn in crayon — wax scribble, broken grain, paper tooth, true plaza palette.",
+   "desc": "Oil Paint Plaza drawn in crayon \u2014 wax scribble, broken grain, paper tooth, true plaza palette.",
    "id": "crayon-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Crayon Plaza",
@@ -2741,39 +2741,39 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "The pool model with Moth's own texture bake, rigged to Fable's bone contract — she really walks. Pool Deck Stroll coin game.",
+   "desc": "The pool model with Moth's own texture bake, rigged to Fable's bone contract \u2014 she really walks. Pool Deck Stroll coin game.",
    "id": "pool-model-moth",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "Pool Model — Moth Bake",
+   "title": "Pool Model \u2014 Moth Bake",
    "url": "../games/pool-model-moth/"
   },
   {
    "category": "Viral Demos",
-   "desc": "The pool model with Hunyuan's texture, rigged to Fable's bone contract — she really walks. Pool Deck Stroll coin game.",
+   "desc": "The pool model with Hunyuan's texture, rigged to Fable's bone contract \u2014 she really walks. Pool Deck Stroll coin game.",
    "id": "pool-model-hunyuan",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "Pool Model — Hunyuan",
+   "title": "Pool Model \u2014 Hunyuan",
    "url": "../games/pool-model-hunyuan/"
   },
   {
    "category": "Viral Demos",
-   "desc": "Hunyuan's texture with skin tones color-matched to Moth's bake, rigged to Fable's bone contract — she really walks. Pool Deck Stroll coin game.",
+   "desc": "Hunyuan's texture with skin tones color-matched to Moth's bake, rigged to Fable's bone contract \u2014 she really walks. Pool Deck Stroll coin game.",
    "id": "pool-model-colorfix",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "Pool Model — Hunyuan Color-Matched",
+   "title": "Pool Model \u2014 Hunyuan Color-Matched",
    "url": "../games/pool-model-colorfix/"
   },
   {
    "category": "Viral Demos",
-   "desc": "All three pool models rigged and strolling one deck together — Moth, Hunyuan, and the color-matched winner. One joystick walks the trio.",
+   "desc": "All three pool models rigged and strolling one deck together \u2014 Moth, Hunyuan, and the color-matched winner. One joystick walks the trio.",
    "id": "pool-trio-all",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "Pool Models — All 3 Rigged",
+   "title": "Pool Models \u2014 All 3 Rigged",
    "url": "../games/pool-trio-all/"
   },
   {
    "category": "Viral Demos",
-   "desc": "The painted plaza as a dream — warped space, impossible shadows, an evening sky over a daylit square. Walk her through it.",
+   "desc": "The painted plaza as a dream \u2014 warped space, impossible shadows, an evening sky over a daylit square. Walk her through it.",
    "id": "surrealism-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Surrealism Plaza",
@@ -2781,31 +2781,31 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "Pitball Verity Level 1 in a painted Hyrule crater — stone statue heads, Chuchu jellies, Bomb-Flower orbs, rupees. Same numbers as the original.",
+   "desc": "Pitball Verity Level 1 in a painted Hyrule crater \u2014 stone statue heads, Chuchu jellies, Bomb-Flower orbs, rupees. Same numbers as the original.",
    "id": "pitball-verity-zelda",
    "thumb": "thumbs/pitball-verity.png",
-   "title": "Pitball — Hyrule",
+   "title": "Pitball \u2014 Hyrule",
    "url": "../games/pitball-verity-zelda/"
   },
   {
    "category": "Viral Demos",
-   "desc": "Pitball Verity Level 1 on a painted Vice beach street — car formations, neon beach-ball orbs, cash drops. Same numbers as the original.",
+   "desc": "Pitball Verity Level 1 on a painted Vice beach street \u2014 car formations, neon beach-ball orbs, cash drops. Same numbers as the original.",
    "id": "pitball-verity-gta6",
    "thumb": "thumbs/pitball-verity.png",
-   "title": "Pitball — Vice",
+   "title": "Pitball \u2014 Vice",
    "url": "../games/pitball-verity-gta6/"
   },
   {
    "category": "Viral Demos",
-   "desc": "GTA meets Zelda demolition — smash clay pots for rupees, chain Bomb Flower barrels, flip sports cars, and unleash a 42-bird Cucco Swarm.",
+   "desc": "GTA meets Zelda demolition \u2014 smash clay pots for rupees, chain Bomb Flower barrels, flip sports cars, and unleash a 42-bird Cucco Swarm.",
    "id": "topple-vice-hyrule",
    "thumb": "thumbs/topple-vice-hyrule.png",
-   "title": "TOPPLE: VICE × HYRULE",
+   "title": "TOPPLE: VICE \u00d7 HYRULE",
    "url": "../games/topple-vice-hyrule/"
   },
   {
    "category": "Viral Demos",
-   "desc": "Trap-rage walk home — every tree, hydrant, caution sign, sprinkler, and bin down the street tries to flatten you. Dodge 500m to the porch before Rage hits 100%.",
+   "desc": "Trap-rage walk home \u2014 every tree, hydrant, caution sign, sprinkler, and bin down the street tries to flatten you. Dodge 500m to the porch before Rage hits 100%.",
    "id": "everything-hates-you",
    "thumb": "thumbs/everything-hates-you.png",
    "title": "EVERYTHING HATES YOU!",
@@ -2813,7 +2813,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "The painted plaza drawn in colored pencil — fine directional hatching in each surface's own color, cross-hatched shade, the warm paper showing through as the light.",
+   "desc": "The painted plaza drawn in colored pencil \u2014 fine directional hatching in each surface's own color, cross-hatched shade, the warm paper showing through as the light.",
    "id": "colored-pencil-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Colored Pencil Plaza",
@@ -2821,7 +2821,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "Ride a bicycle through Van Gogh's Starry Night — an endless painted village street under the great spiral sky, lit windows, cypresses, and a headlamp pool on the cobbles. Steer with the stick.",
+   "desc": "Ride a bicycle through Van Gogh's Starry Night \u2014 an endless painted village street under the great spiral sky, lit windows, cypresses, and a headlamp pool on the cobbles. Steer with the stick.",
    "id": "starry-ride",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Starry Night Ride",
@@ -2829,7 +2829,7 @@
   },
   {
    "category": "AR",
-   "desc": "Linkle (dress rig) dances in your room to a 115 BPM groove — tap the ring on the beat for PERFECTs, tap her for a spin",
+   "desc": "Linkle (dress rig) dances in your room to a 115 BPM groove \u2014 tap the ring on the beat for PERFECTs, tap her for a spin",
    "id": "linkle-ar-dance",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Linkle AR Dance",
@@ -2837,10 +2837,10 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "All 15 Pixelmon GTA x Zelda mashup sprites on one page — the heroine, the hero, cars, cucco, chest, gems and more, each labeled with its role in Vice Hyrule.",
+   "desc": "All 15 Pixelmon GTA x Zelda mashup sprites on one page \u2014 the heroine, the hero, cars, cucco, chest, gems and more, each labeled with its role in Vice Hyrule.",
    "id": "mashup-sprites",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "Mashup Sprites — GTA × Zelda Set",
+   "title": "Mashup Sprites \u2014 GTA \u00d7 Zelda Set",
    "url": "../games/mashup-sprites/"
   },
   {
@@ -2853,39 +2853,39 @@
   },
   {
    "category": "Originals",
-   "desc": "Leaf ride, motorcycle and hang-glide in full painted dabs. Compare build A — the first all-painted attempt.",
+   "desc": "Leaf ride, motorcycle and hang-glide in full painted dabs. Compare build A \u2014 the first all-painted attempt.",
    "id": "linkle-arcade-a",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "Linkle Arcade A — Full Painted",
+   "title": "Linkle Arcade A \u2014 Full Painted",
    "url": "../games/linkle-arcade-a/"
   },
   {
    "category": "Originals",
-   "desc": "Leaf ride, motorcycle and hang-glide in clean Hoshi toon style — shader sky, grass tufts, warm grade. Compare build B.",
+   "desc": "Leaf ride, motorcycle and hang-glide in clean Hoshi toon style \u2014 shader sky, grass tufts, warm grade. Compare build B.",
    "id": "linkle-arcade-b",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "Linkle Arcade B — Hoshi Style",
+   "title": "Linkle Arcade B \u2014 Hoshi Style",
    "url": "../games/linkle-arcade-b/"
   },
   {
    "category": "Originals",
-   "desc": "Leaf ride down the hill, motorcycle causeway and hang-glide — painted with the fountain's own brush pipeline. Compare build C: pure fountain paint.",
+   "desc": "Leaf ride down the hill, motorcycle causeway and hang-glide \u2014 painted with the fountain's own brush pipeline. Compare build C: pure fountain paint.",
    "id": "linkle-arcade-c",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "Linkle Arcade C — Fountain Paint",
+   "title": "Linkle Arcade C \u2014 Fountain Paint",
    "url": "../games/linkle-arcade-c/"
   },
   {
    "category": "Originals",
-   "desc": "Leaf ride down the hill, motorcycle causeway and hang-glide — the fountain paint plus Hoshi light, sculpted sky and warm grade. Compare build D.",
+   "desc": "Leaf ride down the hill, motorcycle causeway and hang-glide \u2014 the fountain paint plus Hoshi light, sculpted sky and warm grade. Compare build D.",
    "id": "linkle-arcade-d",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "Linkle Arcade D — Paint + Light",
+   "title": "Linkle Arcade D \u2014 Paint + Light",
    "url": "../games/linkle-arcade-d/"
   },
   {
    "category": "AR",
-   "desc": "The trap-rage walk home on your real floor — rear-camera AR lays the sidewalk over your room; dodge trees, hydrants, signs, sprinklers & bins for 500m.",
+   "desc": "The trap-rage walk home on your real floor \u2014 rear-camera AR lays the sidewalk over your room; dodge trees, hydrants, signs, sprinklers & bins for 500m.",
    "id": "everything-hates-you-ar",
    "thumb": "thumbs/bonk-yard.png",
    "title": "EVERYTHING HATES YOU! AR",
@@ -2893,7 +2893,7 @@
   },
   {
    "category": "Originals",
-   "desc": "Plant bomb flowers, blast the pots, and outlast 3 bots in a Hyrule field — Bomberman arena, Zelda-skinned.",
+   "desc": "Plant bomb flowers, blast the pots, and outlast 3 bots in a Hyrule field \u2014 Bomberman arena, Zelda-skinned.",
    "id": "bomb-bloom",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Bomb Bloom",
@@ -2901,7 +2901,7 @@
   },
   {
    "category": "Originals",
-   "desc": "Ride a glossy ball and ram the whole neighborhood off a floating stone disc over a neon sea — last ball standing wins.",
+   "desc": "Ride a glossy ball and ram the whole neighborhood off a floating stone disc over a neon sea \u2014 last ball standing wins.",
    "id": "bumper-balls",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Bumper Balls",
@@ -2909,7 +2909,7 @@
   },
   {
    "category": "Originals",
-   "desc": "Drive the MTA bus round Toad City's Baltimore — pick up waving riders at 15 landmark stops and chain drop-offs for combo fares before the clock runs out.",
+   "desc": "Drive the MTA bus round Toad City's Baltimore \u2014 pick up waving riders at 15 landmark stops and chain drop-offs for combo fares before the clock runs out.",
    "id": "bus-it-baltimore",
    "thumb": "thumbs/bonk-yard.png",
    "title": "BUS IT! Baltimore",
@@ -2917,7 +2917,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "The painted plaza starts as a grey pencil sketch — walk her through it and watercolor blooms only where she walks.",
+   "desc": "The painted plaza starts as a grey pencil sketch \u2014 walk her through it and watercolor blooms only where she walks.",
    "id": "watercolor-walk-plaza",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Watercolor Walk Plaza",
@@ -2925,15 +2925,15 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "Castle on tank treads vs weapon swarms — GTA 6 arsenal vs Hyrule Castle, then Zelda weapons vs a Vice high-rise.",
+   "desc": "Castle on tank treads vs weapon swarms \u2014 GTA 6 arsenal vs Hyrule Castle, then Zelda weapons vs a Vice high-rise.",
    "id": "castle-busters",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "Castle Busters: Vice × Hyrule",
+   "title": "Castle Busters: Vice \u00d7 Hyrule",
    "url": "../games/castle-busters/"
   },
   {
    "category": "Originals",
-   "desc": "Dig the trench, pile the wall, hold back 5 waves — sand ASMR vs the sea",
+   "desc": "Dig the trench, pile the wall, hold back 5 waves \u2014 sand ASMR vs the sea",
    "id": "beach-trench",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Beach Trench!",
@@ -2941,7 +2941,7 @@
   },
   {
    "category": "Arcade Hub",
-   "desc": "Light cycles vs 3 AI — trap them in your trail",
+   "desc": "Light cycles vs 3 AI \u2014 trap them in your trail",
    "id": "temporal-trails",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Temporal Trails",
@@ -2949,7 +2949,7 @@
   },
   {
    "category": "Arcade Hub",
-   "desc": "Microgames at rising speed — 4 seconds each, 3 hearts",
+   "desc": "Microgames at rising speed \u2014 4 seconds each, 3 hearts",
    "id": "microgame-rush",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Microgame Rush",
@@ -2957,7 +2957,7 @@
   },
   {
    "category": "Arcade Hub",
-   "desc": "Last one standing on crumbling hex floors over lava — you + 5 bots",
+   "desc": "Last one standing on crumbling hex floors over lava \u2014 you + 5 bots",
    "id": "hexagon-heat",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Hexagon Heat",
@@ -2981,7 +2981,7 @@
   },
   {
    "category": "Viral Demos",
-   "desc": "Top-down Vice beach town: sword, pots, cars, cuccos — Zelda × GTA sandbox",
+   "desc": "Top-down Vice beach town: sword, pots, cars, cuccos \u2014 Zelda \u00d7 GTA sandbox",
    "id": "hyrule-vice",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Hyrule Vice",
@@ -2989,7 +2989,7 @@
   },
   {
    "category": "Classic Homebrew",
-   "desc": "Toss & swing — defend the left across 5 floors",
+   "desc": "Toss & swing \u2014 defend the left across 5 floors",
    "id": "mr-baseball-2",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Mr. Baseball 2",
@@ -2997,7 +2997,7 @@
   },
   {
    "category": "AR",
-   "desc": "The defender in AR — neon ledges floating in your room, toss & swing",
+   "desc": "The defender in AR \u2014 neon ledges floating in your room, toss & swing",
    "id": "mr-baseball-2-ar",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Mr. Baseball 2 AR",
@@ -3005,7 +3005,7 @@
   },
   {
    "category": "AR",
-   "desc": "Punch-Out AR — Linkle the Hyrule Hurricane, ghost gloves, hold to block",
+   "desc": "Punch-Out AR \u2014 Linkle the Hyrule Hurricane, ghost gloves, hold to block",
    "id": "punch-out-ar",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Punch-Out AR",
@@ -3013,7 +3013,7 @@
   },
   {
    "category": "Originals",
-   "desc": "Drive the gold Cybercab around a brownstone fountain plaza — the watercolor paints itself in as you go; hit 99% for the finale",
+   "desc": "Drive the gold Cybercab around a brownstone fountain plaza \u2014 the watercolor paints itself in as you go; hit 99% for the finale",
    "id": "cybercab-fountain",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Cybercab Watercolor Fountain",
@@ -3021,15 +3021,15 @@
   },
   {
    "category": "AR",
-   "desc": "High hand drops the seeds, low hand walks the gardener — snip every bloom the seeds grow",
+   "desc": "High hand drops the seeds, low hand walks the gardener \u2014 snip every bloom the seeds grow",
    "id": "planko-ar",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "AR Planko — Flower Garden",
+   "title": "AR Planko \u2014 Flower Garden",
    "url": "../games/planko-ar/"
   },
   {
    "category": "Arcade Hub",
-   "desc": "Pump bubble-jets and stack all 6 rings on the water tank — Double! Triple! combos",
+   "desc": "Pump bubble-jets and stack all 6 rings on the water tank \u2014 Double! Triple! combos",
    "id": "ringtank",
    "thumb": "thumbs/bonk-yard.png",
    "title": "RingTank",
@@ -3037,7 +3037,7 @@
   },
   {
    "category": "Arcade Hub",
-   "desc": "One-tap donut stacker — land each donut dead-center or the tower topples",
+   "desc": "One-tap donut stacker \u2014 land each donut dead-center or the tower topples",
    "id": "glazy",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Glazy",
@@ -3045,7 +3045,7 @@
   },
   {
    "category": "Arcade Hub",
-   "desc": "Tilt the whole board and slide every marble home — 6 levels, par is the perfect line",
+   "desc": "Tilt the whole board and slide every marble home \u2014 6 levels, par is the perfect line",
    "id": "tilt",
    "thumb": "thumbs/bonk-yard.png",
    "title": "TILT",
@@ -3053,7 +3053,7 @@
   },
   {
    "category": "Arcade Hub",
-   "desc": "4v4 penguin snowball war on the ice — knock out the other flock",
+   "desc": "4v4 penguin snowball war on the ice \u2014 knock out the other flock",
    "id": "pengball",
    "thumb": "thumbs/bonk-yard.png",
    "title": "PENGBALL",
@@ -3061,7 +3061,7 @@
   },
   {
    "category": "Arcade Hub",
-   "desc": "Bonk Moblins, chain the combo to ×5 — bonk a cucco and the swarm ends you",
+   "desc": "Bonk Moblins, chain the combo to \u00d75 \u2014 bonk a cucco and the swarm ends you",
    "id": "whack-a-moblin",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Whack-a-Moblin",
@@ -3069,7 +3069,7 @@
   },
   {
    "category": "Arcade Hub",
-   "desc": "Aim, power, steer the Bombchu down the lane — full 10-frame bowling scoring",
+   "desc": "Aim, power, steer the Bombchu down the lane \u2014 full 10-frame bowling scoring",
    "id": "bombchu-bowling",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Bombchu Bowling",
@@ -3077,7 +3077,7 @@
   },
   {
    "category": "Arcade Hub",
-   "desc": "Stare-down duels — draw on the flash or it's a foul; duels get faster every round",
+   "desc": "Stare-down duels \u2014 draw on the flash or it's a foul; duels get faster every round",
    "id": "wild-gunman",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Wild Gunman",
@@ -3085,7 +3085,7 @@
   },
   {
    "category": "Arcade Hub",
-   "desc": "Boardwalk shooting gallery — bolts fly slow, so lead your targets",
+   "desc": "Boardwalk shooting gallery \u2014 bolts fly slow, so lead your targets",
    "id": "crossbow-gallery",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Crossbow Gallery",
@@ -3093,7 +3093,7 @@
   },
   {
    "category": "Arcade Hub",
-   "desc": "Pots arc across the sky — center hits pay double, golden pots pay 5×",
+   "desc": "Pots arc across the sky \u2014 center hits pay double, golden pots pay 5\u00d7",
    "id": "clay-pot-skeet",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Clay Pot Skeet",
@@ -3101,7 +3101,7 @@
   },
   {
    "category": "Arcade Hub",
-   "desc": "Judgment shooting — drop Bokoblins and decoys, spare the townsfolk, never the cucco",
+   "desc": "Judgment shooting \u2014 drop Bokoblins and decoys, spare the townsfolk, never the cucco",
    "id": "cucco-alley",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Cucco Alley",
@@ -3109,7 +3109,7 @@
   },
   {
    "category": "Arcade Hub",
-   "desc": "One forgery hides in every grid of goods — find the tell before the clock runs out",
+   "desc": "One forgery hides in every grid of goods \u2014 find the tell before the clock runs out",
    "id": "spot-the-fake",
    "thumb": "thumbs/bonk-yard.png",
    "title": "SPOT THE FAKE!",
@@ -3117,7 +3117,7 @@
   },
   {
    "category": "Arcade Hub",
-   "desc": "A giant storybook with a pose-shaped hole zooms in — strike the matching pose or BONK",
+   "desc": "A giant storybook with a pose-shaped hole zooms in \u2014 strike the matching pose or BONK",
    "id": "booksquirm",
    "thumb": "thumbs/bonk-yard.png",
    "title": "BOOKSQUIRM",
@@ -3125,7 +3125,7 @@
   },
   {
    "category": "Arcade Hub",
-   "desc": "Drag the beads, zero the crossings — 60 seconds, knots get denser every level",
+   "desc": "Drag the beads, zero the crossings \u2014 60 seconds, knots get denser every level",
    "id": "untangle-it",
    "thumb": "thumbs/bonk-yard.png",
    "title": "UNTANGLE IT!",
@@ -3133,7 +3133,7 @@
   },
   {
    "category": "Originals",
-   "desc": "Link loose in the real Vice City — hookshot zips, paraglider drops, cucco swarm wanted system",
+   "desc": "Link loose in the real Vice City \u2014 hookshot zips, paraglider drops, cucco swarm wanted system",
    "id": "hyrule-vice-city",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Hyrule Vice City",
@@ -3141,7 +3141,7 @@
   },
   {
    "category": "Originals",
-   "desc": "Skate score attack on real Vice Beach — every curb grindable, manuals, combos, 2-minute runs",
+   "desc": "Skate score attack on real Vice Beach \u2014 every curb grindable, manuals, combos, 2-minute runs",
    "id": "kickflip-vice",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Kickflip Vice",
@@ -3149,15 +3149,15 @@
   },
   {
    "category": "Classic Homebrew",
-   "desc": "The original 1997 game, faithful and untouched — all six cities, real data, original missions",
+   "desc": "The original 1997 game, faithful and untouched \u2014 all six cities, real data, original missions",
    "id": "gta-original",
    "thumb": "thumbs/bonk-yard.png",
-   "title": "The Original — GTA 1997",
+   "title": "The Original \u2014 GTA 1997",
    "url": "../games/gta-original/"
   },
   {
    "category": "Originals",
-   "desc": "Our enhanced GTA — Vice/Liberty/satellite Miami with Original, HD-remake and Drawn vehicle modes",
+   "desc": "Our enhanced GTA \u2014 Vice/Liberty/satellite Miami with Original, HD-remake and Drawn vehicle modes",
    "id": "neon-vice",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Neon Vice (Enhanced)",
@@ -3165,11 +3165,24 @@
   },
   {
    "category": "Originals",
-   "desc": "Original top-down open-city crime game — walk, jack, drive, outrun the heat at golden hour",
+   "desc": "Original top-down open-city crime game \u2014 walk, jack, drive, outrun the heat at golden hour",
    "id": "palm-city",
    "thumb": "thumbs/bonk-yard.png",
    "title": "Palm City",
    "url": "../games/palm-city/"
+  },
+  {
+   "autostart": [],
+   "category": "AI Bake-Off",
+   "id": "fix-or-wreck",
+   "keys": {
+    "start": "Enter"
+   },
+   "labels": {},
+   "note": "Neon (AI Studio) build, pixel-people version: pick FIX or WRECK on one shared facade \u2014 both climbers live at once, contesting the same windows. Felix vs Ralph base pair, 8 famous pairs, piano drops, collapsing buildings.",
+   "orientation": "any",
+   "path": "../games/fix-or-wreck/index.html",
+   "title": "Fix or Wreck"
   }
  ]
 }
