@@ -17,6 +17,124 @@ const PAL = {
 };
 const TYPES = Object.keys(PAL);
 const kind = (s) => s === 'road' ? 'road' : s === 'service' ? 'parking' : s === 'sidewalk' ? 'sidewalk' : 'grass';
+// GTA6-look roll-out (Nov 19): the weathered-lot vocabulary from the approved Weis sample,
+// generalized to EVERY parking polygon. Seeded per polygon index, so every chunk that paints a
+// piece of the lot draws the SAME elements (canvas-clipped) — no seams, no sync cost: this runs
+// inside paintGen, which the sliced queue already budgets. Elements: soft grime, tonal patches,
+// sealed patch rectangles, random-walk cracks, tar snakes on the big lots, clustered oil stains,
+// puddle sheen, worn stall ticks along the long edges, dirt bleed straddling the boundary.
+function inPoly2(x, y, f) {
+  let inside = false;
+  for (let i = 0, j = f.length - 2; i < f.length; j = i, i += 2) {
+    const xi = f[i], yi = f[i + 1], xj = f[j], yj = f[j + 1];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+function weatherLot(g, f, idx) {
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9, cx = 0, cy = 0;
+  const n = f.length / 2;
+  for (let k = 0; k < f.length; k += 2) { x0 = Math.min(x0, f[k]); x1 = Math.max(x1, f[k]); y0 = Math.min(y0, f[k + 1]); y1 = Math.max(y1, f[k + 1]); cx += f[k]; cy += f[k + 1]; }
+  cx /= n; cy /= n;
+  const area = (x1 - x0) * (y1 - y0); if (area < 2500) return;               // sheds and pads stay clean
+  const rnd = mulberry32((idx * 1013904223) ^ 0x9e37);
+  let la = 0, lx = 1, ly = 0;                                                // the lot's long axis (longest edge)
+  for (let k = 0; k < f.length; k += 2) { const bx = f[(k + 2) % f.length], by = f[(k + 3) % f.length], L = Math.hypot(bx - f[k], by - f[k + 1]); if (L > la) { la = L; lx = (bx - f[k]) / L; ly = (by - f[k + 1]) / L; } }
+  const A = Math.atan2(ly, lx), clampN = (v, a, b) => Math.max(a, Math.min(b, Math.round(v)));
+  const sample = () => { for (let t = 0; t < 8; t++) { const x = x0 + rnd() * (x1 - x0), y = y0 + rnd() * (y1 - y0); if (inPoly2(x, y, f)) return [x, y]; } return null; };
+  g.save(); poly(g, f); g.clip();
+  for (let i = 0, m = clampN(area / 30000, 3, 22); i < m; i++) {             // soft grime
+    const p = sample(); if (!p) continue;
+    const r = 90 + rnd() * 200, gr2 = g.createRadialGradient(p[0], p[1], 4, p[0], p[1], r), dark = rnd() > 0.35;
+    gr2.addColorStop(0, dark ? 'rgba(10,12,20,0.10)' : 'rgba(150,160,185,0.06)'); gr2.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gr2; g.beginPath(); g.arc(p[0], p[1], r, 0, 7); g.fill();
+  }
+  for (let i = 0, m = clampN(area / 22000, 3, 26); i < m; i++) {             // tonal patches
+    const p = sample(); if (!p) continue;
+    const rx = 60 + rnd() * 170, ry = rx * (0.5 + rnd() * 0.5);
+    g.save(); g.translate(p[0], p[1]); g.rotate(A); g.globalAlpha = 0.06 + rnd() * 0.09;
+    g.fillStyle = rnd() > 0.4 ? '#0d0f16' : '#8b95a8'; g.beginPath(); g.ellipse(0, 0, rx, ry, 0, 0, 7); g.fill(); g.restore();
+  }
+  g.globalAlpha = 1;
+  for (let i = 0, m = clampN(area / 45000, 1, 11); i < m; i++) {             // sealed patch rectangles
+    const p = sample(); if (!p) continue;
+    const w = 60 + rnd() * 160, d = 40 + rnd() * 90;
+    g.save(); g.translate(p[0], p[1]); g.rotate(A);
+    g.fillStyle = `rgba(13,15,22,${0.10 + rnd() * 0.12})`; g.fillRect(-w / 2, -d / 2, w, d);
+    g.fillStyle = 'rgba(205,215,235,0.10)'; g.fillRect(-w / 2, -d / 2, w, 2.2);
+    g.fillStyle = 'rgba(0,0,0,0.20)'; g.fillRect(-w / 2, d / 2 - 2.2, w, 2.2);
+    g.restore();
+  }
+  g.strokeStyle = 'rgba(9,9,15,0.5)';                                        // cracks: seeded random walks
+  for (let i = 0, m = clampN(area / 38000, 2, 13); i < m; i++) {
+    const p = sample(); if (!p) continue;
+    let [x, y] = p, a = rnd() * Math.PI * 2; g.lineWidth = 1.1 + rnd() * 0.9; g.beginPath(); g.moveTo(x, y);
+    const steps = 8 + (rnd() * 14 | 0);
+    for (let q = 0; q < steps; q++) { a += (rnd() - 0.5) * 0.9; x += Math.cos(a) * 13; y += Math.sin(a) * 13; g.lineTo(x, y); if (rnd() > 0.8) g.moveTo(x, y); }
+    g.stroke();
+  }
+  if (area > 260000) for (let i = 0; i < 2; i++) {                           // tar snakes across the big lots
+    const off = (rnd() - 0.5) * (y1 - y0) * 0.5, ph = rnd() * 9, px = -ly, py = lx;
+    const sx = cx + px * off, sy = cy + py * off, ext = la * 0.42;
+    for (const [col, lw, dy] of [['rgba(11,11,17,0.55)', 5.5, 0], ['rgba(190,200,220,0.10)', 1.4, -2]]) {
+      g.strokeStyle = col; g.lineWidth = lw; g.beginPath();
+      for (let d = -ext; d <= ext; d += 22) { const wob = Math.sin(d * 0.02 + ph) * 9, x = sx + lx * d + px * wob, y = sy + ly * d + py * wob + dy; d === -ext ? g.moveTo(x, y) : g.lineTo(x, y); }
+      g.stroke();
+    }
+  }
+  for (let c = 0, nc = clampN(area / 160000, 1, 4); c < nc; c++) {          // oil stains, clustered where cars sit
+    const p = sample(); if (!p) continue;
+    for (let i = 0, m = 3 + (rnd() * 3 | 0); i < m; i++) {
+      const ox = p[0] + (rnd() - 0.5) * 130, oy = p[1] + (rnd() - 0.5) * 80;
+      if (!inPoly2(ox, oy, f)) continue;
+      for (let q = 0; q < 3; q++) {
+        const gx = ox + (rnd() - 0.5) * 22, gy = oy + (rnd() - 0.5) * 13, r = 5 + rnd() * 11;
+        const gr2 = g.createRadialGradient(gx, gy, 1, gx, gy, r);
+        gr2.addColorStop(0, 'rgba(6,6,11,0.21)'); gr2.addColorStop(1, 'rgba(6,6,11,0)');
+        g.fillStyle = gr2; g.beginPath(); g.arc(gx, gy, r, 0, 7); g.fill();
+      }
+    }
+  }
+  for (let i = 0, m = area > 120000 ? 3 : 1; i < m; i++) {                   // puddle sheen holding the sky
+    const p = sample(); if (!p) continue;
+    const rx = 26 + rnd() * 30, ry = rx * 0.42;
+    g.save(); g.translate(p[0], p[1]); g.rotate(A);
+    g.fillStyle = 'rgba(158,182,224,0.10)'; g.beginPath(); g.ellipse(0, 0, rx, ry, 0, 0, 7); g.fill();
+    g.strokeStyle = 'rgba(205,225,250,0.14)'; g.lineWidth = 1.6; g.beginPath(); g.ellipse(0, 0, rx, ry, 0, Math.PI * 1.05, Math.PI * 1.75); g.stroke();
+    g.restore();
+  }
+  // worn stall ticks along every long edge, pointing inward, broken into fading segments
+  g.lineWidth = 2.6;
+  for (let k = 0; k < f.length; k += 2) {
+    const ax = f[k], ay = f[k + 1], bx = f[(k + 2) % f.length], by = f[(k + 3) % f.length], L = Math.hypot(bx - ax, by - ay);
+    if (L < 120) continue;
+    const ux = (bx - ax) / L, uy = (by - ay) / L;
+    let nx = -uy, ny = ux; if ((cx - ax) * nx + (cy - ay) * ny < 0) { nx = -nx; ny = -ny; }   // inward = toward the lot's heart
+    g.strokeStyle = 'rgba(233,229,214,0.11)'; g.lineWidth = 2.2; g.beginPath();
+    g.moveTo(ax + ux * 14 + nx * 46, ay + uy * 14 + ny * 46); g.lineTo(bx - ux * 14 + nx * 46, by - uy * 14 + ny * 46); g.stroke();
+    g.lineWidth = 2.6;
+    for (let d = 20; d < L - 10; d += 27) {
+      const px = ax + ux * d, py = ay + uy * d;
+      for (let q = 0; q < 3; q++) {
+        if (rnd() > 0.86) continue;
+        const a0 = q / 3, a1 = (q + 0.82) / 3;
+        g.strokeStyle = `rgba(233,229,214,${0.09 + rnd() * 0.24})`;
+        g.beginPath(); g.moveTo(px + nx * 46 * a0, py + ny * 46 * a0); g.lineTo(px + nx * 46 * a1, py + ny * 46 * a1); g.stroke();
+      }
+    }
+  }
+  g.restore();
+  for (let k = 0; k < f.length; k += 2) {                                    // dirt bleed straddling the boundary
+    const ax = f[k], ay = f[k + 1], bx = f[(k + 2) % f.length], by = f[(k + 3) % f.length], L = Math.hypot(bx - ax, by - ay);
+    for (let d = 0; d < L; d += 15) {
+      const x = ax + (bx - ax) * d / L, y = ay + (by - ay) * d / L;
+      const ox = x - cx, oy = y - cy, ol = Math.hypot(ox, oy) || 1, off = 3 + rnd() * 13;
+      const dx = x + ox / ol * off, dy = y + oy / ol * off, r = 7 + rnd() * 15;
+      g.fillStyle = rnd() > 0.3 ? `rgba(122,98,62,${0.07 + rnd() * 0.11})` : `rgba(70,58,40,${0.10 + rnd() * 0.08})`;
+      g.beginPath(); g.ellipse(dx, dy, r, r * 0.62, rnd() * 3, 0, 7); g.fill();
+    }
+  }
+}
 function curlAngle(wx, wy, sc, seed, base) {
   const e = 1.2, n1 = vnoise(wx * sc, (wy + e) * sc, seed), n2 = vnoise(wx * sc, (wy - e) * sc, seed);
   const n3 = vnoise((wx + e) * sc, wy * sc, seed), n4 = vnoise((wx - e) * sc, wy * sc, seed);
@@ -199,6 +317,8 @@ export class GroundPainter {
       for (const i of AR.inChunk('green', cx, cy)) { g.globalAlpha = 0.22; g.fillStyle = '#2f6a34'; poly(g, AR.A.green[i]); g.fill(); }
       for (const i of AR.inChunk('parking', cx, cy)) { g.globalAlpha = 0.85; g.fillStyle = '#4f5765'; poly(g, AR.A.parking[i]); g.fill(); g.globalAlpha = 0.25; g.strokeStyle = '#e8e2d2'; g.lineWidth = 1.2; g.stroke(); }
       yield;
+      g.globalAlpha = 1;
+      for (const i of AR.inChunk('parking', cx, cy)) { weatherLot(g, AR.A.parking[i], i); yield; }   // GTA6-look: every lot weathered (see weatherLot above)
       const FADE = ['#bcb4ac', '#b6aea6', '#c2bab0', '#b0a8a2', '#bab2aa'];
       for (const i of AR.inChunk('buildings', cx, cy)) {
         if (AR.heroSet.has(i)) continue;                  // heroes are drawn live, bigger and crisp (lf_render.js)
@@ -206,6 +326,11 @@ export class GroundPainter {
         g.globalAlpha = 0.13; g.fillStyle = '#2a2040'; g.save(); g.translate(5, -2.5); poly(g, f); g.fill(); g.restore();   // soft shadow, ENE like the bake's sun
         g.globalAlpha = 0.42; g.fillStyle = FADE[i % FADE.length]; poly(g, f); g.fill();
         g.globalAlpha = 0.16; g.strokeStyle = '#6f6070'; g.lineWidth = 1; g.stroke();
+        // GTA6-look: a faint inset line reads as the roof's parapet edge — background roofs get
+        // the kit's lightest touch (heroes carry the full bake; the rest stay faded, per L10)
+        let bx0 = 1e9, by0 = 1e9, bx1 = -1e9, by1 = -1e9, bcx = 0, bcy = 0; const bn = f.length / 2;
+        for (let k = 0; k < f.length; k += 2) { bx0 = Math.min(bx0, f[k]); bx1 = Math.max(bx1, f[k]); by0 = Math.min(by0, f[k + 1]); by1 = Math.max(by1, f[k + 1]); bcx += f[k]; bcy += f[k + 1]; }
+        if ((bx1 - bx0) * (by1 - by0) > 4000) { g.globalAlpha = 0.10; g.strokeStyle = '#38303e'; g.lineWidth = 1.6; poly(g, f, 0.88, bcx / bn, bcy / bn); g.stroke(); g.globalAlpha = 1; }
       }
       g.globalAlpha = 1;
       yield;
@@ -226,6 +351,12 @@ export class GroundPainter {
         }
       });
       yield;
+      if (base === 'service') walk(e, (x, y, ux, uy) => {               // GTA6-look: tired service pavement — sparse sealed patches, hashed per world cell so chunks agree at the seams
+        const hr = mulberry32(((x / 55) | 0) * 73856093 ^ ((y / 55) | 0) * 19349663 ^ 0x5eed);
+        if (hr() > 0.16) return;
+        const w2 = 16 + hr() * 30, d2 = 10 + hr() * 18;
+        g.save(); g.translate(x, y); g.rotate(Math.atan2(uy, ux)); g.globalAlpha = 0.10 + hr() * 0.10; g.fillStyle = '#0d0f16'; g.fillRect(-w2 / 2, -d2 / 2, w2, d2); g.restore(); g.globalAlpha = 1;
+      }, 55);
       const twoWayArterial = !e.oneway && ['primary', 'secondary', 'trunk', 'tertiary'].includes(base);
       if (twoWayArterial) walk(e, (x, y, ux, uy) => {                   // double yellow centre line
         for (const o of [-1.6, 1.6]) { g.globalAlpha = 0.8; g.fillStyle = '#f2c84a'; g.fillRect(x - uy * o - 1.1, y + ux * o - 1.1, 2.2, 2.2); }
