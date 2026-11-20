@@ -21,6 +21,7 @@ import { Interior } from './lf_interior.js';
 import { InteriorRenderer } from './lf_interior_render.js';
 import { Places, PlaceInterior, doorPoint } from './lf_places.js';           // L12/L13: public enterable places (the Weis, Gringada) + the 108 Astro + Scott's Civic
 import { PlaceRenderer, heroStyle, worldFx } from './lf_places_render.js';
+import { Gta6Look } from './lf_gta6.js';   // GTA6-look sample pass (Weis lot), Nov 19
 import { placeVan, mergedSupport, hopLift } from './lf_van.js';        // L7 remainder: David Klink's Scooby-Doo van by Rigg's house (steppable exhaust tip)
 import { Barker, bubbleAt } from './lf_riggisms.js';                   // L7 remainder: Rigg-isms (IGURT GOGURT / fuck shit diesel)
 import { FakeCop } from './lf_fakecop.js';                               // M-B: Kosack's fake-cop pull-over minigame
@@ -36,7 +37,7 @@ import { Breadcrumb, isCollegePark } from './lf_breadcrumb.js';         // easy-
 const Q = new URLSearchParams(location.search);
 const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
 const VIEW_W = 420, view = { w: VIEW_W, h: 860 };
-const MIN_ZOOM = VIEW_W / 28300;   // HARD CAP (owner, Nov 18): no zoomed-out view is EVER wider than 2,830 m across (10 wu = 1 m) — opening fit, world pulse, every start, every house
+const MIN_ZOOM = VIEW_W / 14150;   // HARD CAP (owner, Nov 18; HALVED Nov 19): no zoomed-out view is EVER wider than 1,415 m across (10 wu = 1 m) — opening fit, world pulse, every start, every house
 let DPR = 1, renderer = null;
 function resize() {
   const iw = innerWidth, ih = innerHeight;
@@ -126,6 +127,7 @@ let KOTH = null;   // Cul-de-Sac King of the Hill lands in phase 2 with its data
     if (PJ) { PL = new Places(PJ); AJ.heroes.push(...PL.heroes()); PL.attach(sim); valet.attachPlaces(PL); renderer.heroStyle = heroStyle; renderer.placeFx = (g, S, gr, t, vis) => worldFx(g, S, PL, gr, t, vis); for (const p of PJ.places) { try { KITS[p.interior] = await j('data/interiors/' + p.interior + '.json'); } catch (e) {} } }
     areas = new Areas(AJ, W); ground.areas = areas; ground.cache.clear(); ground.job = null;
     if (renderer) renderer.areas = areas;
+    if (renderer) renderer.gta6 = new Gta6Look(areas, W);   // GTA6-look sample: no-ops if there is no Weis hero
     sim.setBuildings(AJ.buildings); sim.setGreens(AJ.green); mapCv = null; tick('houses'); party.build(sim, areas);   // L17: the 100-person crowd needs the footprints
     if (!van) { van = placeVan(sim, 'rigg', inHouse); setFootProject(footProj); }   // L7: the Scooby-Doo van parks by Rigg's house once the footprints are known
   }).catch(e => { if (globalThis.showErr) showErr('houses failed to load: ' + e.message); });
@@ -280,7 +282,7 @@ let intro = null, introIn = null;
 // while the pick screen sat, the chase camera kept easing to the default car's
 // street zoom (0.62), so a slow pick opened at ~68 m across and a fast pick at
 // ~2,820 m. Same fit for every start, every house, every dwell time; clamped to
-// the 2,830 m cap.
+// the 1,415 m cap (halved Nov 19).
 function openFit() { const B = W.bounds; return { x: (B.x0 + B.x1) / 2, y: (B.y0 + B.y1) / 2, z: Math.max(MIN_ZOOM, Math.min(VIEW_W / (B.x1 - B.x0), view.h / (B.y1 - B.y0)) * 0.98 * 1.5) }; }
 function startIntro() {
   if (inside || Q.has('cam') || Q.has('pilot') || Q.has('speed') || Q.has('nointro')) return;   // NOT `fixed`: pick() can run before that const exists
@@ -445,8 +447,8 @@ function drawBreadcrumb() {
 }
 const input = new Input(canvas, view); input.fightOn = true;
 const fixed = Q.get('cam') ? Q.get('cam').split(',').map(Number) : null;
-const B0 = W.bounds, fitZ = Math.max(MIN_ZOOM, Math.min(VIEW_W / (B0.x1 - B0.x0), view.h / (B0.y1 - B0.y0)) * 0.98 * 1.5);   // Nov 18 (owner): the opening sits halfway back from the whole-map fit (~2,830 m across, never wider — the MIN_ZOOM cap); startIntro() recomputes this same fit via openFit() so the flight's start never depends on the live camera
-const cam = fixed ? { x: fixed[0], y: fixed[1], zoom: fixed[2] || 1 }
+const B0 = W.bounds, fitZ = Math.max(MIN_ZOOM, Math.min(VIEW_W / (B0.x1 - B0.x0), view.h / (B0.y1 - B0.y0)) * 0.98 * 1.5);   // Nov 18 (owner): the opening sits halfway back from the whole-map fit (~1,415 m across since the Nov 19 halving, never wider — the MIN_ZOOM cap); startIntro() recomputes this same fit via openFit() so the flight's start never depends on the live camera
+const cam = fixed ? { x: fixed[0], y: fixed[1], zoom: Math.max(MIN_ZOOM, fixed[2] || 1) }   // Nov 19: ?cam= honours the same 1,415 m cap as every other view
   : (picking || Q.get('player')) && !Q.has('speed') && !Q.has('pilot') && !Q.has('nointro')
     ? { x: (B0.x0 + B0.x1) / 2, y: (B0.y0 + B0.y1) / 2, zoom: fitZ }   // open wide on the map (half-fit since Nov 18)
     : { x: sim.player.x, y: sim.player.y, zoom: 0.62 };   // owner Nov 17: zoom out, more world
@@ -526,7 +528,7 @@ function frame(now) {
     tx = foot.x; ty = foot.y; tz = foot.climb ? 1.1 : 1.8;   // on foot (owner, Nov 17): 20% closer than the old 1.5
     if (RF && foot.z >= RF.h - 2 && !foot.air && !foot.climb) { const L = lookout(foot, RF, sim, M, view); tx = L.x; ty = L.y; tz = L.zoom; }   // L5: up top, the closing shot
   }
-  if (fixed) { tx = fixed[0]; ty = fixed[1]; tz = fixed[2] || 1; }
+  if (fixed) { tx = fixed[0]; ty = fixed[1]; tz = Math.max(MIN_ZOOM, fixed[2] || 1); }   // Nov 19: the ?cam= target honours the same 1,415 m cap (this line re-reads the param every frame, so the clamp lives here, not only at construction)
   const pulseOK = !fixed && !(foot && foot.active) && !intro && !picking && !pilot && !Q.has('speed') && !((M && M.beat) || oM.beat);   // !picking: the pulse clock starts when you start driving — the same post-meeting rhythm at every house
   if (pulseOK) { pulseT += dt; if (pulseT > PULSE.out + PULSE.hold + PULSE.back) pulseT = -PULSE.rest; }
   if (pulseOK && pulseT >= 0) {
@@ -543,7 +545,7 @@ function frame(now) {
     const k = fixed ? 1 : 1 - Math.exp(-dt * 3.2);
     cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k; cam.zoom += (tz - cam.zoom) * (fixed ? 1 : 1 - Math.exp(-dt * 1.5));
   }
-  if (!fixed && cam.zoom < MIN_ZOOM) cam.zoom = MIN_ZOOM;   // HARD CAP (owner, Nov 18): never wider than 2,830 m across, whatever path set the zoom
+  if (!fixed && cam.zoom < MIN_ZOOM) cam.zoom = MIN_ZOOM;   // HARD CAP (owner, Nov 18; halved Nov 19): never wider than 1,415 m across, whatever path set the zoom
   if (inside) { (inside.place ? PIR : IR).draw(inside, VIEW_W, view.h, DPR, now / 1000); drawControls(); requestAnimationFrame(frame); return; }
   // KOTH circle road (owner, Nov 17): the cul-de-sac you're sitting in — or fighting over — is
   // REAL pavement: the same sac the ring below draws gets its disc painted as asphalt, road grip

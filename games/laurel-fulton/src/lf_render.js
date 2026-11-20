@@ -145,6 +145,8 @@ export class Renderer {
     for (let cy = cy0; cy <= cy1; cy++)
       for (let cx = cx0; cx <= cx1; cx++) { if (far && !this.ground.has(cx, cy)) continue; g.drawImage(this.ground.get(cx, cy), cx * CHUNK, cy * CHUNK, CHUNK + 0.6, CHUNK + 0.6); }
     if (far) this.farRoads(g, z, vx0, vy0, vx1, vy1);
+    const GV = this._gv || (this._gv = {}); GV.x0 = vx0; GV.y0 = vy0; GV.x1 = vx1; GV.y1 = vy1; GV.z = z;   // GTA6-look: the shared view rect the pass culls against
+    if (this.gta6 && !far) this.gta6.ground(g, GV);   // GTA6-look (lf_gta6.js): dressed ground — props + door crosswalks (lot weathering lives in lf_ground.js)
     const vis = (x, y, m = 120) => x > vx0 - m && x < vx1 + m && y > vy0 - m && y < vy1 + m;
     // task L8 hero tier: the crew's homes + the POIs, BIGGER than real (x1.35 about the centroid), crisp,
     // inked, with a name plaque. (Placeholder roofs until the Street View hero art, L11/G12, lands.)
@@ -172,6 +174,7 @@ export class Renderer {
       g.globalAlpha = 1;
       if (h.style && this.heroStyle) this.heroStyle(g, h, this.gr, time, S);   // L12/L13 hook (lf_places_render.js): the Weis big-box / the Gringada memory build
     }
+    if (this.gta6 && !far) this.gta6.over(g, this.gr, time, GV, this.heroArt);   // GTA6-look: worked roofs per archetype, over the hero tier (heroArt passed so overlays align with its frames)
     // crashable scenery (owner, Nov 18): guardrails along the fast roads + bridges, and
     // bushes in the yards — the SAME sets the sim collides with (lf_veg.js), so what you
     // see is exactly what you can hit. Rails: a bright band on a dark shadow line.
@@ -233,6 +236,7 @@ export class Renderer {
       g.fillStyle = 'rgba(255,241,216,0.94)'; g.beginPath(); g.roundRect(h.cx - w / 2, y - 18, w, 34, 12); g.fill();
       g.lineWidth = 2.5; g.strokeStyle = '#2a1430'; g.stroke(); g.fillStyle = '#2a1430'; g.textAlign = 'center'; g.fillText(h.who, h.cx, y + 7);
     }
+    if (this.gta6 && !far) this.gta6.high(g, this.gr, time, GV);   // GTA6-look: graph-generated poles + wires, pennant strings (under the grade, over the cars)
     // grade (Palm City's, keyframed by tod): warm golden multiply + soft-light glow from the west,
     // vignette — at golden hour this matches the old static grade; by dusk the multiply plunges
     // to ultramarine, the glow dies and the vignette deepens, exactly as Palm City falls to night.
