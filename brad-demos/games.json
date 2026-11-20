@@ -13,6 +13,14 @@
  ],
  "games": [
   {
+   "category": "Arcade Hub",
+   "id": "tapcade-20",
+   "note": "AI Studio build (Neon): 20-in-1 pocket arcade of playable hyper-casual mobile ad games \u2014 Gate Blaster, Tall Stack Run, Hole Swallow, Knife Hit, Water Sort and 15 more.",
+   "orientation": "portrait",
+   "path": "../games/tapcade-20/index.html",
+   "title": "Tapcade 20 \u2014 20-in-1 Pocket Arcade"
+  },
+  {
    "category": "AI Bake-Off",
    "id": "flappy-showdown",
    "keys": {
