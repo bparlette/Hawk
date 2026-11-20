@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Bunny Hop — BMX</title>
+<style>
+  html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#1c2338;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;}
+  #game{position:fixed;inset:0;}
+  canvas{display:block;}
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:1100;}
+  #speed{position:absolute;top:calc(10px + env(safe-area-inset-top));left:14px;color:#fff;
+    font-size:15px;font-weight:700;letter-spacing:.04em;text-shadow:0 1px 4px rgba(0,0,0,.7);}
+  #speed b{font-size:30px;font-weight:800;}
+  #mode{position:absolute;top:calc(48px + env(safe-area-inset-top));left:14px;color:#ffd9a0;
+    font-size:12px;font-weight:700;letter-spacing:.14em;text-shadow:0 1px 4px rgba(0,0,0,.7);}
+  #title{position:absolute;top:calc(10px + env(safe-area-inset-top));right:14px;color:#fff;opacity:.85;
+    font-size:13px;font-weight:800;letter-spacing:.22em;text-shadow:0 1px 4px rgba(0,0,0,.7);}
+  #prompt{position:absolute;left:50%;bottom:24%;transform:translateX(-50%);color:#fff;background:rgba(10,14,26,.72);
+    border:2px solid #ffd23f;border-radius:999px;padding:10px 20px;font-size:16px;font-weight:800;letter-spacing:.03em;
+    display:none;white-space:nowrap;box-shadow:0 4px 18px rgba(0,0,0,.45);}
+  #hint{position:absolute;left:50%;top:16%;transform:translateX(-50%);color:#fff;text-align:center;
+    font-size:14px;line-height:1.55;font-weight:600;text-shadow:0 1px 5px rgba(0,0,0,.85);
+    transition:opacity 1.2s ease;pointer-events:none;width:92%;}
+  #hint span{background:rgba(10,14,26,.55);border-radius:8px;padding:2px 8px;}
+  /* ---- gptouch: floating joystick (left half) + round buttons (bottom-right) ---- */
+  #stickZone{position:fixed;left:0;bottom:0;width:50%;height:62%;z-index:1150;touch-action:none;}
+  #stickBase{position:fixed;width:112px;height:112px;border-radius:50%;border:2px solid rgba(255,255,255,.4);
+    background:rgba(16,20,36,.32);display:none;z-index:1151;pointer-events:none;transform:translate(-50%,-50%);}
+  #stickKnob{position:fixed;width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.75);
+    display:none;z-index:1152;pointer-events:none;transform:translate(-50%,-50%);box-shadow:0 2px 8px rgba(0,0,0,.4);}
+  .btn{position:fixed;border-radius:50%;border:3px solid rgba(255,255,255,.55);color:#fff;font-weight:900;
+    display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:1200;touch-action:none;
+    text-shadow:0 1px 3px rgba(0,0,0,.5);box-shadow:0 4px 14px rgba(0,0,0,.4);}
+  .btn small{font-size:9px;letter-spacing:.12em;font-weight:700;opacity:.9;}
+  #btnA{right:26px;bottom:calc(30px + env(safe-area-inset-bottom));width:92px;height:92px;font-size:21px;background:rgba(255,46,77,.78);}
+  #btnB{right:132px;bottom:calc(22px + env(safe-area-inset-bottom));width:66px;height:66px;font-size:14px;background:rgba(41,230,255,.5);}
+  .btn.on{filter:brightness(1.5);transform:scale(.94);}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div id="hud">
+  <div id="speed"><b>0</b> km/h</div>
+  <div id="mode"></div>
+  <div id="title">BUNNY HOP</div>
+  <div id="prompt"></div>
+  <div id="hint"><span>Left stick / WASD to ride &nbsp;·&nbsp; HOLD <b>A</b> or <b>SPACE</b> to crouch, RELEASE to bunny hop &nbsp;·&nbsp; <b>B</b> brake &nbsp;·&nbsp; In air: W/S pitch &nbsp;·&nbsp; Hop the bridge rail and swim!</span></div>
+</div>
+<div id="stickZone"></div>
+<div id="stickBase"></div><div id="stickKnob"></div>
+<div class="btn" id="btnB">B<small>BRAKE</small></div>
+<div class="btn" id="btnA">A<small>HOP</small></div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { buildWorld } from './src/world/buildWorld.js';
+import { createBike } from './src/physics/bikePhysics.js';
+
+/* ============================================================ RENDERER / SCENE / DUSK SKY */
+const container = document.getElementById('game');
+const renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.12;
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x2e3a5c, 55, 190);
+{
+  const c = document.createElement('canvas'); c.width = 4; c.height = 512;
+  const g = c.getContext('2d'); const gr = g.createLinearGradient(0,0,0,512);
+  gr.addColorStop(0.0,'#1d2a52'); gr.addColorStop(0.45,'#3a4a7d'); gr.addColorStop(0.72,'#8a5f7d');
+  gr.addColorStop(0.88,'#e07f4a'); gr.addColorStop(1.0,'#f7a856');
+  g.fillStyle = gr; g.fillRect(0,0,4,512);
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  scene.background = tex;
+}
+const camera = new THREE.PerspectiveCamera(62, window.innerWidth/window.innerHeight, 0.1, 400);
+const hemi = new THREE.HemisphereLight(0x8fa3d9, 0x40342a, 0.85); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffa860, 1.9);
+sun.position.set(-38, 17, -30); sun.castShadow = true;
+sun.shadow.mapSize.set(1024,1024);
+sun.shadow.camera.left=-34; sun.shadow.camera.right=34; sun.shadow.camera.top=34; sun.shadow.camera.bottom=-34;
+sun.shadow.camera.near=1; sun.shadow.camera.far=140; sun.shadow.bias=-0.0006;
+scene.add(sun); scene.add(sun.target);
+scene.add(new THREE.AmbientLight(0x33415e, 0.5));
+
+/* ============================================================ WORLD + PHYSICS (standalone modules) */
+const world = buildWorld(scene);
+const WATER_Y = world.water.y;
+const env = {
+  groundAt: world.groundAt,
+  colliders: world.colliders,
+  inWater: (x, z) => world.water.contains(x, z),
+  waterY: WATER_Y,
+  swimBounds: world.water.bounds,
+  climbOutAt: world.climbOutAt,
+};
+const bike = createBike(world.spawn);
+const S = bike.state;
+S.y = world.groundAt(S.x, S.z);
+
+/* ============================================================ BIKE + RIDER VISUALS */
+const BOX = new THREE.BoxGeometry(1,1,1);
+function mat(color, rough=0.9, metal=0.0){ return new THREE.MeshStandardMaterial({ color, roughness:rough, metalness:metal }); }
+function box(w,h,d,material,x=0,y=0,z=0,parent,shadow=true){
+  const m = new THREE.Mesh(BOX, material); m.scale.set(w,h,d); m.position.set(x,y,z);
+  m.castShadow = shadow; m.receiveShadow = true; parent.add(m); return m;
+}
+function tube(a, b, r, material, parent){
+  const d = new THREE.Vector3().subVectors(b,a); const len = d.length();
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r,r,len,6), material);
+  m.position.copy(a).addScaledVector(d,0.5);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), d.normalize());
+  m.castShadow = true; parent.add(m); return m;
+}
+const V3 = (x,y,z)=>new THREE.Vector3(x,y,z);
+const frameMat = mat(0xd8434f, 0.35, 0.6), chromeMat = mat(0xb9c0c9, 0.3, 0.85), tyreMat = mat(0x17181c, 0.95),
+      skinMat = mat(0xc98a5e, 0.8), shirtMat = mat(0xffd23f, 0.85), pantsMat = mat(0x2b4d8f, 0.9),
+      shoeMat = mat(0xf2f2f2, 0.7), capMat = mat(0x22242c, 0.8);
+const bikeGroup = new THREE.Group(); scene.add(bikeGroup);
+const leanGroup = new THREE.Group(); bikeGroup.add(leanGroup);
+const pitchGroup = new THREE.Group(); leanGroup.add(pitchGroup);
+let wheelF, wheelR, crank, legL, legR, shinL, shinR, riderRig;
+{
+  const wheelGeo = new THREE.CylinderGeometry(0.34,0.34,0.07,20); wheelGeo.rotateZ(Math.PI/2);
+  const hubGeo = new THREE.CylinderGeometry(0.05,0.05,0.1,8); hubGeo.rotateZ(Math.PI/2);
+  function wheel(z){
+    const g = new THREE.Group(); g.position.set(0, 0.34, z); pitchGroup.add(g);
+    const t = new THREE.Mesh(wheelGeo, tyreMat); t.castShadow = true; g.add(t);
+    g.add(new THREE.Mesh(hubGeo, chromeMat));
+    for (let i=0;i<3;i++){ const s = box(0.02, 0.6, 0.03, chromeMat, 0, 0, 0, g); s.rotation.x = i*Math.PI/3; s.castShadow=false; }
+    return g;
+  }
+  wheelF = wheel(0.52); wheelR = wheel(-0.52);
+  tube(V3(0,0.36,-0.5), V3(0,0.62,0.18), 0.032, frameMat, pitchGroup);
+  tube(V3(0,0.62,0.18), V3(0,0.98,-0.18), 0.034, frameMat, pitchGroup);
+  tube(V3(0,0.62,0.18), V3(0,0.92,0.44), 0.034, frameMat, pitchGroup);
+  tube(V3(0,0.98,-0.18), V3(0,0.95,0.42), 0.03, frameMat, pitchGroup);
+  tube(V3(0,0.92,0.44), V3(0,0.34,0.52), 0.026, chromeMat, pitchGroup);
+  tube(V3(0,0.98,-0.18), V3(0,0.36,-0.5), 0.024, frameMat, pitchGroup);
+  box(0.07, 0.05, 0.3, mat(0x1c1c20,0.8), 0, 1.0, -0.2, pitchGroup);
+  const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.022,0.022,0.52,8), chromeMat);
+  bar.rotation.z = Math.PI/2; bar.position.set(0, 1.06, 0.46); bar.castShadow = true; pitchGroup.add(bar);
+  tube(V3(0,0.95,0.42), V3(0,1.06,0.46), 0.024, chromeMat, pitchGroup);
+  crank = new THREE.Group(); crank.position.set(0, 0.38, 0.16); pitchGroup.add(crank);
+  const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.09,0.03,14), chromeMat);
+  disc.rotation.z = Math.PI/2; crank.add(disc);
+  box(0.03, 0.3, 0.03, chromeMat, 0, 0, 0, crank).rotation.x = 0.6;
+  riderRig = new THREE.Group(); pitchGroup.add(riderRig);
+  box(0.3, 0.16, 0.2, pantsMat, 0, 0.98, -0.14, riderRig);
+  const torso = box(0.34, 0.52, 0.19, shirtMat, 0, 1.28, -0.02, riderRig); torso.rotation.x = 0.36;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.115, 14, 12), skinMat);
+  head.position.set(0, 1.6, 0.1); head.castShadow = true; riderRig.add(head);
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.12, 14, 8, 0, Math.PI*2, 0, 1.25), capMat);
+  cap.position.set(0, 1.63, 0.1); riderRig.add(cap);
+  box(0.2, 0.03, 0.12, capMat, 0, 1.6, 0.22, riderRig);
+  function arm(side){
+    const g = new THREE.Group(); g.position.set(side*0.21, 1.44, 0.02); riderRig.add(g);
+    tube(V3(0,0,0), V3(side*0.03,-0.24,0.16), 0.042, shirtMat, g);
+    tube(V3(side*0.03,-0.24,0.16), V3(side*-0.02,-0.42,0.42), 0.036, skinMat, g);
+    return g;
+  }
+  arm(-1); arm(1);
+  function leg(side){
+    const hip = new THREE.Group(); hip.position.set(side*0.11, 0.95, -0.08); riderRig.add(hip);
+    box(0.095, 0.44, 0.095, pantsMat, 0, -0.22, 0, hip);
+    const shin = new THREE.Group(); shin.position.set(0, -0.44, 0); hip.add(shin);
+    box(0.08, 0.42, 0.08, pantsMat, 0, -0.21, 0, shin);
+    box(0.09, 0.05, 0.22, shoeMat, 0, -0.43, 0.05, shin);
+    return { hip, shin };
+  }
+  const lL = leg(-1), lR = leg(1); legL = lL.hip; legR = lR.hip; shinL = lL.shin; shinR = lR.shin;
+}
+/* ---- swimmer (same rider, prone) — visible in swim / bail */
+const swimmer = new THREE.Group(); swimmer.visible = false; scene.add(swimmer);
+let swimArmL, swimArmR, swimLegL, swimLegR, swimFoam;
+{
+  swimFoam = new THREE.Mesh(new THREE.CircleGeometry(0.88, 20),
+    new THREE.MeshBasicMaterial({ color:0xdff2ff, transparent:true, opacity:0.55, depthWrite:false }));
+  swimFoam.rotation.x = -Math.PI/2; swimFoam.position.y = -0.4; swimmer.add(swimFoam);
+  box(0.34, 0.18, 0.55, shirtMat, 0, 0, -0.05, swimmer);
+  box(0.3, 0.15, 0.22, pantsMat, 0, -0.01, -0.42, swimmer);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.115, 14, 12), skinMat);
+  head.position.set(0, 0.06, 0.32); head.castShadow = true; swimmer.add(head);
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.12, 14, 8, 0, Math.PI*2, 0, 1.25), capMat);
+  cap.position.set(0, 0.09, 0.32); swimmer.add(cap);
+  function sArm(side){ const g = new THREE.Group(); g.position.set(side*0.22, 0.02, 0.18); swimmer.add(g); box(0.08, 0.08, 0.46, skinMat, 0, 0, 0.23, g); return g; }
+  swimArmL = sArm(-1); swimArmR = sArm(1);
+  function sLeg(side){ const g = new THREE.Group(); g.position.set(side*0.1, 0, -0.52); swimmer.add(g); box(0.09, 0.09, 0.5, pantsMat, 0, 0, -0.25, g); return g; }
+  swimLegL = sLeg(-1); swimLegR = sLeg(1);
+}
+/* ---- splash rings (pooled) */
+const splashes = [];
+{
+  const geo = new THREE.RingGeometry(0.4, 0.62, 24); geo.rotateX(-Math.PI/2);
+  for (let i=0;i<4;i++){
+    const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:0xcfeaff, transparent:true, opacity:0 }));
+    m.position.y = WATER_Y + 0.03; m.visible = false; scene.add(m);
+    splashes.push({ m, t: 99 });
+  }
+}
+function splash(x, z, big=false){
+  const s = splashes.find(s=>s.t>1) || splashes[0];
+  s.t = 0; s.m.position.x = x; s.m.position.z = z; s.m.visible = true;
+  s.m.scale.setScalar(big?1.6:1);
+}
+
+/* ============================================================ INPUT (gptouch + keyboard) */
+const keys = {};
+let joyActive = false, joyId = null, joyOX = 0, joyOY = 0, joyX = 0, joyY = 0;
+let btnA = false, btnB = false;
+const input = { steer:0, throttle:0, brake:false, hopHeld:false, action:false };
+window.addEventListener('keydown', e=>{
+  if (['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
+  keys[e.code] = true;
+});
+window.addEventListener('keyup', e=>{ keys[e.code] = false; });
+const zone = document.getElementById('stickZone'), sBase = document.getElementById('stickBase'), sKnob = document.getElementById('stickKnob');
+zone.addEventListener('pointerdown', e=>{
+  joyActive = true; joyId = e.pointerId; joyOX = e.clientX; joyOY = e.clientY; joyX = 0; joyY = 0;
+  sBase.style.display = sKnob.style.display = 'block';
+  sBase.style.left = joyOX+'px'; sBase.style.top = joyOY+'px';
+  sKnob.style.left = joyOX+'px'; sKnob.style.top = joyOY+'px';
+  zone.setPointerCapture(e.pointerId);
+});
+zone.addEventListener('pointermove', e=>{
+  if (!joyActive || e.pointerId !== joyId) return;
+  let dx = e.clientX - joyOX, dy = e.clientY - joyOY;
+  const len = Math.hypot(dx,dy), max = 52;
+  if (len > max){ dx *= max/len; dy *= max/len; }
+  joyX = dx/max; joyY = dy/max;
+  sKnob.style.left = (joyOX+dx)+'px'; sKnob.style.top = (joyOY+dy)+'px';
+});
+function joyEnd(e){ if (e.pointerId === joyId){ joyActive=false; joyX=0; joyY=0; sBase.style.display = sKnob.style.display = 'none'; } }
+zone.addEventListener('pointerup', joyEnd); zone.addEventListener('pointercancel', joyEnd);
+function bindBtn(id, set){
+  const el = document.getElementById(id);
+  el.addEventListener('pointerdown', e=>{ e.preventDefault(); set(true); el.classList.add('on'); el.setPointerCapture(e.pointerId); });
+  const off = e=>{ set(false); el.classList.remove('on'); };
+  el.addEventListener('pointerup', off); el.addEventListener('pointercancel', off);
+}
+bindBtn('btnA', v=>{ btnA = v; });
+bindBtn('btnB', v=>{ btnB = v; });
+document.addEventListener('gesturestart', e=>e.preventDefault());
+document.addEventListener('dblclick', e=>e.preventDefault());
+function pollInput(){
+  let steer = 0, throttle = 0;
+  if (keys['KeyA'] || keys['ArrowLeft']) steer -= 1;
+  if (keys['KeyD'] || keys['ArrowRight']) steer += 1;
+  if (keys['KeyW'] || keys['ArrowUp']) throttle += 1;
+  if (keys['KeyS'] || keys['ArrowDown']) throttle -= 1;
+  if (joyActive){ steer += joyX; throttle += -joyY; }
+  input.steer = THREE.MathUtils.clamp(steer, -1, 1);
+  input.throttle = THREE.MathUtils.clamp(throttle, -1, 1);
+  input.brake = btnB || !!keys['ShiftLeft'];
+  input.hopHeld = btnA || !!keys['Space'];
+  input.action = btnA || !!keys['KeyE'];
+}
+
+/* ============================================================ HUD */
+const speedEl = document.querySelector('#speed b'), modeEl = document.getElementById('mode'),
+      promptEl = document.getElementById('prompt'), hintEl = document.getElementById('hint');
+setTimeout(()=>{ hintEl.style.opacity = '0'; }, 8000);
+function showPrompt(t){ if (t){ promptEl.textContent = t; promptEl.style.display = 'block'; } else promptEl.style.display = 'none'; }
+
+/* ============================================================ MAIN LOOP */
+const camPos = new THREE.Vector3(S.x - 6, 4, S.z);
+let last = performance.now(), ftSamples = [], workSamples = [];
+function animate(now){
+  requestAnimationFrame(animate);
+  const w0 = performance.now();
+  let dt = Math.min(0.033, (now - last)/1000); last = now;
+  if (dt > 0) ftSamples.push(dt);
+  if (window.__freeze) dt = 0;
+  pollInput();
+  const events = bike.step(dt, input, env);
+  if (events.includes('splash')) splash(S.x, S.z, true);
+  /* prompts */
+  if (S.mode === 'swim') showPrompt(S.canClimb ? 'Tap A or E — climb out' : null);
+  else if (S.mode === 'bail') showPrompt(S.bailT > 0.8 ? 'Tap A or E — get back on' : null);
+  else showPrompt(null);
+  /* visuals by mode */
+  riderRig.visible = S.mode === 'ride';
+  swimmer.visible = S.mode !== 'ride';
+  if (S.mode === 'ride'){
+    bikeGroup.position.set(S.x, S.y, S.z);
+    bikeGroup.rotation.y = S.heading;
+    leanGroup.rotation.z = S.lean + (S.wobble > 0 ? Math.sin(S.time*34) * 0.09 * S.wobble : 0);
+    leanGroup.position.y = -S.crouch * 0.07;
+    pitchGroup.rotation.x = S.pitch;
+    riderRig.position.y = -S.crouch * 0.17;
+    riderRig.rotation.x = S.crouch * 0.22;
+    const spin = S.grounded ? S.speed / 0.34 : 9;
+    wheelF.rotation.x += spin * dt; wheelR.rotation.x += spin * dt;
+    crank.rotation.x = -S.pedalPhase;
+    const ph = S.pedalPhase;
+    legL.rotation.x = -0.55 + Math.sin(ph) * 0.5;        legR.rotation.x = -0.55 + Math.sin(ph + Math.PI) * 0.5;
+    shinL.rotation.x = 0.75 + Math.cos(ph) * 0.38;       shinR.rotation.x = 0.75 + Math.cos(ph + Math.PI) * 0.38;
+  } else if (S.mode === 'swim'){
+    const t = S.time;
+    swimFoam.visible = true;
+    swimmer.position.set(S.x, WATER_Y + 0.48 + Math.sin(t*2.2)*0.045, S.z);
+    swimmer.scale.setScalar(1.18);
+    swimmer.rotation.set(0.12 + Math.sin(t*2.2)*0.03, S.swimHeading, 0);
+    const stroke = S.speed > 0.1 ? t * 5.2 : t * 1.4;
+    swimArmL.rotation.x = -Math.sin(stroke) * 0.95 - 0.3;
+    swimArmR.rotation.x = -Math.sin(stroke + Math.PI) * 0.95 - 0.3;
+    swimLegL.rotation.x = Math.sin(stroke*1.35) * 0.3;
+    swimLegR.rotation.x = Math.sin(stroke*1.35 + Math.PI) * 0.3;
+    bikeGroup.position.set(S.floatBike.x, WATER_Y + 0.1 + Math.sin(t*1.7)*0.05, S.floatBike.z);
+    bikeGroup.rotation.y = S.floatBike.heading;
+    leanGroup.rotation.z = 1.25;
+  } else { // bail
+    swimFoam.visible = false;
+    bikeGroup.position.set(S.x, S.y, S.z);
+    bikeGroup.rotation.y = S.heading;
+    leanGroup.rotation.z = 1.35;
+    swimmer.position.set(S.x + 0.7, 0.16, S.z + 0.4);
+    swimmer.rotation.set(-Math.PI/2 + 0.25, S.heading, 0);
+  }
+  /* splashes */
+  for (const s of splashes){
+    if (s.t > 1){ s.m.visible = false; continue; }
+    s.t += dt * 1.5;
+    s.m.scale.multiplyScalar(1 + dt*5);
+    s.m.material.opacity = 0.75 * (1 - s.t);
+  }
+  /* camera */
+  const tgt = S.mode === 'swim'
+    ? { x: S.x, z: S.z, h: S.swimHeading, y: WATER_Y + 0.4 }
+    : { x: S.x, z: S.z, h: S.heading, y: S.y + 0.9 };
+  const bx = Math.sin(tgt.h), bz = Math.cos(tgt.h);
+  const dist = S.mode === 'swim' ? 3.8 : 5.7, hgt = S.mode === 'swim' ? 1.9 : 2.4;
+  camPos.x += ((tgt.x - bx*dist) - camPos.x) * Math.min(1, dt*4.5);
+  camPos.z += ((tgt.z - bz*dist) - camPos.z) * Math.min(1, dt*4.5);
+  camPos.y += ((tgt.y + hgt) - camPos.y) * Math.min(1, dt*4.5);
+  camera.position.copy(camPos);
+  camera.lookAt(tgt.x + bx*2.2, tgt.y + 0.35, tgt.z + bz*2.2);
+  sun.position.set(S.x - 38, 17, S.z - 30); sun.target.position.set(S.x, 0, S.z);
+  speedEl.textContent = Math.round(Math.abs(S.speed) * 3.6);
+  modeEl.textContent = S.mode === 'swim' ? '🏊 SWIMMING' : (S.mode === 'bail' ? '💥 BAILED' : (!S.grounded ? '🕊 AIRBORNE' : (S.crouching ? '🦘 CROUCH…' : '')));
+  renderer.render(scene, camera);
+  workSamples.push(performance.now() - w0);
+}
+requestAnimationFrame(animate);
+window.addEventListener('resize', ()=>{
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* ---- debug / scripted-play hooks (verification harness) */
+window.__dbg = {
+  S, world,
+  groundAt: world.groundAt,
+  teleport(x, z, heading = 0, speed = 0){
+    S.mode = 'ride';
+    S.x = x; S.z = z; S.heading = heading; S.speed = speed;
+    S.y = world.groundAt(x, z); S.grounded = true; S.vy = 0; S.vx = 0; S.vz = 0;
+    S.pitch = 0; S.pitchVel = 0; S.wobble = 0; S.crouch = 0; S.crouching = false; S.lean = 0;
+    camPos.set(x - Math.sin(heading)*5.7, S.y + 3.3, z - Math.cos(heading)*5.7);
+  },
+  hopNow(power = 1){
+    if (S.mode === 'ride' && S.grounded){
+      S.vy = 3.4 + 3.4*power + Math.min(1.3, Math.abs(S.speed)*0.1);
+      S.vx = Math.sin(S.heading) * S.speed; S.vz = Math.cos(S.heading) * S.speed;
+      S.grounded = false; S.pitchVel = -2.0;
+    }
+  },
+  frameStats(){
+    const a = ftSamples.slice(-240); if (!a.length) return null;
+    const s = [...a].sort((p,q)=>p-q);
+    const w = [...workSamples.slice(-240)].sort((p,q)=>p-q);
+    return { medianMs: +(s[Math.floor(s.length/2)]*1000).toFixed(2), p90Ms: +(s[Math.floor(s.length*0.9)]*1000).toFixed(2),
+             workMedianMs: w.length ? +w[Math.floor(w.length/2)].toFixed(2) : null, n: a.length };
+  },
+  setFreeze(v){ window.__freeze = !!v; },
+  ready: true,
+};
+</script>
+</body>
+</html>

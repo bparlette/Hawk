@@ -21,6 +21,14 @@
    "title": "Tapcade 112 \u2014 112-in-1 Pocket Arcade"
   },
   {
+   "category": "Originals",
+   "id": "bunny-hop",
+   "note": "3D BMX at dusk (Moth build): momentum riding with real lean, hold-and-release bunny hops onto and over trash bins, hop the canal bridge rail, land in the water and swim. Three.js, gamepress touch standard.",
+   "orientation": "portrait",
+   "path": "../games/bunny-hop/index.html",
+   "title": "Bunny Hop \u2014 BMX"
+  },
+  {
    "category": "AI Bake-Off",
    "id": "flappy-showdown",
    "keys": {
