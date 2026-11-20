@@ -22,12 +22,12 @@ const smooth = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t
 // night"), so the night floor is lifted here: mul ~3x brighter, vignette capped ~0.5. Laurel-only
 // divergence; day/dusk keys and all ramps stay at parity.
 const KEYS = [
-  { t: 0.00, mul: [255, 246, 224], roofMul: [255, 248, 228], warm: 0.62, glow: 0.48, shadow: 0.68, shadowCol: [108, 68, 56], vigCol: [62, 34, 24], vigAlpha: 0.18, eastGlow: [248, 162, 112] },
-  { t: 0.35, mul: [255, 236, 200], roofMul: [255, 240, 208], warm: 0.64, glow: 0.46, shadow: 0.66, shadowCol: [104, 62, 58], vigCol: [58, 32, 26], vigAlpha: 0.22, eastGlow: [244, 152, 116] },
-  { t: 0.55, mul: [242, 186, 152], roofMul: [248, 198, 166], warm: 0.50, glow: 0.34, shadow: 0.60, shadowCol: [88, 52, 74],  vigCol: [48, 26, 42], vigAlpha: 0.32, eastGlow: [220, 128, 138] },
-  { t: 0.72, mul: [162, 118, 174], roofMul: [204, 160, 208], warm: 0.24, glow: 0.14, shadow: 0.52, shadowCol: [46, 38, 108], vigCol: [24, 18, 58], vigAlpha: 0.48, eastGlow: [158, 94, 200] },
-  { t: 0.86, mul: [100, 114, 180], roofMul: [152, 154, 218], warm: 0.05, glow: 0.04, shadow: 0.44, shadowCol: [22, 26, 78],  vigCol: [16, 22, 56], vigAlpha: 0.50, eastGlow: [150, 90, 200] },
-  { t: 1.00, mul: [82, 100, 166],  roofMul: [140, 148, 214], warm: 0.02, glow: 0.00, shadow: 0.42, shadowCol: [20, 25, 74],  vigCol: [14, 20, 52], vigAlpha: 0.52, eastGlow: [150, 90, 200] },
+  { t: 0.00, mul: [242, 246, 252], roofMul: [248, 250, 255], warm: 0.42, glow: 0.24, shadow: 0.72, shadowCol: [32, 42, 62],  vigCol: [18, 24, 38], vigAlpha: 0.22, eastGlow: [215, 224, 240] },
+  { t: 0.35, mul: [236, 238, 244], roofMul: [244, 245, 250], warm: 0.46, glow: 0.26, shadow: 0.70, shadowCol: [34, 42, 64],  vigCol: [18, 24, 40], vigAlpha: 0.25, eastGlow: [228, 198, 178] },
+  { t: 0.55, mul: [212, 198, 206], roofMul: [226, 212, 220], warm: 0.34, glow: 0.20, shadow: 0.64, shadowCol: [28, 34, 62],  vigCol: [16, 20, 40], vigAlpha: 0.34, eastGlow: [196, 152, 170] },
+  { t: 0.72, mul: [148, 162, 204], roofMul: [176, 186, 224], warm: 0.14, glow: 0.08, shadow: 0.56, shadowCol: [18, 28, 66],  vigCol: [12, 18, 44], vigAlpha: 0.42, eastGlow: [128, 150, 212] },
+  { t: 0.86, mul: [108, 130, 186], roofMul: [146, 162, 214], warm: 0.04, glow: 0.02, shadow: 0.48, shadowCol: [14, 22, 58],  vigCol: [10, 16, 42], vigAlpha: 0.46, eastGlow: [110, 138, 204] },
+  { t: 1.00, mul: [90, 114, 174],  roofMul: [134, 152, 208], warm: 0.02, glow: 0.00, shadow: 0.45, shadowCol: [12, 20, 54],  vigCol: [8, 14, 38],  vigAlpha: 0.48, eastGlow: [104, 132, 198] },
 ];
 export function grade(t) {
   let i = 0;
@@ -47,7 +47,73 @@ export function grade(t) {
 
 const SUN = { x: 0.8, y: -0.3 }, FAR_CHUNKS = 90;                       // the bake's sun: shadows fall east-north-east
 export class Renderer {
-  constructor(ctx, W, ground, fleet, imgs, areas = null) { this.areas = areas; this.ctx = ctx; this.W = W; this.ground = ground; this.fleet = fleet; this.imgs = imgs; this.stacks = null; }
+  constructor(ctx, W, ground, fleet, imgs, areas = null) {
+    this.areas = areas; this.ctx = ctx; this.W = W; this.ground = ground; this.fleet = fleet; this.imgs = imgs; this.stacks = null;
+    this._decks = []; this._seenD = new Set(); this._viewBuf = [0, 0, 0, 0];
+  }
+  _ensureSprites() {
+    if (this._spritesReady || typeof document === 'undefined') return;
+    this._spritesReady = true;
+    // 1. Pre-baked car contact AO shadow (soft dark rounded pill under chassis)
+    const ao = document.createElement('canvas'); ao.width = 64; ao.height = 36;
+    const ag = ao.getContext('2d');
+    const rg = ag.createRadialGradient(32, 18, 4, 32, 18, 30);
+    rg.addColorStop(0, 'rgba(6,10,18,0.62)'); rg.addColorStop(0.55, 'rgba(6,10,18,0.34)'); rg.addColorStop(1, 'rgba(6,10,18,0)');
+    ag.fillStyle = rg; ag.fillRect(0, 0, 64, 36);
+    this._carAoTex = ao;
+    // 2. Pre-baked realistic dappled foliage canopy sprites (4 variants)
+    this._bushTex = [];
+    const palettes = [
+      ['#21381e', '#2f4c28', '#3e6233', '#547844'],
+      ['#1e3322', '#2b472d', '#3a5c39', '#4f734a'],
+      ['#283a1d', '#375028', '#476533', '#5c7c44'],
+      ['#1c301c', '#294326', '#385832', '#4c6d42'],
+    ];
+    for (let v = 0; v < 4; v++) {
+      const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+      const bg = cv.getContext('2d'), pal = palettes[v];
+      let s = 1337 + v * 997; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+      // soft cast shadow
+      bg.fillStyle = 'rgba(10,16,22,0.42)';
+      bg.beginPath(); bg.ellipse(36, 30, 22, 19, 0.2, 0, Math.PI * 2); bg.fill();
+      // organic dark canopy base clusters
+      for (let i = 0; i < 14; i++) {
+        const a = rnd() * Math.PI * 2, d = rnd() * 11, r = 7 + rnd() * 7;
+        bg.fillStyle = pal[i < 5 ? 0 : 1];
+        bg.beginPath(); bg.arc(32 + Math.cos(a) * d, 32 + Math.sin(a) * d, r, 0, Math.PI * 2); bg.fill();
+      }
+      // mid-tone leaf tufts
+      for (let i = 0; i < 16; i++) {
+        const a = rnd() * Math.PI * 2, d = rnd() * 13, r = 4 + rnd() * 5;
+        bg.fillStyle = pal[2];
+        bg.beginPath(); bg.arc(30 + Math.cos(a) * d, 31 + Math.sin(a) * d, r, 0, Math.PI * 2); bg.fill();
+      }
+      // sunlit upper-left crown highlights (matching SUN {0.8, -0.3} -> light from WSW)
+      for (let i = 0; i < 10; i++) {
+        const a = rnd() * Math.PI * 2, d = rnd() * 9, r = 2.5 + rnd() * 3.5;
+        bg.fillStyle = pal[3];
+        bg.beginPath(); bg.arc(27 + Math.cos(a) * d, 34 + Math.sin(a) * d, r, 0, Math.PI * 2); bg.fill();
+      }
+      this._bushTex.push(cv);
+    }
+    // 3. Pre-baked headlight beam cones (zero per-frame createLinearGradient)
+    this._beamTex = {};
+    const beamCols = {
+      white: 'rgba(255,244,214,',
+      blue: 'rgba(65,125,255,',
+      yellow: 'rgba(255,202,64,',
+      red: 'rgba(255,46,56,',
+      kblue: 'rgba(56,130,255,',
+    };
+    for (const [k, col] of Object.entries(beamCols)) {
+      const cv = document.createElement('canvas'); cv.width = 96; cv.height = 48;
+      const lg = cv.getContext('2d'), gr = lg.createLinearGradient(0, 24, 96, 24);
+      gr.addColorStop(0, col + '0.85)'); gr.addColorStop(0.55, col + '0.28)'); gr.addColorStop(1, col + '0)');
+      lg.fillStyle = gr; lg.beginPath();
+      lg.moveTo(0, 20); lg.lineTo(0, 28); lg.lineTo(96, 48); lg.lineTo(96, 0); lg.closePath(); lg.fill();
+      this._beamTex[k] = cv;
+    }
+  }
   resize(vw, vh, dpr) { this.vw = vw; this.vh = vh; this.dpr = dpr; }
   cell(m, k, which) {                                   // a car sheet frame -> [img, sx, sy, sw, sh, ox, oy, w, h]
     const e = m[which], img = this.imgs[e.file], cols = m.cols, rows = Math.ceil(m.angles / cols);
@@ -101,19 +167,32 @@ export class Renderer {
     const hf = 0.55 + 0.45 * (this.gr ? this.gr.heads : 0);   // Palm City's headlight ramp: always clearly on (owner: the colours must be OBVIOUS), full strength by dusk
     const kRed = c.model === 'cavalier_kosack' && ((Math.floor((this.time || 0) * 6.4) % 2) === 0);
     const beamL = L * 2.6, beamW = Wd * 0.95;
-    for (const s of [-1, 1]) {
-      const col = c.model === 'celica_rigg' ? ['rgba(55,105,255,', 0.68 * hf]
-        : c.model === 'camaro_brad' ? ['rgba(255,200,50,', 0.58 * hf]
-        : c.model === 'cavalier_kosack' ? ((s < 0 ? kRed : !kRed) ? [s < 0 ? 'rgba(255,46,56,' : 'rgba(56,130,255,', 0.72 * hf] : ['rgba(255,240,200,', 0.36 * hf])
-        : ['rgba(255,240,200,', 0.3 * hf];
-      const ox = c.x + fx * (L / 2) + px * s * Wd * 0.30, oy = c.y + fy * (L / 2) + py * s * Wd * 0.30;
-      const tx = ox + fx * beamL, ty = oy + fy * beamL;
-      const gr = g.createLinearGradient(ox, oy, tx, ty);
-      gr.addColorStop(0, col[0] + col[1] + ')'); gr.addColorStop(1, col[0] + '0)');
-      g.fillStyle = gr; g.beginPath();
-      g.moveTo(ox + px * 2.5, oy + py * 2.5); g.lineTo(ox - px * 2.5, oy - py * 2.5);
-      g.lineTo(tx - px * beamW / 2, ty - py * beamW / 2); g.lineTo(tx + px * beamW / 2, ty + py * beamW / 2);
-      g.closePath(); g.fill();
+    if (this._beamTex) {
+      for (const s of [-1, 1]) {
+        const [bk, ba] = c.model === 'celica_rigg' ? ['blue', 0.72 * hf]
+          : c.model === 'camaro_brad' ? ['yellow', 0.62 * hf]
+          : c.model === 'cavalier_kosack' ? ((s < 0 ? kRed : !kRed) ? [s < 0 ? 'red' : 'kblue', 0.76 * hf] : ['white', 0.38 * hf])
+          : ['white', 0.34 * hf];
+        const ox = c.x + fx * (L / 2) + px * s * Wd * 0.30, oy = c.y + fy * (L / 2) + py * s * Wd * 0.30;
+        g.save(); g.translate(ox, oy); g.rotate(c.h); g.globalAlpha = ba;
+        g.drawImage(this._beamTex[bk], 0, -beamW / 2, beamL, beamW);
+        g.restore();
+      }
+    } else {
+      for (const s of [-1, 1]) {
+        const col = c.model === 'celica_rigg' ? ['rgba(55,105,255,', 0.68 * hf]
+          : c.model === 'camaro_brad' ? ['rgba(255,200,50,', 0.58 * hf]
+          : c.model === 'cavalier_kosack' ? ((s < 0 ? kRed : !kRed) ? [s < 0 ? 'rgba(255,46,56,' : 'rgba(56,130,255,', 0.72 * hf] : ['rgba(255,240,200,', 0.36 * hf])
+          : ['rgba(255,240,200,', 0.3 * hf];
+        const ox = c.x + fx * (L / 2) + px * s * Wd * 0.30, oy = c.y + fy * (L / 2) + py * s * Wd * 0.30;
+        const tx = ox + fx * beamL, ty = oy + fy * beamL;
+        const gr = g.createLinearGradient(ox, oy, tx, ty);
+        gr.addColorStop(0, col[0] + col[1] + ')'); gr.addColorStop(1, col[0] + '0)');
+        g.fillStyle = gr; g.beginPath();
+        g.moveTo(ox + px * 2.5, oy + py * 2.5); g.lineTo(ox - px * 2.5, oy - py * 2.5);
+        g.lineTo(tx - px * beamW / 2, ty - py * beamW / 2); g.lineTo(tx + px * beamW / 2, ty + py * beamW / 2);
+        g.closePath(); g.fill();
+      }
     }
     g.restore();
   }
@@ -130,11 +209,12 @@ export class Renderer {
     }
   }
   draw(S, cam, time, tod = 0.18) {
+    this._ensureSprites();
     this.gr = grade(tod); this.tod = tod;
     const g = this.ctx, { vw, vh, dpr } = this, z = cam.zoom, hw = vw / 2 / z, hh = vh / 2 / z;
     this.zNow = z;
     const vx0 = cam.x - hw, vy0 = cam.y - hh, vx1 = cam.x + hw, vy1 = cam.y + hh;
-    g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#4c7a3c'; g.fillRect(0, 0, vw, vh);
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#364d30'; g.fillRect(0, 0, vw, vh);
     g.setTransform(dpr * z, 0, 0, dpr * z, dpr * (vw / 2 - cam.x * z), dpr * (vh / 2 - cam.y * z));
     // LOAD FIX (Nov 18): zoomed all the way out (the opening shows the WHOLE map, the world pulse goes far) the view covers
     // ~30,000 ground chunks, and ground.get() PAINTS a missing one synchronously — the page froze for minutes and "did not
@@ -197,37 +277,49 @@ export class Renderer {
       const buf = this._bb || (this._bb = []);
       for (const b of bushesNear(cam.x, cam.y, Math.max(hw, hh) + 80, this.W, this._nb, this.areas.A.green, buf)) {
         if (S.squashed && S.squashed.has(b.id)) {   // driven through: flat + pale until it regrows
-          g.globalAlpha = 0.75; g.fillStyle = '#7a8f4a'; g.beginPath(); g.ellipse(b.x, b.y, b.r * 1.25, b.r * 0.6, 0, 0, Math.PI * 2); g.fill(); g.globalAlpha = 1; continue;
+          g.globalAlpha = 0.72; g.fillStyle = '#5a6e3e'; g.beginPath(); g.ellipse(b.x, b.y, b.r * 1.25, b.r * 0.6, 0, 0, Math.PI * 2); g.fill(); g.globalAlpha = 1; continue;
         }
-        g.globalAlpha = 0.35; g.fillStyle = '#1e3016'; g.beginPath(); g.ellipse(b.x + SUN.x * 6, b.y + SUN.y * 6, b.r, b.r * 0.8, 0, 0, Math.PI * 2); g.fill();
-        g.globalAlpha = 1; g.fillStyle = '#3f7031'; g.beginPath(); g.arc(b.x, b.y, b.r, 0, Math.PI * 2); g.fill();
-        g.fillStyle = '#55883f'; g.beginPath(); g.arc(b.x - b.r * 0.25, b.y - b.r * 0.3, b.r * 0.68, 0, Math.PI * 2); g.fill();
-        g.fillStyle = '#6fa653'; g.beginPath(); g.arc(b.x - b.r * 0.38, b.y - b.r * 0.45, b.r * 0.36, 0, Math.PI * 2); g.fill();
+        if (this._bushTex) {
+          const sz = b.r * 2.9;
+          g.drawImage(this._bushTex[b.v || 0], b.x - sz * 0.5, b.y - sz * 0.5, sz, sz);
+        } else {
+          g.globalAlpha = 0.38; g.fillStyle = '#121c16'; g.beginPath(); g.ellipse(b.x + SUN.x * 6, b.y + SUN.y * 6, b.r, b.r * 0.8, 0, 0, Math.PI * 2); g.fill();
+          g.globalAlpha = 1; g.fillStyle = '#2d4a26'; g.beginPath(); g.arc(b.x, b.y, b.r, 0, Math.PI * 2); g.fill();
+          g.fillStyle = '#3f6234'; g.beginPath(); g.arc(b.x - b.r * 0.25, b.y - b.r * 0.3, b.r * 0.68, 0, Math.PI * 2); g.fill();
+        }
       }
     }
-    // shadows of ground-level cars, then those cars
-    g.globalAlpha = 0.55; for (const c of S.cars) if (c.layer === 0 && vis(c.x, c.y)) this.drawCar(g, c, 'shadow');
+    // shadows of ground-level cars (cast shadow + tight chassis contact AO), then those cars
+    g.globalAlpha = 0.58; for (const c of S.cars) if (c.layer === 0 && vis(c.x, c.y)) {
+      if (this._carAoTex && !(c.z > 1)) {
+        g.save(); g.translate(c.x, c.y); g.rotate(c.h);
+        g.drawImage(this._carAoTex, -(c.len || 46) * 0.62, -(c.wid || 20) * 0.72, (c.len || 46) * 1.24, (c.wid || 20) * 1.44);
+        g.restore();
+      }
+      this.drawCar(g, c, 'shadow');
+    }
     for (const c of S.cars) if (c.layer === 0 && vis(c.x, c.y)) this.drawGlow(g, c);
-    this.S = S; this.time = time; FX.under(g, S, time, [cam.x - hw - 60, cam.y - hh - 60, cam.x + hw + 60, cam.y + hh + 60]);
+    const vb = this._viewBuf; vb[0] = cam.x - hw - 60; vb[1] = cam.y - hh - 60; vb[2] = cam.x + hw + 60; vb[3] = cam.y + hh + 60;
+    this.S = S; this.time = time; FX.under(g, S, time, vb);
     g.globalAlpha = 1; for (const c of S.cars) if (c.layer === 0 && vis(c.x, c.y)) this.drawCar(g, c, 'color');
     for (const c of S.cars) if (c.siren && c.layer === 0 && vis(c.x, c.y)) drawLightBar(g, c, time);   // L15: the cruiser's roof light bar
     // bridge decks: cast shadow on whatever is below, then the deck (asphalt + parapets), then cars on it
-    const decks = []; const seen = new Set();
+    const decks = this._decks, seen = this._seenD; decks.length = 0; seen.clear();
     for (let cy = Math.floor(vy0 / 256) - 1; cy <= Math.floor(vy1 / 256) + 1; cy++) for (let cx = Math.floor(vx0 / 256) - 1; cx <= Math.floor(vx1 / 256) + 1; cx++)
       for (const si of this.W.grid[1].get(cx * 100003 + cy) || []) { const e = this.W.seg[si].e; if (!seen.has(e)) { seen.add(e); decks.push(e); } }
     g.lineCap = 'butt'; g.lineJoin = 'round';
     const path = (e, dx = 0, dy = 0) => { g.beginPath(); e.pts.forEach(([x, y], i) => i ? g.lineTo(x + dx, y + dy) : g.moveTo(x + dx, y + dy)); };
-    for (const e of decks) { g.globalAlpha = 0.32; g.strokeStyle = '#1c1530'; g.lineWidth = e.w + 10; path(e, SUN.x * 60, SUN.y * 60); g.stroke(); }
+    for (const e of decks) { g.globalAlpha = 0.38; g.strokeStyle = '#0e1422'; g.lineWidth = e.w + 10; path(e, SUN.x * 60, SUN.y * 60); g.stroke(); }
     g.globalAlpha = 1;
-    for (const e of decks) { g.strokeStyle = '#d9cbb3'; g.lineWidth = e.w + 9; path(e); g.stroke(); }
-    for (const e of decks) { g.strokeStyle = '#5a6272'; g.lineWidth = e.w; path(e); g.stroke(); g.strokeStyle = 'rgba(244,240,230,0.55)'; g.lineWidth = 1.6; g.setLineDash([16, 24]); path(e); g.stroke(); g.setLineDash([]); }
-    g.globalAlpha = 0.55; for (const c of S.cars) if (c.layer === 1 && vis(c.x, c.y)) this.drawCar(g, c, 'shadow');
+    for (const e of decks) { g.strokeStyle = '#aeb4bc'; g.lineWidth = e.w + 9; path(e); g.stroke(); }
+    for (const e of decks) { g.strokeStyle = '#4c5462'; g.lineWidth = e.w; path(e); g.stroke(); g.strokeStyle = 'rgba(232,238,246,0.52)'; g.lineWidth = 1.6; g.setLineDash([16, 24]); path(e); g.stroke(); g.setLineDash([]); }
+    g.globalAlpha = 0.58; for (const c of S.cars) if (c.layer === 1 && vis(c.x, c.y)) this.drawCar(g, c, 'shadow');
     for (const c of S.cars) if (c.layer === 1 && vis(c.x, c.y)) this.drawGlow(g, c);
     g.globalAlpha = 1; for (const c of S.cars) if (c.layer === 1 && vis(c.x, c.y)) this.drawCar(g, c, 'color');
     for (const c of S.cars) if (c.siren && c.layer === 1 && vis(c.x, c.y)) drawLightBar(g, c, time);   // L15: light bar on bridge decks too
     if (this.placeFx) this.placeFx(g, S, this.gr, time, vis);   // L12/L13 hook (lf_places_render.js): the 108 Astro's parking lights, Scott's tag, the bark
     if (this.worldFx) this.worldFx(g, S, time, vis, vx0, vy0, vx1, vy1);   // M-B/M-C + valet + curb destruct world overlays
-    FX.over(g, S, this.mission, time);                    // bass rings, sputter, fire, pickup rings, the beat's walkers
+    FX.over(g, S, this.mission, time, vb);                    // bass rings, sputter, fire, pickup rings, the beat's walkers
     // hero plaques (over the cars, under the grade so they sit in the light)
     if (this.heroArt) this.heroArt.districtPlaque(g, vis);   // L11: the Maple Lawn district plaque
     if (this.areas) for (const h of this.areas.heroes) {

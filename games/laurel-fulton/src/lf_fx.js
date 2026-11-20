@@ -83,18 +83,34 @@ export function setFx(S, roster) {
   for (const p of roster.people) if (p.car && p.car.sprite) S.fxBy[p.car.sprite] = p.car.fx || [];
 }
 import { TrackLayer } from './lf_skid.js';
-let tracks = null, tracksT = 0;
+let tracks = null, tracksT = 0, _ugTex = null;
+function getUgTex() {
+  if (_ugTex || typeof document === 'undefined') return _ugTex;
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+  const lg = cv.getContext('2d'), rg = lg.createRadialGradient(32, 32, 3, 32, 32, 32);
+  rg.addColorStop(0, 'rgba(70,150,255,0.85)'); rg.addColorStop(0.55, 'rgba(50,110,255,0.4)'); rg.addColorStop(1, 'rgba(40,90,255,0)');
+  lg.fillStyle = rg; lg.fillRect(0, 0, 64, 64);
+  return (_ugTex = cv);
+}
 // before the car's colour pass: Palm City's tyre-mark tiles (under everything), then the
 // underglow pool sits under the body
 export function under(g, S, time, view) {
   if (!tracks) tracks = new TrackLayer((w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; });
   const dt = Math.min(0.1, Math.max(0, time - tracksT)); tracksT = time;
   if (view) tracks.draw(g, S, dt, view[0], view[1], view[2], view[3]);
+  const ug = getUgTex();
   for (const c of S.cars) if (fxOf(S, c).includes('underglow_blue')) {
-    const r = g.createRadialGradient(c.x, c.y, 4, c.x, c.y, c.len * 0.75);
-    r.addColorStop(0, 'rgba(70,150,255,0.85)'); r.addColorStop(0.55, 'rgba(50,110,255,0.4)'); r.addColorStop(1, 'rgba(40,90,255,0)');
-    g.save(); g.translate(c.x, c.y); g.rotate(c.h); g.scale(1, 0.62); g.translate(-c.x, -c.y);
-    g.globalAlpha = 0.75 + 0.25 * Math.sin(time * 3); g.fillStyle = r; g.beginPath(); g.arc(c.x, c.y, c.len * 0.75, 0, TAU); g.fill(); g.restore(); g.globalAlpha = 1;
+    if (view && (c.x < view[0] - 80 || c.x > view[2] + 80 || c.y < view[1] - 80 || c.y > view[3] + 80)) continue;
+    const rad = c.len * 0.75;
+    g.save(); g.translate(c.x, c.y); g.rotate(c.h); g.scale(1, 0.62);
+    g.globalAlpha = 0.75 + 0.25 * Math.sin(time * 3);
+    if (ug) g.drawImage(ug, -rad, -rad, rad * 2, rad * 2);
+    else {
+      const r = g.createRadialGradient(0, 0, 4, 0, 0, rad);
+      r.addColorStop(0, 'rgba(70,150,255,0.85)'); r.addColorStop(0.55, 'rgba(50,110,255,0.4)'); r.addColorStop(1, 'rgba(40,90,255,0)');
+      g.fillStyle = r; g.beginPath(); g.arc(0, 0, rad, 0, TAU); g.fill();
+    }
+    g.restore(); g.globalAlpha = 1;
   }
 }
 // the shake a bass car's body takes this frame (renderer offsets the sprite by it)
@@ -103,8 +119,9 @@ export function shake(S, c, time) {
   const beat = Math.max(0, Math.sin(time * 2 * Math.PI * 2.1)) ** 6;      // ~126 bpm kick
   return [Math.sin(time * 71 + c.x) * 1.4 * beat, Math.cos(time * 63 + c.y) * 1.4 * beat];
 }
-export function over(g, S, M, time) {
+export function over(g, S, M, time, view = null) {
   for (const c of S.cars) {
+    if (view && (c.x < view[0] - 120 || c.x > view[2] + 120 || c.y < view[1] - 120 || c.y > view[3] + 120)) continue;
     const fx = fxOf(S, c), ca = Math.cos(c.h), sa = Math.sin(c.h);
     // CAR DAMAGE (Palm City stages, drawn over the sprite): panels scuff where they were hit,
     // glass frosts where it cracked; stage 2 smokes, a wreck burns — ember glow + dark smoke

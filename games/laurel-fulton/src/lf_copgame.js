@@ -26,16 +26,29 @@ import { Pilot } from './lf_pilot.js';
 const TAU = Math.PI * 2;
 const clamp = (x, a, b) => x < a ? a : x > b ? b : x;
 const wrap = (a) => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
-export const CIV = { cruise: 165, near: 350, far: 1100 };
+export const CIV = { cruise: 165, near: 420, far: 1150 };
+const VCELL = 512;
 export class Civilians {
-  constructor() { this.rnd = (() => { let s = 424242; return () => (s = (s * 16807) % 2147483647) / 2147483647; })(); }
-  // one more civilian on a street vertex 35-110 m from you (never on top of a car); null if there is no room
+  constructor() { this.rnd = (() => { let s = 424242; return () => (s = (s * 16807) % 2147483647) / 2147483647; })(); this._w = null; this._vgrid = null; }
+  _grid(W) {
+    if (this._w === W && this._vgrid) return this._vgrid;
+    this._w = W; const G = this._vgrid = new Map();
+    for (const [v] of W.adj) { const q = W.verts[v], k = Math.floor(q.x / VCELL) * 100003 + Math.floor(q.y / VCELL); let l = G.get(k); if (!l) G.set(k, l = []); l.push(v); }
+    return G;
+  }
+  _nearVerts(W, x, y, rMin, rMax) {
+    const G = this._grid(W), cx0 = Math.floor((x - rMax) / VCELL), cx1 = Math.floor((x + rMax) / VCELL), cy0 = Math.floor((y - rMax) / VCELL), cy1 = Math.floor((y + rMax) / VCELL), out = [];
+    for (let i = cx0; i <= cx1; i++) for (let j = cy0; j <= cy1; j++) for (const v of G.get(i * 100003 + j) || []) {
+      const q = W.verts[v], d = Math.hypot(q.x - x, q.y - y); if (d > rMin && d < rMax) out.push(v);
+    }
+    return out;
+  }
+  // one more civilian on a street vertex 42-115 m from you (never on top of a car); null if there is no room
   spawn(S, models, extra = {}) {
-    const W = S.W, P = S.player, cand = [];
-    for (const [v] of W.adj) { const q = W.verts[v], d = Math.hypot(q.x - P.x, q.y - P.y); if (d > CIV.near && d < CIV.far) cand.push(v); }
+    const W = S.W, P = S.player, cand = this._nearVerts(W, P.x, P.y, CIV.near, CIV.far);
     for (let guard = 0; cand.length && guard++ < 30;) {
       const v = cand.splice(Math.floor(this.rnd() * cand.length), 1)[0], q = W.verts[v], e = (W.adj.get(v) || [])[0], nb = e && W.verts[e[0]];
-      if (S.cars.some(o => Math.hypot(o.x - q.x, o.y - q.y) < 90)) continue;
+      if (S.cars.some(o => Math.hypot(o.x - q.x, o.y - q.y) < 120)) continue;
       const h = nb ? Math.atan2(nb.y - q.y, nb.x - q.x) : this.rnd() * TAU, m = models[Math.floor(this.rnd() * models.length)];
       const c = S.addCar(m, q.x, q.y, h, { traffic: true, ...extra }); c.v = CIV.cruise * 0.6;
       c.pilot = new Pilot({ player: c }, W, null); c.cruise = CIV.cruise * (0.9 + this.rnd() * 0.2); return c;
@@ -43,7 +56,7 @@ export class Civilians {
     return null;
   }
   newDest(S, c) {
-    const W = S.W, vs = []; for (const [v] of W.adj) { const q = W.verts[v], d = Math.hypot(q.x - c.x, q.y - c.y); if (d > 500 && d < 2400) vs.push(v); }
+    const W = S.W, vs = this._nearVerts(W, c.x, c.y, 500, 2400);
     if (!vs.length) return; const q = W.verts[vs[Math.floor(this.rnd() * vs.length)]]; c.pilot.plan(q.x, q.y, false);
   }
   // top: a speed cap (a hesitating driver); weave: steering wobble

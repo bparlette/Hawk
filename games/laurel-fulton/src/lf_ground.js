@@ -10,10 +10,10 @@ import { poly } from './lf_areas.js';
 
 export const CHUNK = 256, PX = 2, CPX = CHUNK * PX;
 const PAL = {
-  road:     { base: [58, 66, 80],    var: [9, 9, 10],    dabs: ['#4e5768', '#59627a', '#465062', '#626a7a', '#525c70', '#6b7282', '#3e4757', '#747a86'] },
-  parking:  { base: [52, 58, 70],    var: [8, 8, 9],     dabs: ['#48505f', '#3f4756', '#565e6c', '#363d4a', '#636a76'] },
-  sidewalk: { base: [236, 214, 184], var: [14, 12, 12],  dabs: ['#f4e2c4', '#dcc2a4', '#faebd2', '#cfb294', '#efd5b0'] },
-  grass:    { base: [70, 132, 60],   var: [26, 30, 22],  dabs: ['#48a03c', '#8cc846', '#2e7c44', '#b2d44c', '#266644', '#a8cc52', '#56ac36', '#72ba44'] },
+  road:     { base: [68, 74, 84],    var: [8, 8, 9],     dabs: ['#5b626f', '#666e7d', '#515866', '#737b89', '#49505d', '#7c8492', '#565e6b', '#6d7584'] },
+  parking:  { base: [58, 63, 72],    var: [8, 8, 9],     dabs: ['#4e5562', '#454b58', '#616875', '#3d434f', '#6c7380'] },
+  sidewalk: { base: [164, 166, 170], var: [10, 10, 10],  dabs: ['#b0b3b8', '#9ea2a8', '#bcc0c6', '#91969d', '#a7abb1'] },
+  grass:    { base: [54, 78, 48],    var: [16, 18, 14],  dabs: ['#3e5c36', '#526e44', '#314a2c', '#62784d', '#2b4227', '#5c6f47', '#46613b', '#4d5e3c'] },
 };
 const TYPES = Object.keys(PAL);
 const kind = (s) => s === 'road' ? 'road' : s === 'service' ? 'parking' : s === 'sidewalk' ? 'sidewalk' : 'grass';
@@ -272,19 +272,19 @@ export class GroundPainter {
       }
       mg.putImageData(mid, 0, 0);
       tg2.globalCompositeOperation = 'source-atop';
-      tg2.fillStyle = 'rgba(246, 202, 132, 0.12)';     // warm golden-hour tie-in across satellite tiles
+      tg2.fillStyle = 'rgba(185, 205, 232, 0.06)';     // subtle cool-slate atmospheric tie-in across satellite tiles
       tg2.fillRect(0, 0, CPX, CPX);
       tg2.globalCompositeOperation = 'destination-in';
       tg2.drawImage(mk, 0, 0, gw, gw, 0, 0, CPX + S, CPX + S);
-      g.globalAlpha = 0.84; g.drawImage(tc, 0, 0); g.globalAlpha = 1;
+      g.globalAlpha = 0.92; g.drawImage(tc, 0, 0); g.globalAlpha = 1;
       cv._pt = 1;                                 // stamp: this chunk's canvas carries the painting (harness waits on it)
     }
     yield;
-    // pass 2: brush dabs, seeded per 32-unit world cell (seamless across chunks)
+    // pass 2: fine surface texture dabs, seeded per 32-unit world cell (seamless across chunks; trimmed for speed + crispness)
     g.lineCap = 'round';
     const CELL = 32;
     for (let pass = 0; pass < 2; pass++) {
-      const count = pass ? 70 : 36, sx = pass ? 0x9e3779b9 : 0x5bd1e995;
+      const count = pass ? 42 : 24, sx = pass ? 0x9e3779b9 : 0x5bd1e995;
       for (let ky = Math.floor(oy / CELL) - 1; ky <= Math.floor((oy + CHUNK) / CELL) + 1; ky++) {
         yield;
         for (let kx = Math.floor(ox / CELL) - 1; kx <= Math.floor((ox + CHUNK) / CELL) + 1; kx++) {
@@ -295,12 +295,12 @@ export class GroundPainter {
             if (px < -30 || py < -30 || px > CPX + 30 || py > CPX + 30) continue;
             const sf = W.surfaceAt(wx, wy, 0), t = kind(sf), p = PAL[t];
             const paintedGrass = t === 'grass' && this._paintedAt(wx, wy);
-            if (paintedGrass && r1 > 0.25) continue;   // weave 25% of grass brush dabs across the satellite layer
+            if (paintedGrass && r1 > 0.16) continue;   // let crisp satellite aerial detail dominate lawns/woods
             let ang, len, wid, al;
-            if (t === 'road' || t === 'parking') { const r = W.roadInfo(wx, wy, 0), ra = Math.atan2(r.dy, r.dx); ang = curlAngle(wx, wy, 0.015, 11, ra) * 0.3 + ra * 0.7 + (r1 - 0.5) * 0.3; len = (pass ? 12 : 20) + r2 * 14; wid = (pass ? 5.5 : 9) + r3 * 4.5; al = (pass ? 0.4 : 0.32) + r4 * 0.24; }
-            else if (t === 'grass') { ang = curlAngle(wx, wy, 0.026, 31, fbm(wx * 0.015, wy * 0.015, 4, 2) * Math.PI * 3); len = 10 + r2 * 10; wid = (pass ? 5 : 8) + r3 * 4; al = (0.45 + r4 * 0.35) * (paintedGrass ? 0.45 : 1); }
-            else { ang = curlAngle(wx, wy, 0.018, 19, 0) + (r1 - 0.5) * 0.35; len = (pass ? 11 : 17) + r2 * 11; wid = (pass ? 5.5 : 8.5) + r3 * 4; al = 0.3 + r4 * 0.26; }
-            const cxs = Math.cos(ang) * len / 2, sys = Math.sin(ang) * len / 2, bend = (r6 - 0.5) * 0.36;
+            if (t === 'road' || t === 'parking') { const r = W.roadInfo(wx, wy, 0), ra = Math.atan2(r.dy, r.dx); ang = curlAngle(wx, wy, 0.015, 11, ra) * 0.25 + ra * 0.75 + (r1 - 0.5) * 0.25; len = (pass ? 10 : 18) + r2 * 12; wid = (pass ? 4.5 : 8) + r3 * 3.5; al = (pass ? 0.34 : 0.26) + r4 * 0.2; }
+            else if (t === 'grass') { ang = curlAngle(wx, wy, 0.026, 31, fbm(wx * 0.015, wy * 0.015, 4, 2) * Math.PI * 3); len = 9 + r2 * 9; wid = (pass ? 4.5 : 7.5) + r3 * 3.5; al = (0.38 + r4 * 0.28) * (paintedGrass ? 0.38 : 1); }
+            else { ang = curlAngle(wx, wy, 0.018, 19, 0) + (r1 - 0.5) * 0.3; len = (pass ? 9 : 15) + r2 * 9; wid = (pass ? 4.5 : 7.5) + r3 * 3.5; al = 0.24 + r4 * 0.22; }
+            const cxs = Math.cos(ang) * len / 2, sys = Math.sin(ang) * len / 2, bend = (r6 - 0.5) * 0.3;
             g.strokeStyle = p.dabs[(r5 * p.dabs.length) | 0]; g.globalAlpha = al; g.lineWidth = wid;
             g.beginPath(); g.moveTo(px - cxs, py - sys); g.quadraticCurveTo(px - sys * bend, py + cxs * bend, px + cxs, py + sys); g.stroke();
           }
@@ -312,25 +312,70 @@ export class GroundPainter {
     // pass 3: details from the real edges in and around this chunk
     g.save(); g.scale(PX, PX); g.translate(-ox, -oy);
     const AR = this.areas;
-    if (AR) {                                             // task L10 background tier: real footprints, faded and generic
+    if (AR) {                                             // background tier: realistic weathered roofs, crisp cast shadows, parking lot wear
       const r = mulberry32(cx * 7919 + cy * 104729 + 5);
-      for (const i of AR.inChunk('green', cx, cy)) { g.globalAlpha = 0.22; g.fillStyle = '#2f6a34'; poly(g, AR.A.green[i]); g.fill(); }
-      for (const i of AR.inChunk('parking', cx, cy)) { g.globalAlpha = 0.85; g.fillStyle = '#4f5765'; poly(g, AR.A.parking[i]); g.fill(); g.globalAlpha = 0.25; g.strokeStyle = '#e8e2d2'; g.lineWidth = 1.2; g.stroke(); }
+      for (const i of AR.inChunk('green', cx, cy)) { g.globalAlpha = 0.16; g.fillStyle = '#254224'; poly(g, AR.A.green[i]); g.fill(); }
+      for (const i of AR.inChunk('parking', cx, cy)) {
+        const pf = AR.A.parking[i];
+        g.globalAlpha = 0.90; g.fillStyle = '#404652'; poly(g, pf); g.fill();
+        // weathered concrete rim + subtle oil/tire wear stains inside the lot
+        g.save(); poly(g, pf); g.clip();
+        let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+        for (let k = 0; k < pf.length; k += 2) { if (pf[k] < x0) x0 = pf[k]; if (pf[k] > x1) x1 = pf[k]; if (pf[k + 1] < y0) y0 = pf[k + 1]; if (pf[k + 1] > y1) y1 = pf[k + 1]; }
+        const pr = mulberry32(i * 6151 + 17);
+        g.fillStyle = '#2d323c';
+        for (let s = 0; s < 5; s++) {
+          g.globalAlpha = 0.14 + pr() * 0.12;
+          g.beginPath(); g.ellipse(x0 + pr() * (x1 - x0), y0 + pr() * (y1 - y0), 10 + pr() * 22, 6 + pr() * 14, pr() * 3.14, 0, Math.PI * 2); g.fill();
+        }
+        // faded parking stall lines
+        if (x1 - x0 > 45 && y1 - y0 > 45) {
+          g.globalAlpha = 0.24; g.strokeStyle = '#dce2ea'; g.lineWidth = 1.1; g.beginPath();
+          const horiz = (x1 - x0) >= (y1 - y0);
+          if (horiz) {
+            for (let x = x0 + 18; x < x1 - 14; x += 22) { g.moveTo(x, y0 + 6); g.lineTo(x, y0 + 28); g.moveTo(x, y1 - 6); g.lineTo(x, y1 - 28); }
+          } else {
+            for (let y = y0 + 18; y < y1 - 14; y += 22) { g.moveTo(x0 + 6, y); g.lineTo(x0 + 28, y); g.moveTo(x1 - 6, y); g.lineTo(x1 - 28, y); }
+          }
+          g.stroke();
+        }
+        g.restore();
+        g.globalAlpha = 0.42; g.strokeStyle = '#b4bac2'; g.lineWidth = 1.4; poly(g, pf); g.stroke();
+      }
       yield;
       g.globalAlpha = 1;
       for (const i of AR.inChunk('parking', cx, cy)) { weatherLot(g, AR.A.parking[i], i); yield; }   // GTA6-look: every lot weathered (see weatherLot above)
-      const FADE = ['#bcb4ac', '#b6aea6', '#c2bab0', '#b0a8a2', '#bab2aa'];
+      // realistic architectural roof palette (weathered slate, tar-membrane, charcoal shingle, muted cedar/metal)
+      const ROOFS = ['#575e69', '#4a505a', '#636a75', '#6b5950', '#505660', '#73504a', '#5e6773'];
       for (const i of AR.inChunk('buildings', cx, cy)) {
         if (AR.heroSet.has(i)) continue;                  // heroes are drawn live, bigger and crisp (lf_render.js)
         const f = AR.A.buildings[i];
-        g.globalAlpha = 0.13; g.fillStyle = '#2a2040'; g.save(); g.translate(5, -2.5); poly(g, f); g.fill(); g.restore();   // soft shadow, ENE like the bake's sun
-        g.globalAlpha = 0.42; g.fillStyle = FADE[i % FADE.length]; poly(g, f); g.fill();
-        g.globalAlpha = 0.16; g.strokeStyle = '#6f6070'; g.lineWidth = 1; g.stroke();
-        // GTA6-look: a faint inset line reads as the roof's parapet edge — background roofs get
-        // the kit's lightest touch (heroes carry the full bake; the rest stay faded, per L10)
-        let bx0 = 1e9, by0 = 1e9, bx1 = -1e9, by1 = -1e9, bcx = 0, bcy = 0; const bn = f.length / 2;
-        for (let k = 0; k < f.length; k += 2) { bx0 = Math.min(bx0, f[k]); bx1 = Math.max(bx1, f[k]); by0 = Math.min(by0, f[k + 1]); by1 = Math.max(by1, f[k + 1]); bcx += f[k]; bcy += f[k + 1]; }
-        if ((bx1 - bx0) * (by1 - by0) > 4000) { g.globalAlpha = 0.10; g.strokeStyle = '#38303e'; g.lineWidth = 1.6; poly(g, f, 0.88, bcx / bn, bcy / bn); g.stroke(); g.globalAlpha = 1; }
+        // deep directional cast shadow + tight contact AO
+        g.globalAlpha = 0.42; g.fillStyle = '#0e131e'; g.save(); g.translate(10, -5); poly(g, f); g.fill(); g.restore();
+        g.globalAlpha = 0.32; g.lineWidth = 3.2; g.strokeStyle = '#0c1018'; poly(g, f); g.stroke();
+        // weathered roof base
+        g.globalAlpha = 0.94; g.fillStyle = ROOFS[i % ROOFS.length]; poly(g, f); g.fill();
+        // subtle roof membrane seams / shingle texture + parapet coping + rooftop vent on larger roofs
+        let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+        for (let k = 0; k < f.length; k += 2) { if (f[k] < x0) x0 = f[k]; if (f[k] > x1) x1 = f[k]; if (f[k + 1] < y0) y0 = f[k + 1]; if (f[k + 1] > y1) y1 = f[k + 1]; }
+        const bw = x1 - x0, bh = y1 - y0, mx = (x0 + x1) * 0.5, my = (y0 + y1) * 0.5;
+        g.save(); poly(g, f); g.clip();
+        g.globalAlpha = 0.16; g.strokeStyle = '#1d222c'; g.lineWidth = 0.9; g.beginPath();
+        if (bw >= bh) { for (let x = x0 + 9; x < x1; x += 11) { g.moveTo(x, y0); g.lineTo(x, y1); } }
+        else { for (let y = y0 + 9; y < y1; y += 11) { g.moveTo(x0, y); g.lineTo(x1, y); } }
+        g.stroke();
+        // ridge or sunlit half-slope tint
+        g.globalAlpha = 0.14; g.fillStyle = '#d8e2f0';
+        if (bw >= bh) g.fillRect(x0, y0, bw, bh * 0.5); else g.fillRect(x0, y0, bw * 0.5, bh);
+        // rooftop HVAC / turbine vent on commercial / larger buildings
+        if (bw > 48 && bh > 40) {
+          g.globalAlpha = 0.55; g.fillStyle = '#252a34'; g.fillRect(mx - 6, my - 5, 13, 11);
+          g.globalAlpha = 0.85; g.fillStyle = '#8b939e'; g.fillRect(mx - 7, my - 6, 11, 9);
+          g.globalAlpha = 0.65; g.fillStyle = '#bcc4ce'; g.beginPath(); g.arc(mx - 1.5, my - 1.5, 3, 0, Math.PI * 2); g.fill();
+        }
+        g.restore();
+        // crisp parapet / eave coping highlight
+        g.globalAlpha = 0.45; g.strokeStyle = '#c4cbd4'; g.lineWidth = 1.2; poly(g, f); g.stroke();
       }
       g.globalAlpha = 1;
       yield;
@@ -342,12 +387,28 @@ export class GroundPainter {
     for (const e of near) {
       if (e.L !== 0) continue;
       const hw = e.w / 2, base = e.hw.replace('_link', '');
-      if (base !== 'service') walk(e, (x, y, ux, uy) => {               // kerb: warm lit lip + dark gutter crease, skipped inside junctions
+      // subtle dark tire-wear wheel ruts along lanes (photorealistic asphalt patina)
+      if (base !== 'service' && hw >= 14) {
+        g.globalAlpha = 0.14; g.strokeStyle = '#1e232c'; g.lineWidth = 4.2;
+        for (const sd of [-1, 1]) {
+          const off = sd * hw * 0.48;
+          g.beginPath();
+          for (let k = 0; k < e.pts.length; k++) {
+            const p = e.pts[k], q = e.pts[Math.min(e.pts.length - 1, k + 1)], o = e.pts[Math.max(0, k - 1)];
+            let dx = q[0] - o[0], dy = q[1] - o[1]; const L = Math.hypot(dx, dy) || 1; dx /= L; dy /= L;
+            const rx = p[0] - dy * off, ry = p[1] + dx * off;
+            k ? g.lineTo(rx, ry) : g.moveTo(rx, ry);
+          }
+          g.stroke();
+        }
+        g.globalAlpha = 1;
+      }
+      if (base !== 'service') walk(e, (x, y, ux, uy) => {               // kerb: weathered concrete lip + deep gutter AO crease
         for (const sd of [-1, 1]) {
           const nx = -uy * sd, ny = ux * sd, ex = x + nx * hw, ey = y + ny * hw;
           const r = W.roadInfo(ex + nx * 3, ey + ny * 3, 0); if (r.d < r.hw - 1) continue;
-          g.globalAlpha = 0.7; g.fillStyle = '#f0dcbc'; g.fillRect(ex + nx * 1.3 - 1.6, ey + ny * 1.3 - 1.6, 3.2, 3.2);
-          g.globalAlpha = 0.42; g.fillStyle = '#201a42'; g.fillRect(ex - nx * 1.8 - 1.5, ey - ny * 1.8 - 1.5, 3, 3);
+          g.globalAlpha = 0.72; g.fillStyle = '#bfc5cc'; g.fillRect(ex + nx * 1.3 - 1.5, ey + ny * 1.3 - 1.5, 3.0, 3.0);
+          g.globalAlpha = 0.50; g.fillStyle = '#161b28'; g.fillRect(ex - nx * 1.8 - 1.5, ey - ny * 1.8 - 1.5, 3.0, 3.0);
         }
       });
       yield;
@@ -358,19 +419,40 @@ export class GroundPainter {
         g.save(); g.translate(x, y); g.rotate(Math.atan2(uy, ux)); g.globalAlpha = 0.10 + hr() * 0.10; g.fillStyle = '#0d0f16'; g.fillRect(-w2 / 2, -d2 / 2, w2, d2); g.restore(); g.globalAlpha = 1;
       }, 55);
       const twoWayArterial = !e.oneway && ['primary', 'secondary', 'trunk', 'tertiary'].includes(base);
-      if (twoWayArterial) walk(e, (x, y, ux, uy) => {                   // double yellow centre line
-        for (const o of [-1.6, 1.6]) { g.globalAlpha = 0.8; g.fillStyle = '#f2c84a'; g.fillRect(x - uy * o - 1.1, y + ux * o - 1.1, 2.2, 2.2); }
+      if (twoWayArterial) walk(e, (x, y, ux, uy) => {                   // weathered double yellow centre line
+        for (const o of [-1.6, 1.6]) { g.globalAlpha = 0.72; g.fillStyle = '#e5be4c'; g.fillRect(x - uy * o - 1.0, y + ux * o - 1.0, 2.0, 2.0); }
       }, 2);
       else if (base !== 'service' && !e.oneway && base !== 'motorway') walk(e, (x, y, ux, uy, s) => {   // dashed centre on two-lane streets
-        if (s % 40 < 16 && W.roadInfo(x - uy * (hw + 6), y + ux * (hw + 6), 0).d > hw - 2) { g.globalAlpha = 0.6; g.fillStyle = '#f8ecc8'; g.fillRect(x - 1.2, y - 1.2, 2.4, 2.4); }
+        if (s % 40 < 16 && W.roadInfo(x - uy * (hw + 6), y + ux * (hw + 6), 0).d > hw - 2) { g.globalAlpha = 0.52; g.fillStyle = '#e4e8ee'; g.fillRect(x - 1.1, y - 1.1, 2.2, 2.2); }
       }, 2);
       if (e.oneway && e.lanes > 1) walk(e, (x, y, ux, uy, s) => {       // lane dashes on one-way carriageways (US-29, ramps)
         if (s % 60 >= 24) return;
-        for (let l = 1; l < e.lanes; l++) { const o = -hw + l * (e.w / e.lanes); g.globalAlpha = 0.65; g.fillStyle = '#f4f0e6'; g.fillRect(x - uy * o - 1.1, y + ux * o - 1.1, 2.2, 2.2); }
+        for (let l = 1; l < e.lanes; l++) { const o = -hw + l * (e.w / e.lanes); g.globalAlpha = 0.58; g.fillStyle = '#e6eaf0'; g.fillRect(x - uy * o - 1.0, y + ux * o - 1.0, 2.0, 2.0); }
       }, 2);
       if (e.oneway && base !== 'service') walk(e, (x, y, ux, uy) => {   // white edge lines on divided highways
-        for (const sd of [-1, 1]) { const o = sd * (hw - 4); g.globalAlpha = 0.5; g.fillStyle = '#efe9da'; g.fillRect(x - uy * o - 0.9, y + ux * o - 0.9, 1.8, 1.8); }
+        for (const sd of [-1, 1]) { const o = sd * (hw - 4); g.globalAlpha = 0.45; g.fillStyle = '#dde2ea'; g.fillRect(x - uy * o - 0.9, y + ux * o - 0.9, 1.8, 1.8); }
       }, 3);
+      // roadside utility poles + subtle overhead wire along arterials (iconic overhead drone detail)
+      if (['primary', 'secondary', 'tertiary'].includes(base) && e.len > 140) {
+        const poleOff = hw + 8;
+        g.globalAlpha = 0.28; g.strokeStyle = '#111620'; g.lineWidth = 0.7; g.beginPath();
+        for (let k = 0; k < e.pts.length; k++) {
+          const p = e.pts[k], q = e.pts[Math.min(e.pts.length - 1, k + 1)], o = e.pts[Math.max(0, k - 1)];
+          let dx = q[0] - o[0], dy = q[1] - o[1]; const L = Math.hypot(dx, dy) || 1; dx /= L; dy /= L;
+          const px2 = p[0] - dy * poleOff, py2 = p[1] + dx * poleOff;
+          k ? g.lineTo(px2, py2) : g.moveTo(px2, py2);
+        }
+        g.stroke();
+        walk(e, (x, y, ux, uy, s) => {
+          if (Math.abs((s % 190) - 40) > 2) return;
+          const px2 = x - uy * poleOff, py2 = y + ux * poleOff;
+          g.globalAlpha = 0.36; g.strokeStyle = '#0e131d'; g.lineWidth = 2.0;
+          g.beginPath(); g.moveTo(px2, py2); g.lineTo(px2 + 16, py2 - 6); g.stroke();
+          g.globalAlpha = 0.9; g.fillStyle = '#cfd5dc'; g.beginPath(); g.arc(px2, py2, 2.3, 0, Math.PI * 2); g.fill();
+          g.globalAlpha = 0.6; g.strokeStyle = '#303642'; g.lineWidth = 0.8; g.stroke();
+        }, 4);
+        g.globalAlpha = 1;
+      }
       yield;
     }
     // task L3: speed bumps — a raised asphalt hump across the carriageway with worn yellow chevrons

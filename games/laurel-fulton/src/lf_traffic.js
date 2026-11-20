@@ -18,9 +18,9 @@
 // Palm City's traffic DENSITY and numbers do not transfer (it is a busy city); every number here is a named constant.
 import { roadPath } from './lf_pilot.js';
 
-export const AMBIENT_MAX = 1;                         // alive ambient cars, hard cap (owner, Nov 18: halved twice — was 4, then 2)
-export const FIRST_SPAWN = [4, 9];                    // s until the first car after boot
-export const SPAWN_GAP = [48, 128];                   // s between spawns (was [24, 64], originally [10, 26]; stretched with each halving so the MEAN alive count halves too, not just the cap)
+export const AMBIENT_MAX = 1;                         // alive ambient cars, hard cap (quiet suburb: 1 random car at a time)
+export const FIRST_SPAWN = [10, 16];                  // s until the first car after boot (>= 10 s)
+export const SPAWN_GAP = [22, 48];                    // s between spawns (sparse: 1 car every 22-48 s, never a cluster)
 export const SPAWN_R = [900, 1700];                   // spawn ring around the player, world units (10/m): beyond the screen (half-height ~ 700)
 export const DESPAWN_R = 2400;                        // an ambient car this far behind is removed
 export const VISIBLE_R = 950;                         // inside this a car is "on screen": never popped away

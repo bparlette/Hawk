@@ -4,7 +4,7 @@
 // shutters, hoop, the OPEN sign, lots, the Maple Lawn green roofs. Hero = BIGGER than real (L8): the whole local frame is scaled.
 // Where SPECS says "NOT ON RECORD" the art stays neutral. Hooked into lf_render.js (HeroArt.draw returns false until the data is in,
 // so the old placeholder shows meanwhile) and into the plaque pass (districtPlaque).
-const INK = '#2a1430';
+const INK = 'rgba(18,22,32,0.78)';
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const hex = s => [parseInt(s.slice(1, 3), 16), parseInt(s.slice(3, 5), 16), parseInt(s.slice(5, 7), 16)];
 const mix = (a, b, t) => { const A = hex(a), B = hex(b); return `rgb(${Math.round(A[0] + (B[0] - A[0]) * t)},${Math.round(A[1] + (B[1] - A[1]) * t)},${Math.round(A[2] + (B[2] - A[2]) * t)})`; };
@@ -70,8 +70,9 @@ export class HeroArt {
     const ctx = { g, F, sp, S, hw, hd, lim, night, home: sp.kind === 'home' };
     if (ctx.home) this.lawn(ctx);
     for (const d of sp.details) { const f = this['u_' + d.t]; if (f) f.call(this, ctx, d); }
-    // drop shadow (the bake's sun: falls ENE), then facade, then roof
-    g.save(); g.globalAlpha = 0.38; g.fillStyle = '#21183a'; g.translate((this.SUN.x * F.u[0] + this.SUN.y * F.u[1]) * 34 / S, (this.SUN.x * F.v[0] + this.SUN.y * F.v[1]) * 34 / S); lpath(g, P); g.fill(); g.restore();
+    // deep directional drop shadow (the bake's sun: falls ENE) + tight contact AO, then facade, then roof
+    g.save(); g.globalAlpha = 0.48; g.fillStyle = '#0d1320'; g.translate((this.SUN.x * F.u[0] + this.SUN.y * F.u[1]) * 38 / S, (this.SUN.x * F.v[0] + this.SUN.y * F.v[1]) * 38 / S); lpath(g, P); g.fill(); g.restore();
+    g.save(); g.globalAlpha = 0.34; g.lineWidth = 4.2; g.strokeStyle = '#0a0f18'; lpath(g, P); g.stroke(); g.restore();
     this.body(ctx, P, hw, hd, sp);
     for (const d of sp.details) { const f = this['o_' + d.t]; if (f) f.call(this, ctx, d); }
     g.restore();
@@ -79,8 +80,8 @@ export class HeroArt {
     g.globalAlpha = 1; return true;
   }
   lawn({ g, hw, hd }) {
-    g.fillStyle = 'rgba(132,176,86,0.34)'; rrect(g, -hw - 40, -hd - 44, hw * 2 + 80, hd * 2 + 100, 26); g.fill();
-    g.fillStyle = 'rgba(150,196,100,0.22)'; rrect(g, -hw - 22, -hd - 26, hw * 2 + 44, hd * 2 + 62, 18); g.fill();
+    g.fillStyle = 'rgba(66,94,54,0.30)'; rrect(g, -hw - 40, -hd - 44, hw * 2 + 80, hd * 2 + 100, 26); g.fill();
+    g.fillStyle = 'rgba(78,108,64,0.20)'; rrect(g, -hw - 22, -hd - 26, hw * 2 + 44, hd * 2 + 62, 18); g.fill();
   }
   // facade + roof of any box-ish polygon (local coords). sp: wall, brick, inset, roof {type, ridge, c1, c2}
   body(ctx, P, hw, hd, sp) {
@@ -90,23 +91,33 @@ export class HeroArt {
       g.save(); lpath(g, P); g.clip(); g.strokeStyle = 'rgba(70,20,10,0.16)'; g.lineWidth = 0.8;
       for (let y = -hd; y < hd; y += 4.5) { g.beginPath(); g.moveTo(-hw - 2, y); g.lineTo(hw + 2, y); g.stroke(); } g.restore();
     }
-    lpath(g, P); g.lineWidth = 2.6; g.strokeStyle = INK; g.stroke();
+    lpath(g, P); g.lineWidth = 1.6; g.strokeStyle = INK; g.stroke();
     const k = sp.inset || 0.84; g.save(); lpath(g, P, k); g.clip();
     const ex = { x0: -hw * 1.2, x1: hw * 1.2, y0: -hd * 1.2, y1: hd * 1.2 };
     const long = (R.ridge === 'short') ? hw > hd : hw <= hd;                             // ridge along the long side unless told otherwise
     this.roof(ctx, ex, R.type, long ? 'y' : 'x', R.c1, R.c2, sp.kind === 'poi' ? hw * 0.9 : 0);
     for (const d of sp.details || []) if (d.t === 'wing') this.wing(ctx, d, hw, hd);
     g.restore();
-    lpath(g, P, k); g.lineWidth = 1.7; g.strokeStyle = 'rgba(36,24,42,0.6)'; g.stroke();
-    if (R.type === 'flat') { lpath(g, P, k); g.lineWidth = 3.2; g.strokeStyle = 'rgba(236,228,212,0.8)'; g.stroke(); }
+    lpath(g, P, k); g.lineWidth = 1.4; g.strokeStyle = 'rgba(18,22,32,0.52)'; g.stroke();
+    if (R.type === 'flat') { lpath(g, P, k); g.lineWidth = 2.8; g.strokeStyle = 'rgba(208,214,222,0.75)'; g.stroke(); }
   }
   roof(ctx, e, type, axis, c1, c2) {
     const { g, F } = ctx, L = F;
     if (type === 'flat') {
       g.fillStyle = mix(c2, c1, 0.5); g.fillRect(e.x0, e.y0, e.x1 - e.x0, e.y1 - e.y0);
-      g.fillStyle = mix(c1, '#ffffff', 0.12); g.fillRect(e.x0 + 6, e.y0 + 6, (e.x1 - e.x0) - 12, (e.y1 - e.y0) - 12);
-      g.strokeStyle = 'rgba(20,14,30,0.16)'; g.lineWidth = 1; g.beginPath();            // membrane seams
-      const st = Math.max(16, (e.x1 - e.x0) / 14); for (let x = e.x0; x < e.x1; x += st) { g.moveTo(x, e.y0); g.lineTo(x, e.y1); } g.stroke();
+      g.fillStyle = mix(c1, '#d8e0ea', 0.10); g.fillRect(e.x0 + 6, e.y0 + 6, (e.x1 - e.x0) - 12, (e.y1 - e.y0) - 12);
+      // weathered tar-membrane seams + subtle cross seams (overhead commercial roof detail)
+      g.strokeStyle = 'rgba(16,20,28,0.22)'; g.lineWidth = 1.0; g.beginPath();
+      const st = Math.max(14, (e.x1 - e.x0) / 14);
+      for (let x = e.x0; x < e.x1; x += st) { g.moveTo(x, e.y0); g.lineTo(x, e.y1); }
+      for (let y = e.y0; y < e.y1; y += st * 1.5) { g.moveTo(e.x0, y); g.lineTo(e.x1, y); }
+      g.stroke();
+      // rooftop circular turbine vent + HVAC box
+      const mx = (e.x0 + e.x1) * 0.5, my = (e.y0 + e.y1) * 0.5;
+      g.fillStyle = 'rgba(14,18,26,0.42)'; g.fillRect(mx - 16, my - 8, 16, 12);
+      g.fillStyle = '#9aa2ac'; g.fillRect(mx - 18, my - 10, 14, 10);
+      g.fillStyle = '#c8d0da'; g.beginPath(); g.arc(mx + 14, my + 2, 5, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = '#48505c'; g.lineWidth = 1; g.stroke();
       return;
     }
     const xm = (e.x0 + e.x1) / 2, ym = (e.y0 + e.y1) / 2;

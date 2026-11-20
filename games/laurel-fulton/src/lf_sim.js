@@ -49,7 +49,7 @@ export class LFSim {
     // graph is here at boot), bushes as a hash scatter (lf_veg) — squashed bushes are
     // remembered here so the renderer flattens the same ones; they regrow after 20 s.
     this.rails = buildRails(W); this.squashed = new Map(); this.greens = opts.greens || null;
-    this._bushBuf = []; this._railBuf = [];
+    this._bushBuf = []; this._railBuf = []; this._seenH = new Set(); this._nearB = (x, y) => this.nearBuilding(x, y);
     // every crew car parked at its owner's house, nose toward the street
     for (const p of roster.people) {
       if (!p.active || !p.car || !p.car.sprite || !fleet[p.car.sprite]) continue;
@@ -187,7 +187,7 @@ export class LFSim {
     for (const c of this.cars) {
       if (c.parked || c.remote || c.layer !== 0 || c.z > 0 || Math.abs(c.v) < 4) continue;
       const R = (c.len + c.wid) / 4;
-      for (const b of bushesNear(c.x, c.y, R + 18, this.W, (x, y) => this.nearBuilding(x, y), this.greens, this._bushBuf)) {
+      for (const b of bushesNear(c.x, c.y, R + 18, this.W, this._nearB, this.greens, this._bushBuf)) {
         if (Math.hypot(b.x - c.x, b.y - c.y) >= R + b.r) continue;
         if (!this.squashed.has(b.id)) { this.squashed.set(b.id, this.time); if (c === this.player) this.events.push({ t: this.time, kind: 'bush', model: c.model }); }
         c.v *= Math.pow(0.18, dt);                          // ploughing through foliage: heavy drag, never a wall
@@ -218,7 +218,7 @@ export class LFSim {
     if (!this.houses.length) return;
     for (const c of this.cars) {
       if (c.parked || c.layer !== 0 || c.remote) continue;
-      const R = (c.len + c.wid) / 4, seen = new Set();
+      const R = (c.len + c.wid) / 4, seen = this._seenH; seen.clear();
       for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++)
         for (const hi of this.houseGrid.get((Math.floor(c.x / 256) + i) * 100003 + Math.floor(c.y / 256) + j) || []) {
           if (seen.has(hi)) continue; seen.add(hi);

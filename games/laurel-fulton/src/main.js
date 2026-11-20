@@ -37,7 +37,7 @@ import { Breadcrumb, isCollegePark } from './lf_breadcrumb.js';         // easy-
 const Q = new URLSearchParams(location.search);
 const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
 const VIEW_W = 420, view = { w: VIEW_W, h: 860 };
-const MIN_ZOOM = VIEW_W / 14150;   // HARD CAP (owner, Nov 18; HALVED Nov 19): no zoomed-out view is EVER wider than 1,415 m across (10 wu = 1 m) — opening fit, world pulse, every start, every house
+const MIN_ZOOM = 0.38;   // HARD CAP: max zoom-out (~110 m across) — keeps full painted ground, buildings & cars crisp (never drops to flat-green farRoads)
 let DPR = 1, renderer = null;
 function resize() {
   const iw = innerWidth, ih = innerHeight;
@@ -105,7 +105,7 @@ try {
 msg(TITLE + ' — building the map…'); await new Promise(r => setTimeout(r, 0));   // paint that line before the heavy setup
 const W = new GraphWorld(G);
 let areas = new Areas({ buildings: [], parking: [], green: [], heroes: [] }, W);   // real areas land in phase 2
-const ground = new GroundPainter(W, 64, areas, BJ.bumps);
+const ground = new GroundPainter(W, 128, areas, BJ.bumps);
 const opts = { bumps: BJ.bumps };   // buildings arrive with areas.json in phase 2 -> sim.setBuildings
 if (Q.get('spawn')) { const [x, y, h] = Q.get('spawn').split(',').map(Number); opts.spawn = { x, y }; opts.h = h || 0; }
 if (Q.get('model')) opts.model = Q.get('model');
@@ -282,8 +282,12 @@ let intro = null, introIn = null;
 // while the pick screen sat, the chase camera kept easing to the default car's
 // street zoom (0.62), so a slow pick opened at ~68 m across and a fast pick at
 // ~2,820 m. Same fit for every start, every house, every dwell time; clamped to
-// the 1,415 m cap (halved Nov 19).
-function openFit() { const B = W.bounds; return { x: (B.x0 + B.x1) / 2, y: (B.y0 + B.y1) / 2, z: Math.max(MIN_ZOOM, Math.min(VIEW_W / (B.x1 - B.x0), view.h / (B.y1 - B.y0)) * 0.98 * 1.5) }; }
+// the MIN_ZOOM cap.
+function openFit() {
+  const px = sim && sim.player ? sim.player.x : (W.bounds.x0 + W.bounds.x1) / 2;
+  const py = sim && sim.player ? sim.player.y : (W.bounds.y0 + W.bounds.y1) / 2;
+  return { x: px, y: py, z: MIN_ZOOM };
+}
 function startIntro() {
   if (inside || Q.has('cam') || Q.has('pilot') || Q.has('speed') || Q.has('nointro')) return;   // NOT `fixed`: pick() can run before that const exists
   const F = openFit();
@@ -447,18 +451,14 @@ function drawBreadcrumb() {
 }
 const input = new Input(canvas, view); input.fightOn = true;
 const fixed = Q.get('cam') ? Q.get('cam').split(',').map(Number) : null;
-const B0 = W.bounds, fitZ = Math.max(MIN_ZOOM, Math.min(VIEW_W / (B0.x1 - B0.x0), view.h / (B0.y1 - B0.y0)) * 0.98 * 1.5);   // Nov 18 (owner): the opening sits halfway back from the whole-map fit (~1,415 m across since the Nov 19 halving, never wider — the MIN_ZOOM cap); startIntro() recomputes this same fit via openFit() so the flight's start never depends on the live camera
-const cam = fixed ? { x: fixed[0], y: fixed[1], zoom: Math.max(MIN_ZOOM, fixed[2] || 1) }   // Nov 19: ?cam= honours the same 1,415 m cap as every other view
+const fitZ = MIN_ZOOM;
+const cam = fixed ? { x: fixed[0], y: fixed[1], zoom: Math.max(MIN_ZOOM, fixed[2] || 1) }
   : (picking || Q.get('player')) && !Q.has('speed') && !Q.has('pilot') && !Q.has('nointro')
-    ? { x: (B0.x0 + B0.x1) / 2, y: (B0.y0 + B0.y1) / 2, zoom: fitZ }   // open wide on the map (half-fit since Nov 18)
-    : { x: sim.player.x, y: sim.player.y, zoom: 0.62 };   // owner Nov 17: zoom out, more world
-// WORLD PULSE (owner, Nov 17): while driving, every so often the camera eases
-// FAR out to show the world, holds, then eases back to the normal chase zoom.
-// Nov 18 (owner): the far reach was halved, then set halfway back — 0.21, about
-// 200 m across (was 0.14, ~300 m). Identical at every house, and the MIN_ZOOM
-// cap in frame() floors every zoomed-out view regardless of path.
+    ? { x: sim.player.x, y: sim.player.y, zoom: fitZ }   // aerial drone opening over the neighborhood (clamped to MIN_ZOOM)
+    : { x: sim.player.x, y: sim.player.y, zoom: 0.62 };   // driving chase zoom
+// WORLD PULSE: gentle cinematic drone pullback (~95 m across), never drops painted ground chunks.
 // Skipped for captures, beats, foot and intro.
-const PULSE = { far: 0.21, out: 3.0, hold: 3.0, back: 3.0, rest: 27.0 };
+const PULSE = { far: 0.44, out: 2.8, hold: 2.5, back: 2.8, rest: 32.0 };
 let pulseT = -PULSE.rest;
 for (let cy = -2; cy <= 2; cy++) for (let cx = -1; cx <= 1; cx++) ground.get(Math.floor(cam.x / CHUNK) + cx, Math.floor(cam.y / CHUNK) + cy);
 ground.stats.sync = 0;
@@ -586,7 +586,7 @@ function frame(now) {
   const hw = hwf, hh = hhf, farOut = hw0 * hh0 > 4e6;                           // zoomed right out: prefetch only round the car (the view's ground is drawn as roads, renderer FAR_CHUNKS)
   for (const [px, py] of farOut ? [[c.x, c.y]] : [[cam.x, cam.y], [c.x + Math.cos(c.h) * c.v * 1.2, c.y + Math.sin(c.h) * c.v * 1.2]])
     for (let cy = Math.floor((py - hh) / CHUNK); cy <= Math.floor((py + hh) / CHUNK); cy++) for (let cx = Math.floor((px - hw) / CHUNK); cx <= Math.floor((px + hw) / CHUNK); cx++) want.push([cx, cy, (cx * CHUNK - cam.x) ** 2 + (cy * CHUNK - cam.y) ** 2]);
-  want.sort((a, b) => a[2] - b[2]); ground.request(want.slice(0, 60)); ground.work(Math.min(12, Math.max(3, dt * 120)));
+  want.sort((a, b) => a[2] - b[2]); ground.request(want.slice(0, 48)); ground.work(Math.min(5, Math.max(2, dt * 80)));
   requestAnimationFrame(frame);
 }
 // ---- task L10: the whole-area MAP (M key, or the MAP pill top-right): every real road, the footprints, the

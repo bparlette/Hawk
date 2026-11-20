@@ -14,16 +14,57 @@ export const BUSH_CELL = 90;
 const hash2 = (x, y) => { let h = (x * 374761393 + y * 668265263) | 0; h = (h ^ (h >> 13)) | 0; h = Math.imul(h, 1274126177); return ((h ^ (h >> 16)) >>> 0) / 4294967296; };
 const inPoly = (f, x, y) => { let ins = false; for (let k = 0; k < f.length; k += 2) { const ax = f[k], ay = f[k + 1], ex = f[(k + 2) % f.length], ey = f[(k + 3) % f.length]; if ((ay > y) !== (ey > y) && x < (ex - ax) * (y - ay) / (ey - ay) + ax) ins = !ins; } return ins; };
 
+const _greenIndex = new WeakMap();
+function getGreenIndex(greens) {
+  if (!greens || !greens.length) return null;
+  let idx = _greenIndex.get(greens);
+  if (idx) return idx;
+  const boxes = new Array(greens.length), grid = new Map();
+  for (let i = 0; i < greens.length; i++) {
+    const f = greens[i]; let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    for (let k = 0; k < f.length; k += 2) { const x = f[k], y = f[k + 1]; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    boxes[i] = [x0, y0, x1, y1];
+    for (let cx = Math.floor(x0 / 256); cx <= Math.floor(x1 / 256); cx++)
+      for (let cy = Math.floor(y0 / 256); cy <= Math.floor(y1 / 256); cy++) {
+        const key = cx * 100003 + cy; let l = grid.get(key); if (!l) grid.set(key, l = []); l.push(i);
+      }
+  }
+  idx = { boxes, grid, bushCache: new Map() };
+  _greenIndex.set(greens, idx);
+  return idx;
+}
+function inAnyGreen(greens, idx, x, y) {
+  if (!idx) return false;
+  const list = idx.grid.get(Math.floor(x / 256) * 100003 + Math.floor(y / 256));
+  if (!list) return false;
+  for (let i = 0; i < list.length; i++) {
+    const gi = list[i], bb = idx.boxes[gi];
+    if (x < bb[0] || x > bb[2] || y < bb[1] || y > bb[3]) continue;
+    if (inPoly(greens[gi], x, y)) return true;
+  }
+  return false;
+}
+
 // nearBuilding(x, y) is supplied by the caller (the sim's house grid, or a grid the
 // renderer builds from areas.json) so both sides test the same rule.
 export function bushAt(cx, cy, W, nearBuilding, greens) {
+  const idx = getGreenIndex(greens);
+  const key = cx * 100003 + cy;
+  if (idx && idx.bushCache.has(key)) return idx.bushCache.get(key);
+  let res = null;
   const h = hash2(cx, cy);
-  if (h > 0.78) return null;                                   // ~22% of cells grow a bush
-  const x = cx * BUSH_CELL + 14 + hash2(cx * 3 + 1, cy * 7) * (BUSH_CELL - 28);
-  const y = cy * BUSH_CELL + 14 + hash2(cx * 5, cy * 3 + 2) * (BUSH_CELL - 28);
-  if (W.surfaceAt(x, y, 0) !== 'ground') return null;          // never on a road, drive or lot
-  if (!nearBuilding(x, y) && !(greens && greens.some(f => inPoly(f, x, y)))) return null;
-  return { id: cx + ',' + cy, x, y, r: 9 + hash2(cx * 11, cy * 13) * 7 };
+  if (h <= 0.78) {                                             // ~22% of cells grow a bush
+    const x = cx * BUSH_CELL + 14 + hash2(cx * 3 + 1, cy * 7) * (BUSH_CELL - 28);
+    const y = cy * BUSH_CELL + 14 + hash2(cx * 5, cy * 3 + 2) * (BUSH_CELL - 28);
+    if (W.surfaceAt(x, y, 0) === 'ground' && (nearBuilding(x, y) || inAnyGreen(greens, idx, x, y))) {
+      res = { id: cx + ',' + cy, x, y, r: 9 + hash2(cx * 11, cy * 13) * 7, v: (Math.abs(cx * 7 + cy * 13)) & 3, rot: hash2(cx * 17, cy * 19) * 6.283185 };
+    }
+  }
+  if (idx) {
+    if (idx.bushCache.size > 4096) idx.bushCache.clear();
+    idx.bushCache.set(key, res);
+  }
+  return res;
 }
 export function bushesNear(x, y, rad, W, nearBuilding, greens, out = []) {
   out.length = 0;
@@ -31,7 +72,7 @@ export function bushesNear(x, y, rad, W, nearBuilding, greens, out = []) {
   const c0y = Math.floor((y - rad) / BUSH_CELL), c1y = Math.floor((y + rad) / BUSH_CELL);
   for (let cy = c0y; cy <= c1y; cy++) for (let cx = c0x; cx <= c1x; cx++) {
     const b = bushAt(cx, cy, W, nearBuilding, greens);
-    if (b && Math.hypot(b.x - x, b.y - y) < rad + b.r) out.push(b);
+    if (b) { const dx = b.x - x, dy = b.y - y, rr = rad + b.r; if (dx * dx + dy * dy < rr * rr) out.push(b); }
   }
   return out;
 }
