@@ -15,10 +15,10 @@
   {
    "category": "Arcade Hub",
    "id": "tapcade-20",
-   "note": "AI Studio build (Neon): 40-in-1 pocket arcade \u2014 20 playable hyper-casual mobile ad games (Gate Blaster, Tall Stack Run, Hole Swallow, Knife Hit, Water Sort and 15 more) plus 20 80s & 90s arcade classics (Maze Chomp, Tetro Drop, Star Invaders, Fighter Duel and 16 more).",
+   "note": "AI Studio build (Neon): 112-in-1 pocket arcade \u2014 20 playable hyper-casual mobile ad games (Gate Blaster, Tall Stack Run, Hole Swallow, Knife Hit, Water Sort and 15 more), 20 80s & 90s arcade classics (Maze Chomp, Tetro Drop, Star Invaders, Fighter Duel and 16 more), 52 scaled-down micro-sports (2v2 soccer, slam dunk, drag racing, sumo and 48 more), and 20 core micro-game archetypes (horde survivor, sokoban, pinball, laser optics and 16 more). Moth polish pass: gamepress touch standard + fixes.",
    "orientation": "portrait",
    "path": "../games/tapcade-20/index.html",
-   "title": "Tapcade 40 \u2014 40-in-1 Pocket Arcade"
+   "title": "Tapcade 112 \u2014 112-in-1 Pocket Arcade"
   },
   {
    "category": "AI Bake-Off",
