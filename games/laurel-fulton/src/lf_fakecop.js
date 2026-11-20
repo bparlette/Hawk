@@ -28,7 +28,7 @@ export class FakeCop {
     this.traffic = []; this.score = 0; this.streak = 0; this.streakT = 0;
     this.sirenOn = false; this.sirenHold = 0; this.toast = null; this.barks = [];
     this.bus = new SirenBus(); this.civ = new Civilians();
-    this.lock = null; this.stops = 0; this.bluffs = 0;
+    this.lock = null; this.stops = 0; this.bluffs = 0; this.spawnCd = 0;
     this.models = Object.keys(sim.fleet).filter(k => !k.includes('lamar') && !k.includes('kosack'));
   }
 
@@ -106,16 +106,22 @@ export class FakeCop {
 
   step(dt, sirenPressed) {
     const P = this.sim.player; if (!P) return;
-    // Prune far traffic, keep ~5-6 nearby cars on the roads
+    const isKosack = P.model === 'cavalier_kosack' && !P.wreck;
+    // Prune far traffic (or all FakeCop-owned traffic when not playing Kosack so non-crew roads stay sparse:
+    // lf_traffic.js already handles the 1-car ambient traffic for everyone else).
     for (let i = this.traffic.length - 1; i >= 0; i--) {
       const c = this.traffic[i];
-      if (Math.hypot(c.x - P.x, c.y - P.y) > 1250 || c.wreck) {
+      if (!isKosack || Math.hypot(c.x - P.x, c.y - P.y) > 1350 || c.wreck) {
         const si = this.sim.cars.indexOf(c); if (si >= 0) this.sim.cars.splice(si, 1);
         if (this.lock === c) this.lock = null;   // L17: a peeling-off target pruned far away used to leave the lock dangling for good (no more pull-overs)
         this.traffic.splice(i, 1);
       }
     }
-    if (this.traffic.length < 6) this._spawnTraffic();
+    if (this.spawnCd > 0) this.spawnCd -= dt;
+    if (isKosack && this.traffic.length < 1 && this.spawnCd <= 0) {
+      this._spawnTraffic();
+      this.spawnCd = 14;   // sparse: at most 1 extra pull-over civilian for Kosack, >= 14 s between replacements
+    }
     if (this.streakT > 0) { this.streakT -= dt; if (this.streakT <= 0) this.streak = 0; }
     if (this.toast && (this.toast.t -= dt) <= 0) this.toast = null;
     for (let i = this.barks.length - 1; i >= 0; i--) {
@@ -124,7 +130,6 @@ export class FakeCop {
       if ((b.t -= dt) <= 0) this.barks.splice(i, 1);
     }
 
-    const isKosack = P.model === 'cavalier_kosack' && !P.wreck;
     if (!isKosack) { this._audio(false, false); this.lock = null; return; }
     const active = !!sirenPressed || this.sirenOn || (this.lock && this.lock.fcState === 'HESITATE');
     this._audio(active, !!(this.lock && this.lock.fcState === 'HESITATE'));

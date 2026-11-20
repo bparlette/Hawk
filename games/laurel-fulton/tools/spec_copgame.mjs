@@ -49,7 +49,7 @@ const run = (secs, drive, onStep) => { for (let i = 0; i < secs * 60; i++) { S.s
 run(0.5); const T = FC.traffic;
 check(T.length >= 1 && T.every(c => c.traffic && c.model && !c.parked), 'civilian traffic spawns around you for there to be somebody to pull over', `${T.length} cars`);
 run(30);
-check(FC.traffic.length >= 5, 'it keeps ~6 cars around you', `${FC.traffic.length} cars`);
+check(FC.traffic.length === 1, 'it keeps at most 1 sparse civilian car around Kosack (never a swarm)', `${FC.traffic.length} cars`);
 const pickT = () => FC.traffic.filter(c => c.fcState === 'NONE' && !(c.fcCd > 0)).sort((a, b) => Math.hypot(a.x - P.x, a.y - P.y) - Math.hypot(b.x - P.x, b.y - P.y))[0];
 let tgt = pickT();
 check(!!tgt, 'a target is out there', tgt && `${Math.round(Math.hypot(tgt.x - P.x, tgt.y - P.y) / 10)} m away`);
@@ -60,10 +60,11 @@ check(!P.fcSiren, 'CONTROL: no siren on his car while it is off');
 // 4b CONTROL: the siren on but not near anybody
 siren = true; run(0.3); check(P.fcSiren === true && FC.bus.level >= 0, "the siren flag rides his car (Palm City's siren-car rule)");
 // 4c the real thing: siren ON, chase until the target pulls over
-tgt = pickT(); let pulled = null, hesitated = false, offRoad = 0, steps = 0, stoppedMaxV = 0, toastSeen = false, barkLines = new Set(), kerb0 = null, kerb1 = null;
+tgt = pickT(); if (!tgt) { run(15); tgt = pickT(); }
+let pulled = null, hesitated = false, offRoad = 0, steps = 0, stoppedMaxV = 0, toastSeen = false, barkLines = new Set(), kerb0 = null, kerb1 = null;
 const lat = () => { const r = W.roadInfo(tgt.x, tgt.y, 0); if (!r.e) return 0; const q = S.nearPt(tgt.x, tgt.y, r), hx = Math.cos(tgt.h), hy = Math.sin(tgt.h); return (tgt.x - q.x) * -hy + (tgt.y - q.y) * hx; };
 let chosen = tgt, pcar = null;
-run(200, () => chaseInput(tgt, 70), () => {
+run(200, () => { if (!tgt || tgt.wreck) tgt = pickT(); return tgt ? chaseInput(tgt, 70) : { jx: 0, jy: 0, jm: 0, keys: {} }; }, () => {
   for (const b of FC.barks) barkLines.add(b.text); if (FC.toast && /FAKE STOP/.test(FC.toast.text)) toastSeen = true;
   if (FC.traffic.some(c => c.fcState === 'HESITATE')) hesitated = true;
   const pc = FC.traffic.find(c => c.fcState === 'PULL_OVER'); if (pc) { pcar = pc; pulled = 1; steps++; const r = W.roadInfo(pc.x, pc.y, 0); if (!(r.e && r.d < r.hw + 15)) offRoad++; if (pc.fcT < 3.5) stoppedMaxV = Math.max(stoppedMaxV, Math.abs(pc.v)); }
