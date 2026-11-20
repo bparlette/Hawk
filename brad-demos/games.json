@@ -29,6 +29,14 @@
    "title": "Bunny Hop \u2014 BMX"
   },
   {
+   "category": "Originals",
+   "id": "bunny-hop-look",
+   "note": "Bake-off look entry (Moth look pass): the same Bunny Hop physics and world re-lit \u2014 golden-dusk sun with soft shadows, hip-height chase camera, textured asphalt, concrete and water. Side-by-side look comparison against the main Bunny Hop.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/bunny-hop-look/",
+   "title": "Bunny Hop \u2014 Moth Look (Bake-off)"
+  },
+  {
    "category": "AI Bake-Off",
    "id": "flappy-showdown",
    "keys": {
