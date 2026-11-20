@@ -37,6 +37,14 @@
    "title": "Bunny Hop \u2014 Moth Look (Bake-off)"
   },
   {
+   "category": "Originals",
+   "id": "scaggsville-3d",
+   "note": "3D Scaggsville on the REAL Laurel/Fulton map (OpenStreetMap data mined from the original game): pick your player, start at your real house, rally the crew house to house over 23 km of real roads to Atholton High. Golden-hour chase cam, your convoy retraces your line. Three.js, gamepress touch standard.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/scaggsville-3d/",
+   "title": "Scaggsville 3D"
+  },
+  {
    "category": "AI Bake-Off",
    "id": "flappy-showdown",
    "keys": {
