@@ -54,6 +54,14 @@
   },
   {
    "category": "AI Bake-Off",
+   "id": "fleet-drive",
+   "note": "The photo-to-game-car recipe's parking lot (recipe Step 9): every fitted procedural car gets parked here, drivable, on the Bunny Hop world. In the lot now: Rigg's '87 Celica GT (blue beams, working pop-ups) and Brad's '87 Camaro IROC-Z (white-to-maroon fade, yellow beams). SWAP button / TAB changes car. AI layer inside the game: AI-RECIPE.md + window.__FLEET_DRIVE__ live state.",
+   "orientation": "any",
+   "path": "https://bparlette.github.io/Hawk2/games/fleet-drive/",
+   "title": "Fleet Drive \u2014 Photo-Fitted Cars"
+  },
+  {
+   "category": "AI Bake-Off",
    "id": "flappy-showdown",
    "keys": {
     "jump": "Space"
