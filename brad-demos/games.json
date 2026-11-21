@@ -3231,6 +3231,14 @@
    "orientation": "any",
    "path": "../games/fix-or-wreck/index.html",
    "title": "Fix or Wreck"
+  },
+  {
+   "category": "Viral Demos",
+   "id": "bodycam-corridor",
+   "note": "Technique sample after Jav's 'The Hall' (X): a derelict service corridor presented as bodycam found footage. 100% procedural Three.js geometry \u2014 zero modeled assets \u2014 and every texture generated on canvas in code (concrete grime, graffiti, night skyline, the vending-machine face). DOM bodycam overlay: REC, live clock, battery, audio meters, film grain. ~30 s auto-drift loop; drag to look, tap to hold. Peak 71 draw calls, ~3k triangles.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/bodycam-corridor/",
+   "title": "Bodycam Corridor \u2014 Procedural Found Footage"
   }
  ]
 }
