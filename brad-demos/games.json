@@ -3247,6 +3247,14 @@
    "orientation": "portrait",
    "path": "https://bparlette.github.io/Hawk2/games/dead-hall/",
    "title": "Dead Hall \u2014 Bodycam Jump-Scare Rail Horror"
+  },
+  {
+   "category": "Viral Demos",
+   "id": "headshot-hoops",
+   "note": "Built from the viral Shady2K reel 'GTA VI throwing basketballs at NPCs' (362K likes): a sunny Vice-Beach boardwalk where all you do is throw basketballs at people's heads and stomachs. Over-shoulder thrower like the reel, real Three.js ballistics, walking crowd with slapstick reactions \u2014 headshots snap back, sprout circling stars and face-plant (slow-mo + combo multiplier); gut shots double them over clutching and wheezing. Drag to aim, hold to charge, release to bonk. Endless.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/headshot-hoops/",
+   "title": "BONK BEACH \u2014 Headshot Hoops"
   }
  ]
 }
