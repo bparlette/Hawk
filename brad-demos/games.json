@@ -3239,6 +3239,14 @@
    "orientation": "portrait",
    "path": "https://bparlette.github.io/Hawk2/games/bodycam-corridor/",
    "title": "Bodycam Corridor \u2014 Procedural Found Footage"
+  },
+  {
+   "category": "Viral Demos",
+   "id": "dead-hall",
+   "note": "The bodycam sample grown into a full game: a jump-scare rail horror walk through one condemned building, framed as a single police bodycam investigation (Unit 2210, dispatch on the radio between rooms). The camera walks and looks on its own \u2014 the player only STABs, and works one big contextual ACTION button (OPEN / SLAM / HOLD / PUSH / GRAB). 12 rooms stage iconic horror compositions with original procedural figures: hallway twins, the doorway woman, an EXIT-sign hulk charge, a night-vision crawler, the corner, the hatch, a mascot hallway sprint, the door light, the tall one, a wall-eyes chase, a flicker statue, and an empty yellow room. Combat is timing-first: a ~1 s counter window opens every grab, then a pulse strike-window mash (on-pulse thrusts count double, ~20 taps max) \u2014 plus two don't-stab decoys with fair tells. All-procedural Three.js + WebAudio, zero external assets. Peak 190 draw calls, ~6.7k triangles.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/dead-hall/",
+   "title": "Dead Hall \u2014 Bodycam Jump-Scare Rail Horror"
   }
  ]
 }
