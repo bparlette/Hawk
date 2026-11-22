@@ -3255,6 +3255,14 @@
    "orientation": "portrait",
    "path": "https://bparlette.github.io/Hawk2/games/headshot-hoops/",
    "title": "BONK BEACH \u2014 Headshot Hoops"
+  },
+  {
+   "category": "Originals",
+   "id": "game-night-at-daves",
+   "note": "WarioWare-style microgame gauntlet at Dave the Video Game Critic's legendary game nights (Moth build, from Brad's email): 8 rounds, 4 beers, four of the crew as 6-second microgames \u2014 Sudz's Finger Burn Decathlon (rub in big circles!), Scott's Sip Your Beer Tennis (don't touch \u2014 sip instead), Brent's 80-Yard Kick (mind Brian in the lane), Brad's Paddle Master (it refuses to end: just two more times!). Dave grades your night at the end. 16-bit pixel living room stitched from real game-night photos, procedural WebAudio, zero assets.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/game-night-at-daves/",
+   "title": "Game Night at Dave's \u2014 Microgame Gauntlet"
   }
  ]
 }
