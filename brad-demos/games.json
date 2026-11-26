@@ -3263,6 +3263,14 @@
    "orientation": "portrait",
    "path": "https://bparlette.github.io/Hawk2/games/game-night-at-daves/",
    "title": "Game Night at Dave's \u2014 Microgame Gauntlet"
+  },
+  {
+   "category": "Viral Demos",
+   "id": "everything-hates-me",
+   "note": "Papercraft horror-comedy sample: a cute cut-paper world where everything turns on the hero \u2014 a tree falls on him, the river floods the path, the path folds away under him \u2014 then the page itself unfolds a giant face. Autoplay scene; tap to replay.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/everything-hates-me/",
+   "title": "Everything Hates Me \u2014 Papercraft Horror-Comedy (Sample)"
   }
  ]
 }
