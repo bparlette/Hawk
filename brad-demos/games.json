@@ -3287,6 +3287,22 @@
    "orientation": "portrait",
    "path": "https://bparlette.github.io/Hawk2/games/castle-craters/",
    "title": "Castle Craters — One-Player Artillery Duel"
+  },
+  {
+   "category": "AI Bake-Off",
+   "id": "oneprompt-drifter",
+   "note": "The riba2534 one-prompt QQ-Speed-style drift racer, mashed up: the Pelican Beach golden-hour sun, sky and ocean grafted in as a new map, plus a borrowed-car picker \u2014 the Hospital Escape ambulance and Charger Pursuit and the whole 10-car Scaggsville shared fleet, all drivable. Gamepress gptouch controls on touch devices.",
+   "orientation": "landscape",
+   "path": "https://bparlette.github.io/Hawk2/games/oneprompt-drifter/",
+   "title": "One-Prompt Drifter \u2014 Beach Mashup (Borrowed Cars)"
+  },
+  {
+   "category": "AI Bake-Off",
+   "id": "oneprompt-duck",
+   "note": "riba2534's one-prompt pelican beach ride (the 'duck game' \u2014 a pelican on a bicycle at golden hour, Gerstner-wave ocean, long shadows), fitted with the gamepress gptouch standard: floating stick to pedal and steer, A to jump, B for tricks. Keyboard still works.",
+   "orientation": "landscape",
+   "path": "https://bparlette.github.io/Hawk2/games/oneprompt-duck/",
+   "title": "One-Prompt Duck \u2014 Pelican Beach Ride + Touch Controls"
   }
  ]
 }
