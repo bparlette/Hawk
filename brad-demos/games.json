@@ -3274,11 +3274,11 @@
   },
   {
    "category": "Viral Demos",
-   "id": "slide-rush",
-   "note": "Original waterslide racer: one-thumb drag steering down a giant slide over a tropical bay against 5 bot rivals — bump them off the edge, ride off the orange lips to launch into slow-mo flight and land whole sections ahead. Finish 1st to advance to faster, twistier races.",
+   "id": "knife-log",
+   "note": "Original tap-to-throw knife game (Moth build): tap to stick knives into a spinning log until it shatters — never hit a knife already stuck in it. Slice wobbling apples for bonus points, knife count climbs 5 to 9 per run, and every 5th stage is a boss (cheese wheel, tire, pumpkin, barrel) with speed changes, direction flips and pauses. One thumb, portrait.",
    "orientation": "portrait",
-   "path": "https://bparlette.github.io/Hawk2/games/slide-rush/",
-   "title": "Slide Rush — Waterslide Racer"
+   "path": "https://bparlette.github.io/Hawk2/games/knife-log/",
+   "title": "Knife Log — Tap. Throw. Shatter."
   },
   {
    "category": "Originals",
