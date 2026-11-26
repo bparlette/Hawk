@@ -3470,6 +3470,14 @@
    "orientation": "landscape",
    "path": "https://bparlette.github.io/Hawk2/games/gobble-ride/",
    "title": "Gobble Ride - Thanksgiving Turkey Coast Ride"
-  }
+  },
+ {
+  "category": "Viral Demos",
+  "id": "high-step",
+  "note": "Original heel-stack runway runner (Moth build): drag to steer a runway walker, collect sparkling heel blocks to stack comically tall, then spend the stack as bridges over gaps, on stairs and under limbo bars. Whatever height you keep becomes your podium — score scales with the square of your remaining stack. 4 runways, one thumb, portrait.",
+  "orientation": "portrait",
+  "path": "https://bparlette.github.io/Hawk2/games/high-step/",
+  "title": "High Step — Heel-Stack Runway Runner"
+ }
  ]
 }
