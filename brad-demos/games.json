@@ -3479,6 +3479,70 @@
    "orientation": "portrait",
    "path": "https://bparlette.github.io/Hawk2/games/beat-bounce/",
    "title": "Beat Bounce"
+  },
+  {
+   "category": "Viral Demos",
+   "id": "wobble-run",
+   "note": "Original jelly-cube morph runner (Moth build): a glossy jelly cube auto-runs a track of shaped gates \u2014 hold to squash wide & low, release to stretch tall & thin \u2014 match each gate's silhouette or bounce back; near-exact morphs score PERFECT streaks. 5 levels, portrait.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/wobble-run/",
+   "title": "Wobble Run"
+  },
+  {
+   "category": "Viral Demos",
+   "id": "scribble-legs",
+   "note": "Original draw-your-legs racer (Moth build): draw any shape in the notebook pad and it becomes your racer's spinning legs \u2014 redraw mid-race (round for flats, spikes for stairs, hooks for ledges and gaps) to beat two rival doodles to the flag. 3 tracks, portrait.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/scribble-legs/",
+   "title": "Scribble Legs"
+  },
+  {
+   "category": "Viral Demos",
+   "id": "ragdoll-room",
+   "note": "Original no-fail ragdoll physics toy (Moth build): drag any limb to grab and fling a floppy crash-test dummy around a toy room of ramps, a trampoline and a springboard; style points for airtime, flips and bounce chains, plus spawnable balls and boxes. Portrait.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/ragdoll-room/",
+   "title": "Ragdoll Room"
+  },
+  {
+   "category": "Viral Demos",
+   "id": "grid-blast",
+   "note": "Original drag-and-place block puzzle (Moth build): drag pieces from a 3-piece tray onto an 8\u00d78 grid, complete a full row or column to blast it, chain multi-line combos; endless score attack, portrait.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/grid-blast/",
+   "title": "Grid Blast"
+  },
+  {
+   "category": "Viral Demos",
+   "id": "door-jam",
+   "note": "Original colour-door sliding-block puzzle (Moth build): drag chunky coloured blocks along their lanes and slide each one out through a glowing door of its own colour on the board's edge \u2014 clear the board to win. 6 handcrafted levels, portrait.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/door-jam/",
+   "title": "Door Jam"
+  },
+  {
+   "category": "Viral Demos",
+   "id": "unscrewed",
+   "note": "Original screw-pin plate puzzle (Moth build): tap a screw pin to lift it and park it in a scarce spare hole \u2014 when every pin holding a metal plate is out, the plate drops with gravity and a clatter, revealing new holes underneath. 6 handcrafted levels, portrait.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/unscrewed/",
+   "title": "Unscrewed"
+  },
+  {
+   "category": "Viral Demos",
+   "id": "tap-tunes",
+   "note": "Original 4-lane falling-tile rhythm tapper (Moth build): tap each glossy black tile as it crosses the hit zone \u2014 the chart IS the melody, so playing well literally plays the song. Two original tracks synthesized live in code (WebAudio, no audio files), portrait.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/tap-tunes/",
+   "title": "Tap Tunes"
+  },
+  {
+   "category": "Viral Demos",
+   "id": "slide-rush",
+   "note": "Original waterslide racer: drag to steer, bump 5 rivals off the slide, launch off the orange lips and fly whole sections ahead. Portrait.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/slide-rush/",
+   "title": "Slide Rush"
   }
  ]
 }
