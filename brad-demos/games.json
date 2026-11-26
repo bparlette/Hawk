@@ -3454,6 +3454,14 @@
    "orientation": "portrait",
    "path": "https://bparlette.github.io/Hawk2/games/snake-feast/",
    "title": "Snake Feast — Neon Snake-Growth Arena"
+  },
+  {
+   "category": "Viral Demos",
+   "id": "chroma-bounce",
+   "note": "Original colour-gate bounce climber (Moth build): tap to bounce a glowing ball up through spinning neon gates \u2014 only the segment matching your ball's colour lets you through. A four-colour changer star after every gate re-rolls your colour and flashes the screen edge in the new one. Rings, crosses, double rings and pinwheels; every 10 gates the spin speeds up, new shapes join, and the house pelican tows your colour across the sky. One wrong-colour touch ends the run; best score saved. One thumb, portrait.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/chroma-bounce/",
+   "title": "Chroma Bounce \u2014 Colour-Gate Bounce Climber"
   }
  ]
 }
