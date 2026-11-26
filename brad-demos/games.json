@@ -3478,6 +3478,14 @@
   "orientation": "portrait",
   "path": "https://bparlette.github.io/Hawk2/games/high-step/",
   "title": "High Step — Heel-Stack Runway Runner"
+ },
+ {
+  "category": "Viral Demos",
+  "id": "tail-trail",
+  "note": "Original gecko-exit grid puzzle (Moth build): drag a cute gecko by the head along grid paths and its body trails behind like a train — guide the head into the hole of its own colour and the whole body slithers in after it. Other geckos bodies block the paths, so routing and order are the puzzle. Undo and reset, score rewards fewer moves than par. 6 handcrafted levels, phone-first portrait.",
+  "orientation": "portrait",
+  "path": "https://bparlette.github.io/Hawk2/games/tail-trail/",
+  "title": "Tail Trail — Gecko Exit Puzzle"
  }
  ]
 }
