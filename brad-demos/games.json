@@ -3462,6 +3462,14 @@
    "orientation": "portrait",
    "path": "https://bparlette.github.io/Hawk2/games/chroma-bounce/",
    "title": "Chroma Bounce \u2014 Colour-Gate Bounce Climber"
+  },
+  {
+   "category": "AI Bake-Off",
+   "id": "gobble-ride",
+   "note": "Thanksgiving reskin of the one-prompt pelican ride: a plump procedural turkey (banded tail fan, pilgrim hat, red wattle and snood, russet scarf) pedals the same golden-hour coast at harvest time - autumn foliage, pumpkin patches, hay bales, falling leaves - gobbling pumpkins and pumpkin pies instead of fish. Same gptouch standard: floating stick to pedal and steer, A to jump, B for tricks. Fully translated to English, zero CJK.",
+   "orientation": "landscape",
+   "path": "https://bparlette.github.io/Hawk2/games/gobble-ride/",
+   "title": "Gobble Ride - Thanksgiving Turkey Coast Ride"
   }
  ]
 }
