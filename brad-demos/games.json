@@ -3446,6 +3446,14 @@
    "orientation": "portrait",
    "path": "https://bparlette.github.io/Hawk2/games/sky-pack/",
    "title": "Sky Pack — Hold-to-Fly Jetpack Dodger"
+  },
+  {
+   "category": "Viral Demos",
+   "id": "snake-feast",
+   "note": "Original snake-growth arena: steer a neon snake around a dark arena, eat glowing orbs to grow, cut across a rival's head-path to burst them into a feast of orbs, boost trades length for speed. 11 named bot snakes, live leaderboard, 2:30 rounds, Feast Frenzy golden orbs double your growth.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/snake-feast/",
+   "title": "Snake Feast — Neon Snake-Growth Arena"
   }
  ]
 }
