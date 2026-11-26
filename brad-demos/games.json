@@ -3273,6 +3273,14 @@
    "title": "Everything Hates Me — Papercraft Horror-Comedy (Sample)"
   },
   {
+   "category": "Viral Demos",
+   "id": "slide-rush",
+   "note": "Original waterslide racer: one-thumb drag steering down a giant slide over a tropical bay against 5 bot rivals — bump them off the edge, ride off the orange lips to launch into slow-mo flight and land whole sections ahead. Finish 1st to advance to faster, twistier races.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/slide-rush/",
+   "title": "Slide Rush — Waterslide Racer"
+  },
+  {
    "category": "Originals",
    "id": "castle-craters",
    "note": "One-player Worms x Castle Busters mashup: drag-aim artillery across a tall hill — crater the terrain chunk by chunk, ride the wind, collapse the Neon Spire's towers, blast its crew flying, dig out the glowing core and finish it before the bot does the same to your Stone Keep. Bazooka, timed grenade, cluster bomb and a falling grand piano.",
