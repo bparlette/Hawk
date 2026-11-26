@@ -3303,6 +3303,149 @@
    "orientation": "landscape",
    "path": "https://bparlette.github.io/Hawk2/games/oneprompt-duck/",
    "title": "One-Prompt Duck \u2014 Pelican Beach Ride + Touch Controls"
+  },
+  {
+   "category": "Viral Demos",
+   "id": "crowd-math",
+   "note": "Original crowd-multiplier runner (Moth build): your crowd auto-runs down the track — drag left/right to steer through paired carnival gates (+20, x2, -15, a shredder lane), grow huge, and outnumber the rival crowd in the finish-line numbers clash. One-thumb drag, 3+ levels with rising rival counts.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/crowd-math/",
+   "title": "Crowd Math — Crowd Multiplier Runner"
+  }
+,
+  {
+   "category": "Viral Demos",
+   "id": "turf-loop",
+   "note": "Original territory-claim loop game (Moth build): steer your candy block out of your turf, draw an exposed trail, and loop back home to claim everything inside. 5 AI bots play by the same rules — cross their trails to take them out, and don't let anyone cross yours. Floating joystick + WASD, big % HUD, win at 25% or last block standing.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/turf-loop/",
+   "title": "Turf Loop"
+  }
+,
+  {
+   "category": "Viral Demos",
+   "id": "flip-ridge",
+   "note": "Original two-pedal hill-physics driver: hold GAS to climb an endless dusk ridge, tap BRAKE to balance in the air, land clean backflips for +250, grab fuel cans and coins — and don't land on your roof or run the tank dry. Portrait, two big thumb pedals, procedural hills, instant retry.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/flip-ridge/",
+   "title": "Flip Ridge — Two-Pedal Hill Physics"
+  }
+,
+  {
+   "category": "Viral Demos",
+   "id": "picky-hole",
+   "note": "Original order-ticket hole game (Moth build): drag one very picky hole around miniature dioramas — breakfast table, toolbox, beach picnic — and swallow ONLY the items on the order ticket. Wrong bites cost a strike and 3 seconds; 3 strikes or the timer ends the run. The hole grows as it eats to order.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/picky-hole/",
+   "title": "Picky Hole — Eat Exactly To Order"
+  }
+,
+  {
+   "category": "Viral Demos",
+   "id": "skytrack",
+   "note": "Original narrow-track marble runner (Moth build): steer a glossy marble along a sky-high track over a cloud sea at sunrise — drag to lean into turns, tap to hop gaps, thread swinging hammers, grab coins on the racing line. 4 hand-built tracks, checkpoints, quick respawn. Three.js, phone-first touch.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/skytrack/",
+   "title": "Skytrack — Marble Runner"
+  }
+,
+  {
+   "category": "Viral Demos",
+   "id": "dont-trust-the-floor",
+   "note": "Original troll-room platformer: run and jump a little runner to the exit door of 10 small rooms — every room has exactly one scripted betrayal (the floor drops, a spike slides in, the ceiling falls, the door scoots away…). Deaths are instant, score = rooms cleared minus deaths. Phone-first, gamepress touch standard.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/dont-trust-the-floor/",
+   "title": "Don't Trust the Floor — Troll-Room Platformer"
+  }
+,
+  {
+   "category": "Viral Demos",
+   "id": "gate-cannon",
+   "note": "Original cannon-gate mob war (Moth build): drag to aim, hold to fire a stream of blue runners through +10 / x2 / x3 multiplier gates (dodge the spiky TRAP gates), outnumber the red mob in the mid-lane clash and smash the enemy fort before yours falls. One-thumb portrait, escalating matches.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/gate-cannon/",
+   "title": "Gate Cannon — Cannon-Gate Mob War"
+  }
+,
+  {
+   "category": "Viral Demos",
+   "id": "traffic-hop",
+   "note": "Original hop-across-traffic arcade game: a delivery courier with a parcel hops endless golden-hour lanes — dodge cars and trucks, ride the logs across the river, mind the train, and never stop or the sweep catches you. Tap to hop, swipe to dodge; near-misses trigger slow-mo whooshes. Score is steps forward.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/traffic-hop/",
+   "title": "Traffic Hop — Delivery Dash"
+  }
+,
+  {
+   "category": "Viral Demos",
+   "id": "roll-riot",
+   "note": "Original rolling-ball physics platformer (Moth build): hold to roll a glossy beach-ball hero with real momentum — build speed downhill, bounce on springs, squash flat square grumps by landing on them, grab stars and reach the flag across 4 levels. Vanilla JS canvas physics, gamepress touch standard.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/roll-riot/",
+   "title": "Roll Riot — Rolling-Ball Physics Platformer"
+  }
+,
+  {
+   "category": "Viral Demos",
+   "id": "arena-minute",
+   "note": "Original one-screen horde arena (Moth build): survive six 30-second waves in a neon junkyard while your little bot's guns auto-fire, harvest scrap from every kill, and spend it in the between-wave shop — every purchase is visibly bolted onto the bot until it is more gun than bot. Floating joystick, auto fire/aim/pickup.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/arena-minute/",
+   "title": "Arena Minute — Junkyard Horde Arena"
+  }
+,
+  {
+   "category": "Viral Demos",
+   "id": "stand-and-shoot",
+   "note": "Move/stop-to-shoot room clearer: drag one thumb to move your lone ranger — the moment you stop, they auto-fire at the nearest monster. Standing still IS the attack; moving is dodging. Clear 8 diorama rooms (saloon, cave, rooftop), pick 1-of-3 skill cards after each room (split shot, ricochet, rapid fire and more), and finish the run with HP to spare for bonus score.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/stand-and-shoot/",
+   "title": "Stand & Shoot — Stop Moving to Fire (8 Rooms)"
+  }
+,
+  {
+   "category": "Viral Demos",
+   "id": "helix-drop",
+   "note": "Original rotate-the-tower descent game: one-thumb drag spins a candy helix tower so the bouncing ball drops through the gaps — land on a red segment and the run ends, but chain a long fall through three or more platforms to charge a SMASH that blasts straight through one red. Big tower-% counter up top; reach the base to clear, next tower is taller with more red.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/helix-drop/",
+   "title": "Helix Drop — Spin the Tower"
+  }
+,
+  {
+   "category": "Viral Demos",
+   "id": "smash-plunge",
+   "note": "Original hold-to-smash helix descent: hold to plunge the molten ball through coloured rings, release before a black segment reaches the front, and smash 3 in one plunge to ignite a fireball that burns through one black segment. Score = rings smashed + depth %; reach the tower base to clear the level.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/smash-plunge/",
+   "title": "Smash Plunge — Hold-to-Smash Helix Descent"
+  }
+,
+  {
+   "category": "Viral Demos",
+   "id": "stack-and-cross",
+   "note": "Original brick-stack bridge race (Moth build): run over red bricks to stack them comically tall on your back, spend the stack laying bridge steps across water gaps between toy rooftops, out-race two bump-and-steal bot rivals. One-thumb drag steering, 2D canvas, gamepress touch standard.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/stack-and-cross/",
+   "title": "Stack & Cross — Brick Bridge Race"
+  }
+,
+  {
+   "category": "Viral Demos",
+   "id": "swing-line",
+   "note": "Original grapple-swing momentum game: hold to latch the nearest ring and swing with real pendulum physics, release to fly, land on the bounce-pad finish. 15 short levels, full-spin and skim style points, endless mode after Level 15.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/swing-line/",
+   "title": "Swing Line — Grapple-Swing Momentum"
+  }
+,
+  {
+   "category": "Viral Demos",
+   "id": "sky-pack",
+   "note": "Original hold-to-fly jetpack altitude-dodger: hold to rise, release to fall, thread lasers, zappers and missiles through a dusk warehouse-lab, grab coin arcs through the gaps, ride spring-pod and bubble-glider pickups, and enjoy the floppy ragdoll skid when it all goes wrong. Endless score = distance + coins; one hit, instant restart.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/sky-pack/",
+   "title": "Sky Pack — Hold-to-Fly Jetpack Dodger"
   }
  ]
 }
