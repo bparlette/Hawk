@@ -3338,6 +3338,14 @@
   },
   {
    "category": "Viral Demos",
+   "id": "state-hole",
+   "note": "3D hole game on Black Hole City's engine, played on a real-data USA (Census state outlines, real populations): every state is a ground slab and its people stand stacked shoulder-to-shoulder in towers \u2014 California's skyline tops 25 people high, Wyoming is a single 3-person stack. Drag the hole, eat the towers from the base and watch them tumble in, small states first; the hole grows as it eats.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/state-hole/",
+   "title": "State Hole"
+  },
+  {
+   "category": "Viral Demos",
    "id": "skytrack",
    "note": "Original narrow-track marble runner (Moth build): steer a glossy marble along a sky-high track over a cloud sea at sunrise \u2014 drag to lean into turns, tap to hop gaps, thread swinging hammers, grab coins on the racing line. 4 hand-built tracks, checkpoints, quick respawn. Three.js, phone-first touch.",
    "orientation": "portrait",
