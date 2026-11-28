@@ -3346,6 +3346,14 @@
   },
   {
    "category": "Viral Demos",
+   "id": "range-hole",
+   "note": "Original driving-range hole game (Moth build): a triple-deck range where ~100 golfers launch balls non-stop \u2014 and you are the hole. Drag across the range and swallow each ball before it stops; a ball is worth 50 fresh off the club and melts to 5 at rest, catches chained within 2 seconds build a combo multiplier, and every ball eaten grows the hole. Each ball flies the first second of its flight in its own slow motion. 60-second rounds, portrait, direct drag.",
+   "orientation": "portrait",
+   "path": "https://bparlette.github.io/Hawk2/games/range-hole/",
+   "title": "Range Hole"
+  },
+  {
+   "category": "Viral Demos",
    "id": "skytrack",
    "note": "Original narrow-track marble runner (Moth build): steer a glossy marble along a sky-high track over a cloud sea at sunrise \u2014 drag to lean into turns, tap to hop gaps, thread swinging hammers, grab coins on the racing line. 4 hand-built tracks, checkpoints, quick respawn. Three.js, phone-first touch.",
    "orientation": "portrait",
